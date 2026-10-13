@@ -123,7 +123,19 @@ export function tempoReadTransport(url: string): { send: RpcReadLimiter; close()
   return { send, close: () => { if (!owner.closed) queue!.release(owner); } };
 }
 
+/** Explicit proxy configuration is also available on Linux; credentials never belong in this URL. */
+export function configuredHttpsProxy(env: NodeJS.ProcessEnv = process.env) {
+  if (env.AGENTFUEL_HTTPS_PROXY === undefined) return undefined;
+  let url: URL; try { url = new URL(env.AGENTFUEL_HTTPS_PROXY); } catch { throw new Error("CONFIGURED_HTTPS_PROXY_INVALID"); }
+  if (url.protocol !== "http:" || !url.hostname || url.port === "0" || url.username || url.password || url.pathname !== "/" || url.search || url.hash) throw new Error("CONFIGURED_HTTPS_PROXY_INVALID");
+  return url.origin;
+}
+export function defaultUpstreamTransport(platform: NodeJS.Platform = process.platform): RpcTransport {
+  return platform === "darwin" ? "system-https-proxy" : "direct";
+}
 export async function systemHttpsProxy() {
+  const configured = configuredHttpsProxy(); if (configured) return configured;
+  if (process.platform !== "darwin") throw new Error("SYSTEM_HTTPS_PROXY_UNAVAILABLE");
   const { stdout } = await promisify(execFile)("/usr/sbin/scutil", ["--proxy"], { timeout: 3000, env: { PATH: "/usr/bin:/bin", NODE_ENV: process.env.NODE_ENV ?? "production" } });
   const setting = (name: string) => stdout.match(new RegExp(`\\b${name}\\s*:\\s*([^\\s}]+)`))?.[1];
   const host = setting("HTTPSProxy"), port = setting("HTTPSPort");

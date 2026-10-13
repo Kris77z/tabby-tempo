@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import { chmod, mkdir, open, readFile, realpath, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { proxyUpstreamFetch, systemHttpsProxy } from "./demo-rpc.js";
+import { defaultUpstreamTransport, proxyUpstreamFetch, systemHttpsProxy } from "./demo-rpc.js";
 import { loadProbeUpstream } from "./verify-live-tiers.js";
 import { startMagpie } from "./magpie-gateway.js";
 import { journalDiagnostic } from "./demo-common.js";
@@ -19,7 +19,7 @@ export function savedGatewayCounters(raw: string) {
 }
 export async function startLocalModelGateway(options: { config: string; binary: string; directory: string; port?: number; bridgePort?: number; transport?: "direct" | "system-https-proxy" }) {
   const upstream = await loadProbeUpstream(resolve(options.config));
-  const transportKind = options.transport ?? "system-https-proxy";
+  const transportKind = options.transport ?? defaultUpstreamTransport();
   if (!["direct", "system-https-proxy"].includes(transportKind)) throw new Error("INVALID_GATEWAY_TRANSPORT");
   const transport = transportKind === "direct" ? { fetch: ((input: any, init: any) => fetch(input, { ...init, redirect: "error",
     signal: AbortSignal.any([init.signal, AbortSignal.timeout(120000)]) })) as typeof fetch, close() {} } : proxyUpstreamFetch(await systemHttpsProxy(), 120000);

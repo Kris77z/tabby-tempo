@@ -1,7 +1,7 @@
 {
   "chainId": "42431",
   "network": "Tempo Moderato Testnet",
-  "rpcUrl": "https://rpc.testnet.tempo.xyz",
+  "rpcUrl": "https://rpc.moderato.tempo.xyz",
   "explorerUrl": "https://explore.testnet.tempo.xyz",
   "deploymentBlock": 0,
   "underwriterUrl": "http://127.0.0.1:8787",

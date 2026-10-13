@@ -29,7 +29,7 @@ import { loadHostedDaemonConfig } from "./hosted-agents.js";
 import { readSecret, type ContractAddresses } from "./demo-monad-config.js";
 import { TEMPO_IDENTITY, TEMPO_REPUTATION, TEMPO_PATH_USD, tempoPreflight } from "./tempo-config.js";
 import { checkVerifierKey } from "./demo-monad.js";
-import { chainRpcProvider, readRpcUrlFile, type RpcTransport } from "./demo-rpc.js";
+import { chainRpcProvider, defaultUpstreamTransport, readRpcUrlFile, type RpcTransport } from "./demo-rpc.js";
 import { prepareArenaIpc, backupAndRemoveArenaIpc } from "./demo-arena-state.js";
 
 /** Operator-prepared, existing deployment and task catalog. This script never bootstraps chain state. */
@@ -55,15 +55,39 @@ interface RuntimeJournal {
   originalBootstrap?: TempoHostedBootstrap; originalCatalog?: WorkflowConfig["tasks"];
   testSponsorship?: RuntimeSponsorship;
   effectiveBinding?: string; migrations?: CatalogMigration[];
+  publicOriginMigration?: { version: 1; id: string; fromOrigin: string; toOrigin: string; previousBinding: string; publicBinding: string; auditFile: string };
 }
 interface GatewayReady { url: string; endpoint: string; keyFile: string; models: GatewayModel[] }
 const tempoProvider = (url: string, transport: RpcTransport) => chainRpcProvider(url, 42431n, transport);
 const fail = (code: string): never => { throw new Error(code); };
 const safe = (error: unknown) => /^[A-Z][A-Z0-9_]{1,100}$/.test((error as Error)?.message) ? (error as Error).message : "TEMPO_HOSTED_RUNTIME_FAILED";
+function reportRuntimeError(error: unknown) {
+  console.error(safe(error));
+  if (safe(error) !== "TEMPO_HOSTED_RUNTIME_FAILED") return;
+  const value = error as Error & { code?: unknown; cause?: { code?: unknown } };
+  const code = [value?.code, value?.cause?.code].find(item => typeof item === "string" && /^[A-Z_0-9]{1,64}$/.test(item));
+  const prefix = value?.message?.split(":")[0];
+  const source = value?.stack?.match(/(?:scripts|services|packages)\/[A-Za-z0-9_./-]+\.[cm]?ts:\d+:\d+/)?.[0];
+  console.error(JSON.stringify({ diagnostic: "TEMPO_RUNTIME_START", ...(code ? { code } : {}),
+    ...(prefix && /^DOCKER_(?:UNAVAILABLE|IMAGE_MISSING)$/.test(prefix) ? { reason: prefix } : {}), ...(source ? { source } : {}) }));
+}
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
-function runtimeBinding(bootstrap: TempoHostedBootstrap, gateway: GatewayReady, catalog: GatewayModel[]) {
+function runtimeBinding(bootstrap: TempoHostedBootstrap, gateway: Pick<GatewayReady, "url" | "endpoint" | "keyFile">, catalog: GatewayModel[]) {
   const { dashboardAgents: _dashboardAgents, ...executionBootstrap } = bootstrap;
   return hash({ bootstrap: executionBootstrap, gateway: { url: gateway.url, endpoint: gateway.endpoint, keyFile: gateway.keyFile }, catalog });
+}
+export { runtimeBinding as tempoRuntimeBinding };
+export function tempoPublicOrigin(value: unknown): string {
+  if (typeof value !== "string") return fail("TEMPO_PUBLIC_ORIGIN_INVALID");
+  let url: URL; try { url = new URL(value); } catch { return fail("TEMPO_PUBLIC_ORIGIN_INVALID"); }
+  if (url.protocol !== "https:" || url.origin !== value || url.username || url.password || url.pathname !== "/" || url.search || url.hash
+    || !/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/.test(url.hostname) || url.hostname.endsWith(".localhost")) fail("TEMPO_PUBLIC_ORIGIN_INVALID");
+  return value;
+}
+export function tempoFrontendOriginAllowed(value: unknown, publicOrigin = process.env.TEMPO_PUBLIC_ORIGIN): boolean {
+  if (typeof value === "string" && /^http:\/\/127\.0\.0\.1:(?:[0-9]{4,5})$/.test(value)) return true;
+  if (!publicOrigin || value !== publicOrigin) return false;
+  try { return tempoPublicOrigin(publicOrigin) === value; } catch { return false; }
 }
 const address = (value: string) => { const result = getAddress(value); if (result === ZeroAddress) fail("TEMPO_ADDRESS_INVALID"); return result; };
 const same = (a: string, b: string) => address(a) === address(b);
@@ -96,7 +120,7 @@ export async function loadTempoHostedBootstrap(file: string) {
   const b = JSON.parse(await readFile(absolute(file), "utf8")) as TempoHostedBootstrap;
   if (b.version !== 1 || b.chainId !== "42431" || !Number.isSafeInteger(b.deploymentBlock) || b.deploymentBlock < 0
     || b.asset?.symbol !== "PathUSD" || b.asset.decimals !== 6 || !same(b.asset.address, TEMPO_PATH_USD) || !same(b.identity, TEMPO_IDENTITY) || !same(b.reputation, TEMPO_REPUTATION)
-    || !["direct", "system-https-proxy"].includes(b.rpcTransport) || !/^http:\/\/127\.0\.0\.1:(?:[0-9]{4,5})$/.test(b.frontendOrigin) || !Number.isSafeInteger(b.hostedPort) || b.hostedPort < 1024 || b.hostedPort > 65535
+    || !["direct", "system-https-proxy"].includes(b.rpcTransport) || !tempoFrontendOriginAllowed(b.frontendOrigin) || !Number.isSafeInteger(b.hostedPort) || b.hostedPort < 1024 || b.hostedPort > 65535
     || !/^[1-9][0-9]*$/.test(b.maxFeePerGas)) fail("TEMPO_BOOTSTRAP_INVALID");
   for (const value of Object.values(b.contracts)) address(value);
   if (Object.keys(b.contracts).sort().join(",") !== "account,adapter,escrow,manager" || new Set(Object.values(b.contracts).map(address)).size !== 4) fail("TEMPO_CONTRACTS_INVALID");
@@ -290,6 +314,11 @@ export async function startTempoHostedRuntime(directory: string, bootstrapFile: 
     state = await store.read();
     if (state?.migrations?.some(entry => entry.status === "Intent")) fail("TEMPO_MIGRATION_RECOVERY_REQUIRED");
     if (state && (state.effectiveBinding ?? state.binding) !== binding) fail("TEMPO_RUNTIME_BINDING_CHANGED");
+    if (state?.publicOriginMigration) {
+      const audit = await optionalJson<{ status: string; id: string; origin: string }>(state.publicOriginMigration.auditFile);
+      if (audit?.status !== "Applied" || audit.id !== state.publicOriginMigration.id || audit.origin !== b.frontendOrigin
+        || state.publicOriginMigration.toOrigin !== b.frontendOrigin) fail("TEMPO_PUBLIC_ORIGIN_MIGRATION_INCOMPLETE");
+    }
     if (state && !recover) fail("TEMPO_RUNTIME_RECOVER_REQUIRED");
     if (!state) {
       if (check.tasks.some(task => task.status !== "1" || task.deadlineMs <= Date.now())) fail("TEMPO_OPEN_TASKS_REQUIRED");
@@ -357,7 +386,7 @@ export async function startTempoHostedRuntime(directory: string, bootstrapFile: 
       rpcTransport: b.rpcTransport, publicRpcUrl: b.publicRpcUrl, walletDirectory, arenaUrl: url("arena"), underwriterUrl: url("underwriter"), models: taskModels,
       timeoutMs: 120000, pollTimeoutMs: 240000, metered: { relayUrl: `${url("allowance")}/v1/chat`, payTo: b.payTo, priceRaw: "120000", creditsRaw: "200000", catalog, keyFile: gateway.keyFile } });
     const gameConfigFile = await put("game.json", { version: 1, chainId: "42431", identity: b.identity, account: b.contracts.account, token: b.asset.address,
-      rpcUrlFile: b.rpcUrlFile, rpcTransport: b.rpcTransport, upstreamTransport: "system-https-proxy", walletDirectory, sponsorKeyFile: b.roleKeyFiles.sponsor,
+      rpcUrlFile: b.rpcUrlFile, rpcTransport: b.rpcTransport, upstreamTransport: defaultUpstreamTransport(), walletDirectory, sponsorKeyFile: b.roleKeyFiles.sponsor,
       opponent: { binding: b.opponentBinding, keyFile: b.roleKeyFiles.opponent, modelId: "kimi-k2.6", strategy: "balanced" },
       models: models.map(id => ({ id, baseUrl: "https://api.moonshot.cn/v1", keyFile: b.vendorKeyFile })), creditsDirectory: join(directory, "credits") });
     const hostedConfigFile = await put("hosted.json", { version: 1, port: b.hostedPort,
@@ -394,6 +423,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     startTempoHostedRuntime(resolve(first), resolve(second), rest.includes("--recover")).then(runtime => {
       console.log(JSON.stringify(runtime.ready)); const stop = () => { void runtime.close().then(() => process.exit(0)).catch(() => process.exit(1)); };
       process.once("SIGINT", stop); process.once("SIGTERM", stop);
-    }).catch(error => { console.error(safe(error)); process.exitCode = 1; });
+    }).catch(error => { reportRuntimeError(error); process.exitCode = 1; });
   else { console.error("Usage: tempo-hosted-runtime.ts --check BOOTSTRAP | start DIRECTORY BOOTSTRAP [--recover] | append-tasks DIRECTORY BOOTSTRAP ADDITIONAL_TASKS_JSON"); process.exitCode = 1; }
 }

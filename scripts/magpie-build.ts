@@ -11,7 +11,8 @@ export const magpieLock = JSON.parse(await readFile(new URL("./magpie.lock.json"
 };
 export const sha256 = (value: Buffer | string) => createHash("sha256").update(value).digest("hex");
 function command(program: string, args: string[], cwd: string, input?: string) {
-  const result = spawnSync(program, args, { cwd, input, encoding: "utf8", env: { ...process.env, CGO_ENABLED: "0" }, stdio: input === undefined ? "inherit" : "pipe" });
+  const result = spawnSync(program, args, { cwd, input, encoding: "utf8", env: { ...process.env, CGO_ENABLED: "0",
+    GOOS: process.platform, GOARCH: process.arch === "x64" ? "amd64" : process.arch }, stdio: input === undefined ? "inherit" : "pipe" });
   if (result.error || result.status !== 0) throw new Error(`${program} failed (${result.status}): ${result.error?.message || result.stderr || "see command output"}`);
   return result.stdout;
 }

@@ -6,6 +6,7 @@ import { dirname, join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
 import { magpieLock, sha256 } from "./magpie-build.js";
+import { startLinuxMagpie } from "./linux-magpie.js";
 
 export interface MagpieProvider { id: string; model: string; baseUrl: string; key: string }
 export async function verifyMagpieBinary(binaryPath: string, officialBaseline = false) {
@@ -29,8 +30,7 @@ export async function stopMagpie(child: ChildProcess) {
 }
 
 export async function startMagpie(options: { binary: string; stateDirectory: string; port: number; providers: MagpieProvider[]; officialBaseline?: boolean }) {
-  // This local spike uses macOS sandbox-exec so Magpie cannot discover real agent credentials or make external requests.
-  if (process.platform !== "darwin") throw new Error("The verified local launcher currently requires macOS sandbox-exec; container/Linux isolation is not verified");
+  if (!["darwin", "linux"].includes(process.platform)) throw new Error("Magpie requires the macOS or Linux isolated launcher");
   if (!Number.isInteger(options.port) || options.port < 1 || options.port > 65535 || !options.providers.length) throw new Error("Use a local port and at least one explicit provider");
   const provenance = await verifyMagpieBinary(options.binary, options.officialBaseline);
   const state = resolve(options.stateDirectory); const config = join(state, "config", "magpie");
@@ -57,7 +57,10 @@ export async function startMagpie(options: { binary: string; stateDirectory: str
     MAGPIE_NO_STATS: "1", DO_NOT_TRACK: "1" };
   // Preserve the system's home meaning; access to it is denied by the sandbox above.
   if (process.env.HOME) env.HOME = process.env.HOME;
-  const child = spawn("/usr/bin/sandbox-exec", ["-p", profile, provenance.binary, "serve"], { env, cwd: state, stdio: ["ignore", "pipe", "pipe"] });
+  const linux = process.platform === "linux" ? await startLinuxMagpie({ binary: provenance.binary, state, port: options.port,
+    peers: options.providers.map(provider => Number(new URL(provider.baseUrl).port || "80")), env }) : undefined;
+  const child = linux?.child ?? spawn("/usr/bin/sandbox-exec", ["-p", profile, provenance.binary, "serve"], { env, cwd: state, stdio: ["ignore", "pipe", "pipe"] });
+  const close = async () => { try { await stopMagpie(child); } finally { await linux?.close(); } };
   let output = ""; let failure = "";
   child.stdout!.on("data", chunk => { output = (output + String(chunk)).slice(-16384); });
   child.stderr!.on("data", chunk => { output = (output + String(chunk)).slice(-16384); });
@@ -74,13 +77,13 @@ export async function startMagpie(options: { binary: string; stateDirectory: str
           const catalog = await catalogResponse.json() as { data: { id: string }[] };
           const expected = providers.map(p => `${p.id}/${p.models[0]}`).sort();
           if (!catalogResponse.ok || JSON.stringify(catalog.data.map(m => m.id).sort()) !== JSON.stringify(expected)) throw new Error("Magpie catalog does not contain exactly the explicit local providers");
-          return { child, url, health, catalog, provenance, log: () => output, close: () => stopMagpie(child) };
+          return { child, url, health, catalog, provenance, log: () => output, close };
         }
       } catch (error) { if (error instanceof Error && error.message.includes("catalog does not")) throw error; }
       await delay(50);
     }
     throw new Error(`Magpie startup/health probe exceeded 7.5 seconds: ${output}`);
-  } catch (error) { await stopMagpie(child); throw error; }
+  } catch (error) { await close(); throw error; }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

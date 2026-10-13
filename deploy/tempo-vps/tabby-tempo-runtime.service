@@ -1,0 +1,31 @@
+[Unit]
+Upholds=tabby-tempo-frontend.service
+Description=Tabby Tempo hosted agents and independent Arena
+After=network-online.target docker.service tabby-tempo-gateway.service
+Wants=network-online.target
+Requires=docker.service tabby-tempo-gateway.service
+StartLimitIntervalSec=600
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=tabby-tempo
+Group=tabby-tempo
+SupplementaryGroups=docker
+WorkingDirectory=/Users/jungle/Desktop/dev/agentfuel-tempo
+EnvironmentFile=/etc/tabby-tempo/runtime.env
+ExecStart=/opt/tabby-tempo/node/bin/node --import tsx scripts/tempo-hosted-runtime.ts start /Users/jungle/Desktop/dev/agentfuel-tempo/.data/tempo-20261012/runtime /Users/jungle/Desktop/dev/agentfuel-tempo/.data/tempo-20261012/operator/bootstrap.json --recover
+ExecStartPost=/bin/bash /Users/jungle/Desktop/dev/agentfuel-tempo/deploy/tempo-vps/wait-ready.sh runtime
+UMask=0077
+# Docker needs to see the host /tmp path used in submission bind mounts.
+PrivateTmp=false
+NoNewPrivileges=true
+TimeoutStartSec=600
+TimeoutStopSec=90
+KillMode=mixed
+Restart=on-failure
+RestartSec=15
+LimitNOFILE=16384
+
+[Install]
+WantedBy=multi-user.target

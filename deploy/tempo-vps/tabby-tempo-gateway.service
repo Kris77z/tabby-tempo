@@ -1,0 +1,29 @@
+[Unit]
+Upholds=tabby-tempo-runtime.service
+Description=Tabby Tempo isolated model gateway
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=tabby-tempo
+Group=tabby-tempo
+WorkingDirectory=/Users/jungle/Desktop/dev/agentfuel-tempo
+EnvironmentFile=/etc/tabby-tempo/gateway.env
+ExecStart=/opt/tabby-tempo/node/bin/node --import tsx scripts/local-model-gateway.ts --config /Users/jungle/Desktop/dev/agentfuel-tempo/.data/tempo-20261012/operator/model-upstream.json --binary /Users/jungle/Desktop/dev/agentfuel-tempo/.data/magpie-linux-build/magpie --directory /Users/jungle/Desktop/dev/agentfuel-tempo/.data/tempo-20261012/gateway --port 3436 --bridge-port 3437 --transport direct
+ExecStartPost=/bin/bash /Users/jungle/Desktop/dev/agentfuel-tempo/deploy/tempo-vps/wait-ready.sh gateway
+UMask=0077
+PrivateTmp=true
+# bwrap needs user/net/mount/ipc/pid/uts namespaces. Do not add RestrictNamespaces,
+# PrivateNetwork, or an untested NoNewPrivileges setting to this service.
+TimeoutStartSec=330
+TimeoutStopSec=30
+KillMode=mixed
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target

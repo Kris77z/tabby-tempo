@@ -191,6 +191,45 @@ test("Next loopback URL normalization preserves exact browser Host and Origin ch
   assert.equal(calls, 1);
 });
 
+test("explicit TLS proxy permits the fixed public HTTPS origin while rejecting mismatched forwarded authority", async () => {
+  const publicOrigin = "https://tempo.tabbyai.xyz";
+  const proxyHeaders = { host: "tempo.tabbyai.xyz", origin: publicOrigin, "content-type": "application/json",
+    "x-forwarded-host": "tempo.tabbyai.xyz", "x-forwarded-proto": "https", "sec-fetch-site": "same-origin" };
+  const proxied = (path = "/auth/challenge", headers: Record<string, string> = proxyHeaders, url = "https://127.0.0.1:3028") =>
+    new NextRequest(`${url}/api/hosted${path}`, { method: "POST", headers,
+      body: JSON.stringify(path === "/auth/login" ? { challengeId: "challenge", signature: "signature" } : { wallet: "wallet" }) });
+  let calls = 0;
+  const expiresAt = Date.now() + 3600000;
+  const fetcher = (async (url, init) => {
+    calls++; assert.equal(new Headers(init?.headers).get("origin"), upstreamUrl);
+    return String(url).endsWith("/auth/login") ? Response.json({ token, expiresAt })
+      : Response.json({ id: "challenge", message: "message", expiresAt });
+  }) as typeof fetch;
+  const proxyConfig = { ...config, origin: publicOrigin, trustProxy: true, fetcher };
+  assert.equal(new URL(proxied().url).hostname, "localhost");
+  assert.equal((await hostedAgentsRequest(proxied(), proxyConfig)).status, 200);
+  const login = await hostedAgentsRequest(proxied("/auth/login"), proxyConfig);
+  assert.equal(login.status, 200); assert.match(login.headers.get("set-cookie")!, /HttpOnly; SameSite=Strict.*; Secure/);
+  const anonymous = new NextRequest("https://127.0.0.1:3028/api/hosted/agents", { headers: proxyHeaders });
+  assert.equal((await hostedAgentsRequest(anonymous, proxyConfig)).status, 401);
+  assert.equal((await hostedAgentsRequest(proxied(), { ...proxyConfig, trustProxy: false })).status, 403);
+  for (const headers of [
+    { ...proxyHeaders, "x-forwarded-host": "" },
+    { ...proxyHeaders, "x-forwarded-host": "evil.example" },
+    { ...proxyHeaders, "x-forwarded-host": "tempo.tabbyai.xyz, evil.example" },
+    { ...proxyHeaders, "x-forwarded-proto": "http" },
+    { ...proxyHeaders, "x-forwarded-proto": "https, http" },
+    { ...proxyHeaders, host: "evil.example" },
+    { ...proxyHeaders, origin: "https://evil.example" },
+    { ...proxyHeaders, "sec-fetch-site": "cross-site" },
+  ]) assert.equal((await hostedAgentsRequest(proxied("/auth/challenge", headers), proxyConfig)).status, 403);
+  assert.equal((await hostedAgentsRequest(proxied("/auth/challenge", proxyHeaders, "https://evil.example:3028"), proxyConfig)).status, 403);
+  assert.equal((await hostedAgentsRequest(proxied("/auth/challenge", proxyHeaders, "http://127.0.0.1:3028"), proxyConfig)).status, 403);
+  const missingOrigin = proxied(); missingOrigin.headers.delete("origin");
+  assert.equal((await hostedAgentsRequest(missingOrigin, proxyConfig)).status, 403);
+  assert.equal(calls, 2);
+});
+
 test("goal snapshots project nested artifacts and cancellation flags without private executor data", async () => {
   const mission = { stage: "completed", phases: [{ name: "Write", taskType: "writer", goal: "Write the plan", output: "A useful plan.", keyFile: "PRIVATE_SENTINEL" }], answer: "A useful plan.",
     review: { passed: true, summary: "Requirements checked", checks: ["Three concrete steps"], modelKey: "PRIVATE_SENTINEL" },

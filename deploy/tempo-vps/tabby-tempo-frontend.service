@@ -1,0 +1,27 @@
+[Unit]
+Description=Tabby Tempo Next.js frontend
+After=network-online.target tabby-tempo-runtime.service
+Requires=tabby-tempo-runtime.service
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=tabby-tempo
+Group=tabby-tempo
+WorkingDirectory=/Users/jungle/Desktop/dev/agentfuel-tempo/frontend
+EnvironmentFile=/etc/tabby-tempo/frontend.env
+ExecStart=/opt/tabby-tempo/node/bin/node ../node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3028
+ExecStartPost=/bin/bash /Users/jungle/Desktop/dev/agentfuel-tempo/deploy/tempo-vps/wait-ready.sh frontend
+UMask=0077
+PrivateTmp=true
+NoNewPrivileges=true
+TimeoutStartSec=330
+TimeoutStopSec=30
+KillMode=mixed
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target

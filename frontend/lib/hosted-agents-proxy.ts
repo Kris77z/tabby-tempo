@@ -55,12 +55,19 @@ function configuredOrigin(value: string | undefined) {
   if (url.origin !== value || url.username || url.password || !(url.protocol === "https:" || url.protocol === "http:" && ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname))) fail("HOSTED_CONFIG_INVALID", 503);
   return url;
 }
-function authorize(request: Request, expected: URL) {
+function authorize(request: Request, expected: URL, trustProxy = false) {
   const url = new URL(request.url), host = request.headers.get("host") ?? url.host, origin = request.headers.get("origin");
   // NextURL normalizes loopback IPs to localhost; Host and Origin retain the browser's exact authority.
   const normalizedLoopback = request.headers.get("host") === expected.host && ["127.0.0.1", "[::1]"].includes(expected.hostname)
     && url.hostname === "localhost" && url.port === expected.port && url.protocol === expected.protocol;
-  if (host !== expected.host || (url.host !== expected.host && !normalizedLoopback) || !["http:", "https:"].includes(url.protocol) || origin !== null && origin !== expected.origin || request.method !== "GET" && origin !== expected.origin || ["cross-site", "same-site"].includes(request.headers.get("sec-fetch-site") ?? "")) fail("HOSTED_INVALID_ORIGIN", 403);
+  // next start binds to loopback and constructs its internal URL from that
+  // address. A configured local TLS proxy supplies the fixed public authority.
+  const trustedLoopbackProxy = trustProxy && expected.protocol === "https:"
+    && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
+    && request.headers.get("host") === expected.host
+    && request.headers.get("x-forwarded-host") === expected.host
+    && request.headers.get("x-forwarded-proto") === "https";
+  if (host !== expected.host || (url.host !== expected.host && !normalizedLoopback && !trustedLoopbackProxy) || url.protocol !== expected.protocol || origin !== null && origin !== expected.origin || request.method !== "GET" && origin !== expected.origin || ["cross-site", "same-site"].includes(request.headers.get("sec-fetch-site") ?? "")) fail("HOSTED_INVALID_ORIGIN", 403);
   if (["authorization", "x-owner", "x-wallet", "x-agent-owner"].some(key => request.headers.has(key))) fail("HOSTED_BROWSER_CREDENTIAL_REJECTED", 403);
 }
 function session(request: Request) {
@@ -72,10 +79,10 @@ function cookie(token: string, expected: URL, seconds: number) {
   return `${COOKIE}=${token}; Path=/api/hosted; HttpOnly; SameSite=Strict; Max-Age=${seconds}${expected.protocol === "https:" ? "; Secure" : ""}`;
 }
 /** Only the Node route calls this bridge. Browser input cannot choose an upstream or owner. */
-export async function hostedAgentsRequest(request: Request, config: { upstreamUrl?: string; origin?: string; fetcher?: typeof fetch }) {
+export async function hostedAgentsRequest(request: Request, config: { upstreamUrl?: string; origin?: string; trustProxy?: boolean; fetcher?: typeof fetch }) {
   let expected: URL | undefined, path = "";
   try {
-    expected = configuredOrigin(config.origin); authorize(request, expected);
+    expected = configuredOrigin(config.origin); authorize(request, expected, config.trustProxy);
     if (!config.upstreamUrl) fail("HOSTED_NOT_CONFIGURED", 503);
     let base: URL; try { base = new URL(config.upstreamUrl); } catch { fail("HOSTED_CONFIG_INVALID", 503); }
     if (base.protocol !== "http:" || base.hostname !== "127.0.0.1" || base.username || base.password || base.pathname !== "/" || base.search || base.hash) fail("HOSTED_CONFIG_INVALID", 503);
