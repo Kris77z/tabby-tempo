@@ -4,6 +4,7 @@ export const TEMPO_CHAIN_ID = 42431n;
 export const TEMPO_RPC_URL = "https://rpc.moderato.tempo.xyz";
 export const TEMPO_EXPLORER_URL = "https://explore.testnet.tempo.xyz";
 export const TEMPO_PATH_USD = "0x20c0000000000000000000000000000000000000";
+export const TEMPO_FEE_MANAGER = "0xfeec000000000000000000000000000000000000";
 export const TEMPO_IDENTITY = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 export const TEMPO_REPUTATION = "0x8004B663056A597Dffe9eCcC1965A193B7388713";
 export const TEMPO_ASSET = { address: TEMPO_PATH_USD, symbol: "PathUSD" as const, decimals: 6 as const };

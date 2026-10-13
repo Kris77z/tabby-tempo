@@ -1,0 +1,11 @@
+{
+  "passed": 20,
+  "failed": 0,
+  "logSha256": "15f95c8c6d3a863b25d750781f5c02a26471ff5a6d765abc1f13c6778541280c",
+  "files": [
+    "services/hosted-agents/test/service.test.ts",
+    "services/hosted-agents/test/test-sponsorship.test.ts",
+    "services/hosted-agents/test/goals-reconciliation.test.ts"
+  ],
+  "scope": "controlled local regression, no live model or Tempo business operations"
+}

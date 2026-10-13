@@ -82,7 +82,7 @@ test("fixed paths use only cookie bearer and public projections; upstream errors
 });
 test("JSON input/output is bounded and redirects are refused without retries", async () => {
   let calls = 0;
-  const fetcher = (async (_url, options) => { calls++; assert.equal(options?.redirect, "error"); assert.ok(options?.signal); return new Response("x".repeat(1048577)); }) as typeof fetch;
+  const fetcher = (async (_url, options) => { calls++; assert.equal(options?.redirect, "error"); assert.ok(options?.signal); const chunk = new Uint8Array(1024 * 1024); let count = 0; return new Response(new ReadableStream({ pull(controller) { if (count++ < 65) controller.enqueue(chunk); else controller.close(); } })); }) as typeof fetch;
   const large = await hostedAgentsRequest(request("/agents", "POST", { ...settings, name: "x".repeat(8192) }), { ...config, fetcher });
   assert.equal(large.status, 413); assert.equal(calls, 0);
   const output = await hostedAgentsRequest(request("/agents"), { ...config, fetcher }); assert.equal(output.status, 413); assert.equal(calls, 1);
@@ -189,4 +189,30 @@ test("Next loopback URL normalization preserves exact browser Host and Origin ch
     assert.equal(response.status, 403, JSON.stringify({ url, headers }));
   }
   assert.equal(calls, 1);
+});
+
+test("goal snapshots project nested artifacts and cancellation flags without private executor data", async () => {
+  const mission = { stage: "completed", phases: [{ name: "Write", taskType: "writer", goal: "Write the plan", output: "A useful plan.", keyFile: "PRIVATE_SENTINEL" }], answer: "A useful plan.",
+    review: { passed: true, summary: "Requirements checked", checks: ["Three concrete steps"], modelKey: "PRIVATE_SENTINEL" },
+    calls: [{ stage: "phase-0", model: "kimi-k2.6", chargedRaw: "10000", promptTokens: 50, completionTokens: 20, rawTransaction: "PRIVATE_SENTINEL" }], privateKey: "PRIVATE_SENTINEL" };
+  const run = { requestId: "run-1", agentId: "agent-1", action: "goal", goal: "帮我完成一个计划", stopRequested: true, mission, result: { mission, chargedRaw: "10000", phase: "Completed", walletKey: "PRIVATE_SENTINEL" } };
+  const response = await hostedAgentsRequest(request("/agents"), { ...config, fetcher: (async () => Response.json({ agents: [{ id: "agent-1", configurationRequired: true }], runs: [run], models: [],
+    capabilities: { goals: { maxPhases: 3, models: [{ id: "kimi-k2.6", pricePerCallRaw: "10000", relayUrl: "PRIVATE_SENTINEL" }], provider: "PRIVATE_SENTINEL" } } })) as typeof fetch });
+  assert.equal(response.status, 200); const text = await response.text(), body = JSON.parse(text);
+  assert.doesNotMatch(text, /PRIVATE_SENTINEL|rawTransaction|privateKey|keyFile|relayUrl|walletKey|modelKey/);
+  assert.equal(body.agents[0].configurationRequired, true); assert.equal(body.runs[0].goal, run.goal); assert.equal(body.runs[0].stopRequested, true);
+  assert.equal(body.runs[0].mission.phases[0].output, "A useful plan."); assert.equal(body.runs[0].result.mission.review.passed, true);
+  assert.deepEqual(body.capabilities.goals, { maxPhases: 3, models: [{ id: "kimi-k2.6", pricePerCallRaw: "10000" }] });
+  const cancelled = await hostedAgentsRequest(request("/agents/agent-1/cancel", "POST", { requestId: "run-1" }), { ...config, fetcher: (async (url, init) => {
+    assert.equal(String(url), `${upstreamUrl}/agents/agent-1/cancel`); assert.deepEqual(JSON.parse(init!.body as string), { requestId: "run-1" });
+    assert.equal(new Headers(init?.headers).get("authorization"), `Bearer ${token}`); return Response.json(run, { status: 202 });
+  }) as typeof fetch });
+  assert.equal(cancelled.status, 202); const cancelledBody = await cancelled.json(); assert.equal(cancelledBody.stopRequested, true); assert.equal(cancelledBody.goal, run.goal);
+});
+
+test("goal history larger than one MiB remains readable within the bounded artifact window", async () => {
+  const mission = { stage: "completed", phases: [{ name: "draft", taskType: "writer", goal: "Write a report", output: "文".repeat(20000) }], answer: "文".repeat(20000), calls: [] };
+  const runs = Array.from({length: 12}, (_, i) => ({requestId: `goal-${i}`, agentId: "agent-1", action: "goal", goal: "Write a report", mission }));
+  const response = await hostedAgentsRequest(request("/agents"), { ...config, fetcher: (async () => Response.json({ agents: [], models: [], runs })) as typeof fetch });
+  assert.equal(response.status, 200); assert.equal((await response.json()).runs.length, 12);
 });

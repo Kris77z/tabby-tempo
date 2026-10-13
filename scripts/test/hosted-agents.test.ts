@@ -51,6 +51,33 @@ test("CLI check validates actual adapters without any RPC, wallet or runtime cre
     assert.equal(f.calls(), 0);
   } finally { await f.close(); }
 });
+test("runtime goal routes preserve both model prices and reject invalid relay configuration offline", async () => {
+  const f = await fixture();
+  try {
+    const models = ["kimi-k2.6", "kimi-k3"];
+    await f.put("task.json", { ...f.task, models: models.map(id => ({ ...f.task.models[0], id })) });
+    await f.put("game.json", { ...f.game, models: models.map(id => ({ ...f.game.models[0], id })) });
+    const goals = { durationMs: 600000, models: models.map((id, index) => ({ id, relayUrl: `http://127.0.0.1:${9100 + index}/v1/chat`, provider: address,
+      priceRaw: index ? "20000" : "10000", service: "tabby/mission", model: id, physicalModel: `${index ? "strong" : "cheap"}/${id}`, responseModel: id })) };
+    const config = { ...f.config, hosted: { ...f.config.hosted, models: models.map(id => ({ id, label: id })) }, goals };
+    await f.put("hosted.json", config);
+    const loaded = await loadHostedDaemonConfig(f.path);
+    assert.deepEqual(loaded.config.goals, goals);
+    assert.deepEqual(loaded.config.goals?.models.map(model => model.priceRaw), ["10000", "20000"]);
+    const output = await f.run(); assert.deepEqual(JSON.parse(output.stdout), { service: "hosted-agents", checked: true });
+    for (const invalid of [
+      { ...goals, models: [{ ...goals.models[0], relayUrl: "https://external.example/v1/chat" }, goals.models[1]] },
+      { ...goals, models: [{ ...goals.models[0], priceRaw: "0" }, goals.models[1]] },
+      { ...goals, models: [goals.models[0], goals.models[0]] },
+      { ...goals, models: [goals.models[0]] },
+    ]) {
+      await f.put("hosted.json", { ...config, goals: invalid });
+      await assert.rejects(loadHostedDaemonConfig(f.path));
+    }
+    assert.equal(f.calls(), 0);
+    await assert.rejects(lstat(f.config.hosted.directory), { code: "ENOENT" });
+  } finally { await f.close(); }
+});
 test("check rejects mismatched model/domain/RPC and insecure files without side effects", async () => {
   const f = await fixture();
   try {

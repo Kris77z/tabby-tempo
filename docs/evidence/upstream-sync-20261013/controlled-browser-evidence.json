@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "scope": "controlled local browser, not real Tempo goal evidence",
+  "buildId": "u0Auuv8spKQbm3C5YTRin",
+  "stats": {
+    "startTime": "2026-10-13T09:12:31.613Z",
+    "duration": 151864.16499999998,
+    "expected": 98,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "groups": [
+    "hosted workspace/goals/settings/session races",
+    "finance reading/owner isolation/recovery",
+    "name-only onboarding and explicit configuration",
+    "Tempo PathUSD and transaction explorers",
+    "expired sponsorship and notification clickability"
+  ],
+  "viewportFamilies": [
+    "desktop",
+    "mobile"
+  ],
+  "businessChainWrites": 0,
+  "realModelCalls": 0
+}

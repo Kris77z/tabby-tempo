@@ -8,6 +8,31 @@ import { Wallet } from "ethers";
 import { HostedService } from "../src/service.js";
 import type { AgentSettings, HostedConfig, HostedExecution, HostedExecutor, HostedResult } from "../src/types.js";
 const settings: AgentSettings = { name: "Alice", modelId: "kimi-k2.6", strategy: "balanced", perRunBudgetRaw: "120000", totalBudgetRaw: "240000", allowCredit: true };
+test("name-only creation survives restart without spending authority; settings unlock execution and original creation remains idempotent", async t => {
+  const f = await fixture(t), who = Wallet.createRandom().address, requestId = randomUUID();
+  const created = await f.service.create(who, { name: " New Agent ", requestId });
+  await f.service.waitUntilIdle(); await f.restart();
+  const agent = (await f.service.snapshot(who)).agents[0];
+  assert.equal(agent.id, created.id); assert.equal(agent.name, "New Agent");
+  assert.equal(agent.status, "Ready"); assert.ok(agent.binding);
+  assert.equal(agent.configurationRequired, true); assert.equal(agent.modelId, "");
+  assert.equal(agent.perRunBudgetRaw, "0"); assert.equal(agent.totalBudgetRaw, "0"); assert.equal(agent.allowCredit, false);
+  for (const action of ["task", "metered-task", "autonomous", "game", "credits", "reward-task"] as const) {
+    await assert.rejects(f.service.command(who, agent.id, { action, requestId: randomUUID(), ...(action === "game" ? { rewardKind: "usdc" as const } : {}) }), /HOSTED_CONFIGURATION_REQUIRED/);
+  }
+  assert.equal(f.seen.length, 1);
+  await f.service.command(who, agent.id, { action: "deposit", amountRaw: "40000", requestId: randomUUID() }); await f.service.waitUntilIdle();
+  await assert.rejects(f.service.update(who, agent.id, { ...settings, modelId: "missing" }), /HOSTED_SETTINGS_INVALID/);
+  assert.equal((await f.service.snapshot(who)).agents[0].configurationRequired, true);
+  await f.service.update(who, agent.id, { ...settings, name: "Renamed", allowCredit: false });
+  await f.restart();
+  const replay = await f.service.create(who, { name: "New Agent", requestId });
+  assert.equal(replay.id, agent.id); assert.equal(replay.name, "Renamed"); assert.equal(replay.configurationRequired, false);
+  assert.equal(f.seen.length, 2);
+  await f.service.command(who, agent.id, { action: "task", requestId: randomUUID() }); await f.service.waitUntilIdle();
+  assert.equal((await f.service.snapshot(who)).agents[0].spentRaw, "100000");
+  await assert.rejects(f.service.create(who, { name: "Partial", allowCredit: true, requestId: randomUUID() } as any), /HOSTED_SETTINGS_INVALID/);
+});
 async function fixture(t: any, execute?: (input: HostedExecution) => Promise<HostedResult>) {
   const directory = await realpath(await mkdtemp(join(tmpdir(), "hosted-core-"))); let counter = 0;
   const seen: HostedExecution[] = [];
@@ -186,4 +211,81 @@ test("failed parser recovery requires trusted cached proof and rebooks spending 
   assert.equal(pending.runs.find(run => run.requestId === command.requestId)?.terminalRecovery?.previousResult.reason, "AUTONOMY_INVALID_DECISION");
   release(); await f.service.waitUntilIdle(); await f.restart(); await f.service.command(who, agent.id, command);
   const result = await f.service.snapshot(who); assert.equal(result.agents[0].spentRaw, "130000"); assert.equal(result.agents[0].reservedRaw, "0"); assert.equal(calls, 2);
+});
+
+
+test("goal admission binds exact text and owner; progress survives recovery and cancellation releases only reconciled budget", async t => {
+  let goalCalls = 0;
+  const mission = { stage: "executing" as const, phases: [{ name: "分析", taskType: "analyst", goal: "比较方案", output: "已完成对比" }], calls: [{ stage: "plan", model: "kimi-k2.6", chargedRaw: "10000", promptTokens: 32, completionTokens: 20 }] };
+  const f = await fixture(t, async input => {
+    if (input.run.action === "provision") return { phase: "Ready", terminal: true, success: true, chargedRaw: "0", binding: { chainId: "31337", agentId: "1", wallet: input.agent.wallet } };
+    goalCalls++; assert.equal(input.run.action, "goal"); assert.equal(typeof input.progress, "function");
+    if (!input.recover) {
+      await input.progress!({ ...mission, privateKey: "DO_NOT_PROJECT", phases: [{ ...mission.phases[0], rawTransaction: "DO_NOT_PROJECT" }] } as any);
+      return { phase: "Paused", terminal: false, success: false, chargedRaw: "10000", reason: "HOSTED_GOAL_CALL_UNCERTAIN" };
+    }
+    assert.equal(input.run.stopRequested, true); assert.deepEqual(input.run.mission, mission);
+    assert.deepEqual(await f.service.goalControl(input.agent.id, input.run.requestId), { paused: false, cancelled: true });
+    const cancelled = { ...mission, stage: "cancelled" as const }; await input.progress!(cancelled);
+    return { phase: "Cancelled", terminal: true, success: false, chargedRaw: "10000", reason: "HOSTED_GOAL_CANCELLED", mission: cancelled };
+  });
+  f.executor.capabilities = { goals: { maxPhases: 3, models: [{ id: "kimi-k2.6", pricePerCallRaw: "10000" }] } };
+  const owner = Wallet.createRandom().address, other = Wallet.createRandom().address;
+  const agent = await f.service.create(owner, { ...settings, requestId: randomUUID() }); await f.service.waitUntilIdle();
+  const command = { action: "goal" as const, goal: "  帮我比较三种方案\nKeep exact whitespace.  ", requestId: randomUUID() };
+  await assert.rejects(f.service.command(other, agent.id, command), /HOSTED_AGENT_NOT_FOUND/);
+  for (const goal of ["", " ", "x".repeat(12001), "bad\u0000goal"]) await assert.rejects(f.service.command(owner, agent.id, { ...command, goal }), /HOSTED_GOAL_INVALID/);
+  const admitted = await f.service.command(owner, agent.id, command); assert.equal(admitted.reservedRaw, "120000"); await f.service.waitUntilIdle();
+  await assert.rejects(f.service.command(owner, agent.id, { ...command, goal: command.goal.trim() }), /HOSTED_REQUEST_CONFLICT/);
+  await assert.rejects(f.service.cancelGoal(other, agent.id, command.requestId), /HOSTED_AGENT_NOT_FOUND/);
+  assert.deepEqual((await f.service.snapshot(other)).runs, []);
+  await f.restart(); const pending = await f.service.snapshot(owner), run = pending.runs.find(r => r.requestId === command.requestId)!;
+  assert.equal(run.goal, command.goal); assert.deepEqual(run.mission, mission); assert.equal(run.status, "Paused");
+  assert.equal(pending.agents[0].reservedRaw, "120000"); assert.equal(pending.agents[0].spentRaw, "0");
+  assert.doesNotMatch(await readFile(join(f.config.directory, "database/session.json"), "utf8"), /DO_NOT_PROJECT/);
+  await f.service.cancelGoal(owner, agent.id, command.requestId); await f.service.waitUntilIdle(); await f.restart();
+  const final = await f.service.snapshot(owner), stopped = final.runs.find(r => r.requestId === command.requestId)!;
+  assert.equal(stopped.status, "Failed"); assert.equal(stopped.reason, "HOSTED_GOAL_CANCELLED"); assert.equal(stopped.mission?.stage, "cancelled");
+  assert.equal(final.agents[0].spentRaw, "10000"); assert.equal(final.agents[0].reservedRaw, "0"); assert.equal(final.agents[0].activeRequestId, undefined);
+  await f.service.cancelGoal(owner, agent.id, command.requestId); await f.service.command(owner, agent.id, command); await f.service.waitUntilIdle(); assert.equal(goalCalls, 2);
+});
+
+test("non-goal executors remain structuredClone compatible and goal commands require configured capability", async t => {
+  const f = await fixture(t, async input => {
+    assert.equal("progress" in input, false); assert.deepEqual(structuredClone(input), input);
+    return input.run.action === "provision" ? { phase: "Ready", terminal: true, success: true, chargedRaw: "0", binding: { chainId: "31337", agentId: "1", wallet: input.agent.wallet } }
+      : { phase: "Complete", terminal: true, success: true, chargedRaw: "10000" };
+  });
+  const owner = Wallet.createRandom().address, agent = await f.service.create(owner, { ...settings, requestId: randomUUID() }); await f.service.waitUntilIdle();
+  await assert.rejects(f.service.command(owner, agent.id, { action: "goal", goal: "Draft a plan", requestId: randomUUID() }), /HOSTED_GOAL_NOT_CONFIGURED/);
+  await f.service.command(owner, agent.id, { action: "task", requestId: randomUUID() }); await f.service.waitUntilIdle();
+  assert.equal((await f.service.snapshot(owner)).agents[0].spentRaw, "10000");
+  const blank = await f.service.create(owner, { name: "Unconfigured", requestId: randomUUID() }); await f.service.waitUntilIdle();
+  f.executor.capabilities = { goals: { maxPhases: 3, models: [{ id: "kimi-k2.6", pricePerCallRaw: "10000" }] } };
+  await assert.rejects(f.service.command(owner, blank.id, { action: "goal", goal: "Draft a plan", requestId: randomUUID() }), /HOSTED_CONFIGURATION_REQUIRED/);
+});
+
+test("goal refuel owns the active slot until deposit settles; resumed success clears stale pause reason", async t => {
+  let release!: () => void, funded = false;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  const f = await fixture(t, async input => {
+    if (input.run.action === "provision") return { phase: "Ready", terminal: true, success: true, chargedRaw: "0", binding: { chainId: "31337", agentId: "1", wallet: input.agent.wallet } };
+    if (input.run.action === "deposit") { await gate; funded = true; return { phase: "Complete", terminal: true, success: true, chargedRaw: "0" }; }
+    return funded ? { phase: "Completed", terminal: true, success: true, chargedRaw: "10000" }
+      : { phase: "Paused", terminal: false, success: false, chargedRaw: "0", reason: "INFERENCE_FUNDING_REQUIRED" };
+  });
+  f.executor.capabilities = { goals: { maxPhases: 3, models: [{ id: "kimi-k2.6", pricePerCallRaw: "10000" }] } };
+  const owner = Wallet.createRandom().address, agent = await f.service.create(owner, { ...settings, requestId: randomUUID() }); await f.service.waitUntilIdle();
+  const command = { action: "goal" as const, goal: "Write a clear plan", requestId: randomUUID() };
+  await f.service.command(owner, agent.id, command); await f.service.waitUntilIdle();
+  try {
+    const deposit = await f.service.command(owner, agent.id, { action: "deposit", amountRaw: "40000", requestId: randomUUID() }); assert.equal(deposit.fundingFor, command.requestId);
+    await assert.rejects(f.service.cancelGoal(owner, agent.id, command.requestId), /HOSTED_RECOVER_ORIGINAL_REQUIRED/);
+    const pending = await f.service.snapshot(owner); assert.equal(pending.agents[0].activeRequestId, deposit.requestId);
+    assert.equal(pending.runs.find(r => r.requestId === command.requestId)?.stopRequested, undefined);
+  } finally { release(); }
+  await f.service.waitUntilIdle(); assert.equal((await f.service.snapshot(owner)).agents[0].activeRequestId, command.requestId);
+  await f.service.command(owner, agent.id, command); await f.service.waitUntilIdle();
+  const result = await f.service.snapshot(owner), run = result.runs.find(r => r.requestId === command.requestId)!;
+  assert.equal(run.status, "Succeeded"); assert.equal(run.reason, undefined); assert.equal(result.agents[0].spentRaw, "10000"); assert.equal(result.agents[0].reservedRaw, "0");
 });

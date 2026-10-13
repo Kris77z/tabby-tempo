@@ -11,6 +11,7 @@ import { InferenceAllowanceRelay, ALLOWANCE_MODEL, ALLOWANCE_SERVICE } from "../
 import { Relay } from "../services/provider-relay/src/relay.js";
 import { Refunder } from "../services/provider-relay/src/refunder.js";
 import { createHttpServer } from "../services/provider-relay/src/http.js";
+import { validateGatewayCatalog } from "../services/hosted-agents/src/inference-gateway.js";
 import { modelCatalogDigest } from "../services/hosted-agents/src/metered-task.js";
 import { loadHostedDaemonConfig } from "./hosted-agents.js";
 
@@ -64,8 +65,10 @@ export async function startLocalHosted(directory: string, gatewayFile: string, v
       await tx(fx.f.identity, fx.f.admin, "registerFor", [wallet, wallet]);
       await tx(fx.f.manager, fx.f.admin, "enrollAgent", [String(index - 3)]);
     }
-    const catalog = gateway.models.map((model: any, i: number) => ({ ...model, route: gateway.endpoint,
-      inputMicroCreditsPerToken: i ? "3" : "1", outputMicroCreditsPerToken: i ? "6" : "2", maxCompletionTokens: 1024 }));
+    const catalog = validateGatewayCatalog(gateway.models.map((model: any, i: number) => ({ ...model, route: gateway.endpoint,
+      inputMicroCreditsPerToken: i ? "3" : "1", outputMicroCreditsPerToken: i ? "6" : "2", maxCompletionTokens: 1024 })));
+    if (!["kimi-k2.6", "cheap"].includes(catalog[0].id) || !["kimi-k3", "strong"].includes(catalog[1].id) || catalog[0].model !== "cheap/kimi-k2.6" || catalog[1].model !== "strong/kimi-k3"
+      || catalog[0].responseModel !== "kimi-k2.6" || catalog[1].responseModel !== "kimi-k3") throw new Error("LOCAL_GATEWAY_MODELS_INVALID");
     const allowance = new InferenceAllowanceRelay({ ...fx.relayConfig, dataDir: join(directory, "allowance"), service: {
       id: ALLOWANCE_SERVICE, model: ALLOWANCE_MODEL, price: 120000n,
       upstreams: [{ name: "allowance-ledger", model: ALLOWANCE_MODEL, baseUrl: "http://127.0.0.1/ledger", key: "unused" }],
@@ -74,7 +77,13 @@ export async function startLocalHosted(directory: string, gatewayFile: string, v
       id: "infercredit/plan", model: "logical-planner", price: 10000n,
       upstreams: [{ name: "magpie-cheap", model: "cheap/kimi-k2.6", baseUrl: gateway.url, key: gatewayKey }],
     } }, { provider: fx.f.provider });
-    for (const relay of [allowance, planner]) {
+    // Personal goals use cash-only task 0 payments. Each model has an isolated
+    // quote journal and fixed per-call price, distinct from task allowances.
+    const goalRelays = catalog.map((model, index) => new Relay({ ...fx.relayConfig, dataDir: join(directory, `goal-${model.id}`), upstreamTimeout: 120000, service: {
+      id: "tabby/mission", model: model.id, price: index ? 20000n : 10000n,
+      upstreams: [{ name: `magpie-${model.id}`, model: model.model, baseUrl: gateway.url, key: gatewayKey }],
+    } }, { provider: fx.f.provider }));
+    for (const relay of [allowance, planner, ...goalRelays]) {
       relays.push(relay); await relay.initialize();
       const refunder = new Refunder(relay); await refunder.initialize();
       const server = createHttpServer(relay, refunder); servers.push(server); server.listen(0, "127.0.0.1"); await once(server, "listening");
@@ -102,6 +111,8 @@ export async function startLocalHosted(directory: string, gatewayFile: string, v
     const hostedConfigFile = await put("hosted.json", { version: 1, port: 8791,
       hosted: { directory: join(directory, "hosted"), origin: "http://127.0.0.1:3024", chainId: "31337", models: models.map(id => ({ id, label: id === "kimi-k2.6" ? "Kimi K2.6" : "Kimi K3" })),
         maxAgentsPerOwner: 6, maxTotalBudgetRaw: "1000000", maxPerRunBudgetRaw: "120000" }, executor: { taskConfigFile, gameConfigFile },
+      goals: { chainLookup: true, durationMs: 600000, models: catalog.map((model, index) => ({ id: models[index], relayUrl: relayUrl(index + 2), provider: fx.f.payee,
+        priceRaw: goalRelays[index].config.service.price.toString(), service: "tabby/mission", model: model.id, physicalModel: model.model, responseModel: model.responseModel })) },
       autonomy: { maxTasks: 2, maxDecisions: 3, durationMs: 600000, plannerRelayUrl: relayUrl(1), plannerProvider: fx.f.payee, plannerPriceRaw: "10000",
         plannerService: "infercredit/plan", plannerModel: "logical-planner", plannerPhysicalModel: "cheap/kimi-k2.6", plannerResponseModel: "kimi-k2.6" } });
     await loadHostedDaemonConfig(hostedConfigFile);

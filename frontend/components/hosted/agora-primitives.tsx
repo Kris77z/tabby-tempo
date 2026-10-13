@@ -28,8 +28,7 @@ export function Badge({ children, status, outline }: { children: React.ReactNode
   return <span className={`${styles.badge} ${outline ? styles.badgeOutline : ""} ${status === "Failed" ? styles.badgeError : status === "Paused" || status === "Pending" ? styles.badgeWarning : ""}`}>[{status && <StatusOrb status={status} />}{children}]</span>;
 }
 // Agora AgentIdentityCard's connected identity/copy-wallet block, now a user-owned wallet.
-export function AgentIdentityCard({ agent }: { agent: HostedAgent }) {
-  const explorerHref = hostedAddressUrl(agent.binding?.chainId, agent.wallet);
+export function AgentIdentityCard({ agent, description, balance, nameControl }: { agent: HostedAgent; description?: string; balance?: string; nameControl?: React.ReactNode }) {
   const [copyState, setCopyState] = React.useState("");
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   React.useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
@@ -40,8 +39,8 @@ export function AgentIdentityCard({ agent }: { agent: HostedAgent }) {
     timer.current = setTimeout(() => setCopyState(""), 2500);
   }
   return <div className={styles.identity}>
-    <div className={styles.identityHeading}><span aria-hidden="true">🤖</span><div><h2>{agent.name}</h2><p>平台托管 Agent · 独立钱包执行与结算</p></div></div>
-    <div className={styles.walletBlock}><span>Agent 钱包</span><code>{agent.wallet}</code><button className={styles.textButton} onClick={() => void copyAddress()}><Icon name="wallet" size={14} />{copyState || "复制地址"}</button>{explorerHref && <a className={styles.textButton} href={explorerHref} target="_blank" rel="noopener noreferrer">查看钱包 ↗</a>}</div>
+    <div className={styles.identityHeading}><span aria-hidden="true">🤖</span><div>{nameControl??<h2>{agent.name}</h2>}{description!==""&&<p>{description??"平台托管 Agent · 独立钱包执行与结算"}</p>}</div></div>
+    <div className={styles.walletBlock}><span>Agent 钱包</span>{hostedAddressUrl(agent.binding?.chainId,agent.wallet)&&<a href={hostedAddressUrl(agent.binding?.chainId,agent.wallet)!} target="_blank" rel="noopener noreferrer" aria-label="查看钱包 ↗"> ↗</a>}<code title={agent.wallet}>{short(agent.wallet,4)}</code><button className={styles.iconButton} aria-label="复制地址" title={copyState || "复制地址"} onClick={() => void copyAddress()}><Icon name={copyState === "已复制" ? "check" : "copy"} size={14} /></button>{balance&&<small style={{color:"#57996a",fontSize:10}}>{balance}</small>}<span className={styles.srOnly} role="status">{copyState}</span></div>
   </div>;
 }
 

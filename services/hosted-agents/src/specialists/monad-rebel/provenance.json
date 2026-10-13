@@ -1,0 +1,17 @@
+{
+  "source": "monad-rebel/agents/services",
+  "importedOn": "2026-10-13",
+  "sha256": {
+    "abi-reader/config.json": "5e333a0b72696542f1bfdab3ed556ee8b53dc216ac53363de443d6f97e4a6e89",
+    "abi-reader/prompt.md": "1cb275c42f4e7724785181f97dd3ce9b01635fff790af1ce46e31c77a2cce557",
+    "gas-optimizer/config.json": "c3fd4229760cd03d3b408396c0bac152ec1391588a9f50b0a8faf1a182804453",
+    "gas-optimizer/prompt.md": "47e6521ee287c561f29dcc47171decf9fc7882b9faa6e18777e34bb8247dcaf4",
+    "token-scanner/config.json": "1122e1e8bb4f4e349ad25546c101ee20865a1e2dcc6c2f751a974f20b83ba308",
+    "token-scanner/prompt.md": "2ba479dd2d3e594be4ec0210c3a8f33688b612f3d51b47092db13fc76eebc3e2",
+    "tx-decoder/config.json": "b7dcfd228dbb3a11c7b03c94ee30c88c36a529b3020fb0faebb803e2e0222042",
+    "tx-decoder/prompt.md": "f118171c85e46f295675b956180dea3052ee1ee162f171cd815803a83bd62b57",
+    "yield-finder/config.json": "4693bc7566417b66da38195d260e676997bfba994d7f8bb16baf351246eb6eb9",
+    "yield-finder/prompt.md": "d4a06de4b09b3033f2839ad02a44e84bfc9c0881f99bd5d5f70ac5e186274479"
+  },
+  "sourceCommit": "a2c57069635c02c8aab8e15f6be22f16db1f4342"
+}

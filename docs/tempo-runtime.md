@@ -136,4 +136,22 @@ Task `3` 补偿 `120000` raw，发布者托管款退回 `150000` raw；第二次
 
 合约本地测试、受控模型回归、真实供应商响应、独立 Docker 隐藏测试与 Tempo canonical 链上回执分开报告。公开网站、真实扩展钱包、比赛正式提交与主网资金使用仍需另行授权及验收。
 
-2026-10-13 GameFi 第一轮在同一 owner 原 3 局限制内运行真实 K2.6 德州：第一局格式无效，后两局平台赢家，测试 Actor 未获奖，余额 guard 正确阻止任务。该轮 `.data/tempo-gamefi-20261013/` journal 与[原记录](tempo-gamefi-runtime-20261013.md)保留。用户批准追加最多 6 局后，使用 `.data/tempo-gamefi-extra-20261013/` 独立授权与 journal，实际 4 局完成参赛 Actor73 的 PathUSD 奖金+原自有预存支付 Task7，以及 Actor74 的真实奖励 tokens 消费完成 Task8；两者独立 Pi/Docker Arena 验收及 Tempo 结算成功、debt0、cash各150000、信誉530/C，未借款或产生还款信誉，剩余两局不执行。见[追加运行与幂等命令](tempo-gamefi-extra-runtime-20261013.md)及[已批准预算方案](tempo-gamefi-additional-test-plan-20261013.md)。核心五单与补偿历史不变；当前3028使用`.next-tempo-gamefi-extra-2`，后台8794加载原私有授权，固定UTC07:28:04.166截止后禁止新增名额。
+2026-10-13 GameFi 第一轮在同一 owner 原 3 局限制内运行真实 K2.6 德州：第一局格式无效，后两局平台赢家，测试 Actor 未获奖，余额 guard 正确阻止任务。该轮 `.data/tempo-gamefi-20261013/` journal 与[原记录](tempo-gamefi-runtime-20261013.md)保留。用户批准追加最多 6 局后，使用 `.data/tempo-gamefi-extra-20261013/` 独立授权与 journal，实际 4 局完成参赛 Actor73 的 PathUSD 奖金+原自有预存支付 Task7，以及 Actor74 的真实奖励 tokens 消费完成 Task8；两者独立 Pi/Docker Arena 验收及 Tempo 结算成功、debt0、cash各150000、信誉530/C，未借款或产生还款信誉，剩余两局不执行。见[追加运行与幂等命令](tempo-gamefi-extra-runtime-20261013.md)及[已批准预算方案](tempo-gamefi-additional-test-plan-20261013.md)。核心五单与补偿历史不变；追加验收时3028使用`.next-tempo-gamefi-extra-2`，后台8794加载原私有授权，固定UTC07:28:04.166截止后禁止新增名额。
+
+
+## 2026-10-13 源代码同步升级
+
+[本轮同步范围](tempo-upstream-sync-20261013.md)迁入新工作台、只填名称创建、单独配置模型预算、内联资金/练习、身份凭证和持久个人目标；五类专家仅分析输入资料，未接入 RPC/Web 工具。源目录快照之后的自动查链仍未迁入。原 Tempo 核心、补偿与 GameFi journal/证据保留，本轮不新增实网业务或付费模型调用。
+
+`tempo-hosted-runtime.ts start DIRECTORY BOOTSTRAP --recover` 会启动两条独立 goal relay，逻辑别名、实体模型及响应模型按原 catalog 绑定。goal 使用 task0、cash-only，每次 10000 / 20000 raw，最多七次调用，并服从原预算和固定 deadline；没有报酬或信誉结算。新目录和 goal 端口独立于旧 fixed/allowance/planner。原五个命名端口重启保留，同 refunder 角色的各 relay 退款共用串行队列。
+
+升级 supervisor 前需确认所有 Agent 没有 activeRequestId 且没有 Queued/Running run。完整重启会原样保存并恢复 `testSponsorshipFile` 的原 file/digest/grantId，与 DB 原授权校验一致；固定 07:28:04.166Z 到期不变、四次 admission 不重置、剩余两局不执行。已有未配置 goals 的旧配置仍可加载，但不允许发送个人目标。配置和暂停/取消/Unknown 恢复不修改已保存的原 UUID 或付款 handle。
+
+新版前端构建为 `.next-upstream-sync-20261013-2`，实际运行地址仍为本地3028，hosted8794。此版本上线本地后可查看新 Dashboard/finance/arena，受控截图与实网历史证据分开；详见[迁移机器证据](evidence/upstream-sync-20261013/migration-evidence.json)。
+
+
+## 2026-10-13 第二轮源代码同步
+
+[第二轮同步说明](tempo-upstream-sync-round2-20261013.md)迁入当前链地址/交易只读预取与持久凭证、过期 goal 付款作废恢复及 Magpie 状态动画。Tempo runtime 的 goals 默认 `chainLookup:true`；旧 goal session 的 `lookupEnabled`/research/付款 handle 按原字节恢复，不把升级后的能力加进已开始的旧任务。模型没有任意网络或交易工具，有限主机查链只使用配置的42431 RPC/Sourcify，未配置能力时 UI 如实显示。
+
+费用从真实 PathUSD feeToken/feePayer→feeManager 唯一 Transfer 读取，native余额占位不作可用余额。原Task7只读探针与受控付款恢复详见第二轮机器证据；本轮没有广播Tempo替换或业务交易，没有付费模型调用，也没有新增或续期游戏授权。8794新daemon沿原hosted.json和过期grant重载，原七个relay端口保持；3028最终独立构建目录见第二轮证据。

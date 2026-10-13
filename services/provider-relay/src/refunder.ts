@@ -3,7 +3,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { MANAGER_ABI, managerInterface, sameAddress, uint } from "@agentfuel/sdk/protocol";
 import { Relay, RelayError } from "./relay.js";
 import { validOperatorResolution, validOperatorCompensation, type PaymentRecord, type Refund, type SignedOperation } from "./store.js";
-export interface RefunderOptions { maxFeePerGas?: bigint; gasLimit?: bigint }
+export interface RefunderOptions { maxFeePerGas?: bigint; gasLimit?: bigint; serialize?: <T>(operation:()=>Promise<T>)=>Promise<T> }
 
 export class Refunder {
   private readonly wallet?: Wallet;
@@ -40,7 +40,7 @@ export class Refunder {
     try {
       if (typeof paymentId !== "string" || !/^0x[0-9a-f]{64}$/.test(paymentId) || typeof refundId !== "string" || !/^0x[0-9a-f]{64}$/.test(refundId) || uint(amount, "amount") === 0n) throw new Error();
     } catch { throw new RelayError("INVALID_REFUND", "Use bytes32 paymentId/refundId and positive decimal amount", 400); }
-    const operation = this.queue.catch(() => {}).then(() => this.relay.store.lock(paymentId, async () => {
+    const work = () => this.relay.store.lock(paymentId, async () => {
       const record = await this.relay.store.read(paymentId);
       await this.manager();
       await this.relay.confirm(record);
@@ -60,7 +60,8 @@ export class Refunder {
       }
       await this.finish(record, entry, true);
       return { ...this.relay.view(record), refundId, txHash: entry.transaction?.txHash };
-    }));
+    });
+    const operation = this.queue.catch(() => {}).then(() => this.limits.serialize ? this.limits.serialize(work) : work());
     this.queue = operation;
     return operation;
   }

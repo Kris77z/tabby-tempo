@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "browser-audit.mts": "cf66f7f3fdf6b8ee62cebb2dcc84ce7545ee094e3b1c06743c74280d26868a12",
+    "preservation-audit.py": "c03e1367804409b0484a62fef935ca7814dc746030f9a33ebd1ddfa76d22cb1f"
+  },
+  "cleanup": "Temporary audit drivers removed after successful execution; reports, baseline snapshots and screenshots retained."
+}

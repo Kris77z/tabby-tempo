@@ -1,0 +1,26 @@
+{
+    "id": "gas-optimizer-v1",
+    "name": "Gas Optimizer",
+    "taskTypes": [
+        "gas-optimization",
+        "gas"
+    ],
+    "skills": [
+        "solidity",
+        "gas",
+        "optimization",
+        "monad",
+        "evm"
+    ],
+    "priceWei": "12000000000000000",
+    "output": {
+        "type": "json",
+        "schemaName": "gas-optimizations-v1"
+    },
+    "llm": {
+        "temperature": 0.2
+    },
+    "fallback": {
+        "summary": "Analyze Solidity code for gas inefficiencies and suggest optimizations."
+    }
+}

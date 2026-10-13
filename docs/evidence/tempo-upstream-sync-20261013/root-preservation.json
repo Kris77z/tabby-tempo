@@ -1,0 +1,54 @@
+{
+  "checkedAt": "2026-10-13T09:54:22.390697+00:00",
+  "checks": {
+    "protectedFilesUnchanged": true,
+    "databaseBusinessSectionsUnchanged": true,
+    "historicalEvidenceUnchanged": true,
+    "originalPortsUnchanged": true,
+    "runtimeBindingsUnchanged": true,
+    "grantAndAdmissionMirrorUnchanged": true,
+    "modelRequestsUnchanged": true,
+    "newGoalPaymentsAbsent": true,
+    "newGoalRoutesBound": true,
+    "allRunsTerminal": true,
+    "allAgentsIdle": true
+  },
+  "passed": true,
+  "protectedFiles": 128,
+  "historicalEvidenceFiles": 28,
+  "runCount": 27,
+  "admissionCount": 4,
+  "grantSha256": "7e90a550b4caef40b7008af1a12ea25fd2606dd6c77a601cbbcc75ddf96c2783",
+  "grantExpiresAtMs": 1791876484166,
+  "acceptedModelRequestsBefore": 13,
+  "acceptedModelRequestsAfter": 13,
+  "ports": {
+    "arena": 60722,
+    "underwriter": 60866,
+    "fixed": 60934,
+    "allowance": 60994,
+    "planner": 61033,
+    "goalCheap": 63750,
+    "goalStrong": 63908
+  },
+  "changedFiles": [],
+  "changedDatabaseSections": [],
+  "changedHistoricalEvidence": [],
+  "newGoalPaymentRecords": 0,
+  "goalModels": [
+    {
+      "id": "kimi-k2.6",
+      "model": "cheap",
+      "physicalModel": "cheap/kimi-k2.6",
+      "responseModel": "kimi-k2.6",
+      "priceRaw": "10000"
+    },
+    {
+      "id": "kimi-k3",
+      "model": "strong",
+      "physicalModel": "strong/kimi-k3",
+      "responseModel": "kimi-k3",
+      "priceRaw": "20000"
+    }
+  ]
+}

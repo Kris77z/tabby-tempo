@@ -1,0 +1,37 @@
+{
+  "checkedAt": "2026-10-13T13:07:18.112815+00:00",
+  "passed": true,
+  "checks": {
+    "protectedFilesUnchanged": true,
+    "historicalEvidenceUnchanged": true,
+    "businessDatabaseUnchanged": true,
+    "portsUnchanged": true,
+    "bindingUnchanged": true,
+    "fixedGrantUnchanged": true,
+    "modelCallsUnchanged": true,
+    "noNewGoalPayments": true,
+    "chainLookupEnabled": true,
+    "allAgentsIdle": true,
+    "allRunsTerminal": true
+  },
+  "protectedFiles": 128,
+  "historicalFiles": 28,
+  "actors": 6,
+  "runs": 27,
+  "admissions": 4,
+  "grantSha256": "7e90a550b4caef40b7008af1a12ea25fd2606dd6c77a601cbbcc75ddf96c2783",
+  "acceptedModelRequests": 13,
+  "changedFiles": [],
+  "changedHistory": [],
+  "changedDatabaseSections": [],
+  "ports": {
+    "arena": 60722,
+    "underwriter": 60866,
+    "fixed": 60934,
+    "allowance": 60994,
+    "planner": 61033,
+    "goalCheap": 63750,
+    "goalStrong": 63908
+  },
+  "newGoalPaymentRecords": 0
+}

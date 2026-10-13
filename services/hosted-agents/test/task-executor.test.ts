@@ -8,6 +8,27 @@ import { HostedTaskExecutor, loadHostedTaskExecutorConfig, validateHostedTaskExe
 import { createHostedTaskFixture } from "./task-fixture.js";
 import { key, read, tx } from "../../underwriter/test/fixture.js";
 
+test("unconfigured Agent provisions and deposits with zero spending/debt policy and no model calls", { timeout: 90000 }, async () => {
+  const directory = await realpath(await mkdtemp(join(tmpdir(), "af-hosted-unconfigured-"))), fx = await createHostedTaskFixture(directory);
+  try {
+    const actor = await fx.actor(20);
+    Object.assign(actor.agent, { configurationRequired: true, modelId: "", perRunBudgetRaw: "0", totalBudgetRaw: "0", allowCredit: false });
+    const executor = new HostedTaskExecutor({ ...fx.config, initialCashRaw: "0" }, { provider: fx.fx.f.provider });
+    const provision = actor.input("provision"), result = await executor.execute(provision);
+    assert.equal(result.phase, "Ready", JSON.stringify(result)); assert.ok(result.binding);
+    actor.agent.binding = result.binding;
+    assert.deepEqual(await executor.execute({ ...provision, recover: true }), result);
+    const policy = await read(fx.fx.f.account, "getPolicy", [result.binding!.agentId]);
+    assert.equal(policy.maxCashPerTx, 0n); assert.equal(policy.maxDebtPerTx, 0n); assert.equal(policy.maxDebtPerDay, 0n);
+    const deposit = actor.input("deposit"); deposit.run.amountRaw = "40000";
+    const deposited = await executor.execute(deposit);
+    assert.equal(deposited.success, true, JSON.stringify(deposited));
+    assert.equal(await read(fx.fx.f.account, "cash", [result.binding!.agentId]), 40000n);
+    await assert.rejects(executor.execute(actor.input("task")), /HOSTED_CONFIGURATION_REQUIRED/);
+    assert.equal(fx.fx.calls.length, 0);
+  } finally { await fx.close(); await rm(directory, { recursive: true, force: true }); }
+});
+
 test("two hosted agents register/enroll independent wallets and run the real fixed B workflow under independent budgets/models", { timeout: 120000 }, async () => {
   const directory = await realpath(await mkdtemp(join(tmpdir(), "af-hosted-task-"))), fx = await createHostedTaskFixture(directory);
   try {

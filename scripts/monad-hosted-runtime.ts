@@ -41,7 +41,7 @@ export interface MonadHostedBootstrap {
   gatewayReadyFile: string; vendorKeyFile: string; tasks: WorkflowConfig["tasks"];
   maxFeePerGas: string; frontendOrigin: "http://127.0.0.1:3024";
 }
-type PortName = "underwriter" | "arena" | "fixed" | "allowance" | "planner";
+type PortName = "underwriter" | "arena" | "fixed" | "allowance" | "planner" | "goalCheap" | "goalStrong";
 interface CatalogMigration {
   id: string; status: "Intent" | "Applied"; createdAt: string; appliedAt?: string;
   beforeBinding: string; afterBinding: string; before: MonadHostedBootstrap; after: MonadHostedBootstrap;
@@ -90,7 +90,7 @@ export async function loadMonadHostedBootstrap(file: string) {
   if (gateway.url !== "http://127.0.0.1:3426/v1" || gateway.endpoint !== `${gateway.url}/chat/completions` || gateway.models?.length !== 2) fail("MONAD_GATEWAY_INVALID");
   const catalog = validateGatewayCatalog(gateway.models.map((model, index) => ({ ...model, route: gateway.endpoint,
     inputMicroCreditsPerToken: index ? "3" : "1", outputMicroCreditsPerToken: index ? "6" : "2", maxCompletionTokens: 1024 }))) as [GatewayModel, GatewayModel];
-  if (catalog[0].model !== "cheap/kimi-k2.6" || catalog[1].model !== "strong/kimi-k3" || catalog[0].responseModel !== "kimi-k2.6" || catalog[1].responseModel !== "kimi-k3") fail("MONAD_GATEWAY_MODELS_INVALID");
+  if (!["kimi-k2.6", "cheap"].includes(catalog[0].id) || !["kimi-k3", "strong"].includes(catalog[1].id) || catalog[0].model !== "cheap/kimi-k2.6" || catalog[1].model !== "strong/kimi-k3" || catalog[0].responseModel !== "kimi-k2.6" || catalog[1].responseModel !== "kimi-k3") fail("MONAD_GATEWAY_MODELS_INVALID");
   absolute(gateway.keyFile);
   await Promise.all([readRpcUrlFile(b.rpcUrlFile), readSecret(b.vendorKeyFile), readSecret(gateway.keyFile)]);
   return { bootstrap: b, gateway, catalog };
@@ -300,7 +300,14 @@ export async function startMonadHostedRuntime(directory: string, bootstrapFile: 
         verifyAllowanceClosure: closure => verifyHostedAllowanceClosure(join(directory, "hosted"), closure) });
     const planner = new Relay({ ...base, dataDir: join(directory, "planner"), service: { id: "infercredit/plan", model: "logical-planner", price: 10000n,
       upstreams: [{ name: "magpie-cheap", model: catalog[0].model, baseUrl: gateway.url, key: gatewayKey }] } }, { provider: rpc });
-    for (const [name, relay] of [["allowance", allowance], ["planner", planner]] as const) {
+    // Stable named ports preserve SDK handles across runtime recovery. Personal
+    // goal calls have their own paid-delivery journals, separate from planner/tasks.
+    const goalPorts = ["goalCheap", "goalStrong"] as const;
+    const goalRelays = catalog.map((model, index) => new Relay({ ...base, dataDir: join(directory, `goal-${model.id}`), service: {
+      id: "tabby/mission", model: model.id, price: index ? 20000n : 10000n,
+      upstreams: [{ name: `magpie-${model.id}`, model: model.model, baseUrl: gateway.url, key: gatewayKey }],
+    } }, { provider: rpc }));
+    for (const [name, relay] of [["allowance", allowance], ["planner", planner], ...goalRelays.map((relay, index) => [goalPorts[index], relay] as const)] as const) {
       relays.push(relay); await relay.initialize(); const refunder = new Refunder(relay, { maxFeePerGas: BigInt(b.maxFeePerGas), gasLimit: 400000n }); await refunder.initialize(); await listening(name, relayHttp(relay, refunder));
     }
     const walletDirectory = join(directory, "wallets"), models = ["kimi-k2.6", "kimi-k3"];
@@ -322,6 +329,8 @@ export async function startMonadHostedRuntime(directory: string, bootstrapFile: 
     const hostedConfigFile = await put("hosted.json", { version: 1, port: 8792,
       hosted: { directory: join(directory, "hosted"), origin: b.frontendOrigin, chainId: "10143", models: models.map(id => ({ id, label: id === "kimi-k2.6" ? "Kimi K2.6" : "Kimi K3" })),
         maxAgentsPerOwner: 6, maxTotalBudgetRaw: "1000000", maxPerRunBudgetRaw: "120000" }, executor: { taskConfigFile, gameConfigFile },
+      goals: { chainLookup: true, durationMs: 1200000, models: catalog.map((model, index) => ({ id: models[index], relayUrl: `${url(goalPorts[index])}/v1/chat`, provider: b.payTo,
+        priceRaw: goalRelays[index].config.service.price.toString(), service: "tabby/mission", model: model.id, physicalModel: model.model, responseModel: model.responseModel })) },
       autonomy: { maxTasks: 2, maxDecisions: 3, durationMs: 1200000, plannerRelayUrl: `${url("planner")}/v1/chat`, plannerProvider: b.payTo, plannerPriceRaw: "10000",
         plannerService: "infercredit/plan", plannerModel: "logical-planner", plannerPhysicalModel: catalog[0].model, plannerResponseModel: catalog[0].responseModel } });
     await loadHostedDaemonConfig(hostedConfigFile);

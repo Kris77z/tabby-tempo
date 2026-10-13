@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-10-13T13:08:03.640637+00:00",
+  "buildId": "_i2pQhQ0K8qZ_hC-2MhB2",
+  "passed": true,
+  "files": [
+    {
+      "path": ".data/upstream-sync-20261013-round2/root/browser-audit.mts",
+      "sha256": "0d049104e6fe75d93a34f33344c590a3ad7292db97f4d81303f122db9f4cccf7"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/root/preservation.py",
+      "sha256": "1be74ba8e6ac146a378d8ceaf464bf483c606fea0f6e45583cbe14863b91a23e"
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-round2-20261013/root-browser.json",
+      "sha256": "683edcd9d4a7674aadf988b5c1170a8ba5f1c2fdb2c19927c50398fafc0a36e6"
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-round2-20261013/desktop-cash.png",
+      "sha256": "68155e2e5e14fbbd1a4f0af810c0c593e582025e690720642fbf367eb9c4ce7c"
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-round2-20261013/mobile-credits.png",
+      "sha256": "073774c94f7bbe646b787d4bb8c7b3b8c87559e2f13a105243f37cb04e825c26"
+    },
+    {
+      "path": "docs/evidence/tempo-upstream-sync-round2-20261013/root-preservation.json",
+      "sha256": "b37bbb0db94c41f8a4e7b594530b974df3b68e2dcb15c24f276815c2a83d3b53"
+    },
+    {
+      "path": "docs/evidence/tempo-upstream-sync-round2-20261013/root-lookup-audit.json",
+      "sha256": "228c4e484d65492dcdd76f26dbd68a7489857484c0a0b4a5529c3add2a27069c"
+    },
+    {
+      "path": "docs/evidence/tempo-upstream-sync-round2-20261013/root-fee-audit.json",
+      "sha256": "ebd0188bc29b1906dff9e225c2ac3c0ff93ca7b68866894f285e746a8e9bd53e"
+    }
+  ]
+}

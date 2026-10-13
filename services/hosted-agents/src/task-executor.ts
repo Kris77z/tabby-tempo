@@ -127,12 +127,17 @@ export class HostedTaskExecutor implements HostedExecutor {
   constructor(config: HostedTaskExecutorConfig, private dependencies: HostedTaskDependencies = {}) { this.config = validateHostedTaskExecutorConfig(config); }
   finance(agent: HostedExecution["agent"]) { return readHostedFinance(this.config, agent, this.dependencies); }
   private snapshot(input: HostedExecution): Snapshot {
-    const agent = input.agent, model = this.config.models.find(model => model.id === agent.modelId);
+    const agent = input.agent;
+    const deferred = agent.configurationRequired === true;
+    const identityOnly = ["provision", "deposit"].includes(input.run.action);
+    if (deferred && !identityOnly) fail("HOSTED_CONFIGURATION_REQUIRED");
+    // The infrastructure template supplies chain addresses, not a chosen execution model.
+    const model = deferred && identityOnly ? this.config.models[0] : this.config.models.find(model => model.id === agent.modelId);
     if (!model || !strategies.includes(agent.strategy)) fail("HOSTED_TASK_MODEL_NOT_ALLOWED");
     const settings: AgentSettings = { name: agent.name, modelId: agent.modelId, strategy: agent.strategy, perRunBudgetRaw: amount(agent.perRunBudgetRaw), totalBudgetRaw: amount(agent.totalBudgetRaw), allowCredit: agent.allowCredit };
     if (input.run.action !== "deposit" && input.run.amountRaw !== undefined) fail("HOSTED_EXECUTION_BINDING_INVALID");
     if (input.run.fundingFor !== undefined && (input.run.action !== "deposit" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(input.run.fundingFor))) fail("HOSTED_DEPOSIT_BINDING_INVALID");
-    if (typeof settings.allowCredit !== "boolean" || BigInt(settings.perRunBudgetRaw) < 1n || BigInt(settings.totalBudgetRaw) < BigInt(settings.perRunBudgetRaw)) fail("HOSTED_TASK_BUDGET_INVALID");
+    if (deferred ? settings.modelId !== "" || settings.perRunBudgetRaw !== "0" || settings.totalBudgetRaw !== "0" || settings.allowCredit !== false : typeof settings.allowCredit !== "boolean" || BigInt(settings.perRunBudgetRaw) < 1n || BigInt(settings.totalBudgetRaw) < BigInt(settings.perRunBudgetRaw)) fail("HOSTED_TASK_BUDGET_INVALID");
     const workflow = structuredClone(model.templates[agent.strategy]);
     // A long-lived host template is not the fixed Relay's five-minute quote window.
     // Freeze this per-request deadline in the first snapshot; recovery retains it.

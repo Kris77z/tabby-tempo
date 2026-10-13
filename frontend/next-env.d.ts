@@ -1,7 +1,7 @@
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
-import "./.next-tempo-gamefi-extra-2/types/routes.d.ts";
-import "./.next-tempo-gamefi-extra-2/types/root-params.d.ts";
+import "./.next-upstream-sync-round2-20261013-2/types/routes.d.ts";
+import "./.next-upstream-sync-round2-20261013-2/types/root-params.d.ts";
 
 // NOTE: This file should not be edited
 // see https://nextjs.org/docs/app/api-reference/config/typescript for more information.

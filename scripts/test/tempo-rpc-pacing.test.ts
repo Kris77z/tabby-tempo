@@ -12,7 +12,7 @@ async function heldEndpoint() {
   const reads: { address: string; at: number }[] = [], writes: string[] = [];
   const server = createServer(async (request, response) => {
     const chunks: Buffer[] = []; for await (const chunk of request) chunks.push(Buffer.from(chunk)); const body = JSON.parse(Buffer.concat(chunks).toString());
-    if (body.method === "eth_getBalance") {
+    if (["eth_getBalance", "eth_getStorageAt"].includes(body.method)) {
       reads.push({ address: body.params[0], at: Date.now() }); active++; maximum = Math.max(maximum, active);
       if (reads.length === 4) firstFour();
       await gate; active--;
@@ -25,9 +25,9 @@ async function heldEndpoint() {
 }
 const timed = <T>(promise: Promise<T>, ms: number) => Promise.race([promise, delay(ms).then(() => { throw new Error("CONTROLLED_RPC_TEST_TIMEOUT"); })]);
 
-test("Tempo providers sharing an endpoint keep four read slots and 100ms pacing while writes bypass the full queue", async () => {
+test("Tempo providers sharing an endpoint keep four balance/storage read slots and 100ms pacing while writes bypass the full queue", async () => {
   const endpoint = await heldEndpoint(), a = await chainRpcProvider(endpoint.url, 42431, "direct"), b = await chainRpcProvider(`${endpoint.url}/`, "42431", "direct");
-  const pending = Promise.allSettled(Array.from({ length: 12 }, (_, index) => (index % 2 ? a : b).provider.send("eth_getBalance", [address(index + 1), "latest"])));
+  const pending = Promise.allSettled(Array.from({ length: 12 }, (_, index) => (index % 2 ? a : b).provider.send(index % 3 ? "eth_getBalance" : "eth_getStorageAt", index % 3 ? [address(index + 1), "latest"] : [address(index + 1), "0x0", "latest"])));
   try {
     await timed(endpoint.four, 2000); await delay(150);
     assert.equal(endpoint.reads.length, 4, "different providers must share the endpoint's four active read slots");

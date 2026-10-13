@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-10-13T12:42:38.818Z",
+  "source": "Previously captured real Tempo canonical Task7 payment receipt; no new RPC or transaction",
+  "transactionHash": "0x5fdb1f7da92be6f50b7a14cc7f50caf88361cb44b5aa8319ab8fe99dd0538471",
+  "fee": {
+    "status": "confirmed-receipt-transfer",
+    "feeToken": "0x20c0000000000000000000000000000000000000",
+    "feePayer": "0xa2f5bdd12b24fec85b0f4151d43b0528dd05cbc2",
+    "symbol": "PathUSD",
+    "decimals": 6,
+    "amountRaw": "210",
+    "amount": "0.00021",
+    "logIndex": "0x7"
+  },
+  "businessPaymentRaw": "120000",
+  "duplicateMatchingTransferIsUnknown": true,
+  "missingFeeMetadataIsUnknown": true,
+  "passed": true
+}

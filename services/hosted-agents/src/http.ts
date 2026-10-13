@@ -1,5 +1,5 @@
 import { createServer, type IncomingMessage } from "node:http";
-import { HostedError, type AgentSettings, type HostedAction, type HostedAgent, type HostedRun } from "./types.js";
+import { HostedError, type AgentCreation, type AgentSettings, type HostedAction, type HostedAgent, type HostedRun } from "./types.js";
 
 /** Authentication and ownership remain in HostedService; HTTP never accepts an owner. */
 export interface HostedHttpService {
@@ -8,11 +8,12 @@ export interface HostedHttpService {
   authenticate(token: string): string | Promise<string>;
   logout(token: string): unknown | Promise<unknown>;
   snapshot(owner: string): unknown | Promise<unknown>;
+  cancelGoal?(who: string, agentId: string, requestId: string): Promise<HostedRun>;
   finance(owner: string, id: string): unknown | Promise<unknown>;
-  create(owner: string, input: AgentSettings & { requestId: string }): HostedAgent | Promise<HostedAgent>;
+  create(owner: string, input: AgentCreation & { requestId: string }): HostedAgent | Promise<HostedAgent>;
   update(owner: string, id: string, input: AgentSettings): HostedAgent | Promise<HostedAgent>;
   pause(owner: string, id: string, paused: boolean): HostedAgent | Promise<HostedAgent>;
-  command(owner: string, id: string, input: { action: HostedAction; requestId: string; rewardKind?: "usdc" | "llm-credits"; amountRaw?: string }): HostedRun | Promise<HostedRun>;
+  command(owner: string, id: string, input: { action: HostedAction; requestId: string; rewardKind?: "usdc" | "llm-credits"; amountRaw?: string; goal?: string }): HostedRun | Promise<HostedRun>;
 }
 const settings = ["name", "modelId", "strategy", "perRunBudgetRaw", "totalBudgetRaw", "allowCredit"];
 function fail(code: string, status = 400): never { throw new HostedError(code, status); }
@@ -28,7 +29,7 @@ async function body(request: IncomingMessage, allowed: string[]): Promise<any> {
   const parts: Buffer[] = []; let bytes = 0;
   for await (const part of request.iterator({ destroyOnReturn: false })) {
     const buffer = Buffer.from(part); bytes += buffer.length;
-    if (bytes > 8192) { request.resume(); fail("HOSTED_BODY_TOO_LARGE", 413); } parts.push(buffer);
+    if (bytes > (allowed.includes("goal") ? 65536 : 8192)) { request.resume(); fail("HOSTED_BODY_TOO_LARGE", 413); } parts.push(buffer);
   }
   let value: unknown;
   try { value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(parts))); } catch { fail("HOSTED_JSON_INVALID"); }
@@ -54,7 +55,7 @@ export function createHostedHttpServer(service: HostedHttpService) {
         const input = await body(request, ["challengeId", "signature"]); send(200, await service.login(input.challengeId, input.signature)); return;
       }
       if (["/auth/challenge", "/auth/login"].includes(path)) fail("HOSTED_METHOD_NOT_ALLOWED", 405);
-      const match = /^\/agents\/([a-zA-Z0-9_-]{1,80})(?:\/(pause|runs|finance))?$/.exec(path);
+      const match = /^\/agents\/([a-zA-Z0-9_-]{1,80})(?:\/(pause|runs|finance|cancel))?$/.exec(path);
       if (!["/auth/logout", "/agents"].includes(path) && !match) fail("HOSTED_ROUTE_NOT_FOUND", 404);
       if (!(method === "POST" && path === "/auth/logout" || path === "/agents" && ["GET", "POST"].includes(method ?? "") || match && (match[2] === "finance" ? method === "GET" : match[2] ? method === "POST" : method === "PATCH"))) fail("HOSTED_METHOD_NOT_ALLOWED", 405);
       const bearer = token(request), owner = await service.authenticate(bearer);
@@ -62,7 +63,8 @@ export function createHostedHttpServer(service: HostedHttpService) {
       else if (path === "/agents") send(method === "GET" ? 200 : 202, method === "GET" ? await service.snapshot(owner) : await service.create(owner, await body(request, ["requestId", ...settings])));
       else if (match![2] === "finance") send(200, await service.finance(owner, match![1]));
       else if (match![2] === "pause") { const input = await body(request, ["paused"]); if (typeof input.paused !== "boolean") fail("HOSTED_BODY_INVALID"); send(200, await service.pause(owner, match![1], input.paused)); }
-      else if (match![2] === "runs") send(202, await service.command(owner, match![1], await body(request, ["action", "requestId", "rewardKind", "amountRaw"])));
+      else if (match![2] === "cancel") { const input = await body(request, ["requestId"]); if (!service.cancelGoal) fail("HOSTED_GOAL_NOT_CONFIGURED",503); send(202, await service.cancelGoal(owner, match![1], input.requestId)); }
+      else if (match![2] === "runs") send(202, await service.command(owner, match![1], await body(request, ["action", "requestId", "rewardKind", "amountRaw", "goal"])));
       else send(200, await service.update(owner, match![1], await body(request, settings)));
     } catch (error) {
       const safe = error instanceof HostedError && /^HOSTED_[A-Z_0-9]{1,80}$/.test(error.code);

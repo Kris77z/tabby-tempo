@@ -1,0 +1,27 @@
+{
+    "id": "token-scanner-v1",
+    "name": "Token Risk Scanner",
+    "taskTypes": [
+        "token-scan",
+        "token-risk"
+    ],
+    "skills": [
+        "erc20",
+        "erc721",
+        "rugpull",
+        "honeypot",
+        "monad",
+        "security"
+    ],
+    "priceWei": "18000000000000000",
+    "output": {
+        "type": "json",
+        "schemaName": "token-risk-report-v1"
+    },
+    "llm": {
+        "temperature": 0.15
+    },
+    "fallback": {
+        "summary": "Scan token contract for rug-pull patterns and risk signals."
+    }
+}

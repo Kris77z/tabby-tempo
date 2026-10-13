@@ -22,3 +22,5 @@ export function hostedAddressUrl(chainId: string | undefined, address: string): 
   const explorer = chainId ? networks[chainId]?.explorerUrl : undefined;
   return explorer && /^0x[0-9a-f]{40}$/i.test(address) ? `${explorer}/address/${address}` : null;
 }
+
+export function networkFeeSymbol(chainId: string = TEMPO_TESTNET.chainId): string { return chainId === "42431" ? "PathUSD" : chainId === "10143" ? "MON" : "ETH"; }

@@ -1,0 +1,154 @@
+{
+  "source": "monad-rebel local Registry",
+  "capturedOn": "2026-10-13",
+  "profiles": {
+    "coder": {
+      "serviceId": "auditor-v1",
+      "name": "Smart Contract Auditor",
+      "taskType": "smart-contract-audit",
+      "reputation": {
+        "score": 2.5,
+        "count": 9,
+        "trend": "stable",
+        "recentScores": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "lastUsedAt": 1772278577,
+        "qualified": true
+      }
+    },
+    "analyst": {
+      "serviceId": "defi-analyst-v1",
+      "name": "DeFi Protocol Analyzer",
+      "taskType": "defi-analysis",
+      "reputation": {
+        "score": 4.5,
+        "count": 5,
+        "trend": "stable",
+        "recentScores": [
+          88,
+          92,
+          85,
+          90,
+          90
+        ],
+        "lastUsedAt": 1772109002,
+        "qualified": true
+      }
+    },
+    "writer": {
+      "serviceId": "writer-v1",
+      "name": "AI Content Writer",
+      "taskType": "content-generation",
+      "reputation": {
+        "score": 4.28,
+        "count": 18,
+        "trend": "down",
+        "recentScores": [
+          90,
+          90,
+          70,
+          70,
+          90
+        ],
+        "lastUsedAt": 1772278672,
+        "qualified": true
+      }
+    },
+    "abi-interact": {
+      "serviceId": "abi-reader-v1",
+      "name": "ABI Reader & Explainer",
+      "taskType": "abi-interact",
+      "reputation": {
+        "score": 4.05,
+        "count": 3,
+        "trend": "stable",
+        "recentScores": [
+          80,
+          85,
+          78
+        ],
+        "lastUsedAt": 1708855000,
+        "qualified": true
+      }
+    },
+    "gas-optimization": {
+      "serviceId": "gas-optimizer-v1",
+      "name": "Gas Optimizer",
+      "taskType": "gas-optimization",
+      "reputation": {
+        "score": 4.17,
+        "count": 6,
+        "trend": "down",
+        "recentScores": [
+          88,
+          95,
+          90,
+          90,
+          70
+        ],
+        "lastUsedAt": 1772011552,
+        "qualified": true
+      }
+    },
+    "token-scan": {
+      "serviceId": "token-scanner-v1",
+      "name": "Token Risk Scanner",
+      "taskType": "token-scan",
+      "reputation": {
+        "score": 4.5,
+        "count": 11,
+        "trend": "stable",
+        "recentScores": [
+          90,
+          90,
+          90,
+          90,
+          90
+        ],
+        "lastUsedAt": 1772278440,
+        "qualified": true
+      }
+    },
+    "tx-decode": {
+      "serviceId": "tx-decoder-v1",
+      "name": "Transaction Decoder",
+      "taskType": "tx-decode",
+      "reputation": {
+        "score": 3.78,
+        "count": 3,
+        "trend": "stable",
+        "recentScores": [
+          75,
+          82,
+          70
+        ],
+        "lastUsedAt": 1708860000,
+        "qualified": true
+      }
+    },
+    "yield-search": {
+      "serviceId": "yield-finder-v1",
+      "name": "Yield Strategy Finder",
+      "taskType": "yield-search",
+      "reputation": {
+        "score": 4.5,
+        "count": 7,
+        "trend": "up",
+        "recentScores": [
+          65,
+          90,
+          90,
+          90,
+          90
+        ],
+        "lastUsedAt": 1772278322,
+        "qualified": true
+      }
+    }
+  }
+}

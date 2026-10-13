@@ -110,3 +110,6 @@
 }
 @media (max-width: 390px) { .nav button { font-size: 9px; }.sessionBar>span:not(.badge) { display: none; } }
 @media (prefers-reduced-motion: reduce) { .shell * { animation: none !important; transition: none !important; } }
+/* Wallet address with one icon action, including screen-reader feedback. */
+.walletBlock code{flex-basis:auto;overflow-wrap:anywhere;min-width:0;flex:1}.walletBlock>.srOnly{display:block}.walletBlock .iconButton{flex-shrink:0}
+.widgetLabel{padding-top:8px;padding-bottom:8px}

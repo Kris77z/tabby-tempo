@@ -1,0 +1,36 @@
+{
+  "boundary": "Current local Tempo owner, read-only UI. Authentication only; browser business writes blocked. No goal submitted.",
+  "checks": [
+    {
+      "view": "desktop-cash",
+      "legacyRequest": "519303e1-cb08-4631-8aec-2ea7ec340c83",
+      "chainLookup": "42431",
+      "maxTargets": 2,
+      "legacySucceeded": true,
+      "tempoLinks": 3,
+      "canvasVisible": true,
+      "motionControl": true,
+      "expiredGrantDisabled": true,
+      "businessWrites": 0
+    },
+    {
+      "view": "mobile-credits",
+      "legacyRequest": "3ec27411-3b6c-4212-884c-af2d84939b01",
+      "chainLookup": "42431",
+      "maxTargets": 2,
+      "legacySucceeded": true,
+      "tempoLinks": 2,
+      "canvasVisible": true,
+      "motionControl": true,
+      "expiredGrantDisabled": true,
+      "businessWrites": 0
+    }
+  ],
+  "screenshots": [
+    "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-upstream-sync-round2-20261013/desktop-cash.png",
+    "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-upstream-sync-round2-20261013/mobile-credits.png"
+  ],
+  "errors": [],
+  "passed": true,
+  "completedAt": "2026-10-13T13:06:37.176Z"
+}

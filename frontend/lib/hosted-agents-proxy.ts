@@ -1,3 +1,4 @@
+import { validateGoalView } from "../../services/hosted-agents/src/goal-types.js";
 const COOKIE = "agentfuel_hosted_session";
 const responseHeaders = { "cache-control": "private, no-store", "x-content-type-options": "nosniff" };
 const settings = ["name", "modelId", "strategy", "perRunBudgetRaw", "totalBudgetRaw", "allowCredit"];
@@ -10,15 +11,17 @@ function select(value: unknown, fields: string[]) {
 }
 /** Public fields only: never forward an upstream token, key path or arbitrary adapter state. */
 function agent(value: unknown) {
-  const result = select(value, [...settings, "id", "owner", "wallet", "createdAt", "updatedAt", "status", "spentRaw", "reservedRaw", "activeRequestId"]);
+  const result = select(value, [...settings, "id", "owner", "wallet", "createdAt", "updatedAt", "status", "spentRaw", "reservedRaw", "activeRequestId", "configurationRequired"]);
   if (object(value) && value.binding !== undefined) result.binding = select(value.binding, ["chainId", "agentId", "wallet"]);
   return result;
 }
 function run(value: unknown) {
-  const result = select(value, ["requestId", "agentId", "action", "fundingFor", "rewardKind", "amountRaw", "status", "createdAt", "updatedAt", "reservedRaw", "chargedRaw", "recoverable", "reason"]);
+  const result = select(value, ["requestId", "agentId", "action", "fundingFor", "rewardKind", "amountRaw", "status", "createdAt", "updatedAt", "reservedRaw", "chargedRaw", "recoverable", "reason", "goal", "stopRequested"]);
+  if (object(value) && value.mission !== undefined) result.mission = validateGoalView(value.mission);
   if (object(value) && value.testSponsorship !== undefined) result.testSponsorship = select(value.testSponsorship, ["grantId", "digest", "ordinal"]);
   if (object(value) && value.result !== undefined) {
     result.result = select(value.result, ["phase", "terminal", "success", "chargedRaw", "reason", "taskId", "paymentId", "txHash", "matchId", "cashRaw", "principalRaw", "feeRaw", "rewardRaw", "creditsGranted", "creditsUsed", "chainId", "acceptTxHash", "paymentTxHash", "fromCashRaw", "fromCreditRaw", "refundedRaw", "autonomousTasks"]);
+    if (object(value.result) && value.result.mission !== undefined) result.result.mission = validateGoalView(value.result.mission);
     if (object(value.result) && value.result.binding !== undefined) result.result.binding = select(value.result.binding, ["chainId", "agentId", "wallet"]);
     if (object(value.result) && value.result.settlement !== undefined) {
       result.result.settlement = select(value.result.settlement, ["txHash", "passed", "loanStatus", "repaidRaw", "slashedRaw", "residualRaw"]);
@@ -79,7 +82,7 @@ export async function hostedAgentsRequest(request: Request, config: { upstreamUr
     const url = new URL(request.url); if (url.search) fail("HOSTED_QUERY_INVALID");
     path = url.pathname.slice("/api/hosted".length);
     if (!url.pathname.startsWith("/api/hosted/")) fail("HOSTED_ROUTE_NOT_FOUND", 404);
-    const match = /^\/agents\/([a-zA-Z0-9_-]{1,80})(?:\/(pause|runs|finance))?$/.exec(path);
+    const match = /^\/agents\/([a-zA-Z0-9_-]{1,80})(?:\/(pause|runs|finance|cancel))?$/.exec(path);
     let allowed: string[] | undefined;
     if (["/auth/challenge", "/auth/login", "/auth/logout"].includes(path)) {
       if (request.method !== "POST") fail("HOSTED_METHOD_NOT_ALLOWED", 405);
@@ -89,13 +92,13 @@ export async function hostedAgentsRequest(request: Request, config: { upstreamUr
       if (request.method === "POST") allowed = ["requestId", ...settings];
     } else if (match) {
       if (request.method !== (match[2] === "finance" ? "GET" : match[2] ? "POST" : "PATCH")) fail("HOSTED_METHOD_NOT_ALLOWED", 405);
-      allowed = match[2] === "finance" ? undefined : match[2] === "pause" ? ["paused"] : match[2] === "runs" ? ["action", "requestId", "rewardKind", "amountRaw"] : settings;
+      allowed = match[2] === "finance" ? undefined : match[2] === "pause" ? ["paused"] : match[2] === "cancel" ? ["requestId"] : match[2] === "runs" ? ["action", "requestId", "rewardKind", "amountRaw", "goal"] : settings;
     } else fail("HOSTED_ROUTE_NOT_FOUND", 404);
     const publicAuth = ["/auth/challenge", "/auth/login"].includes(path), token = publicAuth ? undefined : session(request);
     let input;
     if (allowed) {
       if (request.headers.get("content-type")?.toLowerCase().split(";")[0].trim() !== "application/json") fail("HOSTED_JSON_REQUIRED", 415);
-      input = await readJson(request, 8192);
+      input = await readJson(request, allowed?.includes("goal") ? 65536 : 8192);
       if (!object(input) || Object.keys(input).some(key => !allowed!.includes(key))) fail("HOSTED_BODY_INVALID");
     }
     const upstream = await (config.fetcher ?? fetch)(new URL(path, base), { method: request.method, redirect: "error", cache: "no-store",
@@ -104,7 +107,7 @@ export async function hostedAgentsRequest(request: Request, config: { upstreamUr
       // Give Tempo's bounded 120s backend read time to finish; backend budgets
       // for local/Monad reads remain unchanged, as do all business POST budgets.
       body: input ? JSON.stringify(input) : undefined, signal: AbortSignal.any([request.signal, AbortSignal.timeout(match?.[2] === "finance" ? 130000 : 10000)]) });
-    const payload = await readJson(upstream, 1048576);
+    const payload = await readJson(upstream, path === "/agents" ? 64 * 1024 * 1024 : 1048576);
     if (!upstream.ok) {
       const error = object(payload) && typeof payload.error === "string" && /^HOSTED_[A-Z_0-9]{1,80}$/.test(payload.error) ? payload.error : "HOSTED_UNAVAILABLE";
       const status = [400, 401, 403, 404, 409, 413, 415, 429, 503].includes(upstream.status) ? upstream.status : 503;
@@ -135,10 +138,11 @@ export async function hostedAgentsRequest(request: Request, config: { upstreamUr
         const capabilities: Record<string, unknown> = {};
         if (object(payload.capabilities.inference) && Array.isArray(payload.capabilities.inference.models)) capabilities.inference = {
           ...select(payload.capabilities.inference, ["priceRaw", "creditsRaw"]), models: payload.capabilities.inference.models.map((model: unknown) => select(model, ["id", "inputMicroCreditsPerToken", "outputMicroCreditsPerToken"])) };
+        if (object(payload.capabilities.goals) && Array.isArray(payload.capabilities.goals.models)) capabilities.goals = { ...select(payload.capabilities.goals,["maxPhases"]), ...(object(payload.capabilities.goals.chainLookup)?{chainLookup:select(payload.capabilities.goals.chainLookup,["chainId","maxTargets"])}:{}), ...(Array.isArray(payload.capabilities.goals.specialists)?{specialists:payload.capabilities.goals.specialists.map((s:unknown)=>select(s,["id","serviceId","name","output"]))}:{}), models: payload.capabilities.goals.models.map((m:unknown)=>select(m,["id","pricePerCallRaw"])) };
         if (object(payload.capabilities.autonomy)) capabilities.autonomy = select(payload.capabilities.autonomy, ["maxTasks", "durationMs", "plannerPriceRaw"]);
         value = { ...value, capabilities } as typeof value;
       }
-    } else value = match?.[2] === "finance" ? finance(payload) : match?.[2] === "runs" ? run(payload) : agent(payload);
+    } else value = match?.[2] === "finance" ? finance(payload) : ["runs", "cancel"].includes(match?.[2] ?? "") ? run(payload) : agent(payload);
     return Response.json(value, { status: upstream.status, headers: responseHeaders });
   } catch (error) {
     return Response.json({ error: error instanceof BridgeError ? error.code : "HOSTED_UNAVAILABLE" }, { status: error instanceof BridgeError ? error.status : 503,

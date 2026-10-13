@@ -1,0 +1,36 @@
+{
+  "boundary": "Read-only current Tempo owner UI; authentication only, business POSTs blocked; no model requests or chain writes.",
+  "checks": [
+    {
+      "viewport": "desktop-cash",
+      "agentId": "514aaff4-2700-4d52-ab56-376308e64421",
+      "legacyRequest": "519303e1-cb08-4631-8aec-2ea7ec340c83",
+      "legacySucceeded": true,
+      "goalCapability": true,
+      "draftReload": true,
+      "tempoEvidenceLinks": 3,
+      "expiredGrantDisabled": true,
+      "businessWrites": 0
+    },
+    {
+      "viewport": "mobile-credits",
+      "agentId": "893fadc6-c22c-4bed-969f-791032cc1a98",
+      "legacyRequest": "3ec27411-3b6c-4212-884c-af2d84939b01",
+      "legacySucceeded": true,
+      "goalCapability": true,
+      "draftReload": true,
+      "tempoEvidenceLinks": 2,
+      "expiredGrantDisabled": true,
+      "businessWrites": 0
+    }
+  ],
+  "screenshots": [
+    "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-upstream-sync-20261013/desktop-cash-history.png",
+    "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-upstream-sync-20261013/desktop-cash-expired-game.png",
+    "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-upstream-sync-20261013/mobile-credits-history.png",
+    "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-upstream-sync-20261013/mobile-credits-expired-game.png"
+  ],
+  "errors": [],
+  "passed": true,
+  "completedAt": "2026-10-13T09:53:39.902Z"
+}

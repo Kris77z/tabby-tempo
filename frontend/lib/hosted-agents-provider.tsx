@@ -9,7 +9,7 @@ const HostedContext = createContext<State | null>(null);
 /** One session controller for both hosted routes. No reads before a consumer mounts. */
 export function HostedAgentsProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const state = useHostedAgentsController(pathname === "/dashboard" || pathname === "/onboarding");
+  const state = useHostedAgentsController(["/dashboard", "/onboarding", "/finance", "/arena"].includes(pathname));
   return <HostedContext.Provider value={state}>{children}</HostedContext.Provider>;
 }
 

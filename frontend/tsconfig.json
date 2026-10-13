@@ -64,7 +64,11 @@
     ".next-tempo-gamefi-extra/types/**/*.ts",
     ".next-tempo-gamefi-extra/dev/types/**/*.ts",
     ".next-tempo-gamefi-extra-2/types/**/*.ts",
-    ".next-tempo-gamefi-extra-2/dev/types/**/*.ts"
+    ".next-tempo-gamefi-extra-2/dev/types/**/*.ts",
+    ".next-upstream-sync-20261013-2/types/**/*.ts",
+    ".next-upstream-sync-20261013-2/dev/types/**/*.ts",
+    ".next-upstream-sync-round2-20261013-2/types/**/*.ts",
+    ".next-upstream-sync-round2-20261013-2/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

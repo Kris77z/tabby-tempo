@@ -1,3 +1,5 @@
+import { loadTestSponsorship, type TestSponsorshipState } from "../services/hosted-agents/src/test-sponsorship.js";
+import type { HostedGoalConfig } from "../services/hosted-agents/src/goals/executor.js";
 import { once } from "node:events";
 import { createHash, randomBytes } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
@@ -42,7 +44,7 @@ export interface TempoHostedBootstrap {
   gatewayReadyFile: string; vendorKeyFile: string; tasks: WorkflowConfig["tasks"];
   maxFeePerGas: string; frontendOrigin: string; hostedPort: number;
 }
-type PortName = "underwriter" | "arena" | "fixed" | "allowance" | "planner";
+type PortName = "underwriter" | "arena" | "fixed" | "allowance" | "planner" | "goalCheap" | "goalStrong";
 interface CatalogMigration {
   id: string; status: "Intent" | "Applied"; createdAt: string; appliedAt?: string;
   beforeBinding: string; afterBinding: string; before: TempoHostedBootstrap; after: TempoHostedBootstrap;
@@ -51,6 +53,7 @@ interface CatalogMigration {
 interface RuntimeJournal {
   version: 1; binding: string; startedAt: string; templateDeadlineMs: number; ipcDirectory: string; operatorToken: string; ports: Partial<Record<PortName, number>>;
   originalBootstrap?: TempoHostedBootstrap; originalCatalog?: WorkflowConfig["tasks"];
+  testSponsorship?: RuntimeSponsorship;
   effectiveBinding?: string; migrations?: CatalogMigration[];
 }
 interface GatewayReady { url: string; endpoint: string; keyFile: string; models: GatewayModel[] }
@@ -66,6 +69,29 @@ const address = (value: string) => { const result = getAddress(value); if (resul
 const same = (a: string, b: string) => address(a) === address(b);
 const absolute = (value: string) => { if (typeof value !== "string" || !isAbsolute(value) || resolve(value) !== value) fail("TEMPO_ABSOLUTE_PATH_REQUIRED"); return value; };
 async function optionalJson<T>(path: string): Promise<T | undefined> { try { return JSON.parse(await readFile(path, "utf8")); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined; throw error; } }
+export interface RuntimeSponsorship { file: string; digest: string; grantId: string }
+/** Preserve the same private authorization across config regeneration, including after expiry. */
+export async function preserveTempoRuntimeSponsorship(directory: string, origin: string, previous?: RuntimeSponsorship): Promise<RuntimeSponsorship | undefined> {
+  const current = await optionalJson<{hosted?: {testSponsorshipFile?: string}}>(join(directory, "hosted.json"));
+  const configured = current?.hosted?.testSponsorshipFile;
+  if (previous && configured && configured !== previous.file) fail("TEMPO_SPONSORSHIP_BINDING_CHANGED");
+  const file = previous?.file ?? configured;
+  if (!file) return undefined;
+  const loaded = await loadTestSponsorship(file, { chainId: "42431", origin });
+  const observed = { file, digest: loaded.digest, grantId: loaded.grant.id };
+  const primary = await optionalJson<{testSponsorship?: TestSponsorshipState}>(join(directory,"hosted","database","session.json"));
+  if (previous && JSON.stringify(previous) !== JSON.stringify(observed)
+    || !primary?.testSponsorship || primary.testSponsorship.digest !== loaded.digest
+    || JSON.stringify(primary.testSponsorship.grant) !== JSON.stringify(loaded.grant)) fail("TEMPO_SPONSORSHIP_BINDING_CHANGED");
+  return observed;
+}
+export const TEMPO_GOAL_PORTS = ["goalCheap", "goalStrong"] as const;
+/** Logical aliases remain identical to the original paid catalog; physical/response models are separate. */
+export function tempoGoalConfig(catalog: GatewayModel[], ports: Partial<Record<PortName,number>>, provider: string): HostedGoalConfig {
+  return {durationMs:1200000, chainLookup:true, models:catalog.map((model,index)=>({id:["kimi-k2.6","kimi-k3"][index],
+    relayUrl:`http://127.0.0.1:${ports[TEMPO_GOAL_PORTS[index]]}/v1/chat`, provider,
+    priceRaw:index?"20000":"10000", service:"tabby/mission", model:model.id, physicalModel:model.model, responseModel:model.responseModel}))};
+}
 export async function loadTempoHostedBootstrap(file: string) {
   const b = JSON.parse(await readFile(absolute(file), "utf8")) as TempoHostedBootstrap;
   if (b.version !== 1 || b.chainId !== "42431" || !Number.isSafeInteger(b.deploymentBlock) || b.deploymentBlock < 0
@@ -273,6 +299,8 @@ export async function startTempoHostedRuntime(directory: string, bootstrapFile: 
       await store.write(state);
     }
     const journal = state;
+    journal.testSponsorship = await preserveTempoRuntimeSponsorship(directory,b.frontendOrigin,journal.testSponsorship);
+    await store.write(journal);
     const runner = new DockerExecutor(); await runner.ready();
     connection = await tempoProvider(await readRpcUrlFile(b.rpcUrlFile), b.rpcTransport); const rpc = connection.provider;
     const put = async (name: string, value: unknown) => { const path = join(directory, name); await atomicJson(path, value); return path; };
@@ -295,8 +323,13 @@ export async function startTempoHostedRuntime(directory: string, bootstrapFile: 
         upstreams: catalog.map((model, index) => ({ name: index ? "strong" : "cheap", model: model.model, baseUrl: gateway.url, key: gatewayKey })) },
       dataDir: join(directory, "fixed"), quoteTtl: 300, confirmations: 1, upstreamTimeout: 120000, host: "127.0.0.1", port: 0,
       operatorToken: journal.operatorToken, refunderKey: await readSecret(b.roleKeyFiles.refunder) };
+    // All relay refunds use the same role wallet; serialize it across the distinct journals.
+    let refundQueue: Promise<unknown> = Promise.resolve();
+    const serializeRefund = <T>(operation:()=>Promise<T>):Promise<T> => {
+      const next=refundQueue.catch(()=>{}).then(operation); refundQueue=next; return next;
+    };
     const fixed = new FixedPriceSolvingRelay(base, { provider: rpc, runner, modelFetch: fetch, recoverLock: recover });
-    relays.push(fixed); await fixed.initialize(); const fixedRefunder = new FixedPriceRefunder(fixed, { maxFeePerGas: BigInt(b.maxFeePerGas), gasLimit: 10_000_000n }); await fixedRefunder.initialize();
+    relays.push(fixed); await fixed.initialize(); const fixedRefunder = new FixedPriceRefunder(fixed, { maxFeePerGas: BigInt(b.maxFeePerGas), gasLimit: 10_000_000n, serialize: serializeRefund }); await fixedRefunder.initialize();
     await listening("fixed", relayHttp(fixed, fixedRefunder));
     const allowance = new InferenceAllowanceRelay({ ...base, dataDir: join(directory, "allowance"), service: { id: ALLOWANCE_SERVICE, model: ALLOWANCE_MODEL, price: 120000n,
       upstreams: [{ name: "allowance-ledger", model: ALLOWANCE_MODEL, baseUrl: "http://127.0.0.1/ledger", key: "unused" }] } },
@@ -304,8 +337,12 @@ export async function startTempoHostedRuntime(directory: string, bootstrapFile: 
         verifyAllowanceClosure: closure => verifyHostedAllowanceClosure(join(directory, "hosted"), closure) });
     const planner = new Relay({ ...base, dataDir: join(directory, "planner"), service: { id: "infercredit/plan", model: "logical-planner", price: 10000n,
       upstreams: [{ name: "magpie-cheap", model: catalog[0].model, baseUrl: gateway.url, key: gatewayKey }] } }, { provider: rpc });
-    for (const [name, relay] of [["allowance", allowance], ["planner", planner]] as const) {
-      relays.push(relay); await relay.initialize(); const refunder = new Refunder(relay, { maxFeePerGas: BigInt(b.maxFeePerGas), gasLimit: 10_000_000n }); await refunder.initialize(); await listening(name, relayHttp(relay, refunder));
+    const goalRelays = catalog.map((model,index)=>new Relay({...base,dataDir:join(directory,`goal-${model.id}`),service:{
+      id:"tabby/mission",model:model.id,price:index?20000n:10000n,
+      upstreams:[{name:`magpie-${model.id}`,model:model.model,baseUrl:gateway.url,key:gatewayKey}]
+    }},{provider:rpc}));
+    for (const [name, relay] of [["allowance", allowance], ["planner", planner], ...goalRelays.map((relay,index)=>[TEMPO_GOAL_PORTS[index],relay] as const)] as const) {
+      relays.push(relay); await relay.initialize(); const refunder = new Refunder(relay, { maxFeePerGas: BigInt(b.maxFeePerGas), gasLimit: 10_000_000n, serialize: serializeRefund }); await refunder.initialize(); await listening(name, relayHttp(relay, refunder));
     }
     const walletDirectory = join(directory, "wallets"), models = ["kimi-k2.6", "kimi-k3"];
     const taskModels = models.map((id, index) => {
@@ -324,8 +361,9 @@ export async function startTempoHostedRuntime(directory: string, bootstrapFile: 
       opponent: { binding: b.opponentBinding, keyFile: b.roleKeyFiles.opponent, modelId: "kimi-k2.6", strategy: "balanced" },
       models: models.map(id => ({ id, baseUrl: "https://api.moonshot.cn/v1", keyFile: b.vendorKeyFile })), creditsDirectory: join(directory, "credits") });
     const hostedConfigFile = await put("hosted.json", { version: 1, port: b.hostedPort,
-      hosted: { directory: join(directory, "hosted"), origin: b.frontendOrigin, chainId: "42431", models: models.map(id => ({ id, label: id === "kimi-k2.6" ? "Kimi K2.6" : "Kimi K3" })),
+      hosted: { ...(journal.testSponsorship?{testSponsorshipFile:journal.testSponsorship.file}:{}), directory: join(directory, "hosted"), origin: b.frontendOrigin, chainId: "42431", models: models.map(id => ({ id, label: id === "kimi-k2.6" ? "Kimi K2.6" : "Kimi K3" })),
         maxAgentsPerOwner: 6, maxTotalBudgetRaw: "1000000", maxPerRunBudgetRaw: "120000" }, executor: { taskConfigFile, gameConfigFile },
+      goals: tempoGoalConfig(catalog,journal.ports,b.payTo),
       autonomy: { maxTasks: 2, maxDecisions: 3, durationMs: 1200000, plannerRelayUrl: `${url("planner")}/v1/chat`, plannerProvider: b.payTo, plannerPriceRaw: "10000",
         plannerService: "infercredit/plan", plannerModel: "logical-planner", plannerPhysicalModel: catalog[0].model, plannerResponseModel: catalog[0].responseModel } });
     await loadHostedDaemonConfig(hostedConfigFile);

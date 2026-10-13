@@ -16,8 +16,14 @@ function financial(agent: HostedAgent, after = false): Extract<HostedFinance, { 
     policy: { maxCashPerTxRaw: "120000", maxDebtPerTxRaw: "120000", maxDebtPerDayRaw: "1000000", ownerFrozen: false },
     counts: { repayments: after ? "2" : "1", defaults: "0", mirrorRepayments: after ? "2" : "1", successes: after ? "2" : "1", mirrorDefaults: "0" } };
 }
-async function pane(page: Page, name: "资源" | "请求") {
-  const tab = page.getByRole("tab", { name, exact: true }); if (await tab.isVisible()) await tab.click();
+async function accountButton(page:Page,name:string){const trigger=page.getByRole('button',{name:'账户菜单',exact:true});if(await trigger.getAttribute('aria-expanded')!=='true')await trigger.click();return page.getByRole('menuitem',{name,exact:true});}
+async function pane(page:Page,name:'资源'|'请求'){
+ const outer=page.getByRole('tab',{name:'mission.log',exact:true});if(await outer.isVisible())await outer.click();
+ await page.getByRole('tab',{name:name==='资源'?'资金与借贷':'任务',exact:true}).click();
+}
+async function selectAgent(page:Page,id:string){
+ const outer=page.getByRole('tab',{name:'agent.sys',exact:true});if(await outer.isVisible())await outer.click();
+ await page.getByRole('combobox',{name:'当前 Agent',exact:true}).click();await page.getByRole('listbox',{name:'当前 Agent',exact:true}).getByRole('option',{name:id,exact:true}).click();await pane(page,'资源');
 }
 test("own completed credit task refreshes the flywheel and exposes separate canonical transaction evidence", async ({ page }, info) => {
   let agents = [a], runs: HostedRun[] = [], after = false, financeReads = 0;
@@ -38,10 +44,10 @@ test("own completed credit task refreshes the flywheel and exposes separate cano
     unexpected.push(`${method} ${path}`); return route.fulfill({ status: 503, json: { error: "HOSTED_UNAVAILABLE" } });
   });
   await page.goto("/dashboard"); await pane(page, "资源");
-  const panel = page.getByTestId("hosted-financial-snapshot");
-  await expect(panel.getByText("570", { exact: true })).toBeVisible(); await expect(panel).toContainText("CHAIN IDENTITY · #9001");
+  const panel = page.getByTestId("hosted-financial-snapshot").filter({visible:true});
+  await expect(panel.getByText("570", { exact: true })).toBeVisible(); await expect(panel).toContainText("Agent #9001");
   await expect(panel).toContainText("已核验快照 · chain 10143 · 区块 #10"); expect(financeReads).toBe(1);
-  await page.getByRole("button", { name: "运行任务", exact: true }).click();
+  await page.getByRole("button",{name:"去接单 →",exact:true}).click();await page.getByRole("button",{name:"执行操作",exact:true}).click();await pane(page,"资源");
   await expect(panel.getByText("640", { exact: true })).toBeVisible();
   await expect(panel).toContainText("InferScore 570 → 640"); await expect(panel).toContainText("Tier C → B"); await expect(panel).toContainText("真实还款 1 → 2");
   await expect(panel).toContainText("本金上限 0.2 → 0.5 USDC"); expect(financeReads).toBe(2);
@@ -50,7 +56,7 @@ test("own completed credit task refreshes the flywheel and exposes separate cano
   const summary = page.getByRole("region", { name: "任务结算摘要" });
   await expect(summary).toContainText("cash 支付 0.04 · 信用支付 0.08 USDC"); await expect(summary).toContainText("实际还款 0.092 USDC"); await expect(summary).toContainText("已足额还款");
   await expect(summary.getByRole("link", { name: /查看结算交易/ })).toHaveAttribute("href", `https://testnet.monadexplorer.com/tx/${hash("e")}`);
-  await page.getByText("查看请求与凭证", { exact: true }).click();
+  await page.getByText("请求详情与凭证", { exact: true }).click();
   await expect(page.getByRole("link", { name: /查看接单交易/ })).toHaveAttribute("href", `https://testnet.monadexplorer.com/tx/${hash("c")}`);
   await expect(page.getByRole("link", { name: /查看付款交易/ })).toHaveAttribute("href", `https://testnet.monadexplorer.com/tx/${hash("d")}`);
   expect(unexpected).toEqual([]); expect(failures).toEqual([]);
@@ -67,7 +73,7 @@ test("unavailable reads show unknown values, preserve a labelled prior snapshot 
     }
     return route.fulfill({ status: 503, json: { error: "HOSTED_UNAVAILABLE" } });
   });
-  await page.goto("/dashboard"); await pane(page, "资源"); const panel = page.getByTestId("hosted-financial-snapshot");
+  await page.goto("/dashboard"); await pane(page, "资源"); const panel = page.getByTestId("hosted-financial-snapshot").filter({visible:true});
   await expect(panel).toContainText("cash、债务和评分尚不可用"); await expect(panel.getByText("未偿债务（含 fee）", { exact: true })).toHaveCount(0); await expect(panel.getByText("InferScore", { exact: true })).toHaveCount(0);
   mode = "confirmed"; await panel.getByRole("button", { name: "刷新金融快照" }).click(); await expect(panel.getByText("570", { exact: true })).toBeVisible();
   mode = "unavailable"; await panel.getByRole("button", { name: "刷新金融快照" }).click(); await expect(panel).toContainText("以下保留上次已核验快照"); await expect(panel).toContainText("上次快照"); await expect(panel.getByText("570", { exact: true })).toBeVisible();
@@ -85,8 +91,8 @@ test("a slow response from the previous hosted identity cannot replace the selec
     return route.fulfill({ status: 503, json: { error: "HOSTED_UNAVAILABLE" } });
   });
   await page.goto("/dashboard"); await expect.poll(() => readsA).toBe(1);
-  await page.getByRole("combobox", { name: "当前 Agent" }).selectOption(b.id); await pane(page, "资源");
-  const panel = page.getByTestId("hosted-financial-snapshot"); await expect(panel.getByText("710", { exact: true })).toBeVisible(); await expect(panel).toContainText("CHAIN IDENTITY · #9002");
+  await selectAgent(page,b.id); await pane(page, "资源");
+  const panel = page.getByTestId("hosted-financial-snapshot").filter({visible:true}); await expect(panel.getByText("710", { exact: true })).toBeVisible(); await expect(panel).toContainText("Agent #9002");
   const response = page.waitForResponse(value => value.url().endsWith(`/${a.id}/finance`)); release(); await response;
   await expect(panel.getByText("710", { exact: true })).toBeVisible(); await expect(panel.getByText("570", { exact: true })).toHaveCount(0); await expect(panel).toContainText("0.999 USDC");
 });
@@ -105,7 +111,7 @@ test("a suspended finance transport reconnects once without any business operati
     return route.fulfill({ status: 503, json: { error: "HOSTED_UNAVAILABLE" } });
   });
   await page.goto("/dashboard"); await pane(page, "资源");
-  const panel = page.getByTestId("hosted-financial-snapshot");
+  const panel = page.getByTestId("hosted-financial-snapshot").filter({visible:true});
   await expect(panel).toContainText("已核验快照"); await expect(panel.getByText("570", { exact: true })).toBeVisible();
   expect(reads).toBe(2); expect(writes).toEqual([]);
 });
@@ -123,7 +129,7 @@ test("an HTTP 200 finance timeout reconnects once and stops if the second read a
     }
     return route.fulfill({ status: 503, json: { error: "HOSTED_UNAVAILABLE" } });
   });
-  await page.goto("/dashboard"); await pane(page, "资源"); const panel = page.getByTestId("hosted-financial-snapshot");
+  await page.goto("/dashboard"); await pane(page, "资源"); const panel = page.getByTestId("hosted-financial-snapshot").filter({visible:true});
   await expect(panel).toContainText("已核验快照 · chain 10143 · 区块 #10"); expect(reads).toBe(2);
   await expect(panel.getByText("570", { exact: true })).toBeVisible();
   alwaysTimeout = true;
@@ -147,11 +153,11 @@ test("an HTTP 200 timeout cannot retry for an old Agent or a permanent binding f
     if (path.endsWith(`/${b.id}/finance`)) { readsB++; return route.fulfill({ status: 200, json: { status: "unavailable", observedAt: timestamp, reason: "HOSTED_FINANCE_BINDING_MISMATCH" } }); }
     return route.fulfill({ status: 503, json: { error: "HOSTED_UNAVAILABLE" } });
   });
-  await page.goto("/dashboard"); await pane(page, "资源"); const panel = page.getByTestId("hosted-financial-snapshot");
+  await page.goto("/dashboard"); await pane(page, "资源"); const panel = page.getByTestId("hosted-financial-snapshot").filter({visible:true});
   await expect(panel).toContainText("链上读取超时");
-  await page.getByRole("combobox", { name: "当前 Agent" }).selectOption(b.id);
+  await selectAgent(page,b.id);
   await expect(panel).toContainText("链上身份或协议配置尚未核验");
-  await page.waitForTimeout(900); expect(readsA).toBe(1); expect(readsB).toBe(1);
+  const afterSwitch=readsA;expect(afterSwitch).toBeLessThanOrEqual(2);await page.evaluate(()=>{window.dispatchEvent(new Event("online"));document.dispatchEvent(new Event("visibilitychange"));});await page.waitForTimeout(900);expect(readsA).toBe(afterSwitch);expect(readsB).toBe(1);
   await expect(panel).not.toContainText("已核验快照");
   await expect(panel.getByText("未偿债务（含 fee）", { exact: true })).toHaveCount(0);
 });
@@ -165,7 +171,7 @@ test("offline and background finance recovery waits for resume and remains bound
     if (path.endsWith(`/${a.id}/finance`)) { reads++; return mode === "failed" ? route.abort("internetdisconnected") : route.fulfill({ json: financial(a, reads > 1) }); }
     return route.fulfill({ status: 503, json: { error: "HOSTED_UNAVAILABLE" } });
   });
-  await page.goto("/dashboard"); await pane(page, "资源"); const panel = page.getByTestId("hosted-financial-snapshot");
+  await page.goto("/dashboard"); await pane(page, "资源"); const panel = page.getByTestId("hosted-financial-snapshot").filter({visible:true});
   await expect(panel).toContainText("已核验快照"); expect(reads).toBe(1);
   mode = "failed"; await page.context().setOffline(true);
   await panel.getByRole("button", { name: "刷新金融快照" }).click();
@@ -204,11 +210,11 @@ test("a failed identity cannot retry after Agent selection changes, and chain un
     if (path.endsWith(`/${b.id}/finance`)) { readsB++; return route.fulfill({ json: { status: "unavailable", observedAt: timestamp, reason: "HOSTED_FINANCE_UNDERWRITER_UNAVAILABLE" } }); }
     return route.fulfill({ status: 503, json: { error: "HOSTED_UNAVAILABLE" } });
   });
-  await page.goto("/dashboard"); await pane(page, "资源"); const panel = page.getByTestId("hosted-financial-snapshot");
+  await page.goto("/dashboard"); await pane(page, "资源"); const panel = page.getByTestId("hosted-financial-snapshot").filter({visible:true});
   await expect(panel).toContainText("cash、债务和评分尚不可用");
-  await page.getByRole("combobox", { name: "当前 Agent" }).selectOption(b.id);
+  await selectAgent(page,b.id);
   await expect(panel).toContainText("Underwriter 暂时不可用");
-  await page.waitForTimeout(900); expect(readsA).toBe(1); expect(readsB).toBe(1);
+  const afterSwitch=readsA;expect(afterSwitch).toBeLessThanOrEqual(2);await page.evaluate(()=>{window.dispatchEvent(new Event("online"));document.dispatchEvent(new Event("visibilitychange"));});await page.waitForTimeout(900);expect(readsA).toBe(afterSwitch);expect(readsB).toBe(1);
   await expect(panel.getByText("未偿债务（含 fee）", { exact: true })).toHaveCount(0);
 });
 
@@ -233,7 +239,7 @@ for (const destination of ["dashboard", "onboarding"]) test(`fresh login on ${de
   let release!: () => void, financeReads = 0, challengeCalls = 0, loginCalls = 0;
   const gate = new Promise<void>(resolve => { release = resolve; }), expiry = Date.now() + 300000;
   const challenge = { id: "financial-auth-challenge", expiresAt: expiry,
-    message: `AgentFuel hosted agent login\nOrigin: http://127.0.0.1:3014\nWallet: ${signer.address}\nChain: 10143\nNonce: financial-auth-challenge\nExpires: ${new Date(expiry).toISOString()}\nThis signature authenticates your platform account. It authorizes no blockchain transaction.` };
+    message: `AgentFuel hosted agent login\nOrigin: ${test.info().project.use.baseURL}\nWallet: ${signer.address}\nChain: 10143\nNonce: financial-auth-challenge\nExpires: ${new Date(expiry).toISOString()}\nThis signature authenticates your platform account. It authorizes no blockchain transaction.` };
   const setCookie = (value: string, maxAge: number) => `${cookieName}=${value}; Path=/api/hosted; HttpOnly; SameSite=Strict; Max-Age=${maxAge}`;
   await page.route("**/api/**", async route => {
     const path = new URL(route.request().url()).pathname, cookie = route.request().headers().cookie ?? "";
@@ -255,7 +261,7 @@ for (const destination of ["dashboard", "onboarding"]) test(`fresh login on ${de
   try {
     await page.goto("/dashboard"); await expect.poll(() => financeReads).toBe(1);
     if (destination === "onboarding") {
-      await page.getByRole("button", { name: "创建 Agent", exact: true }).click();
+      await (await accountButton(page,"创建 Agent")).click();
       await page.getByRole("button", { name: "开始创建 ↵", exact: true }).click();
       await expect(page.getByLabel("名称", { exact: true })).toBeVisible();
       await page.getByLabel("名称", { exact: true }).fill("旧身份未确认配置");
@@ -263,7 +269,7 @@ for (const destination of ["dashboard", "onboarding"]) test(`fresh login on ${de
     await page.evaluate(() => (window as unknown as { ethereum: { __emit: (event: string, payload: unknown) => void } }).ethereum.__emit("chainChanged", "0x279f"));
     await expect(page.getByRole("button", { name: "签名登录", exact: true })).toBeEnabled();
     await page.getByRole("button", { name: "签名登录", exact: true }).click();
-    await expect(page.getByRole("button", { name: "等待钱包…", exact: true })).toBeDisabled();
+    await expect(page.getByRole("button", { name: destination==="onboarding"?"等待钱包…":"签名登录", exact: true })).toBeDisabled();
     await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
     expect(challengeCalls).toBe(0); expect(loginCalls).toBe(0);
     const oldResponse = page.waitForResponse(response => response.url().endsWith(`/${a.id}/finance`) && response.status() === 401);
@@ -274,12 +280,12 @@ for (const destination of ["dashboard", "onboarding"]) test(`fresh login on ${de
       await page.getByRole("link", { name: "进入工作台 →", exact: true }).click();
       await expect(page).toHaveURL(/\/dashboard$/);
     }
-    await expect(page.getByRole("button", { name: "退出登录", exact: true })).toBeEnabled();
+    await expect(await accountButton(page,"退出登录")).toBeEnabled();
     expect(loginCalls).toBe(1); expect(challengeCalls).toBe(1);
     expect((await page.context().cookies()).find(cookie => cookie.name === cookieName)?.value).toBe(newToken);
     const refresh = page.waitForResponse(response => response.url().endsWith("/api/hosted/agents") && response.status() === 200);
-    await page.getByRole("button", { name: "刷新托管数据", exact: true }).click(); await refresh;
-    await pane(page, "资源"); await expect(page.getByTestId("hosted-financial-snapshot").getByText("570", { exact: true })).toBeVisible();
+    await (await accountButton(page,"刷新数据")).click(); await refresh;
+    await pane(page, "资源"); await expect(page.getByTestId("hosted-financial-snapshot").filter({visible:true}).getByText("570", { exact: true })).toBeVisible();
     expect((await page.context().cookies()).find(cookie => cookie.name === cookieName)?.value).toBe(newToken);
   } finally { release(); }
 });

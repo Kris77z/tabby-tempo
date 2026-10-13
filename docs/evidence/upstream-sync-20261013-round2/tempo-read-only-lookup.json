@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "readOnly": true,
+  "paidModelCalls": 0,
+  "transactionsBroadcast": 0,
+  "scope": "PathUSD and original Task7 payment; no goal admission or model dispatch",
+  "evidence": {
+    "version": 1,
+    "chainId": "42431",
+    "observedAt": "2026-10-13T12:51:28.127Z",
+    "digest": "0x99dbfde87f4bfd30cd68467928f53ff182d7dbb3dd007ee65b20249ff3f9aa8a",
+    "records": [
+      {
+        "kind": "address",
+        "target": "0x20C0000000000000000000000000000000000000",
+        "blockNumber": 39414030,
+        "blockHash": "0xaabc82e15f25cd92d8774ddf265bf668fde47da07e379ef2e0575df384b88717",
+        "dataJson": "{\"address\":\"0x20C0000000000000000000000000000000000000\",\"codeHash\":\"0x309b8896ee4c1ff7ec1966155373dee42663b6b40c3fedc70ba501684848d2a3\",\"codeBytes\":1,\"nativeBalanceIsPlaceholder\":true,\"isContract\":true,\"feeAsset\":{\"address\":\"0x20c0000000000000000000000000000000000000\",\"symbol\":\"PathUSD\",\"decimals\":6,\"balance\":{\"status\":\"read\",\"value\":\"\\\"938731760535499\\\"\"}},\"proxySlots\":[{\"kind\":\"eip1967\",\"slot\":\"0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc\",\"value\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"},{\"kind\":\"zeppelinos\",\"slot\":\"0x7050c9e0f4ca769c69bd3a8ef740bc37934f8e2c036e5a723fd8ee048ed3f8c3\",\"value\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"},{\"kind\":\"beacon\",\"slot\":\"0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50\",\"value\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}],\"proxyDetection\":\"EIP-1967, legacy Zeppelinos and EIP-1167 only; absence is not proof of no custom proxy\",\"tokenReads\":{\"name\":{\"status\":\"read\",\"value\":\"\\\"PathUSD\\\"\"},\"symbol\":{\"status\":\"read\",\"value\":\"\\\"PathUSD\\\"\"},\"decimals\":{\"status\":\"read\",\"value\":\"\\\"6\\\"\"},\"totalSupply\":{\"status\":\"read\",\"value\":\"\\\"18565059633709551615000\\\"\"},\"owner\":{\"status\":\"unavailable\"},\"paused\":{\"status\":\"read\",\"value\":\"false\"}},\"totalSupplyFormatted\":\"18565059633709551.615\"}",
+        "source": {
+          "url": "https://sourcify.dev/server/v2/contract/42431/0x20C0000000000000000000000000000000000000?fields=abi,sources,runtimeBytecode.onchainBytecode",
+          "status": "unverified",
+          "codeMatched": false,
+          "truncated": false
+        }
+      },
+      {
+        "kind": "address",
+        "target": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+        "blockNumber": 39348294,
+        "blockHash": "0xc88cbd93302c977e7a3e0c7bdea00461574b2673c932cfa1baacedc8e53ed2f8",
+        "dataJson": "{\"address\":\"0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B\",\"codeHash\":\"0xcdd106ff635d70eff57665ba551d3a2ef7f93f181fe03e82a94c387c513cbe76\",\"codeBytes\":8620,\"nativeBalanceIsPlaceholder\":true,\"isContract\":true,\"feeAsset\":{\"address\":\"0x20c0000000000000000000000000000000000000\",\"symbol\":\"PathUSD\",\"decimals\":6,\"balance\":{\"status\":\"read\",\"value\":\"\\\"331200\\\"\"}},\"proxySlots\":[{\"kind\":\"eip1967\",\"slot\":\"0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc\",\"value\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"},{\"kind\":\"zeppelinos\",\"slot\":\"0x7050c9e0f4ca769c69bd3a8ef740bc37934f8e2c036e5a723fd8ee048ed3f8c3\",\"value\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"},{\"kind\":\"beacon\",\"slot\":\"0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50\",\"value\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}],\"proxyDetection\":\"EIP-1967, legacy Zeppelinos and EIP-1167 only; absence is not proof of no custom proxy\",\"tokenReads\":{\"name\":{\"status\":\"unavailable\"},\"symbol\":{\"status\":\"unavailable\"},\"decimals\":{\"status\":\"unavailable\"},\"totalSupply\":{\"status\":\"unavailable\"},\"owner\":{\"status\":\"read\",\"value\":\"\\\"0x119e2eeFe529815f7f5F24687BA6F6b585176B14\\\"\"},\"paused\":{\"status\":\"unavailable\"},\"ownerBalance\":{\"status\":\"unavailable\"}}}",
+        "source": {
+          "url": "https://sourcify.dev/server/v2/contract/42431/0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B?fields=abi,sources,runtimeBytecode.onchainBytecode",
+          "status": "unverified",
+          "codeMatched": false,
+          "truncated": false
+        }
+      },
+      {
+        "kind": "transaction",
+        "target": "0x5fdb1f7da92be6f50b7a14cc7f50caf88361cb44b5aa8319ab8fe99dd0538471",
+        "blockNumber": 39348294,
+        "blockHash": "0xc88cbd93302c977e7a3e0c7bdea00461574b2673c932cfa1baacedc8e53ed2f8",
+        "dataJson": "{\"hash\":\"0x5fdb1f7da92be6f50b7a14cc7f50caf88361cb44b5aa8319ab8fe99dd0538471\",\"from\":\"0xa2f5bdd12b24fec85b0f4151d43b0528dd05cbc2\",\"to\":\"0x1b3e3f54347c5e84c7ca2e2759636e31950d9b9b\",\"valueRaw\":\"0\",\"nonce\":7,\"status\":\"success\",\"gasUsed\":\"348674\",\"effectiveGasPriceRaw\":\"600000001\",\"type\":\"0x2\",\"calldata\":\"0x5535ecbf0000000000000000000000000000000000000000000000000000000000000049000000000000000000000000760a4dfb7373311b88b2481611f78730f6fc932b000000000000000000000000000000000000000000000000000000000001d4c04cc538668eddb24577bf8854c1df9e7b616b7869e7bcae8d466363a151009301000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e00000000000000000000000000000000000000000000000000000000000000000\",\"calldataTruncated\":false,\"logs\":[{\"address\":\"0x20c0000000000000000000000000000000000000\",\"topics\":[\"0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef\",\"0x0000000000000000000000001b3e3f54347c5e84c7ca2e2759636e31950d9b9b\",\"0x000000000000000000000000760a4dfb7373311b88b2481611f78730f6fc932b\"],\"data\":\"0x000000000000000000000000000000000000000000000000000000000001d4c0\",\"dataTruncated\":false,\"logIndex\":\"0x5\"},{\"address\":\"0x1b3e3f54347c5e84c7ca2e2759636e31950d9b9b\",\"topics\":[\"0x99692b4a07b787501d170f35eb712e137177503e58c59845f5dabc54e24c7c99\",\"0x0000000000000000000000000000000000000000000000000000000000000049\",\"0x000000000000000000000000760a4dfb7373311b88b2481611f78730f6fc932b\",\"0x4cc538668eddb24577bf8854c1df9e7b616b7869e7bcae8d466363a151009301\"],\"data\":\"0x000000000000000000000000000000000000000000000000000000000001d4c00000000000000000000000000000000000000000000000000000000000000000\",\"dataTruncated\":false,\"logIndex\":\"0x6\"},{\"address\":\"0x20c0000000000000000000000000000000000000\",\"topics\":[\"0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef\",\"0x000000000000000000000000a2f5bdd12b24fec85b0f4151d43b0528dd05cbc2\",\"0x000000000000000000000000feec000000000000000000000000000000000000\"],\"data\":\"0x00000000000000000000000000000000000000000000000000000000000000d2\",\"dataTruncated\":false,\"logIndex\":\"0x7\"}],\"logsTruncated\":false,\"fee\":{\"status\":\"confirmed-receipt-transfer\",\"feeToken\":\"0x20c0000000000000000000000000000000000000\",\"feePayer\":\"0xa2f5bdd12b24fec85b0f4151d43b0528dd05cbc2\",\"symbol\":\"PathUSD\",\"decimals\":6,\"amountRaw\":\"210\",\"amount\":\"0.00021\",\"logIndex\":\"0x7\"},\"nativeBalanceIsPlaceholder\":true,\"decodeStatus\":\"Undecoded; raw calldata retained, no guessed selector signature\"}"
+      }
+    ]
+  }
+}

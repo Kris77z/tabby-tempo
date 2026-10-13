@@ -1,0 +1,26 @@
+{
+    "id": "yield-finder-v1",
+    "name": "Yield Strategy Finder",
+    "taskTypes": [
+        "yield-search",
+        "yield"
+    ],
+    "skills": [
+        "defi",
+        "yield",
+        "apy",
+        "staking",
+        "farming",
+        "monad"
+    ],
+    "priceWei": "15000000000000000",
+    "output": {
+        "type": "text"
+    },
+    "llm": {
+        "temperature": 0.5
+    },
+    "fallback": {
+        "summary": "Discover and evaluate DeFi yield opportunities on Monad."
+    }
+}

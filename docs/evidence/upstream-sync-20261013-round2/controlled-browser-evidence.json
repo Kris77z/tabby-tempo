@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "boundary": "Controlled API fixtures intercept all API/RPC/model traffic; screenshots are synthetic, not Tempo business evidence",
+  "stats": {
+    "startTime": "2026-10-13T12:54:04.135Z",
+    "duration": 20241.926,
+    "expected": 14,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "testedBuildId": "wl2ldIuUdqw10vKBvreiP",
+  "finalBuildId": "_i2pQhQ0K8qZ_hC-2MhB2",
+  "buildDifference": "final build includes shared RPC eth_getStorageAt read whitelist; client components unchanged",
+  "screenshots": [
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-round2-20261013/synthetic-chain-evidence-desktop.png",
+      "sha256": "365d48ac0e66b76910b1fb221b5d34a48aee84bd81c8f09a2e8a4ee3f36927b9",
+      "boundary": "Synthetic API fixture; no chain or model call"
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-round2-20261013/synthetic-chain-evidence-mobile.png",
+      "sha256": "1a37338331e3824bb7014f7aef95a2f4c4860b79b6f18e2f91913d338266d40e",
+      "boundary": "Synthetic API fixture; no chain or model call"
+    }
+  ],
+  "realOwnerAcceptance": "docs/tempo-upstream-sync-round2-root-acceptance-20261013.md"
+}

@@ -1,9 +1,10 @@
-import type { AgentSettings, HostedAction, HostedAgent, HostedRun, HostedCatalogModel, HostedFinance, HostedCapabilities, HostedSponsorship } from "../../services/hosted-agents/src/types";
-import { networkName } from "./networks";
-export type { AgentSettings, HostedAction, HostedAgent, HostedRun, HostedCatalogModel, HostedFinance, HostedCapabilities, HostedSponsorship };
+import { validGoal } from "../../services/hosted-agents/src/goal-types";
+import type { AgentCreation, AgentSettings, HostedAction, HostedAgent, HostedRun, HostedCatalogModel, HostedFinance, HostedCapabilities, HostedSponsorship } from "../../services/hosted-agents/src/types";
+export type { AgentCreation, AgentSettings, HostedAction, HostedAgent, HostedRun, HostedCatalogModel, HostedFinance, HostedCapabilities, HostedSponsorship };
 export interface HostedSnapshot { capabilities?: HostedCapabilities; sponsorship?: HostedSponsorship; agents: HostedAgent[]; runs: HostedRun[]; models: HostedCatalogModel[] }
-export interface RunInput { requestId: string; action: HostedAction; rewardKind?: "usdc" | "llm-credits"; amountRaw?: string }
-export type PendingCommand = { owner: string; kind: "create"; input: AgentSettings & { requestId: string } } | { owner: string; kind: "run"; agentId: string; input: RunInput };
+export interface RunInput { requestId: string; action: HostedAction; rewardKind?: "usdc" | "llm-credits"; amountRaw?: string; goal?: string }
+export type PendingCommand = { owner: string; kind: "create"; input: AgentCreation & { requestId: string } } | { owner: string; kind: "run"; agentId: string; input: RunInput };
+import { networkName } from "./networks";
 export class HostedClientError extends Error {
   constructor(readonly code: string, readonly status: number) { super(code); }
 }
@@ -28,6 +29,29 @@ export async function hostedRequest<T>(path: string, method = "GET", body?: unkn
 }
 
 const messages: Record<string, string> = {
+  HOSTED_WALLET_GAS_REQUIRED: "Agent 钱包手续费余额不足；Tempo 使用测试 PathUSD，补足后恢复原开户请求。",
+  HOSTED_GOAL_LOOKUP_NETWORK: "当前只查询 Agent 所在网络，请使用当前链的地址或交易哈希。",
+  HOSTED_GOAL_LOOKUP_LIMIT: "单次最多查询两个地址或交易；资料过多时请缩小分析范围。",
+  HOSTED_GOAL_INPUT_TOO_LARGE: "本次资料超过分析上限，请减少目标或拆分任务。",
+  HOSTED_GOAL_LOOKUP_UNAVAILABLE: "链上读取暂时不可用，尚未发起模型付款；可以恢复原请求。",
+  HOSTED_GOAL_LOOKUP_REORG: "读取期间区块发生变化，请恢复原请求重新核验。",
+  HOSTED_GOAL_SPECIALIST_OUTPUT_INVALID: "专家输出不符合报告格式，已保留调用费用与凭证并停止。",
+  HOSTED_GOAL_OUTPUT_INVALID: "模型返回内容无效，已计入确认费用并停止。",
+  HOSTED_GOAL_MODEL_CHANGED: "模型响应与报价不一致，已保留付款凭证。",
+  HOSTED_GOAL_UNDELIVERED_REFUNDED: "未交付的调用已确认退款，任务已终止。",
+  HOSTED_GOAL_PAYMENT_VOIDED: "过期付款已确认作废，没有扣款；请新建任务。",
+  HOSTED_GOAL_PAYMENT_REVERTED: "付款交易未成功，任务已停止。",
+  HOSTED_GOAL_NOT_CONFIGURED: "目标执行服务尚未接通。",
+  HOSTED_GOAL_INVALID: "请输入 1–12000 个字符的任务目标。",
+  HOSTED_GOAL_NEEDS_INPUT: "需要补充信息，请查看任务回复。",
+  HOSTED_GOAL_REVIEW_FAILED: "交付物未通过独立复核，请查看检查结果。",
+  HOSTED_GOAL_BUDGET_REQUIRED: "本次预算已达到上限，已保留阶段产出。",
+  HOSTED_GOAL_DEADLINE: "已达到本次执行时限，已保留产出。",
+  HOSTED_GOAL_CANCELLED: "已停止后续执行，已发生费用保留。",
+  HOSTED_GOAL_CALL_UNCERTAIN: "模型结果待核对，请恢复原请求。",
+  HOSTED_GOAL_RECONCILIATION_REQUIRED: "已请求停止；原付款或调用仍需对账。",
+  HOSTED_GOAL_PLAN_INVALID: "规划结果格式无效，已停止。",
+  HOSTED_GOAL_REVIEW_INVALID: "复核结果格式无效，已保留交付物。",
   WORKFLOW_REFUNDED_TASK_TERMINATED: "推理服务异常，已补偿退款并终止任务。",
   GATEWAY_PERMANENTLY_SEALED: "原推理调用已封存，不能再次派发。",
   ALLOWANCE_COMPENSATED: "原推理额度包已补偿退款，不能继续使用。",
@@ -52,6 +76,7 @@ const messages: Record<string, string> = {
   HOSTED_AUTH_REQUIRED: "请用钱包签名登录，查看和管理自己的 Agent。",
   HOSTED_AUTH_INVALID: "登录签名已过期或无效，请重新签名登录。",
   HOSTED_AUTH_RATE_LIMIT: "签名请求过于频繁，请稍后重试。",
+  HOSTED_CONFIGURATION_REQUIRED: "请先设置模型、推理预算和借贷权限，再开始运行。",
   HOSTED_SETTINGS_INVALID: "设置未被接受，请检查模型、名称和预算是否在平台允许范围内。",
   HOSTED_AGENT_LIMIT: "已达到平台允许创建的 Agent 数量。",
   HOSTED_AGENT_PAUSED: "Agent 已暂停，请先继续 Agent。",
@@ -71,7 +96,7 @@ export function hostedError(error: unknown): string {
   return "操作未完成，请检查钱包或稍后重试。";
 }
 export function reasonLabel(code: string) { return messages[code] ?? code; }
-export const actionLabel: Record<HostedAction, string> = { provision: "初始化 Agent", deposit: "现金入账", task: "运行任务", game: "免费德州", credits: "奖励额度消费", "reward-task": "奖励额度运行任务", "metered-task": "按量额度运行任务", autonomous: "Pi 连续运行" };
+export const actionLabel: Record<HostedAction, string> = { provision: "初始化 Agent", deposit: "现金入账", task: "运行任务", game: "免费德州", credits: "奖励额度消费", "reward-task": "奖励额度运行任务", "metered-task": "按量额度运行任务", autonomous: "Pi 连续运行" , goal: "目标任务" };
 export const statusLabel: Record<string, string> = { Pending: "初始化中", Ready: "就绪", Paused: "已暂停", Queued: "排队中", Running: "运行中", Succeeded: "已完成", Failed: "失败" };
 export const strategyLabel = { conservative: "保守", balanced: "均衡", aggressive: "积极" };
 export function usdcRaw(value: string): string {
@@ -88,7 +113,7 @@ export function inputUsdc(raw: string): string {
   return `${value / 1_000_000n}${fraction ? `.${fraction}` : ""}`;
 }
 export function replayInput(run: HostedRun): RunInput {
-  return { requestId: run.requestId, action: run.action, ...(run.rewardKind === undefined ? {} : { rewardKind: run.rewardKind }), ...(run.amountRaw === undefined ? {} : { amountRaw: run.amountRaw }) };
+  return { requestId: run.requestId, action: run.action, ...(run.rewardKind === undefined ? {} : { rewardKind: run.rewardKind }), ...(run.goal === undefined ? {} : { goal: run.goal }), ...(run.amountRaw === undefined ? {} : { amountRaw: run.amountRaw }) };
 }
 
 const pendingKey = (owner: string) => `agentfuel:hosted:pending:${owner.toLowerCase()}`;
@@ -101,14 +126,18 @@ export function readPending(owner: string): PendingCommand | null {
   try {
     const value = JSON.parse(localStorage.getItem(pendingKey(owner)) ?? "null") as PendingCommand | null;
     if (!value || value.owner.toLowerCase() !== owner.toLowerCase() || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.input?.requestId)) return null;
-    if (value.kind === "run" && /^[a-zA-Z0-9_-]{1,80}$/.test(value.agentId) && ["provision", "deposit", "task", "game", "credits", "reward-task", "metered-task", "autonomous"].includes(value.input.action)) {
+    if (value.kind === "run" && /^[a-zA-Z0-9_-]{1,80}$/.test(value.agentId) && ["provision", "deposit", "task", "game", "credits", "reward-task", "metered-task", "autonomous", "goal"].includes(value.input.action)) {
       const input = value.input;
+      if (input.action === "goal" ? !validGoal(input.goal) : input.goal !== undefined) return null;
       if (input.action === "game" && !["usdc", "llm-credits"].includes(input.rewardKind ?? "") || input.action === "deposit" && !/^[1-9]\d*$/.test(input.amountRaw ?? "")) return null;
       return { owner, kind: "run", agentId: value.agentId, input: { requestId: input.requestId, action: input.action,
-        ...(input.action === "game" ? { rewardKind: input.rewardKind } : {}), ...(input.action === "deposit" ? { amountRaw: input.amountRaw } : {}) } };
+        ...(input.action === "goal" ? { goal: input.goal } : {}), ...(input.action === "game" ? { rewardKind: input.rewardKind } : {}), ...(input.action === "deposit" ? { amountRaw: input.amountRaw } : {}) } };
     }
     if (value.kind === "create") {
       const input = value.input;
+      if (typeof input.name !== "string" || !input.name.trim() || input.name.length > 80 || /[\x00-\x1f\x7f]/.test(input.name)) return null;
+      if (Object.keys(input).every(key => ["name", "requestId"].includes(key))) return { owner, kind: "create", input: { name: input.name, requestId: input.requestId } };
+      if (!("modelId" in input)) return null;
       if (typeof input.name !== "string" || typeof input.modelId !== "string" || !["conservative", "balanced", "aggressive"].includes(input.strategy) ||
         !/^[1-9]\d*$/.test(input.perRunBudgetRaw) || !/^[1-9]\d*$/.test(input.totalBudgetRaw) || typeof input.allowCredit !== "boolean") return null;
       return { owner, kind: "create", input: { requestId: input.requestId, name: input.name, modelId: input.modelId,

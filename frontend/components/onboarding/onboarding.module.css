@@ -40,7 +40,7 @@
 .shell button { font:inherit; font-size:14px; border:0; border-radius:0; background:transparent; color:var(--phosphor-bright); padding:5px 0; cursor:pointer; margin-top:12px; min-height:36px; text-align:left; text-shadow:inherit; }
 .shell button:before { content:"[ " / ""; color:var(--color-muted); }.shell button:after { content:" ]" / ""; color:var(--color-muted); }
 .shell button:hover:not(:disabled) { color:#ffe3c8; text-decoration:underline; text-underline-offset:4px; }.shell button:disabled { opacity:.45; cursor:default; }
-.shell button:focus-visible,.shell a:focus-visible { outline:1px dashed var(--color-ink); outline-offset:4px; border-radius:0; }
+.shell button:focus-visible,.shell a:focus-visible { outline:none; color:#ffe3c8; text-shadow:0 0 10px var(--phosphor-glow); text-decoration:underline; text-underline-offset:4px; }
 .shell .enterKey { flex-shrink:0; color:var(--color-muted); padding:0 6px; margin:0; min-height:32px; font:inherit; }
 .shell .enterKey:before,.shell .enterKey:after { content:none; }
 .review dl { margin:12px 0; }.review dl div { display:grid; grid-template-columns:160px minmax(0,1fr); gap:16px; }.review dt { color:var(--color-muted); }.review dd { margin:0; overflow-wrap:anywhere; }

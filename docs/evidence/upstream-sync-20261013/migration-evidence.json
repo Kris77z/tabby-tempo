@@ -1,0 +1,1610 @@
+{
+  "version": 1,
+  "at": "2026-10-13T09:19:56.790888+00:00",
+  "scope": "code sync and controlled local validation; no real paid inference or Tempo business writes",
+  "sourceHead": "922f65dc9c20ab404946ce37e49e95484b515f75",
+  "targetBase": "4846960a9f1dcfe389a459d86913cc8c7f7b8c73",
+  "snapshotSha256": "69c075a158bf40f77fae668cbe7e5fe7cb22b4bbfc4c6509b63de9620ccb39d7",
+  "sourceStableDuringCapture": true,
+  "frozenFiles": 146,
+  "postSnapshotDrift": [
+    "frontend/components/hosted/agent-profile.tsx",
+    "frontend/components/hosted/goal-composer.tsx",
+    "frontend/components/hosted/mission-panel.tsx",
+    "frontend/lib/hosted-agents-proxy.ts",
+    "frontend/lib/hosted-client.ts",
+    "scripts/hosted-agents.ts",
+    "scripts/local-hosted.ts",
+    "scripts/monad-hosted-runtime.ts",
+    "services/hosted-agents/src/goal-types.ts",
+    "services/hosted-agents/src/goals/acceptance.ts",
+    "services/hosted-agents/src/goals/commander.ts",
+    "services/hosted-agents/src/goals/executor.ts",
+    "services/hosted-agents/src/specialists/catalog.ts",
+    "services/hosted-agents/src/specialists/execution.ts",
+    "services/hosted-agents/src/types.ts",
+    "services/hosted-agents/test/goals.test.ts",
+    "services/hosted-agents/test/specialists.test.ts"
+  ],
+  "independentTokenSchemaPatches": [
+    {
+      "sha256": "3024a99c1c54c8c47a48e3785fbe49cf95f2b8c167a97d6cec118e9f8a5711cb",
+      "scope": "only token-scan normalizer; chainResearch prompt excluded"
+    },
+    {
+      "sha256": "f7c773094de967c13b8f2af524a277427e3ae5998f8474775b55b79b9a950b48",
+      "scope": "only token-scan review output contract"
+    }
+  ],
+  "excludedAfterSnapshot": [
+    "chain-lookup",
+    "chain-evidence",
+    "automatic address/transaction lookup"
+  ],
+  "files": [
+    {
+      "path": "frontend/app/advanced/page.tsx",
+      "category": "both-changed",
+      "sourceSha256": "81f95164c69e1826c0bef0033b1bd7b264b51d02bc15c7eb0022365fdd352ae9",
+      "baseSha256": "9ff49ddbb4d69776a9decaf301d29c1a2ac7daf04b3d2012ecd2f4a59287412c",
+      "targetBeforeSha256": "20b146eb3275c5c756ef4a50f100f5b9c5acbe50e74a569f0bc95e31f6bd20ef",
+      "targetAfterSha256": "f9fa0b02bfa90f855e86f39a8006d1fa2ca3c2fe1a3d091d883145546b4816c9",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/app/arena/arena-play.css",
+      "category": "source-only",
+      "sourceSha256": "5f5d426958250c9098c29e86d828a5894c90df7e1ce819d235d42ef92d5fb08a",
+      "baseSha256": "03374ff595747b27825979a4991c9cfd11eab91486b20705b92b2812d16a9d61",
+      "targetBeforeSha256": "03374ff595747b27825979a4991c9cfd11eab91486b20705b92b2812d16a9d61",
+      "targetAfterSha256": "5f5d426958250c9098c29e86d828a5894c90df7e1ce819d235d42ef92d5fb08a",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/app/arena/holdem/page.tsx",
+      "category": "source-only",
+      "sourceSha256": "a07b008c861116e6a125e66369dd59178b583484c96b5bb82ab4b3f37199fee1",
+      "baseSha256": "8ad2461d09ffc2b4811bf17aa6e0895f829ec0894a50324f4166d3b8add19597",
+      "targetBeforeSha256": "8ad2461d09ffc2b4811bf17aa6e0895f829ec0894a50324f4166d3b8add19597",
+      "targetAfterSha256": "a07b008c861116e6a125e66369dd59178b583484c96b5bb82ab4b3f37199fee1",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/app/arena/page.tsx",
+      "category": "both-changed",
+      "sourceSha256": "af9a7a22b88986c498b2ae19b7e238ce24919c64676b44f4f8f9b1e953e45adb",
+      "baseSha256": "86e56e1ef3f630057756aa0635620ca03a6279701e22db714cf0c73adc7da4c2",
+      "targetBeforeSha256": "74ae0cca1d9c01e00b86da0079581fe55e360dc057704076331ec025c291e84b",
+      "targetAfterSha256": "74ae0cca1d9c01e00b86da0079581fe55e360dc057704076331ec025c291e84b",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/app/dashboard/page.tsx",
+      "category": "source-only",
+      "sourceSha256": "8b81aca85601cef0fbbe63f907a89b734d0402a0e9948045bb890d8bb1fb725d",
+      "baseSha256": "f16b7fd6dac3d3f31a40c4291feff19a82ba8752943fac0116e06fe074d28291",
+      "targetBeforeSha256": "f16b7fd6dac3d3f31a40c4291feff19a82ba8752943fac0116e06fe074d28291",
+      "targetAfterSha256": "33c695948a1fe288312f9f409a02d869e86fdf2487acf00ebbf7bf44a69e9dae",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/app/finance/page.tsx",
+      "category": "source-only",
+      "sourceSha256": "e3a3bc32a3b6607bd76b0be7655e0698f81eedde216615d1585c2610b75998cf",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "e3a3bc32a3b6607bd76b0be7655e0698f81eedde216615d1585c2610b75998cf",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/app/layout.tsx",
+      "category": "source-only",
+      "sourceSha256": "3fa12ac35b13e23354b93b1186a5ce7cb73cf92440182496bb052143db8c4a1c",
+      "baseSha256": "2f7f9b228b079b8667332d7e475038dc355530f06f811eb3d958150d4980912f",
+      "targetBeforeSha256": "2f7f9b228b079b8667332d7e475038dc355530f06f811eb3d958150d4980912f",
+      "targetAfterSha256": "3fa12ac35b13e23354b93b1186a5ce7cb73cf92440182496bb052143db8c4a1c",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/app/manifest.ts",
+      "category": "source-only",
+      "sourceSha256": "b5b68c4d01006fc873f2ba7629001413b4beb8f0e988f7e44b021f325b1005b1",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "b5b68c4d01006fc873f2ba7629001413b4beb8f0e988f7e44b021f325b1005b1",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/app/onboarding/page.tsx",
+      "category": "source-only",
+      "sourceSha256": "b19829e20681d19bebe0a5134068e4966fa4044fc0f0974a5ac7917fc6e4ac4e",
+      "baseSha256": "ad0461036181ac54fccb5ceaab3124c84a06ad1f190e8350880525803cf74db4",
+      "targetBeforeSha256": "ad0461036181ac54fccb5ceaab3124c84a06ad1f190e8350880525803cf74db4",
+      "targetAfterSha256": "b19829e20681d19bebe0a5134068e4966fa4044fc0f0974a5ac7917fc6e4ac4e",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/app/page.tsx",
+      "category": "source-only",
+      "sourceSha256": "2937d0a6169b3c6825e08147b7cec838fdd6091af76f738b3d5cdc75f758b277",
+      "baseSha256": "0700a75d78e15238eed2222db86517c77c48eb757bef86dbd8ba6220276f13cc",
+      "targetBeforeSha256": "0700a75d78e15238eed2222db86517c77c48eb757bef86dbd8ba6220276f13cc",
+      "targetAfterSha256": "2937d0a6169b3c6825e08147b7cec838fdd6091af76f738b3d5cdc75f758b277",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/arena-play.tsx",
+      "category": "both-changed",
+      "sourceSha256": "049c78e4f3005cda39f966688325c22c00e09eb5133b2e3ebde02749149150f4",
+      "baseSha256": "079e7c7e3b80cc87485b5c4a15fd1de0f2444a08b2873466aa4996cda025b35c",
+      "targetBeforeSha256": "a06a80d760fe919ac226f54f1d18c731ff9eec12adc072aac197c7d8d9103f07",
+      "targetAfterSha256": "42e47d443591414a7d47cab8320e971175f4def611c6bef52a8c2febea1f028d",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/components/hosted/agent-profile.module.css",
+      "category": "source-only",
+      "sourceSha256": "b56636aa6c49776950cebf3a06bf2ac2919c5804606fc700153e7511b67f11aa",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "b56636aa6c49776950cebf3a06bf2ac2919c5804606fc700153e7511b67f11aa",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/agent-profile.tsx",
+      "category": "source-only",
+      "sourceSha256": "4ee0f7fae768d7e4ac138b54bec7c8fab39fa8f62ff711566abf3b40bba21193",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "9a20f8b8d0d2f0e7cf610d35d8b014c92f5b3ded12fd6196575de7c993ca9246",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/agent-settings-form.tsx",
+      "category": "both-changed",
+      "sourceSha256": "8e9871a5018daaf45c57a064438d62722b103cfa543b2c7a05c79f145c256e75",
+      "baseSha256": "e11243d40f7711d30e8d8d448419b02fe660f2ed4f256a12dff44eb7eb980e77",
+      "targetBeforeSha256": "41b892016394e25a99e1d172f47a2b6198fc50f66d1bc5d30aafcdfb188295b8",
+      "targetAfterSha256": "d8a96bdb1fabe69152048c8bfe8ca7ffb6051aaa419740694300ca9b90691bd3",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/components/hosted/agora-primitives.tsx",
+      "category": "both-changed",
+      "sourceSha256": "f51cc5d565fa9ddb385b9045b492201cb375478870f67773d05dfcf9802e27a2",
+      "baseSha256": "55539d29b2e792d2b20670396f4af7616b5aa368f92374b7ebf60614b3298d77",
+      "targetBeforeSha256": "70ebc4d683bc21dd5c30dae0fe19b256e018338c7dd3475667f1862fe8c0b016",
+      "targetAfterSha256": "58333e4b0e2a7bba55a02a672c6e82fc41ee8f0ac564c5fa7a196d47309f092a",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/components/hosted/agora-workspace.module.css",
+      "category": "source-only",
+      "sourceSha256": "f10f896bc72350501f851a65fa5939aec82f066d5cdd1dbd29d245622865418c",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "f10f896bc72350501f851a65fa5939aec82f066d5cdd1dbd29d245622865418c",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/expert-mesh.tsx",
+      "category": "source-only",
+      "sourceSha256": "7819f9bece59a916485a06d7ff6aaaac2d5a01821a43dd75cabb37f71619d3b2",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "2d888975b53212bf3b4f7627afe76934fc72b0813733465cc2cc079bc7c7e1a3",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/finance-app.tsx",
+      "category": "source-only",
+      "sourceSha256": "c0e8ef7c60a331f874ad9984c2cc8e7265eeb41e3ece2786f0c8e3e0842e6862",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "ce666114b5c8b517455dec04b7b49454ba1d1da4e6e59f521c8eb24291c535cf",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/finance.module.css",
+      "category": "source-only",
+      "sourceSha256": "e1e233f7a341147fb6f46d1e4fafa92689eefe782ae06dfeed243b5f2c9c7b95",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "e1e233f7a341147fb6f46d1e4fafa92689eefe782ae06dfeed243b5f2c9c7b95",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/financial-panel.tsx",
+      "category": "both-changed",
+      "sourceSha256": "cc3cda132b57638a96af0a6fa6b0ca2f2650a2972c4d851309f1bd9cd6d4cbae",
+      "baseSha256": "6d19fc4e49d93b54bf086cbbbe12237cee3af7a737b450fbe5cdfc0e07c99b09",
+      "targetBeforeSha256": "7c8a0a111a9aa7cc471459f4099460b6c44354c3feb72f3f209993525334d579",
+      "targetAfterSha256": "ae087dfb1a264e05407c1f2965ab8f303536774c5ec578bcb4ec7720d1c0030f",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/components/hosted/goal-composer.tsx",
+      "category": "source-only",
+      "sourceSha256": "0a78a9bf2f99d5fa6b9d5734b9372735b551dd94556de9c21ed52227776cd1cd",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "69d17077d3c2b8f9acdf80893f2b3a1116d83105ae36d7853f602d32bf3248cd",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/hosted-app.tsx",
+      "category": "both-changed",
+      "sourceSha256": "43ee462a809bdc1549346db545d4a954a6b5415cc6d7146836a8ffeabb779e7f",
+      "baseSha256": "8bdc71fb3e2aed659c573a05158ff7f2892ef3f7b41b2e84feb6e3c66538ae0b",
+      "targetBeforeSha256": "40b55aaadd85db92c3d284945a30bee7d787958c20b53a999dcb62116f6bcdcb",
+      "targetAfterSha256": "63fb3ae5e1c3ff2867bf5afae2e47547805f8a3841bc47fc3cb9079fe62c7b77",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/components/hosted/hosted.module.css",
+      "category": "source-only",
+      "sourceSha256": "f1525ff24450c97913f79d34643a4dbb0ff7ed18cbc23553e287421b3da1922e",
+      "baseSha256": "30c9653e7ff62c6137eb84adab5ed20e9a4bc255a23029fbbd40105e584597b1",
+      "targetBeforeSha256": "30c9653e7ff62c6137eb84adab5ed20e9a4bc255a23029fbbd40105e584597b1",
+      "targetAfterSha256": "f1525ff24450c97913f79d34643a4dbb0ff7ed18cbc23553e287421b3da1922e",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/mission-history.tsx",
+      "category": "source-only",
+      "sourceSha256": "8ccece59b691c84515929945bdc1c98a14bae54d3323befb640e6c4b4d233dce",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "a00d2e6e26c19f431b558b30cb6f464422db40fa19622aa0bb047afac3b76097",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/mission-markdown.tsx",
+      "category": "source-only",
+      "sourceSha256": "c92f37041928146e807716de9f017e8cfb9cf1cb68361420203d288d3d5ecd32",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "c92f37041928146e807716de9f017e8cfb9cf1cb68361420203d288d3d5ecd32",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/mission-panel.tsx",
+      "category": "source-only",
+      "sourceSha256": "18516c5154f879f5878fe3fb754f30105c8e9a746cc0e5f89b48d6447d87dc6f",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "aa4a08024cd412c042154886204e776d95ccdeeed9cb6bff77237a5469904d68",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/terminal-select.tsx",
+      "category": "source-only",
+      "sourceSha256": "42534d83c27b3ff8ca311c3c65e2cf971da4bc986009f44000d3794dee17d7f4",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "42534d83c27b3ff8ca311c3c65e2cf971da4bc986009f44000d3794dee17d7f4",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/workspace-notifications.tsx",
+      "category": "source-only",
+      "sourceSha256": "e1244c6445cbb359536eaa35c2509944ea7d1d5c7f24497f5319a49e476c0c21",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "e1244c6445cbb359536eaa35c2509944ea7d1d5c7f24497f5319a49e476c0c21",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/hosted/workspace.module.css",
+      "category": "source-only",
+      "sourceSha256": "b6ec648721dec588ca67751c1c372b25e121999ab7bcf9c488a6040104fad7de",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "18722b6f4afd38b77afea7a92b9b872c483a97ef7cee6254cdc3bf3061de303e",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/icons.tsx",
+      "category": "source-only",
+      "sourceSha256": "9eb723b7f0649d9674698a1623f1be89694de50b7965923db95a44efd9c7246e",
+      "baseSha256": "8dae6648e1d08ceb8a0f3ef72042618d6da648c44a33527957a3de0d4b62ae94",
+      "targetBeforeSha256": "8dae6648e1d08ceb8a0f3ef72042618d6da648c44a33527957a3de0d4b62ae94",
+      "targetAfterSha256": "9eb723b7f0649d9674698a1623f1be89694de50b7965923db95a44efd9c7246e",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/landing/landing-locale.ts",
+      "category": "both-changed",
+      "sourceSha256": "b6129dcbbd3845067e643010574d6ae5009e727671ea6f172091accc318da8c1",
+      "baseSha256": "7ec7fc884e92f560283e92cfea351399c43af6f841daf03673201725021ef97b",
+      "targetBeforeSha256": "550453d9ef62f87cc010d6cf8f7c9a7e3f829c87a197999f5979e04633e32f85",
+      "targetAfterSha256": "896fd5104f33f9dd0e6012d1339e3d0f03bd943e1329170759d65925f4cd940f",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/components/landing/landing-page.tsx",
+      "category": "both-changed",
+      "sourceSha256": "815ba043c8275b92cd6f50a58c6f9431438d476c7a0d008593be43ed7ffea2ae",
+      "baseSha256": "09b003f7145b18eee8766224364e19c8386d053e7b4f3cdae36aa79249aa8930",
+      "targetBeforeSha256": "b85201eedb01762ec8be781760b210e5732afa65274bf51f58c26db7135255fe",
+      "targetAfterSha256": "cdefad4da6a1ac44356a3efa6359a01b25e66f2229c2395e3af3caab291ad06e",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/components/landing/landing.module.css",
+      "category": "source-only",
+      "sourceSha256": "07c7f80c3c6b7dce6e7a86a47aac921a96bc557693e64e4f9a2e39148108d7d8",
+      "baseSha256": "cb8ba39bcb7b1146f18aa4cfbf4c22ab1e832df0dccf3dabe0c554617f47d778",
+      "targetBeforeSha256": "cb8ba39bcb7b1146f18aa4cfbf4c22ab1e832df0dccf3dabe0c554617f47d778",
+      "targetAfterSha256": "07c7f80c3c6b7dce6e7a86a47aac921a96bc557693e64e4f9a2e39148108d7d8",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/onboarding/onboarding.module.css",
+      "category": "both-changed",
+      "sourceSha256": "e3cb600cb04526c1ac0c7432f11be764d23fc48eb13d33df5589305937f073ac",
+      "baseSha256": "1b82b1b232693fb7344402a2bd674fb5f98006d5378c8f57c206551dc8cabcc4",
+      "targetBeforeSha256": "fbb1758bb0a3ffd5463eb8d235d421d56ff49ae9351b5a6dc107397e0c304c2f",
+      "targetAfterSha256": "e3cb600cb04526c1ac0c7432f11be764d23fc48eb13d33df5589305937f073ac",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/components/onboarding/terminal-onboarding.tsx",
+      "category": "both-changed",
+      "sourceSha256": "097ca08c39b33a5403552284c935ef231029e70c19abfc7b98da2a95e50695d5",
+      "baseSha256": "5b3a2a03cb87bd35d3814232c9e0e9d77f4e1b2e4acc3a6721d0d47ab614df71",
+      "targetBeforeSha256": "38b2180e91b1dc61e8bcba9dac04ba17906388b50ebe75e9b861eed4c0601b26",
+      "targetAfterSha256": "bda646955f40a1a8dde559d9929de9eae1762d72d7c64ad763de65b74162f70e",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/components/tabby-brand.tsx",
+      "category": "source-only",
+      "sourceSha256": "72d3c57f321b7786609705e617af85aa65e3f1b01ee09c084a2c5499360d0b55",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "72d3c57f321b7786609705e617af85aa65e3f1b01ee09c084a2c5499360d0b55",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/terminal/account-menu.tsx",
+      "category": "source-only",
+      "sourceSha256": "7618f24818903e8815aa16fa92487dc2a84abbcff1e459c5b849cacc213afd40",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "7618f24818903e8815aa16fa92487dc2a84abbcff1e459c5b849cacc213afd40",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/terminal/dropdown.module.css",
+      "category": "source-only",
+      "sourceSha256": "fbc16e80355d7a806d36f38217ee464023461f35a026b9c1e59c8ef03fc9ca71",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "fbc16e80355d7a806d36f38217ee464023461f35a026b9c1e59c8ef03fc9ca71",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/terminal/terminal-header.tsx",
+      "category": "source-only",
+      "sourceSha256": "c2e36acaaa7f851539d60111ff5f2b9e32cea8fcae54a2e540861c9da1682bda",
+      "baseSha256": "623acffadbb44e7318db5062bd3628078991d53c59bb93b5a75b8e1c25292d2d",
+      "targetBeforeSha256": "623acffadbb44e7318db5062bd3628078991d53c59bb93b5a75b8e1c25292d2d",
+      "targetAfterSha256": "c2e36acaaa7f851539d60111ff5f2b9e32cea8fcae54a2e540861c9da1682bda",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/terminal/terminal.module.css",
+      "category": "source-only",
+      "sourceSha256": "41915a222768aa7764fa80c83acada89e71a93f1023244a5b27eada74979bb79",
+      "baseSha256": "d868b408bdf36e7074256aed898befe18878f5688540fc383800cbcc53ed1eaf",
+      "targetBeforeSha256": "d868b408bdf36e7074256aed898befe18878f5688540fc383800cbcc53ed1eaf",
+      "targetAfterSha256": "41915a222768aa7764fa80c83acada89e71a93f1023244a5b27eada74979bb79",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/components/terminal/workspace-header.tsx",
+      "category": "source-only",
+      "sourceSha256": "fdb155778c458d6252b7bb84f3f8b883c9d32d477c128cc6cc63dd6542ce9d26",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "b8d02ca7e1ee7645fd0d78fd7ab7d404b2f82d7a3c6d0ff70b7b526bcf5a244a",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/lib/agent-evidence.ts",
+      "category": "source-only",
+      "sourceSha256": "a435784174b2925524dc0ef73d1dfb553975627438d38419d5a1d6e7667b7b0b",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "a435784174b2925524dc0ef73d1dfb553975627438d38419d5a1d6e7667b7b0b",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/lib/demo-expert-reputation.json",
+      "category": "source-only",
+      "sourceSha256": "eb35e099a216c6deeac642ce4cb6ca6f5837fda0e4ec11e2ed131c3c4193f51c",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "eb35e099a216c6deeac642ce4cb6ca6f5837fda0e4ec11e2ed131c3c4193f51c",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/lib/expert-assignments.ts",
+      "category": "source-only",
+      "sourceSha256": "a5122b2bf4832a62039b04f491c6c288de46fd017c151df1f9842b00766a8015",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "a5122b2bf4832a62039b04f491c6c288de46fd017c151df1f9842b00766a8015",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/lib/goal-presets.ts",
+      "category": "source-only",
+      "sourceSha256": "6cf915a2a08d26d9a2a72a2ce7d7dab9dab5a3478b5be21a1c86b350ccd7f254",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "6cf915a2a08d26d9a2a72a2ce7d7dab9dab5a3478b5be21a1c86b350ccd7f254",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/lib/hosted-agents-provider.tsx",
+      "category": "source-only",
+      "sourceSha256": "2a19bd8e4ed4a1408ee6dabf67fe87dac5964d0eb6ba77bbaf4cffe80d9445ff",
+      "baseSha256": "6c4bfa52fb6e24b4eb514696d175517103a5aa6f84ab0bc9a7942f2b773a5ddf",
+      "targetBeforeSha256": "6c4bfa52fb6e24b4eb514696d175517103a5aa6f84ab0bc9a7942f2b773a5ddf",
+      "targetAfterSha256": "2a19bd8e4ed4a1408ee6dabf67fe87dac5964d0eb6ba77bbaf4cffe80d9445ff",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/lib/hosted-agents-proxy.ts",
+      "category": "both-changed",
+      "sourceSha256": "26df51398bac2fbccb99f05a0026accc591fe16da7dfae00facab1fc37442816",
+      "baseSha256": "d75fa04eb76dd504d73bf5f023cadf48ebee8391a9dc5199cba4e288e82d5e9f",
+      "targetBeforeSha256": "4ca5fb3586c40a88898ac335323d0b498259aefbd6fc8b02abbef9871ea84fc5",
+      "targetAfterSha256": "2fc8a252d50b1836482f3f8f1cc70aa894de20bcfef4fd075b2525b53ee4ac71",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/lib/hosted-client.ts",
+      "category": "both-changed",
+      "sourceSha256": "eecf2a616d140747d0e61466f27c9d6d377a11f181963db9848de9a3a25c5b7e",
+      "baseSha256": "80799590219700418d74c98b6e2b9bc4c838b594ed50d351f8a55af09ebf348b",
+      "targetBeforeSha256": "47d89bb31a2b2ae9168762d829af790f4f34c7145a36636aacef044dceccffc5",
+      "targetAfterSha256": "9c1590e6d0207b4c9666acfa4b6485cdd5adb7e67c7f6eda41539c6dca4973e0",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/lib/mission-progress.ts",
+      "category": "source-only",
+      "sourceSha256": "43cba59ab404e0f134dc87f82be6fee09d8e7e4a0dfdc45f90a9659855870fee",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "43cba59ab404e0f134dc87f82be6fee09d8e7e4a0dfdc45f90a9659855870fee",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/lib/use-hosted-agents.ts",
+      "category": "source-only",
+      "sourceSha256": "c1cc10320d89b0463f9181fb8ccbe64def9fa0cc42f9993955a0882cfa73ee91",
+      "baseSha256": "e6c102caa43188d7b8b6baccc34045ed41faf3a40c2ae8f429c58dcec090f4ee",
+      "targetBeforeSha256": "e6c102caa43188d7b8b6baccc34045ed41faf3a40c2ae8f429c58dcec090f4ee",
+      "targetAfterSha256": "c1cc10320d89b0463f9181fb8ccbe64def9fa0cc42f9993955a0882cfa73ee91",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/Inter-LICENSE.txt",
+      "category": "source-only",
+      "sourceSha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/README.md",
+      "category": "source-only",
+      "sourceSha256": "b26c6547a4f60dc3652a7946bbb35cc86e92de6afcb82a9ddecb29d9cb8495c2",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "b26c6547a4f60dc3652a7946bbb35cc86e92de6afcb82a9ddecb29d9cb8495c2",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/app-icon-192.png",
+      "category": "source-only",
+      "sourceSha256": "b5eca415def99be9c943888a43900a01a46b0cba937281f73a5d2baa80d8be97",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "b5eca415def99be9c943888a43900a01a46b0cba937281f73a5d2baa80d8be97",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/app-icon-192.svg",
+      "category": "source-only",
+      "sourceSha256": "db2b5bf05ab54b9d3d917f32c56cd58d553982ce3275b204e78adf6b117fe628",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "db2b5bf05ab54b9d3d917f32c56cd58d553982ce3275b204e78adf6b117fe628",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/app-icon-512.png",
+      "category": "source-only",
+      "sourceSha256": "9cb23c7cbe2347ef6a547f781a00294a294d22715cfbfef6be12171d271f507e",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "9cb23c7cbe2347ef6a547f781a00294a294d22715cfbfef6be12171d271f507e",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/app-icon-512.svg",
+      "category": "source-only",
+      "sourceSha256": "442ccf2210a484e9f3a9cccab5ddd77f509ccba5e32d97e3ab074c83e1bf58c5",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "442ccf2210a484e9f3a9cccab5ddd77f509ccba5e32d97e3ab074c83e1bf58c5",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/apple-touch-icon.png",
+      "category": "source-only",
+      "sourceSha256": "83930878491804b470dfc2130b404d4dda5d63309bcc1d444035c58f3369fec3",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "83930878491804b470dfc2130b404d4dda5d63309bcc1d444035c58f3369fec3",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/apple-touch-icon.svg",
+      "category": "source-only",
+      "sourceSha256": "629045531d3086b5cd9aa0be2a349a890d042610db9277da5c74c62f72d9ae92",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "629045531d3086b5cd9aa0be2a349a890d042610db9277da5c74c62f72d9ae92",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/asset-manifest.json",
+      "category": "source-only",
+      "sourceSha256": "09ab9235b44ae059a1b62da4e12c3f6bd90cbb8d06740bf0dcd2fc22357934e7",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "09ab9235b44ae059a1b62da4e12c3f6bd90cbb8d06740bf0dcd2fc22357934e7",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/brand-square.svg",
+      "category": "source-only",
+      "sourceSha256": "3f98c77ca200f95dc15dc405cef03cd9a89d91cd68ee8ae01c962db2a51ea78b",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "3f98c77ca200f95dc15dc405cef03cd9a89d91cd68ee8ae01c962db2a51ea78b",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/favicon-16.png",
+      "category": "source-only",
+      "sourceSha256": "b7861a32c642efd2a51c2da3b785511093c43ae07d6f5bcc34c129127677cde9",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "b7861a32c642efd2a51c2da3b785511093c43ae07d6f5bcc34c129127677cde9",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/favicon-16.svg",
+      "category": "source-only",
+      "sourceSha256": "e6c6c3fa591f42437b7249bac3bbfc2e656a355fcb47962613106a348b683a3d",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "e6c6c3fa591f42437b7249bac3bbfc2e656a355fcb47962613106a348b683a3d",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/favicon-32.png",
+      "category": "source-only",
+      "sourceSha256": "783a3ca188ee42ba5741dfcecf7afae828c49d607e9f52e55703945f302cf90c",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "783a3ca188ee42ba5741dfcecf7afae828c49d607e9f52e55703945f302cf90c",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/favicon-32.svg",
+      "category": "source-only",
+      "sourceSha256": "8cf7b737b4886e9480061086b69425e260443c4657fbdf2cede44158bbcf77ab",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "8cf7b737b4886e9480061086b69425e260443c4657fbdf2cede44158bbcf77ab",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/favicon-48.png",
+      "category": "source-only",
+      "sourceSha256": "7a0d4c5f99c94e67d9e2a7acf93b9dc8c39b125fa47899c276f2708586b829af",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "7a0d4c5f99c94e67d9e2a7acf93b9dc8c39b125fa47899c276f2708586b829af",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/favicon-48.svg",
+      "category": "source-only",
+      "sourceSha256": "9bca88c861b836a99af08ec1cc53d742c190275fcea80ba398f1d248595ebc01",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "9bca88c861b836a99af08ec1cc53d742c190275fcea80ba398f1d248595ebc01",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/favicon.ico",
+      "category": "source-only",
+      "sourceSha256": "dd0ca9c307a3ffac43df205a5423fc228979bcf15659eea9df08192f4c49fb21",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "dd0ca9c307a3ffac43df205a5423fc228979bcf15659eea9df08192f4c49fb21",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/favicon.png",
+      "category": "source-only",
+      "sourceSha256": "2a10cca4d362621a447e9420ced551530d7885e1e6e292fad80c251d5cc4b3c3",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "2a10cca4d362621a447e9420ced551530d7885e1e6e292fad80c251d5cc4b3c3",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/favicon.svg",
+      "category": "source-only",
+      "sourceSha256": "13e3f66c385acfef9e3cdaa93451e0b237b192dc8ab8a1b2923bc20c0f58953f",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "13e3f66c385acfef9e3cdaa93451e0b237b192dc8ab8a1b2923bc20c0f58953f",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/logo-horizontal-black.png",
+      "category": "source-only",
+      "sourceSha256": "8e13334c5bcf12911ae8f2385fe5adb1eb4040e80132aeee1bea7329904e19cb",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "8e13334c5bcf12911ae8f2385fe5adb1eb4040e80132aeee1bea7329904e19cb",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/logo-horizontal-black.svg",
+      "category": "source-only",
+      "sourceSha256": "6672f19943f3828f1d8fdfc257dd35b1513705288626128940eb41ff54f015ff",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "6672f19943f3828f1d8fdfc257dd35b1513705288626128940eb41ff54f015ff",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/logo-horizontal-color.png",
+      "category": "source-only",
+      "sourceSha256": "f673a2824f34c486de95ce4a0a855d92a30ab91ad821dc5eea6659c732094e57",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "f673a2824f34c486de95ce4a0a855d92a30ab91ad821dc5eea6659c732094e57",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/logo-horizontal-color.svg",
+      "category": "source-only",
+      "sourceSha256": "aa43b8dbf585fab6ea67ea48ef52ea676fd30c0434733fe5acda450fdadfcfc5",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "aa43b8dbf585fab6ea67ea48ef52ea676fd30c0434733fe5acda450fdadfcfc5",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/logo-horizontal-white.png",
+      "category": "source-only",
+      "sourceSha256": "ab04b71a858c0e4e18ef33ffc7739b5a87fc8b516b3a4e71c2ac7243d7741975",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "ab04b71a858c0e4e18ef33ffc7739b5a87fc8b516b3a4e71c2ac7243d7741975",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/logo-horizontal-white.svg",
+      "category": "source-only",
+      "sourceSha256": "3e8197cb8098ae346d3343655ad99adfb7120b183cca0b1a75ffff2ceaa17c0d",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "3e8197cb8098ae346d3343655ad99adfb7120b183cca0b1a75ffff2ceaa17c0d",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/logo-stacked-black.png",
+      "category": "source-only",
+      "sourceSha256": "ad9851bf291325699b38a1c95d097029303a0f3f5e64247801545a1df9343be9",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "ad9851bf291325699b38a1c95d097029303a0f3f5e64247801545a1df9343be9",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/logo-stacked-black.svg",
+      "category": "source-only",
+      "sourceSha256": "66132533467292b1a105a86fafd4652225e1e6cc2e11fa19b4b3bf04b8656d64",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "66132533467292b1a105a86fafd4652225e1e6cc2e11fa19b4b3bf04b8656d64",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/logo-stacked-color.png",
+      "category": "source-only",
+      "sourceSha256": "5ecbb92f0ad51f2375e139f2dce131e809d7b9eea54388b5962ce4950ac87eba",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "5ecbb92f0ad51f2375e139f2dce131e809d7b9eea54388b5962ce4950ac87eba",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/logo-stacked-color.svg",
+      "category": "source-only",
+      "sourceSha256": "c54813c43a1ed8e26fda53c80ebfde62d193edb927399572823fbe1d2cae08e3",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "c54813c43a1ed8e26fda53c80ebfde62d193edb927399572823fbe1d2cae08e3",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/logo-stacked-white.png",
+      "category": "source-only",
+      "sourceSha256": "a25a0935392643f1c6018f3d1d7cdb87b44258f646b459340a36ac7fc9d5d3e3",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "a25a0935392643f1c6018f3d1d7cdb87b44258f646b459340a36ac7fc9d5d3e3",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/logo-stacked-white.svg",
+      "category": "source-only",
+      "sourceSha256": "75ab28b1e89c4e8fb732b2477ec7e1b50e5ed214d17adab9ee71c359a5495c95",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "75ab28b1e89c4e8fb732b2477ec7e1b50e5ed214d17adab9ee71c359a5495c95",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/maskable-512.png",
+      "category": "source-only",
+      "sourceSha256": "75c9a099eff8d9f7837fcdfcaa4781c8f48fd0f4d1ee2be75c510e1cbbdcca16",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "75c9a099eff8d9f7837fcdfcaa4781c8f48fd0f4d1ee2be75c510e1cbbdcca16",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/maskable-512.svg",
+      "category": "source-only",
+      "sourceSha256": "291421303dbd97deca0c5484ab5b02d5a9c78ea1cf6da79a16a064b8de741361",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "291421303dbd97deca0c5484ab5b02d5a9c78ea1cf6da79a16a064b8de741361",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/social-card.svg",
+      "category": "source-only",
+      "sourceSha256": "c804636c3d4eafebfea43a5942c8d40c94bcc1d150dd187cadc90bdfe9337603",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "c804636c3d4eafebfea43a5942c8d40c94bcc1d150dd187cadc90bdfe9337603",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/symbol-black.png",
+      "category": "source-only",
+      "sourceSha256": "289ad1f3cd28d85dfa1f48e7ecadd50db72f4f6d12a97e12e3bff90d974b14f4",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "289ad1f3cd28d85dfa1f48e7ecadd50db72f4f6d12a97e12e3bff90d974b14f4",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/symbol-black.svg",
+      "category": "source-only",
+      "sourceSha256": "17f270ead3f555a143974f33e47d29294620bcdc2f20ac1d7c00e70ef24682b8",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "17f270ead3f555a143974f33e47d29294620bcdc2f20ac1d7c00e70ef24682b8",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/symbol-color.png",
+      "category": "source-only",
+      "sourceSha256": "b24887cc3a9c151a1d39e1b00e43d024d0eed96b0ea7f3fc8d819d22473a490a",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "b24887cc3a9c151a1d39e1b00e43d024d0eed96b0ea7f3fc8d819d22473a490a",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/symbol-color.svg",
+      "category": "source-only",
+      "sourceSha256": "0984827b0e84f417476a089103909984f51d6ffb62f323edf5e7ec501b1b8464",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "0984827b0e84f417476a089103909984f51d6ffb62f323edf5e7ec501b1b8464",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/symbol-white.png",
+      "category": "source-only",
+      "sourceSha256": "203bfc1dbd3c38607805a47089235c6690c4cf26662705c884c151eb3286cd56",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "203bfc1dbd3c38607805a47089235c6690c4cf26662705c884c151eb3286cd56",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/symbol-white.svg",
+      "category": "source-only",
+      "sourceSha256": "1c15c0a7501c7f70629b28443ff12c669b59ebf708b3c763f3242b56998a3a49",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "1c15c0a7501c7f70629b28443ff12c669b59ebf708b3c763f3242b56998a3a49",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/wordmark-black.png",
+      "category": "source-only",
+      "sourceSha256": "d7481130a02ad85345bfcadb2b1825a975e07b900629f3e9d030d356fdf0dd55",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "d7481130a02ad85345bfcadb2b1825a975e07b900629f3e9d030d356fdf0dd55",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/wordmark-black.svg",
+      "category": "source-only",
+      "sourceSha256": "8703b325edad2fc6d035019a96909d1079ee431cb6df2a5e6b4e3d7ae839b926",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "8703b325edad2fc6d035019a96909d1079ee431cb6df2a5e6b4e3d7ae839b926",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/wordmark-color.png",
+      "category": "source-only",
+      "sourceSha256": "d7481130a02ad85345bfcadb2b1825a975e07b900629f3e9d030d356fdf0dd55",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "d7481130a02ad85345bfcadb2b1825a975e07b900629f3e9d030d356fdf0dd55",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/wordmark-color.svg",
+      "category": "source-only",
+      "sourceSha256": "256b6d2fa94580b294f9bb99c5f12d8db94e7a518ce5480b46e0a5dceb4ed0d9",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "256b6d2fa94580b294f9bb99c5f12d8db94e7a518ce5480b46e0a5dceb4ed0d9",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/wordmark-white.png",
+      "category": "source-only",
+      "sourceSha256": "58630bb99e519bf66de2d98c6e4fc215f7e746c486535fc3dfdd04356e9734d4",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "58630bb99e519bf66de2d98c6e4fc215f7e746c486535fc3dfdd04356e9734d4",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/public/brand/tabby/wordmark-white.svg",
+      "category": "source-only",
+      "sourceSha256": "be65e82c6cc6f28e35b4d1fcd8d0d975a14075d23e6b51f61d35068767ad55d0",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "be65e82c6cc6f28e35b4d1fcd8d0d975a14075d23e6b51f61d35068767ad55d0",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/test/agent-evidence.test.ts",
+      "category": "source-only",
+      "sourceSha256": "7f3d24a31e278bd87662483cb4c8bdd486db8edc059dbb4fcaf256ccebebe82f",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "7f3d24a31e278bd87662483cb4c8bdd486db8edc059dbb4fcaf256ccebebe82f",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/test/browser/hosted-agents.spec.ts",
+      "category": "source-only",
+      "sourceSha256": "4734be0ecd83d8d148c067df9d4878b3c5127fd7318cb8739b4fb7fca02b1ef7",
+      "baseSha256": "e534144091a5472ee4647b1d7d3847b75683fe856080290c4d517242e931d771",
+      "targetBeforeSha256": "e534144091a5472ee4647b1d7d3847b75683fe856080290c4d517242e931d771",
+      "targetAfterSha256": "a22b591926af05994c54a293ff1ec6767fad3e3a3664712585c425aa04255349",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/test/browser/hosted-harness.ts",
+      "category": "both-changed",
+      "sourceSha256": "34f28ca8bf0d83c951578981ef23498ace76e2813347d934382dae358f04ccfe",
+      "baseSha256": "42904ddf37f03cf737220d6ab175d4106a2efff029730d15c1a4f32a5e237bf5",
+      "targetBeforeSha256": "8386aa4921efc9c127c9438c88e1bb5f27b94cf86d4ededfc1a5f82b87d6a846",
+      "targetAfterSha256": "d338b6674b00dd5b5043f872d7732176d13d8dc608cc7146703d47b9962952fa",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/test/browser/hosted-onboarding.spec.ts",
+      "category": "both-changed",
+      "sourceSha256": "d13eca88f44b2b64d7eea06628d69fe3d6386740789c8cf99032680eb6d7ee60",
+      "baseSha256": "935421ced81e597f3b9599021f20afaf72205fc00b2c6900a2a4d9921347d81c",
+      "targetBeforeSha256": "800a4b76b6557892197e06a1e940fb809782c1acb0f48dbb0618f6608cb9c184",
+      "targetAfterSha256": "47e0515c1ad3b69a1a15d0a0f7fba6fdcd3af843026d42c5a96e400089c09f1c",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/test/browser/landing.spec.ts",
+      "category": "both-changed",
+      "sourceSha256": "888fd837df07672d1c41b3655202df916026d8f6b125c23234f1ed18206e7401",
+      "baseSha256": "4526fde4315cd4cb695829ed2ea0462bda974c42a1d3bf5faa5ec14a454cd0cf",
+      "targetBeforeSha256": "add9f559ba5b961b47cfcf7aab84346ff74dc7dff319217904a2b49703fa0ede",
+      "targetAfterSha256": "836408d5ad3a695427d766c3088a006b3a6c51945b687931c870d44d3a6b8369",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/test/browser/onboarding-steps.ts",
+      "category": "both-changed",
+      "sourceSha256": "9b3fe240b6b8f6898806600e1a329a9def423e1baac831dcf17022f791e6d8d4",
+      "baseSha256": "696ccaf460d8a97c4cd3207db49112db74deca3bf7754b749b617b48d717534e",
+      "targetBeforeSha256": "b286cc3e5259b898c47f76e1fbcbbb675a7aeea022b6a2695c8f637a626edc4e",
+      "targetAfterSha256": "9b3fe240b6b8f6898806600e1a329a9def423e1baac831dcf17022f791e6d8d4",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/test/expert-assignments.test.ts",
+      "category": "source-only",
+      "sourceSha256": "4a78cd557f9be8416f4af3837fb244769345ee3776eeb06e9d7061a121595944",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "4a78cd557f9be8416f4af3837fb244769345ee3776eeb06e9d7061a121595944",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/test/hosted-agents-proxy.test.ts",
+      "category": "both-changed",
+      "sourceSha256": "2b0c5fce5443486996254a9607836480453ea9956b175c2b686060eaf6f1dbaf",
+      "baseSha256": "2a529a8e002ed464e6f82b56a2b48902d57c07637afd9c20d301db76dd039615",
+      "targetBeforeSha256": "ab89d29cbb8c46673cae92a748e323d660a223c5e7d4b56b2a1ca22650647e7a",
+      "targetAfterSha256": "b807fba860432c4d9d1106e9b6e8f0da480b8b3256b0b5b1c41aacc54d32b0b2",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "frontend/test/hosted-pending.test.ts",
+      "category": "source-only",
+      "sourceSha256": "0c5bd7e96a8666ce507870eb0126ad49a6b995915a4f2163c5a04ae321effdd0",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "0c5bd7e96a8666ce507870eb0126ad49a6b995915a4f2163c5a04ae321effdd0",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "frontend/test/mission-progress.test.ts",
+      "category": "source-only",
+      "sourceSha256": "4bd46cbe087114578961fbb5bcfcb456819b9ed1000f1feeefa4f1b0dabc376a",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "4bd46cbe087114578961fbb5bcfcb456819b9ed1000f1feeefa4f1b0dabc376a",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "scripts/generate-tabby-brand.py",
+      "category": "source-only",
+      "sourceSha256": "e312ed5b7b443d59755498052acf7d8195dfa6f46f69ff75a5098c8f3a8dff76",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "e312ed5b7b443d59755498052acf7d8195dfa6f46f69ff75a5098c8f3a8dff76",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "scripts/hosted-agents.ts",
+      "category": "both-changed",
+      "sourceSha256": "712185ccaa06965a5f4ea28fb5c9cd6f5fc957a50afa98e81a5b488ade156163",
+      "baseSha256": "e94fb278b4276845a867220c16572798f187d40b45f1cc5757a109aa7e2699a8",
+      "targetBeforeSha256": "151ecf7cd65329dbb5513aff4e882651048165c7609747c995171c0fb2612351",
+      "targetAfterSha256": "ecd5dde84f313e2437db57aa5d4facc14f9ebe54f7f2bfdc797461b0c515cb6d",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "scripts/local-hosted.ts",
+      "category": "source-only",
+      "sourceSha256": "35405c6f10a874ab04bb90a53b97b1742f163e400b76cdfbdc0f6bc21e1c10b5",
+      "baseSha256": "e999a43e9261c4e0642b74c27cd3bcf13832340b0777b17010f3e256c5556da2",
+      "targetBeforeSha256": "e999a43e9261c4e0642b74c27cd3bcf13832340b0777b17010f3e256c5556da2",
+      "targetAfterSha256": "35405c6f10a874ab04bb90a53b97b1742f163e400b76cdfbdc0f6bc21e1c10b5",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "scripts/monad-hosted-runtime.ts",
+      "category": "source-only",
+      "sourceSha256": "b6a87cb34730ba97f026dddbf3218533a547ed41a488ffaa58d77eccda555064",
+      "baseSha256": "a8a26e450b20e0468ab96c0805a9946c37d58f9c8380a382cf2ca8f6ee1150d7",
+      "targetBeforeSha256": "a8a26e450b20e0468ab96c0805a9946c37d58f9c8380a382cf2ca8f6ee1150d7",
+      "targetAfterSha256": "b6a87cb34730ba97f026dddbf3218533a547ed41a488ffaa58d77eccda555064",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "scripts/test/goal-live-acceptance.ts",
+      "category": "source-only",
+      "sourceSha256": "0fccf14da4d3405a566b20753530d0ec7b156dfa9bf330fb30597ab0c038aad5",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": null,
+      "decision": "excluded: source-only live paid driver"
+    },
+    {
+      "path": "scripts/test/hosted-agents.test.ts",
+      "category": "source-only",
+      "sourceSha256": "670c5e7b1e7a39dcfdc703ba69849e2236af7af8bc63a8c14696edbf2293d914",
+      "baseSha256": "6494ea6eaeea074bf966bd89b131f4ab7b9bcd6c4ba8aad225fc03b8ee9e477e",
+      "targetBeforeSha256": "6494ea6eaeea074bf966bd89b131f4ab7b9bcd6c4ba8aad225fc03b8ee9e477e",
+      "targetAfterSha256": "670c5e7b1e7a39dcfdc703ba69849e2236af7af8bc63a8c14696edbf2293d914",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "scripts/test/monad-hosted-runtime.test.ts",
+      "category": "source-only",
+      "sourceSha256": "bd5190208de93074898bf82d038d6d68fa58f3843bd7a1b49a3ab92584faab2f",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "bd5190208de93074898bf82d038d6d68fa58f3843bd7a1b49a3ab92584faab2f",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/goal-types.ts",
+      "category": "source-only",
+      "sourceSha256": "30ee2f55e41cc62bd6e53707d70f35ed9f6c1701ea5efcfe6c080fd85a0e06e6",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "30ee2f55e41cc62bd6e53707d70f35ed9f6c1701ea5efcfe6c080fd85a0e06e6",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/acceptance.ts",
+      "category": "source-only",
+      "sourceSha256": "8ecaae8c3e4177290959116deec6b617d442f1a83c8ee0ea629c3497dc3ec6d6",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "8ecaae8c3e4177290959116deec6b617d442f1a83c8ee0ea629c3497dc3ec6d6",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/commander.ts",
+      "category": "source-only",
+      "sourceSha256": "5b895ffe2a180c0103630b1f3340f4dee06ede857936b8e903340bb39e5b74e6",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "5b895ffe2a180c0103630b1f3340f4dee06ede857936b8e903340bb39e5b74e6",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/executor.ts",
+      "category": "source-only",
+      "sourceSha256": "4e64e5e01a0dc9bab988ed408f382d8fca0b2081a4688544b10e52cc6460e807",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "8c0d8a7ff4e11114fd07c1628a162b3ef69fd06c4bce0824507526963c75aaa6",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/payment.ts",
+      "category": "source-only",
+      "sourceSha256": "538b31d0932dad527fe850183f1588fcfccfea3f7ca09b075bb1c71ab9764845",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "538b31d0932dad527fe850183f1588fcfccfea3f7ca09b075bb1c71ab9764845",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/reconciliation.ts",
+      "category": "source-only",
+      "sourceSha256": "4a9263686c16e3716e98d621da89c26accb5d57acdacd8f3cd9c4958298793ad",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "4a9263686c16e3716e98d621da89c26accb5d57acdacd8f3cd9c4958298793ad",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/http.ts",
+      "category": "source-only",
+      "sourceSha256": "4610170f6bda72998bfb290c54aedd5a5a670a0e177e1420d3f1e722d53ce2e5",
+      "baseSha256": "17edff0467b62dcd211a9291522000f0ee8ed9f0b0b764e8a287be96f278492d",
+      "targetBeforeSha256": "17edff0467b62dcd211a9291522000f0ee8ed9f0b0b764e8a287be96f278492d",
+      "targetAfterSha256": "4610170f6bda72998bfb290c54aedd5a5a670a0e177e1420d3f1e722d53ce2e5",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/service.ts",
+      "category": "both-changed",
+      "sourceSha256": "b1316802d2369f265f7d65671a5907799cfe0672742f7a9fd499f6163178be0e",
+      "baseSha256": "15802198cbef8a6d1f07fd1a43fec429d175998cd81d21a8e119dea183a49ca8",
+      "targetBeforeSha256": "a8087a343cb266f225f68de0d3f810a69cfc90559b1cc09f0fe83486fa3c2d2d",
+      "targetAfterSha256": "a41ad23fc5df543d6912d8cebac1199c7821e0b1dbf1a33ba9775804f131c2b5",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/catalog.ts",
+      "category": "source-only",
+      "sourceSha256": "f1c6066516b558bc5a0f236efc268f6cd165aa944ba92ea24175d0b5de4bf187",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "f7c773094de967c13b8f2af524a277427e3ae5998f8474775b55b79b9a950b48",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/execution.ts",
+      "category": "source-only",
+      "sourceSha256": "7131a896eae8e580853026948100e34a8221b098cb0a380add7d1c9dde6ff738",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "72b5df522913f96b88f11d7c869f0fa5d1828983383f6204f86597b8e51ab49d",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/monad-rebel/abi-reader/config.json",
+      "category": "source-only",
+      "sourceSha256": "5e333a0b72696542f1bfdab3ed556ee8b53dc216ac53363de443d6f97e4a6e89",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "5e333a0b72696542f1bfdab3ed556ee8b53dc216ac53363de443d6f97e4a6e89",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/monad-rebel/abi-reader/prompt.md",
+      "category": "source-only",
+      "sourceSha256": "1cb275c42f4e7724785181f97dd3ce9b01635fff790af1ce46e31c77a2cce557",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "1cb275c42f4e7724785181f97dd3ce9b01635fff790af1ce46e31c77a2cce557",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/monad-rebel/gas-optimizer/config.json",
+      "category": "source-only",
+      "sourceSha256": "c3fd4229760cd03d3b408396c0bac152ec1391588a9f50b0a8faf1a182804453",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "c3fd4229760cd03d3b408396c0bac152ec1391588a9f50b0a8faf1a182804453",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/monad-rebel/gas-optimizer/prompt.md",
+      "category": "source-only",
+      "sourceSha256": "47e6521ee287c561f29dcc47171decf9fc7882b9faa6e18777e34bb8247dcaf4",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "47e6521ee287c561f29dcc47171decf9fc7882b9faa6e18777e34bb8247dcaf4",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/monad-rebel/provenance.json",
+      "category": "source-only",
+      "sourceSha256": "74958a445f0ea7868f175995762807161665e58ad726ec180d9808f757f8a36d",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "74958a445f0ea7868f175995762807161665e58ad726ec180d9808f757f8a36d",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/monad-rebel/token-scanner/config.json",
+      "category": "source-only",
+      "sourceSha256": "1122e1e8bb4f4e349ad25546c101ee20865a1e2dcc6c2f751a974f20b83ba308",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "1122e1e8bb4f4e349ad25546c101ee20865a1e2dcc6c2f751a974f20b83ba308",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/monad-rebel/token-scanner/prompt.md",
+      "category": "source-only",
+      "sourceSha256": "2ba479dd2d3e594be4ec0210c3a8f33688b612f3d51b47092db13fc76eebc3e2",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "2ba479dd2d3e594be4ec0210c3a8f33688b612f3d51b47092db13fc76eebc3e2",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/monad-rebel/tx-decoder/config.json",
+      "category": "source-only",
+      "sourceSha256": "b7dcfd228dbb3a11c7b03c94ee30c88c36a529b3020fb0faebb803e2e0222042",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "b7dcfd228dbb3a11c7b03c94ee30c88c36a529b3020fb0faebb803e2e0222042",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/monad-rebel/tx-decoder/prompt.md",
+      "category": "source-only",
+      "sourceSha256": "f118171c85e46f295675b956180dea3052ee1ee162f171cd815803a83bd62b57",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "f118171c85e46f295675b956180dea3052ee1ee162f171cd815803a83bd62b57",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/monad-rebel/yield-finder/config.json",
+      "category": "source-only",
+      "sourceSha256": "4693bc7566417b66da38195d260e676997bfba994d7f8bb16baf351246eb6eb9",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "4693bc7566417b66da38195d260e676997bfba994d7f8bb16baf351246eb6eb9",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/monad-rebel/yield-finder/prompt.md",
+      "category": "source-only",
+      "sourceSha256": "d4a06de4b09b3033f2839ad02a44e84bfc9c0881f99bd5d5f70ac5e186274479",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "d4a06de4b09b3033f2839ad02a44e84bfc9c0881f99bd5d5f70ac5e186274479",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/src/task-executor.ts",
+      "category": "both-changed",
+      "sourceSha256": "19796f560861242bfe94c1f8a4214b3ae3319455c045721b0564839812777599",
+      "baseSha256": "30d7e7b8b0710aa95379fad8ff95de1fedcadccaca7d2c9ad314416a02e11d30",
+      "targetBeforeSha256": "46df05fa58792b33b8833397bbd4bb56199cbac7a68a93895d5e9526a1f03cf6",
+      "targetAfterSha256": "789c17f564e68216ba171ccaca64edcc1811d16b65cec2040ab0a75aa9023d30",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "services/hosted-agents/src/types.ts",
+      "category": "both-changed",
+      "sourceSha256": "b0bb54cda780f2a1bfd70dcc5db80fb8c0ddbc646bfe0bb44b594c3a0daaf2c7",
+      "baseSha256": "757dc1eef4ae93f9f545ec63887b41ca08fed50662194df8eda8a56b65d61fe3",
+      "targetBeforeSha256": "f4d1351d2ccc986f742a062282eeb6ab3d1f8d6cbc049c7e2b5341356c7b7ebd",
+      "targetAfterSha256": "e85ad7f6cd5067311936995c07f7dd0896cf589eb2f0fa9fe5f36ab06c6e6e50",
+      "decision": "merge frozen source with Tempo adaptations"
+    },
+    {
+      "path": "services/hosted-agents/test/autonomy-live.test.ts",
+      "category": "source-only",
+      "sourceSha256": "f0989c12095438a28e61dbb87d0e3d91dc6b5383113bb70f6e5791011f431787",
+      "baseSha256": "8be2c95029b87f6919969cfae89ee29117a25d353f5774db60955a9ab71dc334",
+      "targetBeforeSha256": "8be2c95029b87f6919969cfae89ee29117a25d353f5774db60955a9ab71dc334",
+      "targetAfterSha256": "f0989c12095438a28e61dbb87d0e3d91dc6b5383113bb70f6e5791011f431787",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/test/goals-paid.test.ts",
+      "category": "source-only",
+      "sourceSha256": "3ed99ff7602ede06d2cc83364e1fcc0f87c5f39ac5442be3c2b3c13d22aecf37",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "3ed99ff7602ede06d2cc83364e1fcc0f87c5f39ac5442be3c2b3c13d22aecf37",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/test/goals-reconciliation.test.ts",
+      "category": "source-only",
+      "sourceSha256": "045280f600774e36b315e7951f141b612157455ebf7b57ff00e7ba9ca0518084",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "045280f600774e36b315e7951f141b612157455ebf7b57ff00e7ba9ca0518084",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/test/goals.test.ts",
+      "category": "source-only",
+      "sourceSha256": "9d80c753672c70361b6ad3b30c4d6a4d9646a89464376177b4089214116e6bdd",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "9d80c753672c70361b6ad3b30c4d6a4d9646a89464376177b4089214116e6bdd",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/test/http.test.ts",
+      "category": "source-only",
+      "sourceSha256": "e0675df963ed7fd6a6ed6d3c889a254b381123514fd6a1601e0529c938adfcf8",
+      "baseSha256": "365243416163daf810768ca06963effbc23c0a9ef47336f0c0ca46aaff8b5902",
+      "targetBeforeSha256": "365243416163daf810768ca06963effbc23c0a9ef47336f0c0ca46aaff8b5902",
+      "targetAfterSha256": "e0675df963ed7fd6a6ed6d3c889a254b381123514fd6a1601e0529c938adfcf8",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/test/service.test.ts",
+      "category": "source-only",
+      "sourceSha256": "b101efae56d93c8b9600ea71a00f52b937438852a200ac329b379bf6451c4b8e",
+      "baseSha256": "495f51ead3827f81f18b0122eba89c8355808088d920497dd4444a97bfaf010f",
+      "targetBeforeSha256": "495f51ead3827f81f18b0122eba89c8355808088d920497dd4444a97bfaf010f",
+      "targetAfterSha256": "b101efae56d93c8b9600ea71a00f52b937438852a200ac329b379bf6451c4b8e",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/test/specialist-cases.ts",
+      "category": "source-only",
+      "sourceSha256": "629eb8c053244d0d5086522fa51eab38cf8708e89916960d66b26d1d5de28644",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "629eb8c053244d0d5086522fa51eab38cf8708e89916960d66b26d1d5de28644",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/test/specialists-paid.test.ts",
+      "category": "source-only",
+      "sourceSha256": "fc936f4e25540c96a4819c9d71ab363fa3352df9782a669c2ed13311b1f43eb7",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "825f9d1d0e63d0815cdfbd5b3a7166da5a7db9bf8114b8531b6404ae13c168f6",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/test/specialists.test.ts",
+      "category": "source-only",
+      "sourceSha256": "a951c3537c55b4b89484a4c3c5fb706ba014934cc95877986a4a531eaa0ee9cd",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "targetAfterSha256": "9643fe6862e9393e9fb7ce78d69a7e7f28505bd422092ab4c072c8323963790e",
+      "decision": "migrate frozen source"
+    },
+    {
+      "path": "services/hosted-agents/test/task-executor.test.ts",
+      "category": "source-only",
+      "sourceSha256": "dd9cc88db3a30ccb98a73b9a87dd29588e9b704de082dfedd8c8f61f0e3a25ec",
+      "baseSha256": "3423594eba13e287be4d85619d0a7d04ff41b0e0eacfc4dc7250fb1ea841034f",
+      "targetBeforeSha256": "3423594eba13e287be4d85619d0a7d04ff41b0e0eacfc4dc7250fb1ea841034f",
+      "targetAfterSha256": "dd9cc88db3a30ccb98a73b9a87dd29588e9b704de082dfedd8c8f61f0e3a25ec",
+      "decision": "migrate frozen source"
+    }
+  ],
+  "validation": {
+    "status": "passed",
+    "typecheckAll": "passed",
+    "frontendLogic": {
+      "passed": 55,
+      "failed": 0
+    },
+    "goalSpecialistsControlledAnvil": {
+      "passed": 35,
+      "failed": 0,
+      "specialistLive": false
+    },
+    "specialistsFinalSchemaAndPaid": {
+      "passed": 17,
+      "failed": 0
+    },
+    "httpTaskAutonomyAdapters": {
+      "passed": 13,
+      "failed": 0
+    },
+    "runtimeUpgradeAndCatalog": {
+      "passed": 7,
+      "failed": 0
+    },
+    "refundRegression": {
+      "passed": 13,
+      "failed": 0,
+      "scope": "allowance compensation, operator Unknown resolution, delayed receipt/reorg, shared refunder"
+    },
+    "isolatedBrowserFourth": {
+      "passed": 91,
+      "failed": 5,
+      "corrected": true
+    },
+    "isolatedTargetedBrowserFinal": {
+      "passed": 6,
+      "failed": 0,
+      "scope": "corrected final boundaries; desktop/mobile"
+    },
+    "privateLogSha256": {
+      "frontend-build-wallet-final.log": "d05d6e0e9c5f7020e2eda564fe254449dfe20794d20e05e31bbc302d99ba957d",
+      "typecheck-all-wallet-final.log": "8a4aff97ec239231a3f5eca9611a33859bdfdaf14cc8030454682e79e3e0c0b2",
+      "goal-specialist-tests-second.log": "c4704e2a38020ead3956833b8433acd0455eb8545714f63bd813f331fce06671",
+      "specialist-tests-final.log": "a085c0f5a555168077f6952610e0dd79c22f20199fd335232d20227878ffff1d",
+      "frontend-tests.log": "450d5264f04dc7297e3fa115a4000ac8c4599892ce0a7ba436a588efdc6db232",
+      "runtime-upgrade-tests-final.log": "6699627c7419a0d0594e8216c02ba65d49f9ef4fa0e3a8b04b701a506e788901",
+      "runtime-refund-tests.log": "ae5c04ac59c74d0890c52433c90a6b77d24e7e40c81618baec94b822882e1900",
+      "hosted-adapter-tests.log": "252b2a69785cd153d239f8b15c8c925570d197a2740148cd74a7b231908d7c95",
+      "browser-targeted-all-pass.log": "b764bb8088520a6827d4c3476655ca7ad11b67d91b3e995954ab1602820b3615",
+      "typecheck-final-toast.log": "8a4aff97ec239231a3f5eca9611a33859bdfdaf14cc8030454682e79e3e0c0b2",
+      "frontend-build-toast-final.log": "db6164ecdc384d9d34ea3e79e1ea30ebdf7f999f466d29e958ebe97d5b376c9e",
+      "browser-98-final.log": "231495fffd0e99d5ba14c80aebdfd5adacfe443df940cb64be64d8ff725825d9",
+      "browser-toast-targeted.log": "b93987f7d2eeed122b159de80c09af18c521982181f8b119931c1510c4a38b81",
+      "browser-final-report.json": "d9826286397a8687e6ac4e1acdd5aec2e1c919f18225a7280a9ee98aaf1fb21c",
+      "post-freeze-payment-review/source-mocked-tests.log": "d5ddf463344911522ae8dde3150ff32934a5149bf12a6129afd09bd39d27015e",
+      "typecheck-cleanup.log": "8fa1cf5506304e8abac55868e7f1a136c9b1dde57a3981a382da4c21ea129a6f"
+    },
+    "isolatedBrowserFinalBeforeToastFix": {
+      "passed": 95,
+      "failed": 1,
+      "cause": "mobile notification temporarily intercepted consecutive action button clicks",
+      "preserved": true
+    },
+    "mobileToastFixTargeted": {
+      "passed": 8,
+      "failed": 0,
+      "scope": "desktop/mobile layout, consecutive actions, notification visibility, Tempo evidence"
+    },
+    "isolatedBrowserFinal": {
+      "passed": 98,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "buildId": "u0Auuv8spKQbm3C5YTRin",
+      "mode": "synthetic API, no RPC or model dispatch"
+    },
+    "productionBuild": "passed",
+    "failuresPreserved": [
+      "controlled specialist expectation omitted actual 31337 in prompt",
+      "runtime fixture expected Monad error name and noncanonical temp path",
+      "browser harness fixed old origin/nav/creation selectors",
+      "mobile toast intercepted consecutive action button, fixed placement"
+    ]
+  },
+  "runtimeUpgrade": {
+    "pid": 27181,
+    "ports": {
+      "arena": 60722,
+      "underwriter": 60866,
+      "fixed": 60934,
+      "allowance": 60994,
+      "planner": 61033,
+      "goalCheap": 63750,
+      "goalStrong": 63908
+    },
+    "agentsUnchanged": true,
+    "runsUnchanged": true,
+    "testSponsorshipUnchanged": true,
+    "goalModels": [
+      {
+        "id": "kimi-k2.6",
+        "priceRaw": "10000",
+        "model": "cheap",
+        "physicalModel": "cheap/kimi-k2.6",
+        "responseModel": "kimi-k2.6"
+      },
+      {
+        "id": "kimi-k3",
+        "priceRaw": "20000",
+        "model": "strong",
+        "physicalModel": "strong/kimi-k3",
+        "responseModel": "kimi-k3"
+      }
+    ]
+  },
+  "gatewayAcceptedRequests": {
+    "before": 13,
+    "after": 13
+  },
+  "localFrontend": {
+    "pid": 31272,
+    "port": 3028,
+    "buildDirectory": ".next-upstream-sync-20261013-2",
+    "buildId": "u0Auuv8spKQbm3C5YTRin",
+    "dashboardHttpStatus": 200,
+    "unauthorizedAgentsHttpStatus": 401,
+    "frontendMode": "chain",
+    "rpcTransport": "direct"
+  },
+  "currentSourceHead": "922f65dc9c20ab404946ce37e49e95484b515f75",
+  "finalSourceDriftObservedAt": "2026-10-13T09:19:56.866038+00:00",
+  "finalPostSnapshotDrift": [
+    "frontend/components/hosted/agent-profile.tsx",
+    "frontend/components/hosted/goal-composer.tsx",
+    "frontend/components/hosted/mission-panel.tsx",
+    "frontend/lib/hosted-agents-proxy.ts",
+    "frontend/lib/hosted-client.ts",
+    "scripts/hosted-agents.ts",
+    "scripts/local-hosted.ts",
+    "scripts/monad-hosted-runtime.ts",
+    "services/hosted-agents/src/goal-types.ts",
+    "services/hosted-agents/src/goals/acceptance.ts",
+    "services/hosted-agents/src/goals/commander.ts",
+    "services/hosted-agents/src/goals/executor.ts",
+    "services/hosted-agents/src/goals/payment.ts",
+    "services/hosted-agents/src/goals/reconciliation.ts",
+    "services/hosted-agents/src/specialists/catalog.ts",
+    "services/hosted-agents/src/specialists/execution.ts",
+    "services/hosted-agents/src/types.ts",
+    "services/hosted-agents/test/goals-reconciliation.test.ts",
+    "services/hosted-agents/test/goals.test.ts",
+    "services/hosted-agents/test/specialists.test.ts"
+  ],
+  "protectedBusiness": {
+    "actorsUnchanged": true,
+    "runsUnchanged": true,
+    "testSponsorshipUnchanged": true,
+    "actors": 6,
+    "runs": 27,
+    "activeRequestIds": 0,
+    "sponsorshipAdmissions": 4
+  },
+  "cleanup": {
+    "isolated3038Stopped": true,
+    "obsoleteBuildRemoved": ".next-upstream-sync-20261013",
+    "activeBuildKept": ".next-upstream-sync-20261013-2",
+    "temporaryUpgradeAndPrivateBrowserConfigRemoved": true,
+    "snapshotsJournalsLogsAndEvidenceKept": true
+  },
+  "postFreezePaymentReview": {
+    "decision": "deferred; no production changes",
+    "reason": "new independent nonce-consumed/zero-payment branch only has source mocks; current Tempo goals have no unresolved payment, so conservative reservation remains",
+    "sourceFiles": [
+      {
+        "path": "services/hosted-agents/src/goals/payment.ts",
+        "sha256": "70ce1757564d553be60aed9b3e07548f97657839854a7d850b2da9ddbb37d2f3"
+      },
+      {
+        "path": "services/hosted-agents/src/goals/reconciliation.ts",
+        "sha256": "e8903ab381aeda60a69fbd1bace9509dd716aab9e13e8ff08b8fd16cfd1fc76c"
+      },
+      {
+        "path": "services/hosted-agents/src/goals/executor.ts",
+        "sha256": "bbda5e71a578a9ccc2f561c424ddeacf04cd21c49a0919c436725c21a616eba4"
+      },
+      {
+        "path": "services/hosted-agents/test/goals-reconciliation.test.ts",
+        "sha256": "afd609077f52556d25ab5229bda4703baf053583947a9a68b8b1cd77f14b082d"
+      }
+    ],
+    "sourceMockTests": {
+      "passed": 2,
+      "failed": 0,
+      "chainWrites": 0,
+      "realModelCalls": 0
+    },
+    "missingValidation": [
+      "actual replacement transaction on controlled Anvil",
+      "same UUID terminal/restart/cancel lifecycle",
+      "Tempo signature and canonical nonce semantics"
+    ],
+    "requiresExecutorErrorClassification": true
+  },
+  "targetOnlyFinalFiles": [
+    {
+      "path": "README.md",
+      "sha256": "19c9d67c2365a54fa076fd5f3ef7a8ba2293c9e9a168b54d960a92611e004804"
+    },
+    {
+      "path": "frontend/tsconfig.json",
+      "sha256": "4482a031733b9d52e8bf2609f8d514f3c9a13063ba43748311ce9bd61b21c4fc"
+    },
+    {
+      "path": "frontend/playwright.upstream.config.ts",
+      "sha256": "9d1a4b3543c1cd4725abb3748f3f85489bcf843218e4ac81844f2d640bb06d68"
+    },
+    {
+      "path": "frontend/test/browser/upstream-sync.spec.ts",
+      "sha256": "296fc143e160d43b91982a84a7631d0d8929a54eda0a2818fc6da537588cb145"
+    },
+    {
+      "path": "scripts/tempo-hosted-runtime.ts",
+      "sha256": "e3baef56494364b547d95d29126737b38796aa5dcdba1750f968262e3e5dcca0"
+    },
+    {
+      "path": "scripts/test/tempo-hosted-runtime.test.ts",
+      "sha256": "e79a106885b58d154fd59426304580e87677f828b491b2acf9d46f14f0174ceb"
+    },
+    {
+      "path": "scripts/test/tempo-runtime-upgrade.test.ts",
+      "sha256": "22e984bd944d3d5df0b1d68157b5ef80cab5813990ec3e80f7a95ca2f74e5b0b"
+    },
+    {
+      "path": "services/provider-relay/src/refunder.ts",
+      "sha256": "6aa7b6e26ec24f7cd57ce768e85937ba6bc37e0ccba7d20444d75a9b2f0562b9"
+    },
+    {
+      "path": "services/provider-relay/test/shared-refunder.test.ts",
+      "sha256": "943860ca1965e8091d8b45788a2236ea148669dda568c8824c22aeec0d0be8b2"
+    },
+    {
+      "path": "docs/tempo-upstream-sync-20261013.md",
+      "sha256": "71dfbb88a11783304af1e2def3ca1a0f95f372bc06334cb80415c2b627b2378f"
+    },
+    {
+      "path": "docs/tempo-runtime.md",
+      "sha256": "c1f244b490c4096612835bb500bbe5e78bde957f7fb2f1d861dfc88291562787"
+    }
+  ],
+  "finalHashAuditAt": "2026-10-13T09:57:59.932774+00:00"
+}

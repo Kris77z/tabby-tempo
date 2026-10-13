@@ -1,10 +1,14 @@
 # Tabby — AgentFuel Tempo
 
+Latest upstream sync: [Tempo chain lookup, goal payment recovery and Magpie progress](docs/tempo-upstream-sync-round2-20261013.md). This update uses controlled payment tests and read-only Tempo probes; the original task and reward-path acceptance remains unchanged.
+
 Tabby gives hosted AI agents task-backed credit to buy inference, complete verifiable work, repay financing and build financial reputation on Tempo.
 
 This is the Crypto World's Fair Tempo submission. Four Solidity contracts are deployed on **Tempo Moderato (42431)**, using test **PathUSD** for settlement and transaction fees. Independent acceptance verified **five credit-funded tasks and two reward-funded tasks** with real Kimi inference, Pi execution and Docker hidden tests. All six participating agents ended debt-free. The application is currently operated locally against the testnet; public hosting is being prepared.
 
 For judges: start with [core Tempo acceptance](docs/tempo-root-acceptance-20261012.md), [reward-path acceptance](docs/tempo-gamefi-extra-root-acceptance-20261013.md), and [runtime instructions](docs/tempo-runtime.md). The accepted two-task autonomous run spent 0.26 PathUSD within its unchanged 0.30 budget and reached InferScore 640 / Tier B. Unknown provider outcomes and compensated failures remain disclosed in the evidence.
+
+2026-10-13 code sync: the local Tempo app now includes the refreshed Dashboard, name-only Agent creation, inline games/funds, identity evidence and cash-only personal goals with specialist analysis. These new goal paths were validated with controlled Anvil and browser tests; no new paid Tempo run is claimed. See [migration scope and compatibility](docs/tempo-upstream-sync-20261013.md).
 
 Prior work: this project extends the AgentFuel EVM prototype at source commit `922f65dc9c20ab404946ce37e49e95484b515f75`. Tempo-specific work includes network and asset verification, PathUSD fees, deployment and feedback gas budgets, chain-bound recovery, hosted execution and the independent testnet acceptance records. Historical Monad / Anvil sections below are background, not Tempo evidence.
 
@@ -69,7 +73,7 @@ InferCredit 用已托管的任务报酬支持 Agent 购买推理：现金不足�
 
 root 已用两名用户、随机生成的托管钱包、实际本地链和两个生产 executor 验证：开户 → 入金 → 信用任务 → 赢赞助 USDC → 用奖励余额完成下一单 → 赢额度并消费。未新增真实供应商消费或 Monad 交易，真实扩展钱包与公开部署尚未验收。见 [托管交付](docs/hosted-acceptance.md)、[配置/API](docs/hosted-agents.md)。
 
-`/` 是基于 Oberon 调整的产品落地页；“创建你的 AGENT”进入 `/onboarding`，以 Agora 的暖白棕色终端逐项完成钱包登录、六项配置和确认，再进入 `/dashboard` 托管工作台；“进入工作台”直接打开 `/dashboard`。工作台沿用 Agora Mesh Dashboard 的浅灰/白色方角面板、紫色强调、Geist Mono、紧凑三栏与请求时间线；个人金融卡显示核验后的 cash、完整债务、InferScore、Tier 与还款记录，任务展示真实结算凭证。`/arena`、四种练习和 `/advanced` 共用终端页头与导航。`/arena/holdem` 是固定运营比赛的历史只读证据，入口收在高级协议的“历史演示与证据”，不属于创建或参赛必经路径。个人托管 Agent、固定运营演示与免费练习明确分开；服务未配置时显示真实空态。页面来源与适配见 [Oberon 落地页](docs/frontend-oberon-landing.md) 和 [Agora 迁移记录](docs/frontend-agora-migration.md)。
+`/` 是 Tabby 产品落地页；“创建你的 AGENT”进入 `/onboarding`，完成钱包签名登录、填写名称并确认创建，再进入 `/dashboard` 托管工作台。新 Agent 默认零推理预算、关闭任务授信；首次执行前在工作台单独设置模型、策略、单次与累计预算及授信权限，预算不是充值。“进入工作台”直接打开 `/dashboard`。工作台沿用 Agora Mesh Dashboard 的浅灰/白色方角面板、紫色强调、Geist Mono、紧凑三栏与请求时间线；个人金融卡显示核验后的 cash、完整债务、InferScore、Tier 与还款记录，任务展示真实结算凭证。`/arena`、四种练习和 `/advanced` 共用终端页头与导航。`/arena/holdem` 是固定运营比赛的历史只读证据，入口收在高级协议的“历史演示与证据”，不属于创建或参赛必经路径。个人托管 Agent、固定运营演示与免费练习明确分开；服务未配置时显示真实空态。页面来源与适配见 [Oberon 落地页](docs/frontend-oberon-landing.md) 和 [Agora 迁移记录](docs/frontend-agora-migration.md)。
 
 ## 后端运行与页面接入
 

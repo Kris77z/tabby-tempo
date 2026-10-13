@@ -32,8 +32,27 @@ async function fixture() {
     const signature = await wallet.signMessage(challenge.message), response = await send("/auth/login", "POST", { challengeId: challenge.id, signature });
     assert.equal(response.status, 200); return { challenge, signature, ...(await response.json()) };
   };
-  return { directory, service, url, send, login, close, calls: () => calls, inputs };
+  return { directory, service, url, send, login, close, calls: () => calls, inputs, executor };
 }
+test("name-only HTTP creation gates execution until a valid settings update", async () => {
+  const f = await fixture();
+  try {
+    const { token } = await f.login(wallets[0]);
+    const input = { name: "Name only", requestId: randomUUID() };
+    const response = await f.send("/agents", "POST", input, token);
+    assert.equal(response.status, 202); const created = await response.json();
+    await f.service.waitUntilIdle(); assert.equal(created.configurationRequired, true);
+    const denied = await f.send(`/agents/${created.id}/runs`, "POST", { action: "task", requestId: randomUUID() }, token);
+    assert.equal(denied.status, 409); assert.equal((await denied.json()).error, "HOSTED_CONFIGURATION_REQUIRED");
+    const updated = await f.send(`/agents/${created.id}`, "PATCH", settings, token);
+    assert.equal(updated.status, 200); assert.equal((await updated.json()).configurationRequired, false);
+    const replay = await f.send("/agents", "POST", input, token);
+    assert.equal((await replay.json()).id, created.id); assert.equal(f.calls(), 1);
+    assert.equal((await f.send(`/agents/${created.id}/runs`, "POST", { action: "task", requestId: randomUUID() }, token)).status, 202);
+    await f.service.waitUntilIdle(); assert.equal(f.calls(), 2);
+  } finally { await f.close(); }
+});
+
 test("actual HostedService HTTP binds signed sessions to two owners and preserves idempotency", async () => {
   const f = await fixture();
   try {
@@ -99,5 +118,42 @@ test("HTTP requires exact loopback Host/Origin, bounded JSON and safe errors", a
     assert.equal((await f.send("/unknown")).status, 404);
     const invalid = await f.send("/auth/challenge", "POST", { wallet: "FAKE_PRIVATE_SENTINEL" }); assert.deepEqual(await invalid.json(), { error: "HOSTED_WALLET_INVALID" });
     assert.equal(f.calls(), 0);
+  } finally { await f.close(); }
+});
+
+
+test("signed cookie bridge accepts long Chinese/English goals, preserves configuration flag and owner-scoped cancellation", async () => {
+  const f = await fixture();
+  try {
+    f.executor.capabilities = { goals: { maxPhases: 3, models: [{ id: "coder", pricePerCallRaw: "10000" }] } };
+    const originalExecute = f.executor.execute.bind(f.executor);
+    f.executor.execute = async input => {
+      if (input.run.action !== "goal") return originalExecute(input);
+      await input.progress!({ stage: "paused", phases: [], calls: [] });
+      return input.run.stopRequested
+        ? { phase: "Cancelled", terminal: true, success: false, chargedRaw: "0", reason: "HOSTED_GOAL_CANCELLED", mission: { stage: "cancelled", phases: [], calls: [] } }
+        : { phase: "Paused", terminal: false, success: false, chargedRaw: "0", reason: "HOSTED_GOAL_CALL_UNCERTAIN" };
+    };
+    const bridge = (path: string, method: string, body: unknown | undefined, cookie: string) => hostedAgentsRequest(new Request(origin + "/api/hosted" + path, { method,
+      headers: { host: "127.0.0.1:3000", origin, "content-type": "application/json", cookie }, body: body === undefined ? undefined : JSON.stringify(body) }), { origin, upstreamUrl: f.url });
+    const a = await f.login(wallets[0]), b = await f.login(wallets[1]), cookieA = `agentfuel_hosted_session=${a.token}`, cookieB = `agentfuel_hosted_session=${b.token}`;
+    const created = await bridge("/agents", "POST", { name: "Goal agent", requestId: randomUUID() }, cookieA);
+    assert.equal(created.status, 202); const agent = await created.json(); assert.equal(agent.configurationRequired, true); await f.service.waitUntilIdle();
+    const initial = await (await bridge("/agents", "GET", undefined, cookieA)).json(); assert.equal(initial.agents[0].configurationRequired, true);
+    const updated = await bridge(`/agents/${agent.id}`, "PATCH", settings, cookieA); assert.equal((await updated.json()).configurationRequired, false);
+    for (const goal of ["Explain the tradeoffs. ".repeat(450), "请根据这些要求给出详细方案。".repeat(700)]) {
+      assert.ok(Buffer.byteLength(goal) > 8192); assert.ok(goal.length <= 12000);
+      const command = { action: "goal", requestId: randomUUID(), goal };
+      const posted = await bridge(`/agents/${agent.id}/runs`, "POST", command, cookieA); assert.equal(posted.status, 202); assert.equal((await posted.json()).goal, goal); await f.service.waitUntilIdle();
+      assert.equal((await bridge(`/agents/${agent.id}/runs`, "POST", { ...command, goal: goal + "!" }, cookieA)).status, 409);
+      assert.equal((await bridge(`/agents/${agent.id}/cancel`, "POST", { requestId: command.requestId }, cookieB)).status, 404);
+      const snapshot = await (await bridge("/agents", "GET", undefined, cookieA)).json(); assert.equal(snapshot.runs.find((run: any) => run.requestId === command.requestId).goal, goal);
+      const cancelled = await bridge(`/agents/${agent.id}/cancel`, "POST", { requestId: command.requestId }, cookieA); assert.equal(cancelled.status, 202); assert.equal((await cancelled.json()).stopRequested, true);
+      await f.service.waitUntilIdle(); const final = await (await bridge("/agents", "GET", undefined, cookieA)).json(); assert.equal(final.runs.find((run: any) => run.requestId === command.requestId).reason, "HOSTED_GOAL_CANCELLED");
+      assert.equal((await bridge(`/agents/${agent.id}/cancel`, "POST", { requestId: command.requestId, owner: wallets[0].address }, cookieA)).status, 400);
+    }
+    assert.equal((await bridge(`/agents/${agent.id}/runs`, "POST", { action: "goal", requestId: randomUUID(), goal: "x".repeat(12001) }, cookieA)).status, 400);
+    assert.equal((await bridge(`/agents/${agent.id}/runs`, "POST", { action: "goal", requestId: randomUUID(), goal: "中".repeat(23000) }, cookieA)).status, 413);
+    assert.equal((await f.send(`/agents/${agent.id}/runs`, "POST", { action: "goal", requestId: randomUUID(), goal: "中".repeat(23000) }, a.token)).status, 413);
   } finally { await f.close(); }
 });

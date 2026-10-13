@@ -30,24 +30,24 @@ export function FinancialPanel({ agent, finance }: { agent: HostedAgent; finance
   const changes = snapshot && !finance.stale ? creditChanges(snapshot, finance.previous) : [];
   const creditEnabled = snapshot?.credit.eligible && !snapshot.policy.ownerFrozen && agent.allowCredit && BigInt(snapshot.policy.maxDebtPerTxRaw) > 0n && BigInt(snapshot.policy.maxDebtPerDayRaw) > 0n;
   return <Card><CardContent><section aria-label="信用与结算快照" data-testid="hosted-financial-snapshot">
-    <div className={styles.rowBetween}><h2>信用飞轮</h2><button className={styles.textButton} disabled={finance.loading} onClick={() => void finance.refresh()} aria-label="刷新金融快照">{finance.loading ? "读取中…" : "刷新"}</button></div>
-    <p className={styles.resourceKind}>CHAIN IDENTITY · #{agent.binding?.agentId ?? "待绑定"}</p>
+    <div className={styles.rowBetween}><h2>信誉与资金</h2><button className={styles.textButton} disabled={finance.loading} onClick={() => void finance.refresh()} aria-label="刷新金融快照">{finance.loading ? "读取中…" : "刷新"}</button></div>
+
     {finance.error ? <p className={styles.financeWarning} role="status">{reasons[finance.error] ?? "金融状态暂未确认。"}{snapshot ? " 以下保留上次已核验快照。" : " cash、债务和评分尚不可用。"}</p> : null}
     {snapshot ? <>
+      <p className={styles.help}>{finance.stale ? "上次快照" : "已核验快照"} · chain {snapshot.chainId} · 区块 #{snapshot.block.number} · Agent #{snapshot.agentId}</p>
+      {!!changes.length&&<div className={styles.help} role="status">{changes.map(change=><p key={change}>{change}</p>)}</div>}
       <div className={styles.creditScore}><span>InferScore <strong>{snapshot.credit.score}</strong></span><span>Tier <strong>{snapshot.credit.tier}</strong></span></div>
       <dl className={styles.factList}>
         <div><dt>cash</dt><dd>{amount(snapshot.cashRaw, 6)} {symbol}</dd></div>
         <div><dt>未偿债务（含 fee）</dt><dd>{amount(snapshot.debtRaw, 6)} {symbol}</dd></div>
         <div><dt>Tier 本金上限</dt><dd>{amount(snapshot.credit.tierCapRaw, 6)} {symbol}</dd></div>
-        <div><dt>借款 fee</dt><dd>{fee(snapshot.credit.feeBps)}</dd></div>
+      </dl>
+      {snapshot.counts.repayments !== snapshot.counts.mirrorRepayments ? <p className={styles.financeWarning}>真实还款与声誉镜像计数不同；评分和 Tier 采用 Underwriter 当前已确认结果。</p> : null}
+      <details className={styles.collapsible}><summary>授信与账本详情</summary><dl className={styles.factList}>        <div><dt>借款 fee</dt><dd>{fee(snapshot.credit.feeBps)}</dd></div>
         <div><dt>任务授信</dt><dd>{creditEnabled ? "可申请" : !snapshot.credit.eligible ? rejection[snapshot.credit.rejection ?? ""] ?? "暂不可申请" : !agent.allowCredit ? "本人已关闭" : "策略已限制"}</dd></div>
         <div><dt>真实还款 / 违约</dt><dd>{snapshot.counts.repayments} / {snapshot.counts.defaults}</dd></div>
         <div><dt>声誉还款 / 成功 / 违约</dt><dd>{snapshot.counts.mirrorRepayments} / {snapshot.counts.successes} / {snapshot.counts.mirrorDefaults}</dd></div>
-      </dl>
-      {snapshot.counts.repayments !== snapshot.counts.mirrorRepayments ? <p className={styles.financeWarning}>真实还款与声誉镜像计数不同；评分和 Tier 采用 Underwriter 当前已确认结果。</p> : null}
-      {changes.length ? <p className={styles.financeChanges} role="status">本次刷新：{changes.join("；")}</p> : null}
-      <p className={styles.help}>{finance.stale ? "上次快照" : "已核验快照"} · chain {snapshot.chainId} · 区块 #{snapshot.block.number}<br />区块时间 {time(snapshot.block.timestamp * 1000)}<br />读取时间 {time(snapshot.observedAt)}</p>
-      <p className={styles.help}>完整读取 {snapshot.scannedTaskCount} 项任务，本人 {snapshot.ownedTaskCount} 项。成功信用还款写入声誉后，Underwriter 更新评分与 Tier。每笔授信仍需核验任务和协议额度。</p>
+</dl><p className={styles.help}>{finance.stale ? "上次快照" : "已核验"} · 区块 #{snapshot.block.number} · {time(snapshot.observedAt)}</p></details>
     </> : <p className={styles.help}>{finance.loading ? "正在读取本 Agent 的链上账本与 Underwriter。" : "等待已核验的金融快照。"}</p>}
   </section></CardContent></Card>;
 }

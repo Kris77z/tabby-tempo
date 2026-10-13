@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-13T12:56:09.121Z",
+  "scope": "Independent offline verification of real read-only collector output, digest, token metadata and historical Task7 identity; no new RPC or paid execution.",
+  "passed": true,
+  "evidenceDigest": "0x99dbfde87f4bfd30cd68467928f53ff182d7dbb3dd007ee65b20249ff3f9aa8a",
+  "records": 3,
+  "symbol": "PathUSD",
+  "decimals": 6,
+  "totalSupplyRead": true,
+  "balanceRead": true,
+  "noNativePlaceholderBalance": true,
+  "task7CanonicalBlockMatchesPriorAcceptance": true,
+  "feeRaw": "210"
+}

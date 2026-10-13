@@ -1,0 +1,506 @@
+{
+  "brand": "Tabby",
+  "approved_concept": "A2 Queue T",
+  "colors": {
+    "orange": "#ff5900",
+    "black": "#202020",
+    "paper": "#f1f0ee",
+    "white": "#ffffff"
+  },
+  "font": {
+    "source": "frontend/components/landing/fonts/InterVariable.woff2",
+    "axes": {
+      "wght": 550,
+      "opsz": 32
+    },
+    "tracking_font_units": -40,
+    "license": "SIL OFL 1.1; see Inter-LICENSE.txt",
+    "svg_text": "outlined paths"
+  },
+  "assets": [
+    {
+      "file": "symbol-color.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "transparent",
+      "usage": "Compact approved A2 symbol",
+      "bytes": 550,
+      "sha256": "0984827b0e84f417476a089103909984f51d6ffb62f323edf5e7ec501b1b8464"
+    },
+    {
+      "file": "symbol-color.png",
+      "format": "png",
+      "pixel_size": [
+        1024,
+        1024
+      ],
+      "background": "transparent",
+      "usage": "Compact approved A2 symbol",
+      "bytes": 10726,
+      "sha256": "b24887cc3a9c151a1d39e1b00e43d024d0eed96b0ea7f3fc8d819d22473a490a"
+    },
+    {
+      "file": "logo-horizontal-color.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "transparent",
+      "usage": "Website header/footer and wide spaces",
+      "bytes": 3575,
+      "sha256": "aa43b8dbf585fab6ea67ea48ef52ea676fd30c0434733fe5acda450fdadfcfc5"
+    },
+    {
+      "file": "logo-horizontal-color.png",
+      "format": "png",
+      "pixel_size": [
+        2000,
+        675
+      ],
+      "background": "transparent",
+      "usage": "Website header/footer and wide spaces",
+      "bytes": 39935,
+      "sha256": "f673a2824f34c486de95ce4a0a855d92a30ab91ad821dc5eea6659c732094e57"
+    },
+    {
+      "file": "logo-stacked-color.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "transparent",
+      "usage": "Square presentations and posters",
+      "bytes": 3704,
+      "sha256": "c54813c43a1ed8e26fda53c80ebfde62d193edb927399572823fbe1d2cae08e3"
+    },
+    {
+      "file": "logo-stacked-color.png",
+      "format": "png",
+      "pixel_size": [
+        1024,
+        1024
+      ],
+      "background": "transparent",
+      "usage": "Square presentations and posters",
+      "bytes": 24093,
+      "sha256": "5ecbb92f0ad51f2375e139f2dce131e809d7b9eea54388b5962ce4950ac87eba"
+    },
+    {
+      "file": "wordmark-color.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "transparent",
+      "usage": "Outlined Tabby wordmark only",
+      "bytes": 3067,
+      "sha256": "256b6d2fa94580b294f9bb99c5f12d8db94e7a518ce5480b46e0a5dceb4ed0d9"
+    },
+    {
+      "file": "wordmark-color.png",
+      "format": "png",
+      "pixel_size": [
+        2000,
+        904
+      ],
+      "background": "transparent",
+      "usage": "Outlined Tabby wordmark only",
+      "bytes": 48550,
+      "sha256": "d7481130a02ad85345bfcadb2b1825a975e07b900629f3e9d030d356fdf0dd55"
+    },
+    {
+      "file": "symbol-black.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "transparent",
+      "usage": "Compact approved A2 symbol",
+      "bytes": 550,
+      "sha256": "17f270ead3f555a143974f33e47d29294620bcdc2f20ac1d7c00e70ef24682b8"
+    },
+    {
+      "file": "symbol-black.png",
+      "format": "png",
+      "pixel_size": [
+        1024,
+        1024
+      ],
+      "background": "transparent",
+      "usage": "Compact approved A2 symbol",
+      "bytes": 11503,
+      "sha256": "289ad1f3cd28d85dfa1f48e7ecadd50db72f4f6d12a97e12e3bff90d974b14f4"
+    },
+    {
+      "file": "logo-horizontal-black.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "transparent",
+      "usage": "Website header/footer and wide spaces",
+      "bytes": 3575,
+      "sha256": "6672f19943f3828f1d8fdfc257dd35b1513705288626128940eb41ff54f015ff"
+    },
+    {
+      "file": "logo-horizontal-black.png",
+      "format": "png",
+      "pixel_size": [
+        2000,
+        675
+      ],
+      "background": "transparent",
+      "usage": "Website header/footer and wide spaces",
+      "bytes": 40125,
+      "sha256": "8e13334c5bcf12911ae8f2385fe5adb1eb4040e80132aeee1bea7329904e19cb"
+    },
+    {
+      "file": "logo-stacked-black.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "transparent",
+      "usage": "Square presentations and posters",
+      "bytes": 3704,
+      "sha256": "66132533467292b1a105a86fafd4652225e1e6cc2e11fa19b4b3bf04b8656d64"
+    },
+    {
+      "file": "logo-stacked-black.png",
+      "format": "png",
+      "pixel_size": [
+        1024,
+        1024
+      ],
+      "background": "transparent",
+      "usage": "Square presentations and posters",
+      "bytes": 24457,
+      "sha256": "ad9851bf291325699b38a1c95d097029303a0f3f5e64247801545a1df9343be9"
+    },
+    {
+      "file": "wordmark-black.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "transparent",
+      "usage": "Outlined Tabby wordmark only",
+      "bytes": 3067,
+      "sha256": "8703b325edad2fc6d035019a96909d1079ee431cb6df2a5e6b4e3d7ae839b926"
+    },
+    {
+      "file": "wordmark-black.png",
+      "format": "png",
+      "pixel_size": [
+        2000,
+        904
+      ],
+      "background": "transparent",
+      "usage": "Outlined Tabby wordmark only",
+      "bytes": 48550,
+      "sha256": "d7481130a02ad85345bfcadb2b1825a975e07b900629f3e9d030d356fdf0dd55"
+    },
+    {
+      "file": "symbol-white.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "transparent",
+      "usage": "Compact approved A2 symbol",
+      "bytes": 550,
+      "sha256": "1c15c0a7501c7f70629b28443ff12c669b59ebf708b3c763f3242b56998a3a49"
+    },
+    {
+      "file": "symbol-white.png",
+      "format": "png",
+      "pixel_size": [
+        1024,
+        1024
+      ],
+      "background": "transparent",
+      "usage": "Compact approved A2 symbol",
+      "bytes": 10018,
+      "sha256": "203bfc1dbd3c38607805a47089235c6690c4cf26662705c884c151eb3286cd56"
+    },
+    {
+      "file": "logo-horizontal-white.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "transparent",
+      "usage": "Website header/footer and wide spaces",
+      "bytes": 3575,
+      "sha256": "3e8197cb8098ae346d3343655ad99adfb7120b183cca0b1a75ffff2ceaa17c0d"
+    },
+    {
+      "file": "logo-horizontal-white.png",
+      "format": "png",
+      "pixel_size": [
+        2000,
+        675
+      ],
+      "background": "transparent",
+      "usage": "Website header/footer and wide spaces",
+      "bytes": 31960,
+      "sha256": "ab04b71a858c0e4e18ef33ffc7739b5a87fc8b516b3a4e71c2ac7243d7741975"
+    },
+    {
+      "file": "logo-stacked-white.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "transparent",
+      "usage": "Square presentations and posters",
+      "bytes": 3704,
+      "sha256": "75ab28b1e89c4e8fb732b2477ec7e1b50e5ed214d17adab9ee71c359a5495c95"
+    },
+    {
+      "file": "logo-stacked-white.png",
+      "format": "png",
+      "pixel_size": [
+        1024,
+        1024
+      ],
+      "background": "transparent",
+      "usage": "Square presentations and posters",
+      "bytes": 19614,
+      "sha256": "a25a0935392643f1c6018f3d1d7cdb87b44258f646b459340a36ac7fc9d5d3e3"
+    },
+    {
+      "file": "wordmark-white.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "transparent",
+      "usage": "Outlined Tabby wordmark only",
+      "bytes": 3067,
+      "sha256": "be65e82c6cc6f28e35b4d1fcd8d0d975a14075d23e6b51f61d35068767ad55d0"
+    },
+    {
+      "file": "wordmark-white.png",
+      "format": "png",
+      "pixel_size": [
+        2000,
+        904
+      ],
+      "background": "transparent",
+      "usage": "Outlined Tabby wordmark only",
+      "bytes": 38541,
+      "sha256": "58630bb99e519bf66de2d98c6e4fc215f7e746c486535fc3dfdd04356e9734d4"
+    },
+    {
+      "file": "favicon-16.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "#f1f0ee",
+      "usage": "Pixel-aligned favicon",
+      "bytes": 551,
+      "sha256": "e6c6c3fa591f42437b7249bac3bbfc2e656a355fcb47962613106a348b683a3d"
+    },
+    {
+      "file": "favicon-16.png",
+      "format": "png",
+      "pixel_size": [
+        16,
+        16
+      ],
+      "background": "#f1f0ee",
+      "usage": "Pixel-aligned favicon",
+      "bytes": 161,
+      "sha256": "b7861a32c642efd2a51c2da3b785511093c43ae07d6f5bcc34c129127677cde9"
+    },
+    {
+      "file": "favicon-32.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "#f1f0ee",
+      "usage": "Pixel-aligned favicon",
+      "bytes": 551,
+      "sha256": "8cf7b737b4886e9480061086b69425e260443c4657fbdf2cede44158bbcf77ab"
+    },
+    {
+      "file": "favicon-32.png",
+      "format": "png",
+      "pixel_size": [
+        32,
+        32
+      ],
+      "background": "#f1f0ee",
+      "usage": "Pixel-aligned favicon",
+      "bytes": 173,
+      "sha256": "783a3ca188ee42ba5741dfcecf7afae828c49d607e9f52e55703945f302cf90c"
+    },
+    {
+      "file": "favicon-48.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "#f1f0ee",
+      "usage": "Pixel-aligned favicon",
+      "bytes": 551,
+      "sha256": "9bca88c861b836a99af08ec1cc53d742c190275fcea80ba398f1d248595ebc01"
+    },
+    {
+      "file": "favicon-48.png",
+      "format": "png",
+      "pixel_size": [
+        48,
+        48
+      ],
+      "background": "#f1f0ee",
+      "usage": "Pixel-aligned favicon",
+      "bytes": 264,
+      "sha256": "7a0d4c5f99c94e67d9e2a7acf93b9dc8c39b125fa47899c276f2708586b829af"
+    },
+    {
+      "file": "favicon.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "#f1f0ee",
+      "usage": "Scalable browser favicon; generic PNG is 64 px",
+      "bytes": 548,
+      "sha256": "13e3f66c385acfef9e3cdaa93451e0b237b192dc8ab8a1b2923bc20c0f58953f"
+    },
+    {
+      "file": "favicon.png",
+      "format": "png",
+      "pixel_size": [
+        64,
+        64
+      ],
+      "background": "#f1f0ee",
+      "usage": "Scalable browser favicon; generic PNG is 64 px",
+      "bytes": 305,
+      "sha256": "2a10cca4d362621a447e9420ced551530d7885e1e6e292fad80c251d5cc4b3c3"
+    },
+    {
+      "file": "favicon.ico",
+      "format": "ico",
+      "pixel_size": [
+        [
+          16,
+          16
+        ],
+        [
+          32,
+          32
+        ],
+        [
+          48,
+          48
+        ]
+      ],
+      "background": "#f1f0ee",
+      "usage": "Legacy browser favicon",
+      "bytes": 652,
+      "sha256": "dd0ca9c307a3ffac43df205a5423fc228979bcf15659eea9df08192f4c49fb21"
+    },
+    {
+      "file": "apple-touch-icon.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "#f1f0ee",
+      "usage": "Apple home-screen icon",
+      "bytes": 624,
+      "sha256": "629045531d3086b5cd9aa0be2a349a890d042610db9277da5c74c62f72d9ae92"
+    },
+    {
+      "file": "apple-touch-icon.png",
+      "format": "png",
+      "pixel_size": [
+        180,
+        180
+      ],
+      "background": "#f1f0ee",
+      "usage": "Apple home-screen icon",
+      "bytes": 1531,
+      "sha256": "83930878491804b470dfc2130b404d4dda5d63309bcc1d444035c58f3369fec3"
+    },
+    {
+      "file": "app-icon-192.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "#f1f0ee",
+      "usage": "Web app icon 192 px",
+      "bytes": 625,
+      "sha256": "db2b5bf05ab54b9d3d917f32c56cd58d553982ce3275b204e78adf6b117fe628"
+    },
+    {
+      "file": "app-icon-192.png",
+      "format": "png",
+      "pixel_size": [
+        192,
+        192
+      ],
+      "background": "#f1f0ee",
+      "usage": "Web app icon 192 px",
+      "bytes": 1601,
+      "sha256": "b5eca415def99be9c943888a43900a01a46b0cba937281f73a5d2baa80d8be97"
+    },
+    {
+      "file": "app-icon-512.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "#f1f0ee",
+      "usage": "Web app icon 512 px",
+      "bytes": 629,
+      "sha256": "442ccf2210a484e9f3a9cccab5ddd77f509ccba5e32d97e3ab074c83e1bf58c5"
+    },
+    {
+      "file": "app-icon-512.png",
+      "format": "png",
+      "pixel_size": [
+        512,
+        512
+      ],
+      "background": "#f1f0ee",
+      "usage": "Web app icon 512 px",
+      "bytes": 4252,
+      "sha256": "9cb23c7cbe2347ef6a547f781a00294a294d22715cfbfef6be12171d271f507e"
+    },
+    {
+      "file": "maskable-512.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "#f1f0ee",
+      "usage": "Maskable icon; all modules inside central 80% diameter safe circle",
+      "bytes": 674,
+      "sha256": "291421303dbd97deca0c5484ab5b02d5a9c78ea1cf6da79a16a064b8de741361"
+    },
+    {
+      "file": "maskable-512.png",
+      "format": "png",
+      "pixel_size": [
+        512,
+        512
+      ],
+      "background": "#f1f0ee",
+      "usage": "Maskable icon; all modules inside central 80% diameter safe circle",
+      "bytes": 3793,
+      "sha256": "75c9a099eff8d9f7837fcdfcaa4781c8f48fd0f4d1ee2be75c510e1cbbdcca16"
+    },
+    {
+      "file": "brand-square.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "#f1f0ee",
+      "usage": "Square brand icon for registration and avatars",
+      "bytes": 663,
+      "sha256": "3f98c77ca200f95dc15dc405cef03cd9a89d91cd68ee8ae01c962db2a51ea78b"
+    },
+    {
+      "file": "brand-square.png",
+      "format": "png",
+      "pixel_size": [
+        1024,
+        1024
+      ],
+      "background": "#f1f0ee",
+      "usage": "Square brand icon for registration and avatars",
+      "bytes": 9943,
+      "sha256": "3ae053ee59c556890adf653cae202075db55554cafae72d7bf09788f929d78ee"
+    },
+    {
+      "file": "social-card.svg",
+      "format": "svg",
+      "pixel_size": null,
+      "background": "#f1f0ee",
+      "usage": "Link previews, project README and presentation title",
+      "bytes": 3680,
+      "sha256": "c804636c3d4eafebfea43a5942c8d40c94bcc1d150dd187cadc90bdfe9337603"
+    },
+    {
+      "file": "social-card.png",
+      "format": "png",
+      "pixel_size": [
+        1200,
+        630
+      ],
+      "background": "#f1f0ee",
+      "usage": "Link previews, project README and presentation title",
+      "bytes": 16865,
+      "sha256": "07f5e14102a92a8df7cabe2e3ba14a9876c2120fa7a233f84c95f755ac86dcf9"
+    }
+  ]
+}

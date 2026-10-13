@@ -27,7 +27,7 @@ export async function readRpcUrlFile(path: string) {
 
 const READ_RPC_METHODS = new Set([
   "eth_chainId", "eth_blockNumber", "eth_getBlockByNumber", "eth_getBlockByHash", "eth_getCode", "eth_call",
-  "eth_getBalance", "eth_getTransactionCount", "eth_getTransactionReceipt", "eth_getTransactionByHash", "eth_getLogs",
+  "eth_getBalance", "eth_getStorageAt", "eth_getTransactionCount", "eth_getTransactionReceipt", "eth_getTransactionByHash", "eth_getLogs",
   "eth_gasPrice", "eth_maxPriorityFeePerGas", "eth_feeHistory", "eth_estimateGas",
 ]);
 function retryableRead(request: FetchRequest) {

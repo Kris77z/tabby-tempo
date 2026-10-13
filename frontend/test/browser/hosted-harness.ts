@@ -1,6 +1,6 @@
-import { expect, type Page, type Route } from "@playwright/test";
+import { test, expect, type Page, type Route } from "@playwright/test";
 import { Wallet, getBytes, toUtf8String, verifyMessage } from "ethers";
-import type { AgentSettings, HostedAgent, HostedRun, HostedCapabilities } from "../../../services/hosted-agents/src/types";
+import type { AgentSettings, HostedAgent, HostedRun, HostedCapabilities, HostedSponsorship } from "../../../services/hosted-agents/src/types";
 
 // Synthetic browser acceptance only. Every API path is intercepted before navigation;
 // there is no route.continue/fetch, provider connection, or transaction broadcasting.
@@ -27,7 +27,7 @@ export const makeRun = (values: Partial<HostedRun> = {}): HostedRun => ({
 export type Command = { method: string; path: string; body: Record<string, unknown> };
 export type RpcCall = { method: string; params?: unknown[] };
 export type HarnessOptions = {
-  chainId?: string; walletChainId?: string; capabilities?: HostedCapabilities; authenticated?: boolean; agents?: HostedAgent[]; runs?: HostedRun[];
+  origin?:string;sponsorship?:HostedSponsorship; chainId?: string; walletChainId?: string; capabilities?: HostedCapabilities; authenticated?: boolean; agents?: HostedAgent[]; runs?: HostedRun[];
   error?: { status: number; code: string }; firstRunFailure?: "abort" | "503"; logoutStatus?: 401;
   beforeWrite?: (command: Command) => Promise<void>;
   connectEvent?: boolean; firstCreateFailure?: "503"; createAtEnd?: boolean;
@@ -35,6 +35,7 @@ export type HarnessOptions = {
 export const unexpectedByPage = new WeakMap<Page, string[]>();
 
 export async function syntheticHosted(page: Page, options: HarnessOptions = {}) {
+  const origin=options.origin??String(test.info().project.use.baseURL??"http://127.0.0.1:3014");
   const chainId = options.chainId ?? "31337", walletChainId = options.walletChainId ?? chainId;
   let activeOwner = owner, authenticatedOwner = owner.address;
   const commands: Command[] = [], rpcCalls: RpcCall[] = [], signed: { wallet: string; message: string }[] = [];
@@ -48,7 +49,7 @@ export async function syntheticHosted(page: Page, options: HarnessOptions = {}) 
   const challengeId = "synthetic-auth-challenge", expiresAt = Date.now() + 300_000;
   const challenge = {
     id: challengeId,
-    message: `AgentFuel hosted agent login\nOrigin: http://127.0.0.1:3014\nWallet: ${owner.address}\nChain: ${chainId}\nNonce: ${challengeId}\nExpires: ${new Date(expiresAt).toISOString()}\nThis signature authenticates your platform account. It authorizes no blockchain transaction.`,
+    message: `AgentFuel hosted agent login\nOrigin: ${origin}\nWallet: ${owner.address}\nChain: ${chainId}\nNonce: ${challengeId}\nExpires: ${new Date(expiresAt).toISOString()}\nThis signature authenticates your platform account. It authorizes no blockchain transaction.`,
     expiresAt,
   };
   await page.exposeFunction("__hostedSyntheticWallet", async (call: RpcCall) => {
@@ -106,9 +107,10 @@ export async function syntheticHosted(page: Page, options: HarnessOptions = {}) 
     const method = request.method(), path = url.pathname;
     const body = request.postData() ? request.postDataJSON() as Record<string, unknown> : {};
     commands.push({ method, path, body });
-    expect(url.origin).toBe("http://127.0.0.1:3014");
+    expect(url.origin).toBe(origin);
     expect(url.search).toBe("");
     expect(request.headers()["authorization"]).toBeUndefined();
+    if(path==="/api/arena/play"&&method==="GET"&&!url.search)return fulfill(route,{matches:[],history:[],bot:{name:"Synthetic Bot",description:"Controlled local practice only"},storage:"synthetic"});
     if (!path.startsWith("/api/hosted/")) {
       unexpected.push(`${method} ${path}`);
       return fulfill(route, { error: "SYNTHETIC_API_BLOCKED" }, 503);
@@ -134,22 +136,23 @@ export async function syntheticHosted(page: Page, options: HarnessOptions = {}) 
       if (options.logoutStatus) return fulfill(route, { error: "HOSTED_AUTH_REQUIRED" }, options.logoutStatus);
       return fulfill(route, { authenticated: false });
     }
-    if (path === "/api/hosted/agents" && method === "GET") return fulfill(route, { agents: agents.filter(agent => agent.owner === authenticatedOwner), runs, models, ...(options.capabilities ? { capabilities: options.capabilities } : {}) });
+    if (path === "/api/hosted/agents" && method === "GET") return fulfill(route, { sponsorship:options.sponsorship??{used:0,limit:3,remaining:3,globalLimit:100}, agents: agents.filter(agent => agent.owner === authenticatedOwner), runs, models, ...(options.capabilities ? { capabilities: options.capabilities } : {}) });
     if (/^\/api\/hosted\/agents\/[a-zA-Z0-9_-]+\/finance$/.test(path) && method === "GET") return fulfill(route, { status: "unavailable", observedAt: time, reason: "HOSTED_FINANCE_NOT_CONFIGURED" });
     if (path === "/api/hosted/agents" && method === "POST") {
       const previous = creations.get(String(body.requestId));
       if (previous) return fulfill(route, previous, 202);
       const { requestId, ...publicSettings } = body;
-      const agent = makeAgent({ ...publicSettings, owner: authenticatedOwner, binding: { chainId, agentId: "1999", wallet } } as unknown as Partial<HostedAgent>);
+      const deferred=Object.keys(publicSettings).length===1;
+      const agent = makeAgent({ ...publicSettings, ...(deferred?{configurationRequired:true,modelId:"",perRunBudgetRaw:"0",totalBudgetRaw:"0",allowCredit:false}:{}), owner: authenticatedOwner, binding: { chainId, agentId: "1999", wallet } } as unknown as Partial<HostedAgent>);
       creations.set(String(requestId), agent);
       agents = options.createAtEnd ? [...agents, agent] : [agent, ...agents];
       if (options.firstCreateFailure) return fulfill(route, { error: "HOSTED_UNAVAILABLE" }, 503);
       return fulfill(route, agent, 202);
     }
-    const targetMatch = /^\/api\/hosted\/agents\/([a-zA-Z0-9_-]+)(?:\/(pause|runs))?$/.exec(path);
+    const targetMatch = /^\/api\/hosted\/agents\/([a-zA-Z0-9_-]+)(?:\/(pause|runs|cancel))?$/.exec(path);
     const target = agents.find(agent => agent.id === targetMatch?.[1]);
     if (target && !targetMatch?.[2] && method === "PATCH") {
-      const agent = makeAgent({ ...target, ...body });
+      const agent = makeAgent({ ...target, ...body, ...(target.configurationRequired ? { configurationRequired: false } : {}) });
       agents = agents.map(value => value.id === target.id ? agent : value);
       return fulfill(route, agent);
     }
@@ -158,14 +161,25 @@ export async function syntheticHosted(page: Page, options: HarnessOptions = {}) 
       agents = agents.map(value => value.id === target.id ? agent : value);
       return fulfill(route, agent);
     }
+    if (target && targetMatch?.[2] === "cancel" && method === "POST") {
+      const index = runs.findIndex(run => run.agentId === target.id && run.requestId === body.requestId && run.action === "goal");
+      if (index < 0) return fulfill(route, { error: "HOSTED_GOAL_NOT_FOUND" }, 404);
+      const current = runs[index], mission = { ...(current.mission ?? { phases: [], calls: [] }), stage: "cancelled" as const };
+      const run: HostedRun = { ...current, stopRequested: true, status: "Failed", recoverable: false, reason: "HOSTED_GOAL_CANCELLED", mission,
+        result: { phase: "Cancelled", terminal: true, success: false, chargedRaw: current.chargedRaw, mission } };
+      runs[index] = run; agents = agents.map(agent => agent.id === target.id ? { ...agent, activeRequestId: undefined, reservedRaw: "0" } : agent);
+      return fulfill(route, run, 202);
+    }
     if (target && targetMatch?.[2] === "runs" && method === "POST") {
       runAttempts++;
       if (runAttempts === 1 && options.firstRunFailure === "abort") return route.abort("failed");
       if (runAttempts === 1 && options.firstRunFailure === "503") return fulfill(route, { error: "HOSTED_UNAVAILABLE" }, 503);
       const previous = runs.find(run => run.requestId === body.requestId);
       const chargedRaw = ["game", "deposit", "credits"].includes(String(body.action)) ? "0" : "25000";
-      const run = makeRun({ ...previous, ...body, agentId: target.id, status: "Succeeded", recoverable: false, chargedRaw,
-        result: { phase: "Complete", terminal: true, success: true, chargedRaw,
+      const mission = body.action === "goal" ? { stage: "completed" as const, phases: [{ name: "合成测试阶段", taskType: "writer", goal: String(body.goal), output: "Synthetic test artifact — no real inference." }],
+        answer: "Synthetic test artifact — no real inference.", review: { passed: true, summary: "Synthetic review", checks: ["Fixture only"] }, calls: [] } : undefined;
+      const run = makeRun({ ...previous, ...body, agentId: target.id, status: "Succeeded", recoverable: false, chargedRaw, reason: undefined, ...(mission ? { mission } : {}),
+        result: { phase: "Complete", terminal: true, success: true, chargedRaw, ...(mission ? { mission } : {}),
           ...(body.action === "task" ? { taskId: `synthetic-task-${target.id}` } : {}),
           ...(body.action === "game" ? { matchId: `synthetic-match-${target.id}`, ...(body.rewardKind === "llm-credits" ? { creditsGranted: 4096 } : { rewardRaw: "50000" }) } : {}),
           ...(body.action === "credits" ? { creditsUsed: 512 } : {}),

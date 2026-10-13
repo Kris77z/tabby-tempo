@@ -1,0 +1,534 @@
+{
+  "version": 1,
+  "completedAt": "2026-10-13T13:09:32.007261+00:00",
+  "boundary": {
+    "sourceReadOnly": true,
+    "newTempoBusinessTransactions": 0,
+    "tempoReplacementBroadcasts": 0,
+    "paidModelCalls": 0,
+    "newGameAdmissions": 0,
+    "grantRenewals": 0,
+    "sourceJournalCopies": 0,
+    "sourceEvidenceCopies": 0,
+    "gitCommitOrPushByImplementer": false
+  },
+  "sourceHead": "922f65dc9c20ab404946ce37e49e95484b515f75",
+  "priorSourceSnapshotSha256": "69c075a158bf40f77fae668cbe7e5fe7cb22b4bbfc4c6509b63de9620ccb39d7",
+  "sourceSnapshotSha256": "1b8b8c25b897e3c76b61f9c4474c78f8b6500fbef6fb255d92a55ab5fd38fea8",
+  "snapshotManifestFileSha256": "4f58ac551842e9f5b4f8fd43f78dc4d2de0246633af19deb49281054a2d73fec",
+  "sourceStableDuringCapture": true,
+  "finalFrozenSourceDrift": [],
+  "sourceFilesReviewed": 34,
+  "files": [
+    {
+      "path": "frontend/components/hosted/agent-profile.tsx",
+      "sourceSha256": "fa00b7b7c43523ecbb8f887c8e5e76dd3b39458098accf10ae169f0e84b9d7a8",
+      "baseSha256": "4ee0f7fae768d7e4ac138b54bec7c8fab39fa8f62ff711566abf3b40bba21193",
+      "targetBeforeSha256": "9a20f8b8d0d2f0e7cf610d35d8b014c92f5b3ded12fd6196575de7c993ca9246",
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "88213ec70990762788475fb11b8203117ce4fdf5415c3a0a312ac709c0f72b95"
+    },
+    {
+      "path": "frontend/components/hosted/chain-evidence.tsx",
+      "sourceSha256": "c277dce99ff22ea6e5b8fde52b7aaf2dcb9bfd25a8cf3aacef85f0779b40bfa8",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "7ed5841a1c1ae50c04e38eba106448835e248be3ab5fb0cd57f1c59dfe5dea97"
+    },
+    {
+      "path": "frontend/components/hosted/goal-composer.tsx",
+      "sourceSha256": "6602118aacdf55e0688d93e29bf50f0ed9dfadaf234a998a9dada0eb00adef81",
+      "baseSha256": "0a78a9bf2f99d5fa6b9d5734b9372735b551dd94556de9c21ed52227776cd1cd",
+      "targetBeforeSha256": "69d17077d3c2b8f9acdf80893f2b3a1116d83105ae36d7853f602d32bf3248cd",
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "9396874bb38f6f1815e4aef32fed5e03cb7c5b1e9835ace75ae27b185331d356"
+    },
+    {
+      "path": "frontend/components/hosted/magpie-panel.module.css",
+      "sourceSha256": "9bc6ec8bbe4882f777610b77ff7e214071b4a82e4990574ca83bcbe49e641d24",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "9bc6ec8bbe4882f777610b77ff7e214071b4a82e4990574ca83bcbe49e641d24"
+    },
+    {
+      "path": "frontend/components/hosted/magpie-panel.tsx",
+      "sourceSha256": "ead55200a24762c8956d1c663fe89d85e60fca941e111976ede1e187fe429ff5",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "ead55200a24762c8956d1c663fe89d85e60fca941e111976ede1e187fe429ff5"
+    },
+    {
+      "path": "frontend/components/hosted/mission-panel.tsx",
+      "sourceSha256": "ef1ce1f384c199cc7c2cb3d2bfeb6c20eb33ef70d80ea88c516b5b073de20ff6",
+      "baseSha256": "18516c5154f879f5878fe3fb754f30105c8e9a746cc0e5f89b48d6447d87dc6f",
+      "targetBeforeSha256": "aa4a08024cd412c042154886204e776d95ccdeeed9cb6bff77237a5469904d68",
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "5ed987af9136066c7155837403e9002656818ef26bf45f03e8d6a85977eeb579"
+    },
+    {
+      "path": "frontend/lib/hosted-agents-proxy.ts",
+      "sourceSha256": "b3727eff154e0af760f10842381ec67d9121cc9c2e339f37e7b13a5768f6f6b8",
+      "baseSha256": "26df51398bac2fbccb99f05a0026accc591fe16da7dfae00facab1fc37442816",
+      "targetBeforeSha256": "2fc8a252d50b1836482f3f8f1cc70aa894de20bcfef4fd075b2525b53ee4ac71",
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "f2bc739bf692c4dad07b8e31419628553146722c6fd9282d40d1c6c212bb55b9"
+    },
+    {
+      "path": "frontend/lib/hosted-client.ts",
+      "sourceSha256": "c74f728243434d4c8315ff89cb38145a3e9f7b1869e9f2f0a69edf4a995f7656",
+      "baseSha256": "eecf2a616d140747d0e61466f27c9d6d377a11f181963db9848de9a3a25c5b7e",
+      "targetBeforeSha256": "9c1590e6d0207b4c9666acfa4b6485cdd5adb7e67c7f6eda41539c6dca4973e0",
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "6524bb47ab0442cfa6d8703be31f86a6b0c38085a2ff5913a5700d3ec56f1e56"
+    },
+    {
+      "path": "frontend/lib/magpie-flight.ts",
+      "sourceSha256": "3542cdd77cf0bfb46ef8bf6c727cbc60739163737436c455fed9aff07a942be6",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "3542cdd77cf0bfb46ef8bf6c727cbc60739163737436c455fed9aff07a942be6"
+    },
+    {
+      "path": "frontend/public/brand/tabby/brand-square.png",
+      "sourceSha256": "3ae053ee59c556890adf653cae202075db55554cafae72d7bf09788f929d78ee",
+      "baseSha256": null,
+      "targetBeforeSha256": "3ae053ee59c556890adf653cae202075db55554cafae72d7bf09788f929d78ee",
+      "decision": "preserved: target already equals frozen source",
+      "targetAfterSha256": "3ae053ee59c556890adf653cae202075db55554cafae72d7bf09788f929d78ee"
+    },
+    {
+      "path": "frontend/public/brand/tabby/social-card.png",
+      "sourceSha256": "07f5e14102a92a8df7cabe2e3ba14a9876c2120fa7a233f84c95f755ac86dcf9",
+      "baseSha256": null,
+      "targetBeforeSha256": "07f5e14102a92a8df7cabe2e3ba14a9876c2120fa7a233f84c95f755ac86dcf9",
+      "decision": "preserved: target already equals frozen source",
+      "targetAfterSha256": "07f5e14102a92a8df7cabe2e3ba14a9876c2120fa7a233f84c95f755ac86dcf9"
+    },
+    {
+      "path": "frontend/test/magpie-flight.test.ts",
+      "sourceSha256": "34b666be9497726f27bc76d4437832bbf9e63911fa14366ee5e7e8660df56680",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "34b666be9497726f27bc76d4437832bbf9e63911fa14366ee5e7e8660df56680"
+    },
+    {
+      "path": "scripts/hosted-agents.ts",
+      "sourceSha256": "2b19e56f580122675709c624ab22dfaaba1be8133994ed3dc071e7b5e287761f",
+      "baseSha256": "712185ccaa06965a5f4ea28fb5c9cd6f5fc957a50afa98e81a5b488ade156163",
+      "targetBeforeSha256": "ecd5dde84f313e2437db57aa5d4facc14f9ebe54f7f2bfdc797461b0c515cb6d",
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "c9aacb3a573da3ba03121a2510d4b9a2868de786d6ad002399633ee69fd1b473"
+    },
+    {
+      "path": "scripts/local-hosted.ts",
+      "sourceSha256": "086e77cfd996fa18933d9836aed9eda15e82bda618c327c6bd2d57ddd6da389a",
+      "baseSha256": "35405c6f10a874ab04bb90a53b97b1742f163e400b76cdfbdc0f6bc21e1c10b5",
+      "targetBeforeSha256": "35405c6f10a874ab04bb90a53b97b1742f163e400b76cdfbdc0f6bc21e1c10b5",
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "086e77cfd996fa18933d9836aed9eda15e82bda618c327c6bd2d57ddd6da389a"
+    },
+    {
+      "path": "scripts/monad-hosted-runtime.ts",
+      "sourceSha256": "47d16a7a0303253bca58bdf53fe04c61b6eb8c79dca1c688ea996027af162350",
+      "baseSha256": "b6a87cb34730ba97f026dddbf3218533a547ed41a488ffaa58d77eccda555064",
+      "targetBeforeSha256": "b6a87cb34730ba97f026dddbf3218533a547ed41a488ffaa58d77eccda555064",
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "47d16a7a0303253bca58bdf53fe04c61b6eb8c79dca1c688ea996027af162350"
+    },
+    {
+      "path": "scripts/test/chain-lookup-live.ts",
+      "sourceSha256": "e73f6b738d3eb2b61af2a4901e02e87182010cef5d75233ae95856042e348e0e",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "decision": "excluded: source network-specific paid/live acceptance driver",
+      "targetAfterSha256": null
+    },
+    {
+      "path": "scripts/test/chain-mission-monad.ts",
+      "sourceSha256": "3d7d8c139de35e3a88c4a62f8afd0e7ea81ae4988f9c2fd6a5f14ddf966b6101",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "decision": "excluded: source network-specific paid/live acceptance driver",
+      "targetAfterSha256": null
+    },
+    {
+      "path": "scripts/test/chain-verify-void.ts",
+      "sourceSha256": "b6e9c1f679236301a06681b3a75e0d030aab9af4480f02af875561528ee1017e",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "decision": "excluded: source network-specific paid/live acceptance driver",
+      "targetAfterSha256": null
+    },
+    {
+      "path": "services/hosted-agents/src/chain-evidence.ts",
+      "sourceSha256": "4c5ef2f252c182e1a69e006ab24a9372702b057ace25770b1e45f2646cef1680",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "2c1300200dcc38fe5452202636ac7e1cb1cd2b345fa0c0bf511a5c739c66e163"
+    },
+    {
+      "path": "services/hosted-agents/src/goal-types.ts",
+      "sourceSha256": "428b0e891b0c9e6dec6c3289c466197d0c92834c4e340d8dd824660eb51e6749",
+      "baseSha256": "30ee2f55e41cc62bd6e53707d70f35ed9f6c1701ea5efcfe6c080fd85a0e06e6",
+      "targetBeforeSha256": "30ee2f55e41cc62bd6e53707d70f35ed9f6c1701ea5efcfe6c080fd85a0e06e6",
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "428b0e891b0c9e6dec6c3289c466197d0c92834c4e340d8dd824660eb51e6749"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/acceptance.ts",
+      "sourceSha256": "0c5e6f600c27b4103a4a81a7883041ea6e838f2beadb5639161a93c4037b7240",
+      "baseSha256": "8ecaae8c3e4177290959116deec6b617d442f1a83c8ee0ea629c3497dc3ec6d6",
+      "targetBeforeSha256": "8ecaae8c3e4177290959116deec6b617d442f1a83c8ee0ea629c3497dc3ec6d6",
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "0c5e6f600c27b4103a4a81a7883041ea6e838f2beadb5639161a93c4037b7240"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/chain-lookup.ts",
+      "sourceSha256": "b36e66a672427861e36fb84f7690b143a5c994a27b5e62188a5e6a83dbc09480",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "5a5a18d8d4c36785dccf9e6b25a93d158fb809559d6226211c0a152bdf1c899a"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/commander.ts",
+      "sourceSha256": "deb5f4e23b5eeedeaaca90c09d2d726b5a020230819d7116e7aabe38beeda171",
+      "baseSha256": "5b895ffe2a180c0103630b1f3340f4dee06ede857936b8e903340bb39e5b74e6",
+      "targetBeforeSha256": "5b895ffe2a180c0103630b1f3340f4dee06ede857936b8e903340bb39e5b74e6",
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "deb5f4e23b5eeedeaaca90c09d2d726b5a020230819d7116e7aabe38beeda171"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/executor.ts",
+      "sourceSha256": "f51c4f670623af2953252942895fb3d70e4777e83ff09a0568e3f475cbaa3218",
+      "baseSha256": "4e64e5e01a0dc9bab988ed408f382d8fca0b2081a4688544b10e52cc6460e807",
+      "targetBeforeSha256": "8c0d8a7ff4e11114fd07c1628a162b3ef69fd06c4bce0824507526963c75aaa6",
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "c474062a102efa67b3ed15631d0952fe78fa4a1997e16aae78277a71f14b01b4"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/payment.ts",
+      "sourceSha256": "e2d1a6cf8cbf040d7036587e4ac9cbc0190972af5578763344d0d4f3bf90762e",
+      "baseSha256": "538b31d0932dad527fe850183f1588fcfccfea3f7ca09b075bb1c71ab9764845",
+      "targetBeforeSha256": "538b31d0932dad527fe850183f1588fcfccfea3f7ca09b075bb1c71ab9764845",
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "e2d1a6cf8cbf040d7036587e4ac9cbc0190972af5578763344d0d4f3bf90762e"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/reconciliation.ts",
+      "sourceSha256": "176f54ad8c2f9d995800f157aee5ab2b8404c48a6122ed8425fd10a6d7478218",
+      "baseSha256": "4a9263686c16e3716e98d621da89c26accb5d57acdacd8f3cd9c4958298793ad",
+      "targetBeforeSha256": "4a9263686c16e3716e98d621da89c26accb5d57acdacd8f3cd9c4958298793ad",
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "176f54ad8c2f9d995800f157aee5ab2b8404c48a6122ed8425fd10a6d7478218"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/void-payment.ts",
+      "sourceSha256": "5b4f7dd7e9045c83731d06d419a32986e094e5f69f367bd4dbc5fd59151e38e4",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "06c57282565bc71b0506af242e1e5ad1b61ca7ed4fca73946398d1ecbe8cd1a8"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/catalog.ts",
+      "sourceSha256": "f7c773094de967c13b8f2af524a277427e3ae5998f8474775b55b79b9a950b48",
+      "baseSha256": "f1c6066516b558bc5a0f236efc268f6cd165aa944ba92ea24175d0b5de4bf187",
+      "targetBeforeSha256": "f7c773094de967c13b8f2af524a277427e3ae5998f8474775b55b79b9a950b48",
+      "decision": "preserved: target already equals frozen source",
+      "targetAfterSha256": "f7c773094de967c13b8f2af524a277427e3ae5998f8474775b55b79b9a950b48"
+    },
+    {
+      "path": "services/hosted-agents/src/specialists/execution.ts",
+      "sourceSha256": "f9c5c9ef4b877ff59f683697764f757c5d78e4ff5f22b08b92ded4ce0906a677",
+      "baseSha256": "7131a896eae8e580853026948100e34a8221b098cb0a380add7d1c9dde6ff738",
+      "targetBeforeSha256": "72b5df522913f96b88f11d7c869f0fa5d1828983383f6204f86597b8e51ab49d",
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "cce4aae60c4c3628b2c35cb40e32d8e755277e2bdfebe9ebad18ef2aa88b50ad"
+    },
+    {
+      "path": "services/hosted-agents/src/types.ts",
+      "sourceSha256": "3565b7545fe43b33cc61db57cf71aeba38f119a680605bbff692eea320215dd2",
+      "baseSha256": "b0bb54cda780f2a1bfd70dcc5db80fb8c0ddbc646bfe0bb44b594c3a0daaf2c7",
+      "targetBeforeSha256": "e85ad7f6cd5067311936995c07f7dd0896cf589eb2f0fa9fe5f36ab06c6e6e50",
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "75520d9affc77669229a6616b1ee1fbff03813c284d7309af522b3b280e3776e"
+    },
+    {
+      "path": "services/hosted-agents/test/chain-lookup.test.ts",
+      "sourceSha256": "87f53d51b35cbe6b79d315568ea8c769a4b4d97a890edf123f50f2044213776c",
+      "baseSha256": null,
+      "targetBeforeSha256": null,
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "87f53d51b35cbe6b79d315568ea8c769a4b4d97a890edf123f50f2044213776c"
+    },
+    {
+      "path": "services/hosted-agents/test/goals-reconciliation.test.ts",
+      "sourceSha256": "25cba2af10c36de0513fa8232d0e06fee2822b95390ed8cd8eb099c7d81d7ba0",
+      "baseSha256": "045280f600774e36b315e7951f141b612157455ebf7b57ff00e7ba9ca0518084",
+      "targetBeforeSha256": "045280f600774e36b315e7951f141b612157455ebf7b57ff00e7ba9ca0518084",
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "25cba2af10c36de0513fa8232d0e06fee2822b95390ed8cd8eb099c7d81d7ba0"
+    },
+    {
+      "path": "services/hosted-agents/test/goals.test.ts",
+      "sourceSha256": "45161a61d524a0df4dac2a9c2bffabb0f257df2113184c3982cdceeb8f54f52a",
+      "baseSha256": "9d80c753672c70361b6ad3b30c4d6a4d9646a89464376177b4089214116e6bdd",
+      "targetBeforeSha256": "9d80c753672c70361b6ad3b30c4d6a4d9646a89464376177b4089214116e6bdd",
+      "decision": "migrated from frozen source",
+      "targetAfterSha256": "45161a61d524a0df4dac2a9c2bffabb0f257df2113184c3982cdceeb8f54f52a"
+    },
+    {
+      "path": "services/hosted-agents/test/specialists.test.ts",
+      "sourceSha256": "3f00f4d6c55e2f87ce0d58b57df7ccf2d3e7c99694956d2c0c10f4e2b55f3e2c",
+      "baseSha256": "a951c3537c55b4b89484a4c3c5fb706ba014934cc95877986a4a531eaa0ee9cd",
+      "targetBeforeSha256": "9643fe6862e9393e9fb7ce78d69a7e7f28505bd422092ab4c072c8323963790e",
+      "decision": "merged/adapted: preserve Tempo contracts and current-chain semantics",
+      "targetAfterSha256": "68daf4bc3cdff816fbf5fa6d39756f6e24cd62a2a2103f4747886b682ed357ac"
+    }
+  ],
+  "targetOnly": [
+    {
+      "path": "README.md",
+      "targetAfterSha256": "f03c528fa3a9a149dde97d403e8e0c5de07b1b2eb206008881a2ca1ef71d4c72"
+    },
+    {
+      "path": "docs/tempo-runtime.md",
+      "targetAfterSha256": "96fbba0ded7f9cd5d9eee4da16bccf62fd6af36ffd51ccc3bf3170012e251c6e"
+    },
+    {
+      "path": "docs/tempo-upstream-sync-20261013.md",
+      "targetAfterSha256": "b6f51874deeec736b7bf711bfecfa8234fe78ab3a773a3c6d2663e5d7d392c74"
+    },
+    {
+      "path": "docs/tempo-upstream-sync-round2-20261013.md",
+      "targetAfterSha256": "e24ba4ce83a724aa03d658972cd5dc0177764785453128624eac171e480b3d9d"
+    },
+    {
+      "path": "scripts/tempo-config.ts",
+      "targetAfterSha256": "e30b536751df9d7cb75d0e973d83e7871fea874ac09eed1f55f6792582fa69cd"
+    },
+    {
+      "path": "scripts/tempo-hosted-runtime.ts",
+      "targetAfterSha256": "11d17d8b871b6ea6fb4c15c715c31bebbf63aea43b5c3854a39f3b9d062a9443"
+    },
+    {
+      "path": "scripts/demo-rpc.ts",
+      "targetAfterSha256": "48024e0a39d96d4ff089dce7502e6f6f617b129cfbc363fee5a42b04f989921f"
+    },
+    {
+      "path": "scripts/test/tempo-rpc-pacing.test.ts",
+      "targetAfterSha256": "9daaf166b6ab8c8437f50b04b107751a8e2c95cf22f5657b919bb8e467f52c3e"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/tempo-fee.ts",
+      "targetAfterSha256": "94919939762666d8a57d74c2fd728505fc137b50fd920249f11433bfc6a414d0"
+    },
+    {
+      "path": "services/hosted-agents/test/tempo-chain-lookup.test.ts",
+      "targetAfterSha256": "48a1a12ec84673c355b9a2a87130e4c3f909478ef97c1d0117d827c79ea27b91"
+    },
+    {
+      "path": "services/hosted-agents/test/goal-void-payment.test.ts",
+      "targetAfterSha256": "8f532cb68823105a85bb9e52d6a1133377110dd2259cb80e2949b2d1312e209d"
+    },
+    {
+      "path": "frontend/test/browser/chain-evidence.spec.ts",
+      "targetAfterSha256": "9589c0c7e43f3c7a575b7cba7048a563b1dab802bc5ed7098931828933a2b140"
+    },
+    {
+      "path": "frontend/tsconfig.json",
+      "targetAfterSha256": "fc50f3a5632018aadb23b54f01b08dfe57c4d8d68588e92d569f6e7512853f6d"
+    },
+    {
+      "path": "frontend/next-env.d.ts",
+      "targetAfterSha256": "a57df648764ed5702e2b12f15db86c77dff5fb1b6c99ef30cde7956b06e651f4"
+    }
+  ],
+  "validation": {
+    "lookupVoidReconciliation": {
+      "tests": 17,
+      "passed": 17,
+      "log": "lookup-void-tests.log"
+    },
+    "goalSpecialistRuntimeInitial": {
+      "tests": 44,
+      "passed": 42,
+      "failed": 2,
+      "reason": "old effective-prompt wording assertions; no implementation failure",
+      "log": "goal-specialist-runtime-tests.log"
+    },
+    "specialistBoundaryRecheck": {
+      "tests": 10,
+      "passed": 10,
+      "log": "specialist-boundary-tests.log"
+    },
+    "goalPaymentRegression": {
+      "tests": 1,
+      "passed": 1,
+      "scope": "controlled Anvil cash-only/Unknown/compensation/original UUID; no real provider",
+      "log": "goal-payment-regression.log"
+    },
+    "frontendUnit": {
+      "tests": 18,
+      "passed": 18,
+      "log": "frontend-unit-tests.log"
+    },
+    "tempoReadInitial": {
+      "tests": 10,
+      "passed": 9,
+      "failed": 1,
+      "reason": "existing pacing HTTP scheduling jitter while browser active; no threshold changed",
+      "log": "tempo-read-regression.log"
+    },
+    "tempoStoragePacingFinal": {
+      "tests": 4,
+      "passed": 4,
+      "log": "tempo-storage-pacing-final.log"
+    },
+    "controlledBrowserInitial": {
+      "tests": 14,
+      "passed": 12,
+      "failed": 2,
+      "reason": "completed fixture request was not selected through History; test navigation corrected",
+      "log": "browser-tests.log"
+    },
+    "controlledBrowserFinal": {
+      "tests": 14,
+      "passed": 14,
+      "log": "browser-final-tests.log"
+    },
+    "tempoLookupFirst": {
+      "scope": "receipt/code succeeded, token reads unavailable due source 100k intrinsic gas",
+      "evidence": "tempo-read-only-lookup-first.json"
+    },
+    "tempoLookupFinal": {
+      "scope": "real42431 PathUSD metadata/balance and oldTask7 receipt; bounded1m gas",
+      "evidence": "tempo-read-only-lookup.json"
+    },
+    "typecheckAll": "passed",
+    "nextProductionBuild": "passed",
+    "diffCheck": "passed",
+    "groupsOverlap": true
+  },
+  "runtime": {
+    "frontendPid": 64341,
+    "hostedPid": 62673,
+    "port": 3028,
+    "distDir": ".next-upstream-sync-round2-20261013-2",
+    "buildId": "_i2pQhQ0K8qZ_hC-2MhB2",
+    "chainId": "42431",
+    "businessWrites": 0,
+    "paidModelCalls": 0
+  },
+  "logs": [
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/browser-evidence-recheck.log",
+      "sha256": "67b40da363ce96f07ffedce8b0cf9c14c2f8a331ba5bd78fecb35d1760d6f4f9"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/browser-final-tests.log",
+      "sha256": "c6c1c00c583ce66921738b4fe600c961f0b5da99ed767840a9046fbd8fa903aa"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/browser-tests.log",
+      "sha256": "7d9b2f3c2776e9d3b6c334a6b9f4b55165da2f4eba7d5e7b63aba2521bda306a"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/frontend-build-final.log",
+      "sha256": "7e9b6257e12a901a49a8a15cae1880c31e59ae5bd753d3cda7104353612390b0"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/frontend-build.log",
+      "sha256": "1b84e68b9809f8cf7dadef2e9ffe9c9beb78c70b8d4b19f18ae3a80ba68cd2ff"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/frontend-unit-tests.log",
+      "sha256": "a5f10c47681839a169c211550f05eed55776d00ffd2a6099a6d0c88d642abb79"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/goal-payment-regression.log",
+      "sha256": "46052330c940052b37f15cd5ebc32e50c257125a6f0b2e27964afc69d679ae21"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/goal-specialist-runtime-tests.log",
+      "sha256": "497f3e3468360eda50fc448b779d9cdc321c2a222c8d9487708ba4c8b1ba91ea"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/isolated-frontend.log",
+      "sha256": "8922abd8900895a8dc16e1736450e359282049beb764651bf4b5561f82e1538a"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/live-frontend-final.log",
+      "sha256": "a415e0649077129e1773e59d1731bd3e0a727eecf10a54c07446819c2c5ae7cf"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/live-frontend.log",
+      "sha256": "b7438d573acc79746afae7cb386c9dfd8c3b1c1136ed5852768fbc231133a796"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/lookup-reconciliation-tests.log",
+      "sha256": "1d5ac7d61e1d1cdbc0ea908b6202a6e4444df13212233264984cbb943bd1051f"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/lookup-void-tests.log",
+      "sha256": "ece7b658c59955a402bb581e0add23acf2f982f90d16b660996cd00f0694bd7c"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/specialist-boundary-tests.log",
+      "sha256": "6f052ec89ca89370aef6b08badbf019f3ea9a1a0150011ec0ea528b92f47bdbc"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/tempo-pacing-recheck.log",
+      "sha256": "46d0af4a1b90b2d6b6d82ccd94f57f1cec11d7c7e32963a6c8f3d3c05cfde22b"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/tempo-read-only-probe-first.log",
+      "sha256": "3aedb4d61f107696f6b7d66fb6c41ac8567687fcbfc21129542d4c7bd40dc98d"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/tempo-read-only-probe-network-failure.log",
+      "sha256": "9b876f33f8eb792014b33ac2a384ee35ee8d8cffda6f0bfe227da39ae22ee5d5"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/tempo-read-only-probe.log",
+      "sha256": "e5edc71fd46880edd504003173aa47fac1eff3e665225cc448a3e5e691ca3970"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/tempo-read-regression.log",
+      "sha256": "f3b3cfedbebf802f7a6fb40ffe1f644e4db1d87823c01c358faff5ec8431735b"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/tempo-storage-pacing-final.log",
+      "sha256": "a2c9edf7123ca6c188930b1e8f4e0e114d72637f64fb48513079daef9f16f52e"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/typecheck-final.log",
+      "sha256": "8a4aff97ec239231a3f5eca9611a33859bdfdaf14cc8030454682e79e3e0c0b2"
+    },
+    {
+      "path": ".data/upstream-sync-20261013-round2/implementation/typecheck-first.log",
+      "sha256": "8a4aff97ec239231a3f5eca9611a33859bdfdaf14cc8030454682e79e3e0c0b2"
+    }
+  ],
+  "limits": {
+    "maxLookupTargets": 2,
+    "lookupTimeoutMs": 120000,
+    "maxSourceResponseBytes": 2000000,
+    "maxSourceCharacters": 16000,
+    "maxAbiCharacters": 6000,
+    "maxModelContextBytes": 65000,
+    "tempoCallGasLimit": 1000000,
+    "tempoBatchCalls": 16,
+    "tempoBatchCallDataCharacters": 4096,
+    "tempoBatchAbiDecode": false,
+    "realTempoVoidBroadcastVerified": false
+  },
+  "independentAcceptance": "docs/tempo-upstream-sync-round2-root-acceptance-20261013.md"
+}

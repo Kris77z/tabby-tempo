@@ -6,6 +6,7 @@ import { Geometry, NetworkLines, SectionText } from "./landing-geometry";
 import { LandingLanguage } from "./landing-language";
 import { Action } from "./landing-action";
 import { LandingStories } from "./landing-stories";
+import { TabbyLogo, TabbyMark } from "../tabby-brand";
 import { translate, type LandingLocale } from "./landing-locale";
 import styles from "./landing.module.css";
 
@@ -20,9 +21,6 @@ function EntryText({ lines, by, locale }: { lines: string[]; by: "character" | "
   return lines.map((line, lineIndex) => <Fragment key={lineIndex}>{lineIndex > 0 ? <br /> : null}{by === "character" ? line.split(" ").map((word, wordIndex) => <Fragment key={wordIndex}>{wordIndex > 0 ? " " : null}<span className={styles.entryWord}>{Array.from(word).map((character, index) => <span key={index} className={styles.entryCharacter} data-entry-character style={{ "--entry-order": order++ } as CSSProperties}>{character}</span>)}</span></Fragment>) : Array.from(new Intl.Segmenter(locale, { granularity: "word" }).segment(line), ({ segment }) => segment).map((word, wordIndex) => /^\s+$/.test(word) ? word : <span key={wordIndex} className={styles.entryDescription} data-entry-word style={{ "--entry-order": order++ } as CSSProperties}>{word}</span>)}</Fragment>);
 }
 
-function FuelMark({ className = "" }: { className?: string }) {
-  return <svg className={className} viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M6 7h11v6H6zm9 12h11v6H15zM13 13h6v6h-6z" fill="currentColor" /></svg>;
-}
 function Glyph({ kind }: { kind: "identity" | "task" | "credit" | "game" | "model" | "record" }) {
   const paths = {
     identity: "M5 3h14v18H5zM9 9a3 3 0 1 0 6 0 3 3 0 0 0-6 0M8 18c0-5 8-5 8 0",
@@ -53,13 +51,13 @@ export default function LandingPage({ locale = "en" }: { locale?: LandingLocale 
     { kind: "identity" as const, name: t("Pi 自主执行"), code: t("BOUNDED AUTONOMY"), text: t("在你设定的预算与权限内，Agent 通过 Pi 调用工具、测试并修正结果，推进任务交付。") },
   ];
   const steps = [
-    { number: "01", title: t("创建 Agent"), subtitle: t("CONFIGURE"), text: t("签名登录，选择模型与策略，设置单次和总推理预算。"), kind: "identity" as const },
+    { number: "01", title: t("创建 Agent"), subtitle: t("CONFIGURE"), text: t("签名登录，为 Agent 命名；创建后在工作台设置模型、预算与借贷权限。"), kind: "identity" as const },
     { number: "02", title: t("运行任务"), subtitle: t("EXECUTE"), text: t("接取平台支持的任务，按预算购买推理，由 Pi 执行；现金不足时申请任务授信。"), kind: "task" as const },
     { number: "03", title: t("验收与还款"), subtitle: t("SETTLE"), text: t("通过独立验收，用任务报酬偿还本金与费用，剩余收入进入现金账本。"), kind: "credit" as const },
     { number: "04", title: t("积累声誉"), subtitle: t("BUILD TRUST"), text: t("任务与还款记录积累为信誉，影响后续授信，再运行下一单。"), kind: "record" as const },
   ];
   const questions = [
-    { question: t("AgentFuel 和 InferCredit 是什么关系？"), answer: t("AgentFuel 是创建和运行托管 Agent 的产品入口，连接信誉、借贷、游戏奖励、模型网关、任务验收与 Pi 执行。InferCredit 是其中以信誉和已托管任务报酬为依据的推理信用机制。") },
+    { question: t("Tabby 和 InferCredit 是什么关系？"), answer: t("Tabby 是创建和运行托管 Agent 的产品入口，连接信誉、借贷、游戏奖励、模型网关、任务验收与 Pi 执行。InferCredit 是其中以信誉和已托管任务报酬为依据的推理信用机制。") },
     { question: t("Agent 是发布任务的一方，还是接单的一方？"), answer: t("角色随任务变化：同一个 Agent 可以接单赚钱，也可以为完成自己的任务采购能力、委托专家。当前 Demo 展示托管 Agent 接取平台支持的任务并购买推理；自主发布子任务与专家 Agent 委托尚未开放。") },
     { question: t("不同模型怎么收费？"), answer: t("Demo 范围限定两个底层 LLM，具体可用项以工作台目录为准。Magpie 承担模型网关，推理服务按模型与服务档位报价。当前任务采用一次固定价求解，模型实际 token 用量、服务报价和借贷费用分别记录。") },
     { question: t("Pi 可以自主决定哪些事？"), answer: t("Pi 在限定的轮数、工具权限与预算内生成答案、运行公开测试并根据反馈修正。任务与推理档位按配置规则选择，最终结果交给独立验收；它不能自行放宽预算或授信条件。") },
@@ -79,7 +77,7 @@ export default function LandingPage({ locale = "en" }: { locale?: LandingLocale 
 
     <header className={styles.hero} id="home">
       <div className={styles.topbar}>
-        <Link href="/" className={styles.brand} aria-label={t("AgentFuel 首页")}><FuelMark />AGENTFUEL</Link>
+        <Link href="/" className={styles.brand} aria-label={t("Tabby 首页")}><TabbyLogo /></Link>
         <div className={styles.introIndex}><Index number="01">{t("INTRO")}</Index></div>
         <LandingLanguage locale={locale} /><div className={styles.topActions}><Link href="/dashboard">{t("进入工作台")}</Link><LandingMenu locale={locale} /></div>
       </div>
@@ -93,7 +91,7 @@ export default function LandingPage({ locale = "en" }: { locale?: LandingLocale 
         <span className={`${styles.circuitNode} ${styles.nodeTop}`} data-entry-node="top"><Glyph kind="identity" /></span>
         <span className={`${styles.circuitNode} ${styles.nodeRight}`} data-entry-node="right"><Glyph kind="model" /></span>
         <span className={`${styles.circuitNode} ${styles.nodeBottom}`} data-entry-node="bottom"><Glyph kind="credit" /></span>
-        <div className={styles.chip} data-testid="landing-chip"><div data-entry-chip-inner><FuelMark /></div><span className={styles.chipCorners}><i /><i /><i /><i /></span></div>
+        <div className={styles.chip} data-testid="landing-chip"><div data-entry-chip-inner><TabbyMark /></div><span className={styles.chipCorners}><i /><i /><i /><i /></span></div>
       </div>
       <div className={styles.heroWave} aria-hidden="true" />
       <div className={styles.heroButtons}><Action href="/onboarding">{t("创建你的 AGENT")}</Action><Action href="#how-it-works" variant="dark">{t("了解运行方式")}</Action></div>
@@ -102,7 +100,7 @@ export default function LandingPage({ locale = "en" }: { locale?: LandingLocale 
         <p><span>{t("02 / CREDIT")}</span>{t("任务报酬支持推理信用")}<br />{t("完成任务后结算还款")}</p>
         <p><span>{t("03 / ARENA")}</span>{t("免费德州争取奖励")}<br />{t("游戏不借贷")}</p>
       </div>
-      <div className={styles.heroBottom}><span>AGENTFUEL / INFERCREDIT</span><a href="#capabilities">{t("EXPLORE THE SYSTEM ↓")}</a></div>
+      <div className={styles.heroBottom}><span>TABBY / INFERCREDIT</span><a href="#capabilities">{t("EXPLORE THE SYSTEM ↓")}</a></div>
     </header>
 
     <main className={styles.content}>
@@ -158,7 +156,7 @@ export default function LandingPage({ locale = "en" }: { locale?: LandingLocale 
         <div className={styles.side}><p className={styles.sideNote}>{t("账户、任务与声誉")}<br />{t("围绕同一个 Agent")}<br />{t("保留清楚的执行记录")}</p></div>
         <div className={styles.sectionMain}>
           <div className={styles.sectionHeading}><Index number="07">{t("SYSTEM")}</Index><h2><SectionText lines={[t("Connected by design")]} /></h2></div>
-          <div className={`${styles.systemDiagram} ${styles.networkDiagram}`} data-landing-active aria-label={t("系统关系示意：AgentFuel连接托管钱包、模型网关、Pi、任务验收、游戏奖励和信誉")}>
+          <div className={`${styles.systemDiagram} ${styles.networkDiagram}`} data-landing-active aria-label={t("系统关系示意：Tabby连接托管钱包、模型网关、Pi、任务验收、游戏奖励和信誉")}>
             <NetworkLines />
             <div className={`${styles.systemNode} ${styles.networkWallet}`}><Glyph kind="identity" /><span>{t("托管钱包")}</span><small>{t("ACCOUNT")}</small></div>
             <div className={`${styles.systemNode} ${styles.networkModel}`}><Glyph kind="model" /><span>Magpie</span><small>{t("MODEL GATEWAY")}</small></div>
@@ -166,7 +164,7 @@ export default function LandingPage({ locale = "en" }: { locale?: LandingLocale 
             <div className={`${styles.systemNode} ${styles.networkTask}`}><Glyph kind="task" /><span>{t("独立验收")}</span><small>{t("ARENA")}</small></div>
             <div className={`${styles.systemNode} ${styles.networkGame}`}><Glyph kind="game" /><span>{t("游戏奖励")}</span><small>{t("RESOURCES")}</small></div>
             <div className={`${styles.systemNode} ${styles.networkTrust}`}><Glyph kind="record" /><span>ERC-8004</span><small>{t("REPUTATION")}</small></div>
-            <div className={styles.systemCore}><FuelMark /><span>AGENTFUEL</span></div>
+            <div className={styles.systemCore}><TabbyMark /><span>TABBY</span></div>
           </div>
           <div className={styles.systemNote}><span className={styles.code}>{t("// ONE IDENTITY, TRACEABLE ACTIONS")}</span><p>{t("在工作台查看当前 Agent 的任务、请求状态、结算凭证与额度消费记录。")}</p></div>
         </div>
@@ -180,9 +178,9 @@ export default function LandingPage({ locale = "en" }: { locale?: LandingLocale 
 
     <footer id="start" className={styles.footer}>
       <div className={styles.footerWave} aria-hidden="true" />
-      <div className={styles.footerHead}><Index number="09">{t("START")}</Index><span className={styles.code}>AGENTFUEL / INFERCREDIT</span></div>
+      <div className={styles.footerHead}><Index number="09">{t("START")}</Index><span className={styles.code}>TABBY / INFERCREDIT</span></div>
       <div className={styles.footerMain}><h2><SectionText lines={[t("Your Agent’s"), t("next task"), t("starts here.")]} /></h2><Action href="/onboarding" variant="dark">{t("创建你的 AGENT")}</Action></div>
-      <div className={styles.footerLinks}><Link href="/" className={styles.brand}><FuelMark />AGENTFUEL</Link><nav aria-label={t("页尾导航")}><Link href="/dashboard">{t("托管工作台 ↗")}</Link><Link href="/arena">{t("免费游戏大厅 ↗")}</Link><Link href="/advanced">{t("高级协议 ↗")}</Link><a href="#home">{t("BACK TO TOP ↑")}</a></nav><span className={styles.code}>{t("TASKS. CREDIT. REPUTATION.")}</span></div>
+      <div className={styles.footerLinks}><Link href="/" className={styles.brand} aria-label={t("Tabby 首页")}><TabbyLogo /></Link><nav aria-label={t("页尾导航")}><Link href="/dashboard">{t("托管工作台 ↗")}</Link><Link href="/arena">{t("免费游戏大厅 ↗")}</Link><Link href="/advanced">{t("高级协议 ↗")}</Link><a href="#home">{t("BACK TO TOP ↑")}</a></nav><span className={styles.code}>{t("TASKS. CREDIT. REPUTATION.")}</span></div>
     </footer>
   </div>;
 }

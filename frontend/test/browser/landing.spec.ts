@@ -124,7 +124,7 @@ test("primary CTA opens onboarding and workbench keeps its own route", async ({ 
 test("landing defaults to English and language links preserve the chapter on refresh", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByTestId("oberon-landing")).toHaveAttribute("lang", "en");
-  await expect(page).toHaveTitle("AgentFuel · Credit to keep your Agent working");
+  await expect(page).toHaveTitle("Tabby · Credit to keep your Agent working");
   await expect(page.getByRole("link", { name: "CREATE YOUR AGENT", exact: true })).toHaveCount(2);
   const visibleChinese = await page.locator("body").innerText();
   expect(visibleChinese.match(/[\u4e00-\u9fff]+/g)).toEqual(["中文"]);
