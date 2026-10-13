@@ -1,0 +1,190 @@
+{
+  "readOnly": true,
+  "complete": true,
+  "elapsedMs": 10267,
+  "chainId": "42431",
+  "agentId": "47",
+  "score": "500",
+  "calls": [
+    {
+      "method": "eth_chainId",
+      "ms": 1703,
+      "ok": true
+    },
+    {
+      "method": "eth_getBlockByNumber",
+      "ms": 366,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 332,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 823,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 1174,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 1183,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 1192,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 1268,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 1533,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 1642,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 420,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 438,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 575,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 1056,
+      "ok": true
+    },
+    {
+      "method": "eth_getCode",
+      "ms": 537,
+      "ok": true
+    },
+    {
+      "method": "eth_getCode",
+      "ms": 794,
+      "ok": true
+    },
+    {
+      "method": "eth_getCode",
+      "ms": 933,
+      "ok": true
+    },
+    {
+      "method": "eth_getCode",
+      "ms": 1002,
+      "ok": true
+    },
+    {
+      "method": "eth_getCode",
+      "ms": 1132,
+      "ok": true
+    },
+    {
+      "method": "eth_getCode",
+      "ms": 1211,
+      "ok": true
+    },
+    {
+      "method": "eth_getCode",
+      "ms": 1309,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 377,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 391,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 426,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 521,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 563,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 723,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 904,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 1062,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 1250,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 353,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 522,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 619,
+      "ok": true
+    },
+    {
+      "method": "eth_call",
+      "ms": 637,
+      "ok": true
+    },
+    {
+      "method": "eth_chainId",
+      "ms": 380,
+      "ok": true
+    },
+    {
+      "method": "eth_getBlockByNumber",
+      "ms": 358,
+      "ok": true
+    }
+  ]
+}

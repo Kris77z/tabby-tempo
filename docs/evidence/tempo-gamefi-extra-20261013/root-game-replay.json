@@ -1,0 +1,214 @@
+{
+  "observedAt": "2026-10-13T01:41:50.597Z",
+  "source": "Independent private request/view/hash/action replay; no RPC or model calls",
+  "ownerCount": 7,
+  "newGames": 4,
+  "calls": 6,
+  "completionTokens": 56,
+  "totalTokens": 2607,
+  "games": [
+    {
+      "requestId": "4aa3302f-d15c-460d-af27-7ff583eabfd2",
+      "hostedAgentId": "514aaff4-2700-4d52-ab56-376308e64421",
+      "rewardKind": "usdc",
+      "runStatus": "Succeeded",
+      "phase": "Complete",
+      "sessionSha256": "4f2a4c3158a1daae7126a1a0a501cdc94f0e1d7b698cde74bc98c3d122286bb1",
+      "winners": [
+        0
+      ],
+      "result": {
+        "phase": "Succeeded",
+        "terminal": true,
+        "success": true,
+        "chargedRaw": "0",
+        "principalRaw": "0",
+        "feeRaw": "0",
+        "matchId": "hosted-4aa3302f-d15c-460d-af27-7ff583eabfd2",
+        "rewardRaw": "100000",
+        "cashRaw": "120000",
+        "txHash": "0x3801c227fe2b45e09f722225871bc5d57447743f5bd0794481d67b2e2f2edbfd"
+      },
+      "attempts": [
+        {
+          "turn": 1,
+          "seat": 0,
+          "outcome": "Applied",
+          "model": "kimi-k2.6",
+          "usage": {
+            "prompt_tokens": 425,
+            "completion_tokens": 12,
+            "total_tokens": 437,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "legal": true,
+          "requestSha256": "87a17cfa68f84a26431ac93b18d109deb9948bb357c206df76458d1900fe414d",
+          "responseSha256": "10ba143593abbf01eaa88eae5a974628a6c11cd0c420e215e19e7789def1c4ef"
+        },
+        {
+          "turn": 2,
+          "seat": 1,
+          "outcome": "Applied",
+          "model": "kimi-k2.6",
+          "usage": {
+            "prompt_tokens": 426,
+            "completion_tokens": 8,
+            "total_tokens": 434,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "legal": true,
+          "requestSha256": "b373ae51f5076a1f52d218b017cd1ecdfd13504d0d5c0edccd65becb8de020b3",
+          "responseSha256": "5c18184a7190ad4fe5ec9fa222f531912b2ebd7d3b9f594785e80a626c4515d0"
+        }
+      ]
+    },
+    {
+      "requestId": "031de2d5-91dc-4515-bacb-67ed8361ee92",
+      "hostedAgentId": "893fadc6-c22c-4bed-969f-791032cc1a98",
+      "rewardKind": "llm-credits",
+      "runStatus": "Succeeded",
+      "phase": "Complete",
+      "sessionSha256": "4f5d174f9d06e9faa18c39a1c3669196124a717f485d3a9c86c67f9e9c9a24ff",
+      "winners": [
+        1
+      ],
+      "result": {
+        "phase": "Succeeded",
+        "terminal": true,
+        "success": true,
+        "chargedRaw": "0",
+        "principalRaw": "0",
+        "feeRaw": "0",
+        "matchId": "hosted-031de2d5-91dc-4515-bacb-67ed8361ee92",
+        "creditsGranted": 0,
+        "rewardRaw": "0"
+      },
+      "attempts": [
+        {
+          "turn": 1,
+          "seat": 0,
+          "outcome": "Applied",
+          "model": "kimi-k2.6",
+          "usage": {
+            "prompt_tokens": 425,
+            "completion_tokens": 8,
+            "total_tokens": 433,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "legal": true,
+          "requestSha256": "e2baaf337e5f34bb0451fde48f693876efec428accadac37bccba58f7d1c3fff",
+          "responseSha256": "0f4dcf3a056def5993c3c4cc16882308a87f1c3aa785cd5d7681eb92a37fc8b8"
+        }
+      ]
+    },
+    {
+      "requestId": "c72aaad1-6492-4504-874f-7eac7fa4674b",
+      "hostedAgentId": "893fadc6-c22c-4bed-969f-791032cc1a98",
+      "rewardKind": "llm-credits",
+      "runStatus": "Succeeded",
+      "phase": "Complete",
+      "sessionSha256": "56a070b0fb9a4118682d72d4d2462c74d2f424b9e8eb952f47b37cac76ddd5a2",
+      "winners": [
+        1
+      ],
+      "result": {
+        "phase": "Succeeded",
+        "terminal": true,
+        "success": true,
+        "chargedRaw": "0",
+        "principalRaw": "0",
+        "feeRaw": "0",
+        "matchId": "hosted-c72aaad1-6492-4504-874f-7eac7fa4674b",
+        "creditsGranted": 0,
+        "rewardRaw": "0"
+      },
+      "attempts": [
+        {
+          "turn": 1,
+          "seat": 0,
+          "outcome": "Applied",
+          "model": "kimi-k2.6",
+          "usage": {
+            "prompt_tokens": 425,
+            "completion_tokens": 8,
+            "total_tokens": 433,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "legal": true,
+          "requestSha256": "e9fab1460cb4eb4e8912fadf1a064ea3dd100321830b6b1153c3e8f1fb1d74e0",
+          "responseSha256": "d7da72f8dc3554f683d4d44e2129e77a0cca837d7ea87f06d7e7dc6dba1eea64"
+        }
+      ]
+    },
+    {
+      "requestId": "fcf33e86-a6dd-4e6c-97ed-d2589e5c706b",
+      "hostedAgentId": "893fadc6-c22c-4bed-969f-791032cc1a98",
+      "rewardKind": "llm-credits",
+      "runStatus": "Succeeded",
+      "phase": "Complete",
+      "sessionSha256": "ee2905954dff35a53a38cbb44d35c36c92c97045b15844b586f761599d367a8f",
+      "winners": [
+        0
+      ],
+      "result": {
+        "phase": "Succeeded",
+        "terminal": true,
+        "success": true,
+        "chargedRaw": "0",
+        "principalRaw": "0",
+        "feeRaw": "0",
+        "matchId": "hosted-fcf33e86-a6dd-4e6c-97ed-d2589e5c706b",
+        "creditsGranted": 4096,
+        "rewardRaw": "0"
+      },
+      "attempts": [
+        {
+          "turn": 1,
+          "seat": 0,
+          "outcome": "Applied",
+          "model": "kimi-k2.6",
+          "usage": {
+            "prompt_tokens": 425,
+            "completion_tokens": 12,
+            "total_tokens": 437,
+            "cached_tokens": 256,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            },
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            }
+          },
+          "legal": true,
+          "requestSha256": "5719b1935ac602c172da56fb6632bd50d7570ea81365f30844f26dc5dbb7b42c",
+          "responseSha256": "7348333c3722c6f63f9c8d5df5445459688be8adef856c2ebdf68ed0ce62e544"
+        },
+        {
+          "turn": 2,
+          "seat": 1,
+          "outcome": "Applied",
+          "model": "kimi-k2.6",
+          "usage": {
+            "prompt_tokens": 425,
+            "completion_tokens": 8,
+            "total_tokens": 433,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "legal": true,
+          "requestSha256": "a165a10f46fe95651c2f10c6f6d011561a0ac7fb32517663728eb12ce6779876",
+          "responseSha256": "b670205f08704181478e793f7e5217aca67093640970eff16dce7f56d28b1163"
+        }
+      ]
+    }
+  ]
+}

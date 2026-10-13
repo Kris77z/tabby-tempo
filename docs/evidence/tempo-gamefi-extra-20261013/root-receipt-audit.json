@@ -1,0 +1,90 @@
+{
+  "observedAt": "2026-10-13T01:45:24.047Z",
+  "chainId": "42431",
+  "canonical": true,
+  "records": [
+    {
+      "requestId": "4aa3302f-d15c-460d-af27-7ff583eabfd2",
+      "role": "approve",
+      "agentId": "73",
+      "amountRaw": "100000",
+      "hash": "0xd207625287ab3c83b084b6ebea4c2a4038f83ef282633ad5d7a370c4509ccc24",
+      "blockNumber": 39348167,
+      "blockHash": "0x0749d53f5cebb7ef16f92e45ccb72e7a3e9ad314098d3ed3ee84416e2dec668d",
+      "from": "0xA2F5Bdd12B24FEc85b0F4151D43b0528Dd05CBC2",
+      "to": "0x20C0000000000000000000000000000000000000"
+    },
+    {
+      "requestId": "4aa3302f-d15c-460d-af27-7ff583eabfd2",
+      "role": "deposit",
+      "agentId": "73",
+      "amountRaw": "100000",
+      "hash": "0x3801c227fe2b45e09f722225871bc5d57447743f5bd0794481d67b2e2f2edbfd",
+      "blockNumber": 39348172,
+      "blockHash": "0xc1d990ee2da38924b8b2e36fdcccc2224669d8c7707e2fefaec102d7ac451eed",
+      "from": "0xA2F5Bdd12B24FEc85b0F4151D43b0528Dd05CBC2",
+      "to": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B"
+    },
+    {
+      "requestId": "4aa3302f-d15c-460d-af27-7ff583eabfd2",
+      "role": "reward",
+      "agentId": "73",
+      "amountRaw": "100000",
+      "hash": "0x66bb9dba00d36fdf83b0ab6ede368f9b603b08a6e19238a41acf8c84f69c6a02",
+      "blockNumber": 39348161,
+      "blockHash": "0xf286d1bba77cff324e46463d4ae17f0507cd968031874674dba0707709423b3c",
+      "from": "0x20D5781919a4f9C5B1a3bFC9dC4152bfd2998387",
+      "to": "0x20C0000000000000000000000000000000000000"
+    }
+  ],
+  "tasks": [
+    {
+      "label": "cash",
+      "requestId": "519303e1-cb08-4631-8aec-2ea7ec340c83",
+      "taskId": "7",
+      "status": "Succeeded",
+      "accept": {
+        "hash": "0x16bd500d551ca81cf0ffa08583f7a4a840a5a2faf74593681564a076a1044fe5",
+        "blockNumber": 39348273,
+        "blockHash": "0xfd0052649441c41b62cd968631fc402215ba8a7fe9f06aef0de81ae15de4f1ef"
+      },
+      "payment": {
+        "hash": "0x5fdb1f7da92be6f50b7a14cc7f50caf88361cb44b5aa8319ab8fe99dd0538471",
+        "blockNumber": 39348294,
+        "blockHash": "0xc88cbd93302c977e7a3e0c7bdea00461574b2673c932cfa1baacedc8e53ed2f8",
+        "fromCashRaw": "120000",
+        "fromCreditRaw": "0",
+        "refundedRaw": "0"
+      },
+      "settlement": {
+        "hash": "0xba0f80b900a447684dad2fe20c1442ee9fa2b5e912d95ecda584049723fbd187",
+        "blockNumber": 39348354,
+        "blockHash": "0xb2f7e8a03817f70f5bedcbe507ab8eab13638636e18bf22fd8832dac1e898fc6",
+        "passed": true,
+        "repaidRaw": "0",
+        "slashedRaw": "0",
+        "residualRaw": "150000"
+      }
+    },
+    {
+      "label": "credits",
+      "requestId": "3ec27411-3b6c-4212-884c-af2d84939b01",
+      "taskId": "8",
+      "status": "Succeeded",
+      "accept": {
+        "hash": "0xc465a59bd7da2c0536c759c6e3238330c174c1b29159b34d180657c7d4ce9db8",
+        "blockNumber": 39348451,
+        "blockHash": "0xe03c36acbcb9782180692be6c0308f822d1b3cb06260817e78806abe0463cbbd"
+      },
+      "settlement": {
+        "hash": "0x62eea74315e1abd27b7991d521b944742046b8641987158c7507ec5d53b774d7",
+        "blockNumber": 39348474,
+        "blockHash": "0xd620526dd2f34ca90f3e0e62dcd9a6f6239cb479df4f2d2e362a0ce5f1bcae7a",
+        "passed": true,
+        "repaidRaw": "0",
+        "slashedRaw": "0",
+        "residualRaw": "150000"
+      }
+    }
+  ]
+}

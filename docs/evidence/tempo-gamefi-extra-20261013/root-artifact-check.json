@@ -1,0 +1,8 @@
+{
+  "oldEvidenceFilesUnchanged": 13,
+  "privateValuesChecked": 20,
+  "publicFilesChecked": 18,
+  "matches": 0,
+  "idempotenceSnapshotsEqual": true,
+  "independentGameDigestsMatch": true
+}

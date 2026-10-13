@@ -1,0 +1,249 @@
+{
+  "observedAt": "2026-10-13T01:00:56.291Z",
+  "network": "Tempo testnet 42431",
+  "audit": "Independent local replay, request/view/hash/action binding; no RPC or model calls",
+  "games": [
+    {
+      "label": "game-cash",
+      "requestId": "0fa2bd74-a2b7-4063-9624-ef7a0a96dfe1",
+      "hostedAgentId": "514aaff4-2700-4d52-ab56-376308e64421",
+      "sessionSha256": "73bd596876e8e183d9c73a68374cb8820b4eed59c2241acb4a74b06bed12a664",
+      "phase": "Stopped",
+      "reason": "HOLDEM_INVALID_OR_ILLEGAL_RESPONSE",
+      "appliedActions": 2,
+      "reward": {
+        "phase": "Stopped",
+        "terminal": true,
+        "success": false,
+        "chargedRaw": "0",
+        "reason": "HOLDEM_INVALID_OR_ILLEGAL_RESPONSE",
+        "matchId": "hosted-0fa2bd74-a2b7-4063-9624-ef7a0a96dfe1",
+        "principalRaw": "0",
+        "feeRaw": "0"
+      },
+      "attempts": [
+        {
+          "turn": 1,
+          "seat": 0,
+          "outcome": "Applied",
+          "requestedModel": "kimi-k2.6",
+          "returnedModel": "kimi-k2.6",
+          "httpStatus": 200,
+          "usage": {
+            "prompt_tokens": 304,
+            "completion_tokens": 12,
+            "total_tokens": 316,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "requestSha256": "fe410110a89598106ec82529cf22a0019677173e0b15e0793e7b6d5871dccc03",
+          "responseSha256": "d1d4453c285e697bd857812a9ec3841168efb4c9b2a326b696216b62d36f308c",
+          "legal": true
+        },
+        {
+          "turn": 2,
+          "seat": 1,
+          "outcome": "Applied",
+          "requestedModel": "kimi-k2.6",
+          "returnedModel": "kimi-k2.6",
+          "httpStatus": 200,
+          "usage": {
+            "prompt_tokens": 302,
+            "completion_tokens": 12,
+            "total_tokens": 314,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "requestSha256": "d9afcdc377a701de3123f515ceceff40d1aeb653568407e1d10616676c5b91c4",
+          "responseSha256": "e98e06b2c26df0deebc4fdcc2631f3af2cdff1683a31ec5fddddc338150e29f3",
+          "legal": true
+        },
+        {
+          "turn": 3,
+          "seat": 0,
+          "outcome": "ResponseInvalid",
+          "requestedModel": "kimi-k2.6",
+          "returnedModel": "kimi-k2.6",
+          "httpStatus": 200,
+          "usage": {
+            "prompt_tokens": 304,
+            "completion_tokens": 18,
+            "total_tokens": 322,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "requestSha256": "8cfde0882df50b9aca3656b51ae488ed02999d087dc9f80afe56764239db95e8",
+          "responseSha256": "49ec344964c82bcf1ffd55d963262ae55534f78ce883655fd45658c231df39db",
+          "legal": false
+        }
+      ]
+    },
+    {
+      "label": "game-credits",
+      "requestId": "75e6a55b-aec5-4c86-b084-929edc522f03",
+      "hostedAgentId": "893fadc6-c22c-4bed-969f-791032cc1a98",
+      "sessionSha256": "f0386c347070411b80022cd49afcc35751c407888816ac6a350bd69c4cac2cc5",
+      "phase": "Complete",
+      "appliedActions": 1,
+      "winners": [
+        1
+      ],
+      "resultReason": "fold",
+      "reward": {
+        "phase": "Succeeded",
+        "terminal": true,
+        "success": true,
+        "chargedRaw": "0",
+        "matchId": "hosted-75e6a55b-aec5-4c86-b084-929edc522f03",
+        "principalRaw": "0",
+        "feeRaw": "0",
+        "rewardRaw": "0",
+        "creditsGranted": 0
+      },
+      "attempts": [
+        {
+          "turn": 1,
+          "seat": 0,
+          "outcome": "Applied",
+          "requestedModel": "kimi-k2.6",
+          "returnedModel": "kimi-k2.6",
+          "httpStatus": 200,
+          "usage": {
+            "prompt_tokens": 304,
+            "completion_tokens": 8,
+            "total_tokens": 312,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "requestSha256": "584f1bb3d679ff14b559f3984e3c31e54bef9db6eb40c3a0cf3f6e8a6d51feab",
+          "responseSha256": "4d8e3603f5fe8dd4844fbacf457a36362c2295b0c729748b96375b9545c61843",
+          "legal": true
+        }
+      ]
+    },
+    {
+      "label": "game-cash-2",
+      "requestId": "2307882e-c1d2-455a-8629-14806e0ff33f",
+      "hostedAgentId": "514aaff4-2700-4d52-ab56-376308e64421",
+      "sessionSha256": "eda15395430042ada8daa4d5191ea3b8bee4080b372756e2cb7d66da9de73c21",
+      "phase": "Complete",
+      "appliedActions": 5,
+      "winners": [
+        1
+      ],
+      "resultReason": "fold",
+      "reward": {
+        "phase": "Succeeded",
+        "terminal": true,
+        "success": true,
+        "chargedRaw": "0",
+        "matchId": "hosted-2307882e-c1d2-455a-8629-14806e0ff33f",
+        "cashRaw": "20000",
+        "principalRaw": "0",
+        "feeRaw": "0",
+        "rewardRaw": "0"
+      },
+      "attempts": [
+        {
+          "turn": 1,
+          "seat": 0,
+          "outcome": "Applied",
+          "requestedModel": "kimi-k2.6",
+          "returnedModel": "kimi-k2.6",
+          "httpStatus": 200,
+          "usage": {
+            "prompt_tokens": 425,
+            "completion_tokens": 12,
+            "total_tokens": 437,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "requestSha256": "ba6636dd11095cd745434b8a98200562b62de80f4ef45a06d7a1fa5d18aa1f36",
+          "responseSha256": "e9a71f4924888c4f0c3494214d53666a6de9b3ccd3a3829cc8da694b73e3ca03",
+          "legal": true
+        },
+        {
+          "turn": 2,
+          "seat": 1,
+          "outcome": "Applied",
+          "requestedModel": "kimi-k2.6",
+          "returnedModel": "kimi-k2.6",
+          "httpStatus": 200,
+          "usage": {
+            "prompt_tokens": 424,
+            "completion_tokens": 12,
+            "total_tokens": 436,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "requestSha256": "de6945e8b069e899ab6fdda32cb8ba9d83b1485734161741ecb78b74785f1409",
+          "responseSha256": "2ebd76531ddeaa547f66de36f7e348ffca482066595b5d28ba9dbebc8526a806",
+          "legal": true
+        },
+        {
+          "turn": 3,
+          "seat": 0,
+          "outcome": "Applied",
+          "requestedModel": "kimi-k2.6",
+          "returnedModel": "kimi-k2.6",
+          "httpStatus": 200,
+          "usage": {
+            "prompt_tokens": 425,
+            "completion_tokens": 8,
+            "total_tokens": 433,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "requestSha256": "06c2dcdbdff6ed4b6c58aabee4331cd8cf4656983e282d0fe7a55c662fddde9c",
+          "responseSha256": "916ce36465585d740a2f3cb1b0b42e37d201646a1f7c705ac0190a0e03454a0a",
+          "legal": true
+        },
+        {
+          "turn": 4,
+          "seat": 1,
+          "outcome": "Applied",
+          "requestedModel": "kimi-k2.6",
+          "returnedModel": "kimi-k2.6",
+          "httpStatus": 200,
+          "usage": {
+            "prompt_tokens": 421,
+            "completion_tokens": 12,
+            "total_tokens": 433,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "requestSha256": "48601b75a0b29b3a58f90cc5ed3af919347c6cc65e253e539913299193e8dbf7",
+          "responseSha256": "bf69c7b8a379ec1fa5e62fdf1efb09401740cab223cb55437de2ba7816fcca36",
+          "legal": true
+        },
+        {
+          "turn": 5,
+          "seat": 0,
+          "outcome": "Applied",
+          "requestedModel": "kimi-k2.6",
+          "returnedModel": "kimi-k2.6",
+          "httpStatus": 200,
+          "usage": {
+            "prompt_tokens": 432,
+            "completion_tokens": 8,
+            "total_tokens": 440,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          },
+          "requestSha256": "d256a1eb89abc5692f1511c064eba19fda718531be3b6ecd1b089a8286efdfff",
+          "responseSha256": "9a1f840d2216a1954f48a2719f391278812d343f8d74daed631ad7813c15bde5",
+          "legal": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "observedAt": "2026-10-13T01:07:30.850Z",
+  "authentication": "Node owner signs real login challenge; injected read-only wallet interface, not extension-wallet acceptance",
+  "surfaces": [
+    {
+      "name": "desktop",
+      "walletMethods": [
+        "eth_requestAccounts",
+        "eth_chainId",
+        "eth_accounts",
+        "eth_accounts",
+        "eth_chainId",
+        "personal_sign",
+        "eth_accounts",
+        "eth_chainId"
+      ],
+      "signatures": 1,
+      "agents": [
+        {
+          "label": "cash",
+          "id": "514aaff4-2700-4d52-ab56-376308e64421",
+          "runs": [
+            {
+              "requestId": "0fa2bd74-a2b7-4063-9624-ef7a0a96dfe1",
+              "text": "免费德州 · PathUSD 奖励\n[\n失败]\n\n2026/10/13 08:48:37\n\n0fa2bd74-a2b7-4063-9624-ef7a0a96dfe1\n\nHOLDEM_INVALID_OR_ILLEGAL_RESPONSE\n\n阶段 Stopped\n已确认推理费 0 PathUSD\n查看请求与凭证"
+            },
+            {
+              "requestId": "2307882e-c1d2-455a-8629-14806e0ff33f",
+              "text": "免费德州 · PathUSD 奖励\n[\n已完成]\n\n2026/10/13 08:59:50\n\n2307882e-c1d2-455a-8629-14806e0ff33f\n阶段 Succeeded\n已确认推理费 0 PathUSD\n奖励 0 PathUSD\n查看请求与凭证"
+            }
+          ],
+          "screenshot": "frontend/acceptance/tempo-gamefi-20261013/root-auth-desktop-cash.png",
+          "viewport": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "label": "credits",
+          "id": "893fadc6-c22c-4bed-969f-791032cc1a98",
+          "runs": [
+            {
+              "requestId": "75e6a55b-aec5-4c86-b084-929edc522f03",
+              "text": "免费德州 · LLM credits 奖励\n[\n已完成]\n\n2026/10/13 08:51:01\n\n75e6a55b-aec5-4c86-b084-929edc522f03\n阶段 Succeeded\n已确认推理费 0 PathUSD\n奖励 0 PathUSD\n赠送 0 tokens\n查看请求与凭证"
+            }
+          ],
+          "screenshot": "frontend/acceptance/tempo-gamefi-20261013/root-auth-desktop-credits.png",
+          "viewport": 1440,
+          "scrollWidth": 1440
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "name": "mobile",
+      "walletMethods": [
+        "eth_requestAccounts",
+        "eth_chainId",
+        "eth_accounts",
+        "eth_accounts",
+        "eth_chainId",
+        "personal_sign",
+        "eth_accounts",
+        "eth_chainId"
+      ],
+      "signatures": 1,
+      "agents": [
+        {
+          "label": "cash",
+          "id": "514aaff4-2700-4d52-ab56-376308e64421",
+          "runs": [
+            {
+              "requestId": "0fa2bd74-a2b7-4063-9624-ef7a0a96dfe1",
+              "text": "免费德州 · PathUSD 奖励\n[\n失败]\n\n2026/10/13 08:48:37\n\n0fa2bd74-a2b7-4063-9624-ef7a0a96dfe1\n\nHOLDEM_INVALID_OR_ILLEGAL_RESPONSE\n\n阶段 Stopped\n已确认推理费 0 PathUSD\n查看请求与凭证"
+            },
+            {
+              "requestId": "2307882e-c1d2-455a-8629-14806e0ff33f",
+              "text": "免费德州 · PathUSD 奖励\n[\n已完成]\n\n2026/10/13 08:59:50\n\n2307882e-c1d2-455a-8629-14806e0ff33f\n阶段 Succeeded\n已确认推理费 0 PathUSD\n奖励 0 PathUSD\n查看请求与凭证"
+            }
+          ],
+          "screenshot": "frontend/acceptance/tempo-gamefi-20261013/root-auth-mobile-cash.png",
+          "viewport": 393,
+          "scrollWidth": 393
+        },
+        {
+          "label": "credits",
+          "id": "893fadc6-c22c-4bed-969f-791032cc1a98",
+          "runs": [
+            {
+              "requestId": "75e6a55b-aec5-4c86-b084-929edc522f03",
+              "text": "免费德州 · LLM credits 奖励\n[\n已完成]\n\n2026/10/13 08:51:01\n\n75e6a55b-aec5-4c86-b084-929edc522f03\n阶段 Succeeded\n已确认推理费 0 PathUSD\n奖励 0 PathUSD\n赠送 0 tokens\n查看请求与凭证"
+            }
+          ],
+          "screenshot": "frontend/acceptance/tempo-gamefi-20261013/root-auth-mobile-credits.png",
+          "viewport": 393,
+          "scrollWidth": 393
+        }
+      ],
+      "pageErrors": []
+    }
+  ],
+  "issues": []
+}

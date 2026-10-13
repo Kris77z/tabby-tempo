@@ -1,0 +1,35 @@
+{
+  "name": "@agentfuel/arena",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./docker": "./src/docker.ts",
+    "./submission-auth": "./src/submission-auth.ts",
+    "./freeplay-store": "./src/freeplay/store.ts",
+    "./freeplay-games": "./src/freeplay/games.ts",
+    "./gamefi-runner": "./src/gamefi-runner/index.ts",
+    "./gamefi-types": "./src/gamefi-runner/types.ts",
+    "./inference-rewards": "./src/inference-rewards/index.ts",
+    "./inference-rewards-provider": "./src/inference-rewards/provider.ts",
+    "./holdem-engine": "./src/holdem/engine.ts",
+    "./holdem-cards": "./src/holdem/cards.ts",
+    "./holdem-evaluator": "./src/holdem/evaluator.ts",
+    "./gomoku-rules": "./src/gomoku/rules.ts",
+    "./chess-rules": "./src/chess/rules.ts",
+    "./balatro-rules": "./src/balatro/rules.ts"
+  },
+  "scripts": {
+    "settler": "tsx src/settler-main.ts",
+    "submit": "tsx src/controller-main.ts",
+    "manual": "tsx src/manual-main.ts",
+    "start": "tsx src/http-main.ts",
+    "recover": "tsx src/recover-main.ts",
+    "pretest": "forge build --root ../../contracts --skip-lint",
+    "test": "tsx --test --test-concurrency=1 test/*.test.ts"
+  },
+  "dependencies": {
+    "chess.js": "1.4.0",
+    "ethers": "^6.0.0"
+  }
+}

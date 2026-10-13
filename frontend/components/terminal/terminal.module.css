@@ -1,0 +1,39 @@
+/* Exact light-terminal palette from Agora src/app/dashboard/terminal.css. */
+.theme {
+  --background: 240 5% 96%; --foreground: 240 6% 10%;
+  --card: 0 0% 100%; --card-foreground: 240 6% 10%;
+  --primary: 263 70% 50%; --primary-foreground: 0 0% 100%;
+  --secondary: 240 5% 92%; --muted: 240 5% 92%;
+  --muted-foreground: 240 4% 46%; --accent: 263 70% 50%;
+  --destructive: 0 72% 51%; --border: 240 6% 85%;
+  --input: 240 6% 85%; --ring: 263 70% 50%; --radius: 0px;
+  --color-bg: hsl(var(--background)); --color-ink: hsl(var(--foreground));
+  --color-card: hsl(var(--card)); --color-line: hsl(var(--border)); --color-muted: hsl(var(--muted-foreground));
+  --bg: var(--color-bg); --surface: var(--color-card); --ink: var(--color-ink); --muted: 240 5% 92%;
+  --line: var(--color-line); --blue: hsl(var(--primary)); --blue-soft: hsl(var(--primary)/.05);
+  --mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  min-height: 100dvh; background: var(--color-bg); color: var(--color-ink); font: 12px/1.5 var(--mono);
+}
+.theme *, .theme *::before, .theme *::after { box-sizing: border-box; }
+.theme button,.theme input,.theme select,.theme textarea { font-family: inherit; }
+.theme code,.theme pre { font-family: var(--mono); }
+.theme button:focus-visible,.theme a:focus-visible,.theme input:focus-visible,.theme select:focus-visible,.theme textarea:focus-visible,.theme summary:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.theme ::-webkit-scrollbar { width: 4px; height: 4px; }
+.theme ::-webkit-scrollbar-track { background: var(--color-bg); }
+.theme ::-webkit-scrollbar-thumb { background: hsl(var(--accent)/.3); border-radius: 0; }
+.header { background: var(--color-card); border-bottom: 1px solid var(--color-line); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; min-height: 45px; }
+.titleLeft { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.windowDots { display: flex; gap: 6px; flex-shrink: 0; }
+.windowDots span { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }.windowDots span:nth-child(2) { background: #febc2e; }.windowDots span:nth-child(3) { background: #28c840; }
+.prompt { color: var(--color-muted) !important; font-size: 12px; white-space: nowrap; text-decoration: none; }.prompt span { color: hsl(var(--primary)); }.prompt i { color: hsl(var(--muted-foreground)/.5); font-style: normal; }
+.actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }.actions button { font-size: 11px; border-radius: 0; }
+.status { color: hsl(var(--primary)); text-shadow: 0 0 6px hsl(var(--primary)/.4); font-size: 11px; padding-left: 9px; border-left: 1px solid var(--color-line); }
+.nav { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 6px 16px; background: var(--color-card); border-bottom: 1px solid var(--color-line); font-size: 10px; }
+.nav a { color: var(--color-muted); padding: 3px 0; text-decoration: none; }.nav a::before { content: "// "; opacity: .5; }.nav a[aria-current] { color: hsl(var(--primary)); }.nav a:hover { color: hsl(var(--primary)); }
+.boundary { padding: 5px 16px; border-bottom: 1px solid var(--color-line); font-size: 10px; color: var(--color-muted); overflow-wrap: anywhere; }.boundary code { color: hsl(var(--primary)); }.boundary a { color: hsl(var(--primary)); }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; clip-path: inset(50%); overflow: hidden; white-space: nowrap; }
+@media(max-width:767px) {
+  .header { padding: 8px 12px; flex-wrap: wrap; gap: 7px; }.titleLeft { gap: 10px; }.prompt { font-size: 11px; }.actions { gap: 6px; margin-left: auto; }.actions button { font-size: 10px; }.status { display: none; }
+  .nav { padding: 5px 12px; gap: 4px 12px; }.boundary { padding: 5px 12px; font-size: 9px; }
+}
+@media(max-width:390px) { .prompt { font-size: 10px; }.windowDots { gap: 4px; }.windowDots span { width: 8px; height: 8px; }.titleLeft { gap: 8px; }.actions { gap: 4px; }.actions button { font-size: 9px; } }

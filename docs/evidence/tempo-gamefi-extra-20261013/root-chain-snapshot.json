@@ -1,0 +1,114 @@
+{
+  "observedAt": "2026-10-13T01:43:13.289Z",
+  "chainId": "42431",
+  "block": {
+    "number": 39348703,
+    "hash": "0x8b05da2700703127d6398e11f653ca8240b688e994ded2e992df3ad1e295eaac",
+    "timestamp": 1791855781
+  },
+  "actors": [
+    {
+      "agentId": "73",
+      "cashRaw": "150000",
+      "repayments": "0",
+      "defaults": "0",
+      "counts": {
+        "repayment": "0",
+        "task-success": "1",
+        "default": "0"
+      },
+      "policy": [
+        "120000",
+        "0",
+        "0",
+        "false"
+      ]
+    },
+    {
+      "agentId": "74",
+      "cashRaw": "150000",
+      "repayments": "0",
+      "defaults": "0",
+      "counts": {
+        "repayment": "0",
+        "task-success": "1",
+        "default": "0"
+      },
+      "policy": [
+        "120000",
+        "0",
+        "0",
+        "false"
+      ]
+    },
+    {
+      "agentId": "43",
+      "cashRaw": "100000",
+      "repayments": "0",
+      "defaults": "0",
+      "counts": {
+        "repayment": "0",
+        "task-success": "0",
+        "default": "0"
+      },
+      "policy": [
+        "0",
+        "0",
+        "0",
+        "false"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "7",
+      "agentId": "73",
+      "status": "3",
+      "rewardRaw": "150000",
+      "escrowBalanceRaw": "0",
+      "deadline": "1792069908",
+      "loan": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    },
+    {
+      "taskId": "8",
+      "agentId": "74",
+      "status": "3",
+      "rewardRaw": "150000",
+      "escrowBalanceRaw": "0",
+      "deadline": "1792069908",
+      "loan": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    }
+  ],
+  "oldActors": [
+    {
+      "agentId": "46",
+      "cashRaw": "58000"
+    },
+    {
+      "agentId": "47",
+      "cashRaw": "58000"
+    },
+    {
+      "agentId": "48",
+      "cashRaw": "48000"
+    },
+    {
+      "agentId": "49",
+      "cashRaw": "67200"
+    }
+  ],
+  "poolRaw": "10058800",
+  "outstandingRaw": "0"
+}

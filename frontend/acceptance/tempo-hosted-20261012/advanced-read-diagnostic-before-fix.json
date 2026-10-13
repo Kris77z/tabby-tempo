@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-10-12T17:22:46.964962+00:00",
+  "source": "readDashboard with current Tempo deployment manifest; direct RPC; existing 503/ECONNRESET bounded read retry; call gas 1000000; interval100ms",
+  "outcome": "failed",
+  "totalMs": 51301,
+  "diagnostic": {
+    "stage": "logs",
+    "errorClass": "Error",
+    "code": "SERVER_ERROR",
+    "httpStatus": 429
+  },
+  "businessWrites": 0,
+  "modelCalls": 0
+}

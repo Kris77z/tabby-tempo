@@ -1,0 +1,1180 @@
+{
+  "phase": "final",
+  "observedAt": "2026-10-12T17:07:57.858Z",
+  "frontendOrigin": "http://127.0.0.1:3028",
+  "chainId": "42431",
+  "completeBusinessAcceptance": true,
+  "canonicalHistory": {
+    "source": "root canonical audit",
+    "block": {
+      "number": 39297657,
+      "hash": "0x7720ba7e9a5af77650cfd0cff80dad1bcfcaf9a81b42ede275456efc252666e6"
+    },
+    "labels": {
+      "cheap": {
+        "successfulTaskIds": [
+          "1"
+        ],
+        "compensatedTaskIds": []
+      },
+      "strong": {
+        "successfulTaskIds": [
+          "2"
+        ],
+        "compensatedTaskIds": []
+      },
+      "autonomy": {
+        "successfulTaskIds": [
+          "4"
+        ],
+        "compensatedTaskIds": [
+          "3"
+        ]
+      },
+      "autonomy-validation": {
+        "successfulTaskIds": [
+          "5",
+          "6"
+        ],
+        "compensatedTaskIds": []
+      }
+    },
+    "unknownHistoryCountedAsSuccess": false
+  },
+  "authentication": "real owner personal_sign in Node; real hosted HTTP; no API mocks",
+  "paidOperationsStarted": 0,
+  "businessOperationsStarted": 0,
+  "registryMode": "existing ERC8004 · interfaces verified",
+  "settlement": "test PathUSD",
+  "surfaces": [
+    {
+      "name": "desktop",
+      "walletMethods": [
+        "eth_requestAccounts",
+        "eth_chainId",
+        "eth_accounts",
+        "eth_accounts",
+        "eth_chainId",
+        "personal_sign",
+        "eth_accounts",
+        "eth_chainId"
+      ],
+      "signatures": 1,
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents",
+          "status": 401
+        },
+        {
+          "method": "POST",
+          "path": "/api/hosted/auth/challenge",
+          "status": 200
+        },
+        {
+          "method": "POST",
+          "path": "/api/hosted/auth/login",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents/34b183d8-688b-41b2-85a0-23d05ba07bbc/finance",
+          "status": 200,
+          "financeStatus": "confirmed"
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents/02c7f4d9-ae97-4903-ac88-31638f6f6361/finance",
+          "status": 200,
+          "financeStatus": "confirmed"
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents/e6e62f93-d1d4-4756-8fdc-61c20f12492e/finance",
+          "status": 200,
+          "financeStatus": "confirmed"
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents/2436317c-21e7-426a-8de8-5eebcfadeaa2/finance",
+          "status": 200,
+          "financeStatus": "confirmed"
+        }
+      ],
+      "requestFailures": [
+        {
+          "path": "/",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "path": "/arena",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "path": "/",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "path": "/arena",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "pageErrors": [],
+      "screenshots": [
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-desktop-cheap-resources.png",
+          "viewport": 1440,
+          "scrollWidth": 1440,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            },
+            {
+              "id": "panel-requests",
+              "visibleHeight": 536,
+              "contentHeight": 536
+            },
+            {
+              "id": "panel-resources",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-desktop-cheap-requests.png",
+          "viewport": 1440,
+          "scrollWidth": 1440,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            },
+            {
+              "id": "panel-requests",
+              "visibleHeight": 536,
+              "contentHeight": 536
+            },
+            {
+              "id": "panel-resources",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-desktop-strong-resources.png",
+          "viewport": 1440,
+          "scrollWidth": 1440,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            },
+            {
+              "id": "panel-requests",
+              "visibleHeight": 536,
+              "contentHeight": 536
+            },
+            {
+              "id": "panel-resources",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-desktop-strong-requests.png",
+          "viewport": 1440,
+          "scrollWidth": 1440,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            },
+            {
+              "id": "panel-requests",
+              "visibleHeight": 536,
+              "contentHeight": 536
+            },
+            {
+              "id": "panel-resources",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-desktop-autonomy-resources.png",
+          "viewport": 1440,
+          "scrollWidth": 1440,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            },
+            {
+              "id": "panel-requests",
+              "visibleHeight": 536,
+              "contentHeight": 536
+            },
+            {
+              "id": "panel-resources",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-desktop-autonomy-requests.png",
+          "viewport": 1440,
+          "scrollWidth": 1440,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            },
+            {
+              "id": "panel-requests",
+              "visibleHeight": 536,
+              "contentHeight": 536
+            },
+            {
+              "id": "panel-resources",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-desktop-autonomy-validation-resources.png",
+          "viewport": 1440,
+          "scrollWidth": 1440,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            },
+            {
+              "id": "panel-requests",
+              "visibleHeight": 536,
+              "contentHeight": 536
+            },
+            {
+              "id": "panel-resources",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-desktop-autonomy-validation-requests.png",
+          "viewport": 1440,
+          "scrollWidth": 1440,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            },
+            {
+              "id": "panel-requests",
+              "visibleHeight": 536,
+              "contentHeight": 536
+            },
+            {
+              "id": "panel-resources",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-desktop-pathusd-fee-reserve.png",
+          "viewport": 1440,
+          "scrollWidth": 1440,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            },
+            {
+              "id": "panel-requests",
+              "visibleHeight": 507,
+              "contentHeight": 507
+            },
+            {
+              "id": "panel-resources",
+              "visibleHeight": 794,
+              "contentHeight": 794
+            }
+          ]
+        }
+      ],
+      "agents": [
+        {
+          "kind": "cheap",
+          "id": "34b183d8-688b-41b2-85a0-23d05ba07bbc",
+          "name": "Tempo real cheap",
+          "finance": {
+            "status": "confirmed",
+            "observedAt": "2026-10-12T17:08:19.337Z",
+            "chainId": "42431",
+            "agentId": "46",
+            "wallet": "0x7Fc6A7891473feF26D7b70635BF69Df171939686",
+            "cashRaw": "58000",
+            "debtRaw": "0",
+            "scannedTaskCount": 8,
+            "ownedTaskCount": 1,
+            "block": {
+              "number": 39298148,
+              "hash": "0x70fcca19dce6479383ae08d80413fc53ed6587177362256a1be8e971deb33238",
+              "timestamp": 1791824882
+            },
+            "credit": {
+              "score": "570",
+              "tier": "C",
+              "tierCapRaw": "200000",
+              "feeBps": "1500",
+              "eligible": true,
+              "rejection": null
+            },
+            "policy": {
+              "maxCashPerTxRaw": "120000",
+              "maxDebtPerTxRaw": "120000",
+              "maxDebtPerDayRaw": "300000",
+              "ownerFrozen": false
+            },
+            "counts": {
+              "repayments": "1",
+              "defaults": "0",
+              "mirrorRepayments": "1",
+              "successes": "1",
+              "mirrorDefaults": "0"
+            }
+          },
+          "financialText": "信用飞轮\n刷新\n\nCHAIN IDENTITY · #46\n\nInferScore 570\nTier C\ncash\n0.058 PathUSD\n未偿债务（含 fee）\n0 PathUSD\nTier 本金上限\n0.2 PathUSD\n借款 fee\n15%\n任务授信\n可申请\n真实还款 / 违约\n1 / 0\n声誉还款 / 成功 / 违约\n1 / 1 / 0\n\n已核验快照 · chain 42431 · 区块 #39298148\n区块时间 2026/10/13 01:08:02\n读取时间 2026/10/13 01:08:19\n\n完整读取 8 项任务，本人 1 项。成功信用还款写入声誉后，Underwriter 更新评分与 Tier。每笔授信仍需核验任务和协议额度。",
+          "requestsText": "请求记录\n最近 100 条 · 未结束请求保留\n按量额度运行任务\n[\n已完成]\n\n2026/10/12 21:47:30\n\nd6059ad0-7920-43ef-9f0a-dc8216772cb9\n阶段 Succeeded\n已确认推理费 0.12 PathUSD\n消费 234 tokens\n任务结算\n\ncash 支付 0.04 · 信用支付 0.08 PathUSD\n\n链上任务通过 · 实际还款 0.092 PathUSD · 结算入账 0.058 PathUSD\n\n借款状态：已足额还款\n\n查看结算交易 · 0xba74d0…12f313 ↗\n\nTaskSettled 已核验 · 区块 #39278513 · 2026/10/12 21:47:19\n\n查看请求与凭证\n现金入账\n[\n已完成]\n\n2026/10/12 21:20:26\n\n28400fbe-8418-4013-b56b-488210ed9350\n阶段 Deposited\n已确认推理费 0 PathUSD\n查看请求与凭证\n初始化 Agent\n[\n已完成]\n\n2026/10/12 21:20:00\n\n5b97a717-b370-4778-b530-05ff3dd327a8\n阶段 Ready\n已确认推理费 0 PathUSD\n查看请求与凭证",
+          "transactionLinks": [
+            "https://explore.testnet.tempo.xyz/tx/0xba74d0e4fe14748485a036d3dc8f3ed35463087b9225c3ad1326ddb00d12f313",
+            "https://explore.testnet.tempo.xyz/tx/0xb5c3f53abb1d252b67bfa54bf724b3f693b3b11eb3f85532d24c748c59cb4819",
+            "https://explore.testnet.tempo.xyz/tx/0x73954dc83ca995b37f5c3e6d6e2893e13c61e28dbca403b2cbd84da98e33fe0e",
+            "https://explore.testnet.tempo.xyz/tx/0xd7db9b0eecf65b92204640c04fcf1d1a3715ab8324ad9a1b9b3527ba8f064e0b",
+            "https://explore.testnet.tempo.xyz/tx/0x17ae1d91c8e742ec1c5a2fb0347f6733980d9f1d1da244ab6336e317be41c7dc"
+          ],
+          "alerts": []
+        },
+        {
+          "kind": "strong",
+          "id": "02c7f4d9-ae97-4903-ac88-31638f6f6361",
+          "name": "Tempo real strong",
+          "finance": {
+            "status": "confirmed",
+            "observedAt": "2026-10-12T17:08:38.972Z",
+            "chainId": "42431",
+            "agentId": "47",
+            "wallet": "0xA844a5D57D29e531eaB2bb6c6E190BFa52422b5E",
+            "cashRaw": "58000",
+            "debtRaw": "0",
+            "scannedTaskCount": 8,
+            "ownedTaskCount": 1,
+            "block": {
+              "number": 39298170,
+              "hash": "0xda0a6c4178a5f49eddb51773f01d327f85b32424d9831505ee60d93342bdff60",
+              "timestamp": 1791824900
+            },
+            "credit": {
+              "score": "570",
+              "tier": "C",
+              "tierCapRaw": "200000",
+              "feeBps": "1500",
+              "eligible": true,
+              "rejection": null
+            },
+            "policy": {
+              "maxCashPerTxRaw": "120000",
+              "maxDebtPerTxRaw": "120000",
+              "maxDebtPerDayRaw": "300000",
+              "ownerFrozen": false
+            },
+            "counts": {
+              "repayments": "1",
+              "defaults": "0",
+              "mirrorRepayments": "1",
+              "successes": "1",
+              "mirrorDefaults": "0"
+            }
+          },
+          "financialText": "信用飞轮\n刷新\n\nCHAIN IDENTITY · #47\n\nInferScore 570\nTier C\ncash\n0.058 PathUSD\n未偿债务（含 fee）\n0 PathUSD\nTier 本金上限\n0.2 PathUSD\n借款 fee\n15%\n任务授信\n可申请\n真实还款 / 违约\n1 / 0\n声誉还款 / 成功 / 违约\n1 / 1 / 0\n\n已核验快照 · chain 42431 · 区块 #39298170\n区块时间 2026/10/13 01:08:20\n读取时间 2026/10/13 01:08:38\n\n完整读取 8 项任务，本人 1 项。成功信用还款写入声誉后，Underwriter 更新评分与 Tier。每笔授信仍需核验任务和协议额度。",
+          "requestsText": "请求记录\n最近 100 条 · 未结束请求保留\n按量额度运行任务\n[\n已完成]\n\n2026/10/12 21:51:37\n\n2adae69b-899e-41f2-bcb7-9a905c7647fa\n阶段 Succeeded\n已确认推理费 0.12 PathUSD\n消费 426 tokens\n任务结算\n\ncash 支付 0.04 · 信用支付 0.08 PathUSD\n\n链上任务通过 · 实际还款 0.092 PathUSD · 结算入账 0.058 PathUSD\n\n借款状态：已足额还款\n\n查看结算交易 · 0xfa76a0…c06bfc ↗\n\nTaskSettled 已核验 · 区块 #39278914 · 2026/10/12 21:51:24\n\n查看请求与凭证\n现金入账\n[\n已完成]\n\n2026/10/12 21:22:55\n\nf58b8a97-1a91-46be-af26-969b7e479b14\n阶段 Deposited\n已确认推理费 0 PathUSD\n查看请求与凭证\n初始化 Agent\n[\n已完成]\n\n2026/10/12 21:22:30\n\nb8d40147-9dcb-477e-bea6-e37081d77b36\n阶段 Ready\n已确认推理费 0 PathUSD\n查看请求与凭证",
+          "transactionLinks": [
+            "https://explore.testnet.tempo.xyz/tx/0xfa76a0e26f7e60be9bdb2450ccaa98cd3e24bfbe6d5e48460a7e42c0afc06bfc",
+            "https://explore.testnet.tempo.xyz/tx/0x333d3f31b5e0d639163b9a04cf9fcf338969bbf9af7d8a007a556bf19599ad34",
+            "https://explore.testnet.tempo.xyz/tx/0x7003062013ce7fb71929da83b3a7c22b400667122e2f0ae2b82d344d54761079",
+            "https://explore.testnet.tempo.xyz/tx/0xc409c9a251883d1d1bd4a21118fd3d3560b253b352cc6ce0412a46c5d65d4f45",
+            "https://explore.testnet.tempo.xyz/tx/0x81a8b2f8ad8f0ab3fb9d2f763c5728f76d291618664aa98b35a743057baa03de"
+          ],
+          "alerts": []
+        },
+        {
+          "kind": "autonomy",
+          "id": "e6e62f93-d1d4-4756-8fdc-61c20f12492e",
+          "name": "Tempo real autonomy",
+          "finance": {
+            "status": "confirmed",
+            "observedAt": "2026-10-12T17:09:11.634Z",
+            "chainId": "42431",
+            "agentId": "48",
+            "wallet": "0xAbEEcBeD88d5099988d0a10b9521C9e6cFAAB8d7",
+            "cashRaw": "48000",
+            "debtRaw": "0",
+            "scannedTaskCount": 8,
+            "ownedTaskCount": 2,
+            "block": {
+              "number": 39298195,
+              "hash": "0xff417dde2b2e0203de6c97bb51645b6f47fa73fe110bd5232de506b230fe588f",
+              "timestamp": 1791824919
+            },
+            "credit": {
+              "score": "570",
+              "tier": "C",
+              "tierCapRaw": "200000",
+              "feeBps": "1500",
+              "eligible": true,
+              "rejection": null
+            },
+            "policy": {
+              "maxCashPerTxRaw": "120000",
+              "maxDebtPerTxRaw": "120000",
+              "maxDebtPerDayRaw": "300000",
+              "ownerFrozen": false
+            },
+            "counts": {
+              "repayments": "1",
+              "defaults": "0",
+              "mirrorRepayments": "1",
+              "successes": "1",
+              "mirrorDefaults": "0"
+            }
+          },
+          "financialText": "信用飞轮\n刷新\n\nCHAIN IDENTITY · #48\n\nInferScore 570\nTier C\ncash\n0.048 PathUSD\n未偿债务（含 fee）\n0 PathUSD\nTier 本金上限\n0.2 PathUSD\n借款 fee\n15%\n任务授信\n可申请\n真实还款 / 违约\n1 / 0\n声誉还款 / 成功 / 违约\n1 / 1 / 0\n\n已核验快照 · chain 42431 · 区块 #39298195\n区块时间 2026/10/13 01:08:39\n读取时间 2026/10/13 01:09:11\n\n完整读取 8 项任务，本人 2 项。成功信用还款写入声誉后，Underwriter 更新评分与 Tier。每笔授信仍需核验任务和协议额度。",
+          "requestsText": "请求记录\n最近 100 条 · 未结束请求保留\nPi 连续运行\n[\n失败]\n\n2026/10/12 23:58:49\n\nceaa64c6-ccd0-4c77-b0e7-c4ce3757f4fd\n\nNO_FEASIBLE_CANDIDATE\n\n阶段 Stopped\n已确认推理费 0.14 PathUSD\n连续完成 1 单\n查看请求与凭证\n现金入账\n[\n已完成]\n\n2026/10/12 23:28:23\n\n1b650d7e-aebf-44cb-91a3-78d09b999297\n阶段 Deposited\n已确认推理费 0 PathUSD\n查看请求与凭证\nPi 连续运行\n[\n失败]\n\n2026/10/12 23:22:52\n\n03f7295e-ea84-453a-88ad-5a4184ce47a8\n\n推理服务异常，已补偿退款并终止任务。\n\n阶段 Stopped\n已确认推理费 0.01 PathUSD\n连续完成 0 单\n查看请求与凭证\nPi 连续运行\n[\n失败]\n\n2026/10/12 22:16:06\n\nbde4ae39-7469-4348-a47b-bf69ab194d24\n\n已达到本次连续运行的时间上限。\n\n阶段 Stopped\n已确认推理费 0 PathUSD\n连续完成 0 单\n查看请求与凭证\n现金入账\n[\n已完成]\n\n2026/10/12 21:38:14\n\n09901dd4-05cf-4ce9-9064-c821aeaf49c1\n阶段 Deposited\n已确认推理费 0 PathUSD\n查看请求与凭证\n初始化 Agent\n[\n已完成]\n\n2026/10/12 21:37:53\n\n4103c345-a083-4cb9-b9f0-40bf56014029\n阶段 Ready\n已确认推理费 0 PathUSD\n查看请求与凭证",
+          "transactionLinks": [
+            "https://explore.testnet.tempo.xyz/tx/0x1010ffe1ae307752fdea2df90011a2686bdd26e2d1e8f0223c9b583cd3e84846",
+            "https://explore.testnet.tempo.xyz/tx/0x4037e4ad8a36fa176537354766858d1276ae8a30c4adbf1f38745659fb546663",
+            "https://explore.testnet.tempo.xyz/tx/0xa95c19db3bfc37411214358b76366a418c04a8253ee7816ef7290bd5e1c859ac"
+          ],
+          "alerts": []
+        },
+        {
+          "kind": "autonomy-validation",
+          "id": "2436317c-21e7-426a-8de8-5eebcfadeaa2",
+          "name": "Tempo real autonomy-validation",
+          "finance": {
+            "status": "confirmed",
+            "observedAt": "2026-10-12T17:09:27.092Z",
+            "chainId": "42431",
+            "agentId": "49",
+            "wallet": "0xA8E6DD15F3291f2aecAe44dbca937928d3c01F0F",
+            "cashRaw": "67200",
+            "debtRaw": "0",
+            "scannedTaskCount": 8,
+            "ownedTaskCount": 2,
+            "block": {
+              "number": 39298245,
+              "hash": "0x861faf577262fdbaa385b3cb62ab1d494356ffb888b3117702d14706c64e88f7",
+              "timestamp": 1791824954
+            },
+            "credit": {
+              "score": "640",
+              "tier": "B",
+              "tierCapRaw": "500000",
+              "feeBps": "800",
+              "eligible": true,
+              "rejection": null
+            },
+            "policy": {
+              "maxCashPerTxRaw": "120000",
+              "maxDebtPerTxRaw": "120000",
+              "maxDebtPerDayRaw": "300000",
+              "ownerFrozen": false
+            },
+            "counts": {
+              "repayments": "2",
+              "defaults": "0",
+              "mirrorRepayments": "2",
+              "successes": "2",
+              "mirrorDefaults": "0"
+            }
+          },
+          "financialText": "信用飞轮\n刷新\n\nCHAIN IDENTITY · #49\n\nInferScore 640\nTier B\ncash\n0.0672 PathUSD\n未偿债务（含 fee）\n0 PathUSD\nTier 本金上限\n0.5 PathUSD\n借款 fee\n8%\n任务授信\n可申请\n真实还款 / 违约\n2 / 0\n声誉还款 / 成功 / 违约\n2 / 2 / 0\n\n已核验快照 · chain 42431 · 区块 #39298245\n区块时间 2026/10/13 01:09:14\n读取时间 2026/10/13 01:09:27\n\n完整读取 8 项任务，本人 2 项。成功信用还款写入声誉后，Underwriter 更新评分与 Tier。每笔授信仍需核验任务和协议额度。",
+          "requestsText": "请求记录\n最近 100 条 · 未结束请求保留\nPi 连续运行\n[\n已完成]\n\n2026/10/13 01:00:19\n\n434cb42a-4284-456d-aea1-9c27f16234e2\n\n已达到本次连续运行的任务数上限。\n\n阶段 Completed\n已确认推理费 0.26 PathUSD\n连续完成 2 单\n查看请求与凭证\n现金入账\n[\n已完成]\n\n2026/10/13 00:54:37\n\n165996ec-dcb2-4036-a5d2-5c7fa9b00d41\n阶段 Deposited\n已确认推理费 0 PathUSD\n查看请求与凭证\n初始化 Agent\n[\n已完成]\n\n2026/10/13 00:53:59\n\nd939b12a-05c0-4426-9327-a5160546f2ec\n阶段 Ready\n已确认推理费 0 PathUSD\n查看请求与凭证",
+          "transactionLinks": [
+            "https://explore.testnet.tempo.xyz/tx/0xc846e86e10bf96854a73b22a1a360f41df715e94243a67e3a34dc0cdcd94e665",
+            "https://explore.testnet.tempo.xyz/tx/0x2057a19fa40c4aef7da230f5bbdc4b28b62a193460a7b23af640d44fcaa049fc"
+          ],
+          "alerts": []
+        }
+      ],
+      "visibility": [
+        {
+          "at": "2026-10-12T17:07:59.811Z",
+          "state": "visible"
+        },
+        {
+          "at": "2026-10-12T17:09:27.819Z",
+          "state": "hidden"
+        }
+      ]
+    },
+    {
+      "name": "mobile",
+      "walletMethods": [
+        "eth_requestAccounts",
+        "eth_chainId",
+        "eth_accounts",
+        "eth_accounts",
+        "eth_chainId",
+        "personal_sign",
+        "eth_accounts",
+        "eth_chainId"
+      ],
+      "signatures": 1,
+      "http": [
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents",
+          "status": 401
+        },
+        {
+          "method": "POST",
+          "path": "/api/hosted/auth/challenge",
+          "status": 200
+        },
+        {
+          "method": "POST",
+          "path": "/api/hosted/auth/login",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents/34b183d8-688b-41b2-85a0-23d05ba07bbc/finance",
+          "status": 200,
+          "financeStatus": "confirmed"
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents/02c7f4d9-ae97-4903-ac88-31638f6f6361/finance",
+          "status": 200,
+          "financeStatus": "confirmed"
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents/e6e62f93-d1d4-4756-8fdc-61c20f12492e/finance",
+          "status": 200,
+          "financeStatus": "confirmed"
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "path": "/api/hosted/agents/2436317c-21e7-426a-8de8-5eebcfadeaa2/finance",
+          "status": 200,
+          "financeStatus": "confirmed"
+        }
+      ],
+      "requestFailures": [
+        {
+          "path": "/",
+          "error": "net::ERR_ABORTED"
+        },
+        {
+          "path": "/arena",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "pageErrors": [],
+      "screenshots": [
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-cheap-resources.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-resources",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-cheap-resources-scrolled-1.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-resources",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ],
+          "resourceScroll": {
+            "scrollTop": 120,
+            "visibleHeight": 140,
+            "contentHeight": 953
+          }
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-cheap-resources-scrolled-2.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-resources",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ],
+          "resourceScroll": {
+            "scrollTop": 240,
+            "visibleHeight": 140,
+            "contentHeight": 953
+          }
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-cheap-requests.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-requests",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-cheap-agent.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-strong-resources.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-resources",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-strong-resources-scrolled-1.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-resources",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ],
+          "resourceScroll": {
+            "scrollTop": 120,
+            "visibleHeight": 140,
+            "contentHeight": 953
+          }
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-strong-resources-scrolled-2.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-resources",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ],
+          "resourceScroll": {
+            "scrollTop": 240,
+            "visibleHeight": 140,
+            "contentHeight": 953
+          }
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-strong-requests.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-requests",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-strong-agent.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-autonomy-resources.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-resources",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-autonomy-resources-scrolled-1.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-resources",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ],
+          "resourceScroll": {
+            "scrollTop": 120,
+            "visibleHeight": 140,
+            "contentHeight": 953
+          }
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-autonomy-resources-scrolled-2.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-resources",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ],
+          "resourceScroll": {
+            "scrollTop": 240,
+            "visibleHeight": 140,
+            "contentHeight": 953
+          }
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-autonomy-requests.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-requests",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-autonomy-agent.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-autonomy-validation-resources.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-resources",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-autonomy-validation-resources-scrolled-1.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-resources",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ],
+          "resourceScroll": {
+            "scrollTop": 120,
+            "visibleHeight": 140,
+            "contentHeight": 953
+          }
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-autonomy-validation-resources-scrolled-2.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-resources",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ],
+          "resourceScroll": {
+            "scrollTop": 240,
+            "visibleHeight": 140,
+            "contentHeight": 953
+          }
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-autonomy-validation-requests.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-requests",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-autonomy-validation-agent.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-agent",
+              "visibleHeight": 172,
+              "contentHeight": 172
+            }
+          ]
+        },
+        {
+          "file": "/Users/jungle/Desktop/dev/agentfuel-tempo/frontend/acceptance/tempo-hosted-20261012/final-mobile-pathusd-fee-reserve.png",
+          "viewport": 393,
+          "scrollWidth": 393,
+          "panels": [
+            {
+              "id": "panel-requests",
+              "visibleHeight": 187,
+              "contentHeight": 187
+            }
+          ]
+        }
+      ],
+      "agents": [
+        {
+          "kind": "cheap",
+          "id": "34b183d8-688b-41b2-85a0-23d05ba07bbc",
+          "name": "Tempo real cheap",
+          "finance": {
+            "status": "confirmed",
+            "observedAt": "2026-10-12T17:09:41.687Z",
+            "chainId": "42431",
+            "agentId": "46",
+            "wallet": "0x7Fc6A7891473feF26D7b70635BF69Df171939686",
+            "cashRaw": "58000",
+            "debtRaw": "0",
+            "scannedTaskCount": 8,
+            "ownedTaskCount": 1,
+            "block": {
+              "number": 39298268,
+              "hash": "0x426d7f81ef6059611fc70b0ba0e3db25f590183a40aa69ce2c8ca77b2aa90ebe",
+              "timestamp": 1791824968
+            },
+            "credit": {
+              "score": "570",
+              "tier": "C",
+              "tierCapRaw": "200000",
+              "feeBps": "1500",
+              "eligible": true,
+              "rejection": null
+            },
+            "policy": {
+              "maxCashPerTxRaw": "120000",
+              "maxDebtPerTxRaw": "120000",
+              "maxDebtPerDayRaw": "300000",
+              "ownerFrozen": false
+            },
+            "counts": {
+              "repayments": "1",
+              "defaults": "0",
+              "mirrorRepayments": "1",
+              "successes": "1",
+              "mirrorDefaults": "0"
+            }
+          },
+          "financialText": "信用飞轮\n刷新\n\nCHAIN IDENTITY · #46\n\nInferScore 570\nTier C\ncash\n0.058 PathUSD\n未偿债务（含 fee）\n0 PathUSD\nTier 本金上限\n0.2 PathUSD\n借款 fee\n15%\n任务授信\n可申请\n真实还款 / 违约\n1 / 0\n声誉还款 / 成功 / 违约\n1 / 1 / 0\n\n已核验快照 · chain 42431 · 区块 #39298268\n区块时间 2026/10/13 01:09:28\n读取时间 2026/10/13 01:09:41\n\n完整读取 8 项任务，本人 1 项。成功信用还款写入声誉后，Underwriter 更新评分与 Tier。每笔授信仍需核验任务和协议额度。",
+          "requestsText": "请求记录\n最近 100 条 · 未结束请求保留\n按量额度运行任务\n[\n已完成]\n\n2026/10/12 21:47:30\n\nd6059ad0-7920-43ef-9f0a-dc8216772cb9\n阶段 Succeeded\n已确认推理费 0.12 PathUSD\n消费 234 tokens\n任务结算\n\ncash 支付 0.04 · 信用支付 0.08 PathUSD\n\n链上任务通过 · 实际还款 0.092 PathUSD · 结算入账 0.058 PathUSD\n\n借款状态：已足额还款\n\n查看结算交易 · 0xba74d0…12f313 ↗\n\nTaskSettled 已核验 · 区块 #39278513 · 2026/10/12 21:47:19\n\n查看请求与凭证\n现金入账\n[\n已完成]\n\n2026/10/12 21:20:26\n\n28400fbe-8418-4013-b56b-488210ed9350\n阶段 Deposited\n已确认推理费 0 PathUSD\n查看请求与凭证\n初始化 Agent\n[\n已完成]\n\n2026/10/12 21:20:00\n\n5b97a717-b370-4778-b530-05ff3dd327a8\n阶段 Ready\n已确认推理费 0 PathUSD\n查看请求与凭证",
+          "transactionLinks": [
+            "https://explore.testnet.tempo.xyz/tx/0xba74d0e4fe14748485a036d3dc8f3ed35463087b9225c3ad1326ddb00d12f313",
+            "https://explore.testnet.tempo.xyz/tx/0xb5c3f53abb1d252b67bfa54bf724b3f693b3b11eb3f85532d24c748c59cb4819",
+            "https://explore.testnet.tempo.xyz/tx/0x73954dc83ca995b37f5c3e6d6e2893e13c61e28dbca403b2cbd84da98e33fe0e",
+            "https://explore.testnet.tempo.xyz/tx/0xd7db9b0eecf65b92204640c04fcf1d1a3715ab8324ad9a1b9b3527ba8f064e0b",
+            "https://explore.testnet.tempo.xyz/tx/0x17ae1d91c8e742ec1c5a2fb0347f6733980d9f1d1da244ab6336e317be41c7dc"
+          ],
+          "alerts": []
+        },
+        {
+          "kind": "strong",
+          "id": "02c7f4d9-ae97-4903-ac88-31638f6f6361",
+          "name": "Tempo real strong",
+          "finance": {
+            "status": "confirmed",
+            "observedAt": "2026-10-12T17:09:54.842Z",
+            "chainId": "42431",
+            "agentId": "47",
+            "wallet": "0xA844a5D57D29e531eaB2bb6c6E190BFa52422b5E",
+            "cashRaw": "58000",
+            "debtRaw": "0",
+            "scannedTaskCount": 8,
+            "ownedTaskCount": 1,
+            "block": {
+              "number": 39298292,
+              "hash": "0x4122eb44800b9ac7e1a266ff2cf8f19d9092fd5be94f93f71bf269fca888ed10",
+              "timestamp": 1791824983
+            },
+            "credit": {
+              "score": "570",
+              "tier": "C",
+              "tierCapRaw": "200000",
+              "feeBps": "1500",
+              "eligible": true,
+              "rejection": null
+            },
+            "policy": {
+              "maxCashPerTxRaw": "120000",
+              "maxDebtPerTxRaw": "120000",
+              "maxDebtPerDayRaw": "300000",
+              "ownerFrozen": false
+            },
+            "counts": {
+              "repayments": "1",
+              "defaults": "0",
+              "mirrorRepayments": "1",
+              "successes": "1",
+              "mirrorDefaults": "0"
+            }
+          },
+          "financialText": "信用飞轮\n刷新\n\nCHAIN IDENTITY · #47\n\nInferScore 570\nTier C\ncash\n0.058 PathUSD\n未偿债务（含 fee）\n0 PathUSD\nTier 本金上限\n0.2 PathUSD\n借款 fee\n15%\n任务授信\n可申请\n真实还款 / 违约\n1 / 0\n声誉还款 / 成功 / 违约\n1 / 1 / 0\n\n已核验快照 · chain 42431 · 区块 #39298292\n区块时间 2026/10/13 01:09:43\n读取时间 2026/10/13 01:09:54\n\n完整读取 8 项任务，本人 1 项。成功信用还款写入声誉后，Underwriter 更新评分与 Tier。每笔授信仍需核验任务和协议额度。",
+          "requestsText": "请求记录\n最近 100 条 · 未结束请求保留\n按量额度运行任务\n[\n已完成]\n\n2026/10/12 21:51:37\n\n2adae69b-899e-41f2-bcb7-9a905c7647fa\n阶段 Succeeded\n已确认推理费 0.12 PathUSD\n消费 426 tokens\n任务结算\n\ncash 支付 0.04 · 信用支付 0.08 PathUSD\n\n链上任务通过 · 实际还款 0.092 PathUSD · 结算入账 0.058 PathUSD\n\n借款状态：已足额还款\n\n查看结算交易 · 0xfa76a0…c06bfc ↗\n\nTaskSettled 已核验 · 区块 #39278914 · 2026/10/12 21:51:24\n\n查看请求与凭证\n现金入账\n[\n已完成]\n\n2026/10/12 21:22:55\n\nf58b8a97-1a91-46be-af26-969b7e479b14\n阶段 Deposited\n已确认推理费 0 PathUSD\n查看请求与凭证\n初始化 Agent\n[\n已完成]\n\n2026/10/12 21:22:30\n\nb8d40147-9dcb-477e-bea6-e37081d77b36\n阶段 Ready\n已确认推理费 0 PathUSD\n查看请求与凭证",
+          "transactionLinks": [
+            "https://explore.testnet.tempo.xyz/tx/0xfa76a0e26f7e60be9bdb2450ccaa98cd3e24bfbe6d5e48460a7e42c0afc06bfc",
+            "https://explore.testnet.tempo.xyz/tx/0x333d3f31b5e0d639163b9a04cf9fcf338969bbf9af7d8a007a556bf19599ad34",
+            "https://explore.testnet.tempo.xyz/tx/0x7003062013ce7fb71929da83b3a7c22b400667122e2f0ae2b82d344d54761079",
+            "https://explore.testnet.tempo.xyz/tx/0xc409c9a251883d1d1bd4a21118fd3d3560b253b352cc6ce0412a46c5d65d4f45",
+            "https://explore.testnet.tempo.xyz/tx/0x81a8b2f8ad8f0ab3fb9d2f763c5728f76d291618664aa98b35a743057baa03de"
+          ],
+          "alerts": []
+        },
+        {
+          "kind": "autonomy",
+          "id": "e6e62f93-d1d4-4756-8fdc-61c20f12492e",
+          "name": "Tempo real autonomy",
+          "finance": {
+            "status": "confirmed",
+            "observedAt": "2026-10-12T17:10:07.565Z",
+            "chainId": "42431",
+            "agentId": "48",
+            "wallet": "0xAbEEcBeD88d5099988d0a10b9521C9e6cFAAB8d7",
+            "cashRaw": "48000",
+            "debtRaw": "0",
+            "scannedTaskCount": 8,
+            "ownedTaskCount": 2,
+            "block": {
+              "number": 39298312,
+              "hash": "0xa216bba30fb311241e0e6d9c455756d1a60d6b8539fc86a50736f85ea8cf6e5c",
+              "timestamp": 1791824995
+            },
+            "credit": {
+              "score": "570",
+              "tier": "C",
+              "tierCapRaw": "200000",
+              "feeBps": "1500",
+              "eligible": true,
+              "rejection": null
+            },
+            "policy": {
+              "maxCashPerTxRaw": "120000",
+              "maxDebtPerTxRaw": "120000",
+              "maxDebtPerDayRaw": "300000",
+              "ownerFrozen": false
+            },
+            "counts": {
+              "repayments": "1",
+              "defaults": "0",
+              "mirrorRepayments": "1",
+              "successes": "1",
+              "mirrorDefaults": "0"
+            }
+          },
+          "financialText": "信用飞轮\n刷新\n\nCHAIN IDENTITY · #48\n\nInferScore 570\nTier C\ncash\n0.048 PathUSD\n未偿债务（含 fee）\n0 PathUSD\nTier 本金上限\n0.2 PathUSD\n借款 fee\n15%\n任务授信\n可申请\n真实还款 / 违约\n1 / 0\n声誉还款 / 成功 / 违约\n1 / 1 / 0\n\n已核验快照 · chain 42431 · 区块 #39298312\n区块时间 2026/10/13 01:09:55\n读取时间 2026/10/13 01:10:07\n\n完整读取 8 项任务，本人 2 项。成功信用还款写入声誉后，Underwriter 更新评分与 Tier。每笔授信仍需核验任务和协议额度。",
+          "requestsText": "请求记录\n最近 100 条 · 未结束请求保留\nPi 连续运行\n[\n失败]\n\n2026/10/12 23:58:49\n\nceaa64c6-ccd0-4c77-b0e7-c4ce3757f4fd\n\nNO_FEASIBLE_CANDIDATE\n\n阶段 Stopped\n已确认推理费 0.14 PathUSD\n连续完成 1 单\n查看请求与凭证\n现金入账\n[\n已完成]\n\n2026/10/12 23:28:23\n\n1b650d7e-aebf-44cb-91a3-78d09b999297\n阶段 Deposited\n已确认推理费 0 PathUSD\n查看请求与凭证\nPi 连续运行\n[\n失败]\n\n2026/10/12 23:22:52\n\n03f7295e-ea84-453a-88ad-5a4184ce47a8\n\n推理服务异常，已补偿退款并终止任务。\n\n阶段 Stopped\n已确认推理费 0.01 PathUSD\n连续完成 0 单\n查看请求与凭证\nPi 连续运行\n[\n失败]\n\n2026/10/12 22:16:06\n\nbde4ae39-7469-4348-a47b-bf69ab194d24\n\n已达到本次连续运行的时间上限。\n\n阶段 Stopped\n已确认推理费 0 PathUSD\n连续完成 0 单\n查看请求与凭证\n现金入账\n[\n已完成]\n\n2026/10/12 21:38:14\n\n09901dd4-05cf-4ce9-9064-c821aeaf49c1\n阶段 Deposited\n已确认推理费 0 PathUSD\n查看请求与凭证\n初始化 Agent\n[\n已完成]\n\n2026/10/12 21:37:53\n\n4103c345-a083-4cb9-b9f0-40bf56014029\n阶段 Ready\n已确认推理费 0 PathUSD\n查看请求与凭证",
+          "transactionLinks": [
+            "https://explore.testnet.tempo.xyz/tx/0x1010ffe1ae307752fdea2df90011a2686bdd26e2d1e8f0223c9b583cd3e84846",
+            "https://explore.testnet.tempo.xyz/tx/0x4037e4ad8a36fa176537354766858d1276ae8a30c4adbf1f38745659fb546663",
+            "https://explore.testnet.tempo.xyz/tx/0xa95c19db3bfc37411214358b76366a418c04a8253ee7816ef7290bd5e1c859ac"
+          ],
+          "alerts": []
+        },
+        {
+          "kind": "autonomy-validation",
+          "id": "2436317c-21e7-426a-8de8-5eebcfadeaa2",
+          "name": "Tempo real autonomy-validation",
+          "finance": {
+            "status": "confirmed",
+            "observedAt": "2026-10-12T17:10:22.048Z",
+            "chainId": "42431",
+            "agentId": "49",
+            "wallet": "0xA8E6DD15F3291f2aecAe44dbca937928d3c01F0F",
+            "cashRaw": "67200",
+            "debtRaw": "0",
+            "scannedTaskCount": 8,
+            "ownedTaskCount": 2,
+            "block": {
+              "number": 39298334,
+              "hash": "0x4ecad9412e720e4cfe0a6f8d2453002422fe31b7b4b476eaf8ff33ba7ce0bc2d",
+              "timestamp": 1791825008
+            },
+            "credit": {
+              "score": "640",
+              "tier": "B",
+              "tierCapRaw": "500000",
+              "feeBps": "800",
+              "eligible": true,
+              "rejection": null
+            },
+            "policy": {
+              "maxCashPerTxRaw": "120000",
+              "maxDebtPerTxRaw": "120000",
+              "maxDebtPerDayRaw": "300000",
+              "ownerFrozen": false
+            },
+            "counts": {
+              "repayments": "2",
+              "defaults": "0",
+              "mirrorRepayments": "2",
+              "successes": "2",
+              "mirrorDefaults": "0"
+            }
+          },
+          "financialText": "信用飞轮\n刷新\n\nCHAIN IDENTITY · #49\n\nInferScore 640\nTier B\ncash\n0.0672 PathUSD\n未偿债务（含 fee）\n0 PathUSD\nTier 本金上限\n0.5 PathUSD\n借款 fee\n8%\n任务授信\n可申请\n真实还款 / 违约\n2 / 0\n声誉还款 / 成功 / 违约\n2 / 2 / 0\n\n已核验快照 · chain 42431 · 区块 #39298334\n区块时间 2026/10/13 01:10:08\n读取时间 2026/10/13 01:10:22\n\n完整读取 8 项任务，本人 2 项。成功信用还款写入声誉后，Underwriter 更新评分与 Tier。每笔授信仍需核验任务和协议额度。",
+          "requestsText": "请求记录\n最近 100 条 · 未结束请求保留\nPi 连续运行\n[\n已完成]\n\n2026/10/13 01:00:19\n\n434cb42a-4284-456d-aea1-9c27f16234e2\n\n已达到本次连续运行的任务数上限。\n\n阶段 Completed\n已确认推理费 0.26 PathUSD\n连续完成 2 单\n查看请求与凭证\n现金入账\n[\n已完成]\n\n2026/10/13 00:54:37\n\n165996ec-dcb2-4036-a5d2-5c7fa9b00d41\n阶段 Deposited\n已确认推理费 0 PathUSD\n查看请求与凭证\n初始化 Agent\n[\n已完成]\n\n2026/10/13 00:53:59\n\nd939b12a-05c0-4426-9327-a5160546f2ec\n阶段 Ready\n已确认推理费 0 PathUSD\n查看请求与凭证",
+          "transactionLinks": [
+            "https://explore.testnet.tempo.xyz/tx/0xc846e86e10bf96854a73b22a1a360f41df715e94243a67e3a34dc0cdcd94e665",
+            "https://explore.testnet.tempo.xyz/tx/0x2057a19fa40c4aef7da230f5bbdc4b28b62a193460a7b23af640d44fcaa049fc"
+          ],
+          "alerts": []
+        }
+      ],
+      "visibility": [
+        {
+          "at": "2026-10-12T17:09:28.064Z",
+          "state": "visible"
+        },
+        {
+          "at": "2026-10-12T17:10:23.047Z",
+          "state": "hidden"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "surface": "advanced",
+      "issue": "SSR acceptance failed",
+      "message": "Protocol SSR must complete a verified snapshot\n\nfalse !== true\n"
+    }
+  ],
+  "modelCountersBefore": {
+    "acceptedRequests": 12,
+    "attemptRecords": 24
+  },
+  "advanced": {
+    "status": 200,
+    "headersMs": 41,
+    "totalMs": 47611,
+    "configuredSnapshot": false,
+    "tempoAssetVisible": true,
+    "unknownLedger": true,
+    "fixture": false
+  },
+  "modelCountersAfter": {
+    "acceptedRequests": 12,
+    "attemptRecords": 24
+  },
+  "noNewModelRequests": true
+}

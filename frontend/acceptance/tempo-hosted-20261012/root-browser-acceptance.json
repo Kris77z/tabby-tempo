@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "auditor": "root",
+  "chainId": "42431",
+  "hostedPages": {
+    "source": "final-report.json",
+    "build": ".next-tempo-budget",
+    "observedAt": "2026-10-12T17:07:57.858Z",
+    "surfaces": [
+      {
+        "name": "desktop",
+        "agents": 4,
+        "screenshots": 9,
+        "pageErrors": 0
+      },
+      {
+        "name": "mobile",
+        "agents": 4,
+        "screenshots": 21,
+        "pageErrors": 0
+      }
+    ],
+    "noNewModelRequests": true
+  },
+  "advanced": {
+    "source": "root-advanced-recheck.json",
+    "build": ".next-tempo-advanced",
+    "observedAt": "2026-10-12T17:29:14.093Z",
+    "status": 200,
+    "headersMs": 15,
+    "totalMs": 68661,
+    "configuredSnapshot": true,
+    "tempoAssetVisible": true,
+    "unknownLedger": false,
+    "fixture": false,
+    "htmlSha256": "8cbd3e06209f7f78270a9a70371bd054b9331b9b4d35e7aae6e20713875dd6a0",
+    "noNewModelRequests": true
+  },
+  "retainedInitialFailure": {
+    "source": "final-report-before-advanced-fix.json",
+    "issue": "advanced logs RPC HTTP 429; fixed and independently rechecked"
+  },
+  "scope": "Real local HTTP and Node owner signature; injected browser wallet interface, not extension-wallet acceptance",
+  "method": "Prior desktop/mobile results retained; targeted SSR regression after server transport-only fix; no paid operations"
+}

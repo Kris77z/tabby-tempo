@@ -1,0 +1,9 @@
+{
+  "observedAt": "2026-10-13T00:46:56.296Z",
+  "build": ".next-tempo-gamefi",
+  "authenticated": false,
+  "businessOperations": 0,
+  "surfaces": [],
+  "passed": false,
+  "error": "The input did not match the regular expression /免费德州|赞助|参赛/. Input:\n\n'我的 Agent\\n任务\\n竞技场\\n资金与额度\\n设置\\n\\n› 等待钱包签名登录_'\n"
+}

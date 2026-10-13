@@ -1,0 +1,326 @@
+{
+  "verified": true,
+  "verifiedAt": "2026-10-12T17:07:34.676Z",
+  "chainId": 42431,
+  "method": "Independent local journal inspection, SHA-256 code and Arena evidence reconstruction, linked to independently verified canonical receipts",
+  "arena": [
+    {
+      "taskId": "2",
+      "agentId": "47",
+      "runId": "a7ca7c29-b66e-4dfd-a384-f3cde95f90d1",
+      "mode": "docker",
+      "codeHash": "7901bc918e449cc3f244cbaa677e3e090f2882725f5b1c175f5530532cda5d28",
+      "evidenceHash": "6e110cfd57ffac89b64da89d7b308a415de382e320d29615b3f6de84e6813c7c",
+      "passedCases": 4,
+      "settlementTxHash": "0xfa76a0e26f7e60be9bdb2450ccaa98cd3e24bfbe6d5e48460a7e42c0afc06bfc"
+    },
+    {
+      "taskId": "5",
+      "agentId": "49",
+      "runId": "8402cc2c-0c3f-4808-9d6f-476c7aca3faa",
+      "mode": "docker",
+      "codeHash": "41297124c1d19fdce0a247a97a1b442671642925e1845e07779759470b7ec839",
+      "evidenceHash": "f074766217d22f7f465dd39bb97a6ced9c4eea1816393dde73630ede8ab46467",
+      "passedCases": 5,
+      "settlementTxHash": "0x5c5462ba4bb634fab04c2674c20576fb08055a5733c885fd7393c1c93e05c5a8"
+    },
+    {
+      "taskId": "6",
+      "agentId": "49",
+      "runId": "a8ccc6ef-4459-4fc7-84b2-fe67a69bfda8",
+      "mode": "docker",
+      "codeHash": "a48bccf8e37a2d5a9d5e8b4ee4e363dd0ea94ce070e73aa1ea710208341e8e30",
+      "evidenceHash": "86d12eb8488cdeacb86c610f8d4b49e73a561bde5ad8fafc6d426e3a23e12624",
+      "passedCases": 4,
+      "settlementTxHash": "0x6d7fa54c73679c6ff7c9a0c6f43fc0c590c48e19a8e85a300fb5e403b53f31c4"
+    },
+    {
+      "taskId": "1",
+      "agentId": "46",
+      "runId": "c842bfcd-407e-41fa-9462-96b039332743",
+      "mode": "docker",
+      "codeHash": "41297124c1d19fdce0a247a97a1b442671642925e1845e07779759470b7ec839",
+      "evidenceHash": "f074766217d22f7f465dd39bb97a6ced9c4eea1816393dde73630ede8ab46467",
+      "passedCases": 5,
+      "settlementTxHash": "0xba74d0e4fe14748485a036d3dc8f3ed35463087b9225c3ad1326ddb00d12f313"
+    },
+    {
+      "taskId": "4",
+      "agentId": "48",
+      "runId": "e3a58fab-a245-40a8-8a3c-bb563ae64507",
+      "mode": "docker",
+      "codeHash": "5b650ce55df74fdfaac2ab8fbea184415a78f5ffbeb91aac002795cb3b0a3a60",
+      "evidenceHash": "3497bb77df1f2c7f1f5939f90daea51ceb4d5d0d7b98525fb7e40475502fffe6",
+      "passedCases": 4,
+      "settlementTxHash": "0xde0f1805d0088df97a72c808f8a9e998610ebba1ff76a941d9735ec7591b2b06"
+    }
+  ],
+  "modelCalls": [
+    {
+      "attempt": 1,
+      "model": "kimi-k2.6",
+      "phase": "Response",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 190,
+        "completion_tokens": 44,
+        "total_tokens": 234,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1
+        }
+      },
+      "responseFilePresent": true
+    },
+    {
+      "attempt": 2,
+      "model": "kimi-k3",
+      "phase": "Response",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 334,
+        "completion_tokens": 92,
+        "total_tokens": 426,
+        "completion_tokens_details": {
+          "reasoning_tokens": 20
+        },
+        "prompt_tokens_details": {
+          "cache_write_tokens": 256
+        }
+      },
+      "responseFilePresent": true
+    },
+    {
+      "attempt": 3,
+      "model": "kimi-k2.6",
+      "phase": "Response",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 825,
+        "completion_tokens": 24,
+        "total_tokens": 849,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1
+        }
+      },
+      "responseFilePresent": true
+    },
+    {
+      "attempt": 4,
+      "model": "kimi-k2.6",
+      "phase": "OutcomeUnknown",
+      "responseFilePresent": false
+    },
+    {
+      "attempt": 5,
+      "model": "kimi-k2.6",
+      "phase": "Response",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 825,
+        "completion_tokens": 24,
+        "total_tokens": 849,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1
+        }
+      },
+      "responseFilePresent": true
+    },
+    {
+      "attempt": 6,
+      "model": "kimi-k2.6",
+      "phase": "Response",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 228,
+        "completion_tokens": 54,
+        "total_tokens": 282,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1
+        }
+      },
+      "responseFilePresent": true
+    },
+    {
+      "attempt": 7,
+      "model": "kimi-k2.6",
+      "phase": "OutcomeUnknown",
+      "responseFilePresent": false
+    },
+    {
+      "attempt": 8,
+      "model": "kimi-k2.6",
+      "phase": "Response",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 825,
+        "completion_tokens": 24,
+        "total_tokens": 849,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1
+        }
+      },
+      "responseFilePresent": true
+    },
+    {
+      "attempt": 9,
+      "model": "kimi-k2.6",
+      "phase": "Response",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 825,
+        "completion_tokens": 24,
+        "total_tokens": 849,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1
+        }
+      },
+      "responseFilePresent": true
+    },
+    {
+      "attempt": 10,
+      "model": "kimi-k2.6",
+      "phase": "Response",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 190,
+        "completion_tokens": 44,
+        "total_tokens": 234,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1
+        }
+      },
+      "responseFilePresent": true
+    },
+    {
+      "attempt": 11,
+      "model": "kimi-k2.6",
+      "phase": "Response",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 825,
+        "completion_tokens": 24,
+        "total_tokens": 849,
+        "cached_tokens": 512,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "responseFilePresent": true
+    },
+    {
+      "attempt": 12,
+      "model": "kimi-k2.6",
+      "phase": "Response",
+      "httpStatus": 200,
+      "usage": {
+        "prompt_tokens": 217,
+        "completion_tokens": 48,
+        "total_tokens": 265,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1
+        }
+      },
+      "responseFilePresent": true
+    }
+  ],
+  "modelRequests": 12,
+  "successfulModelResponses": 10,
+  "unknownModelOutcomes": 2,
+  "plannerCompensation": {
+    "verified": true,
+    "verifiedAt": "2026-10-12T15:52:41.299Z",
+    "chainId": 42431,
+    "block": {
+      "number": 39290770,
+      "hash": "0x6cefa479df87b9a243e758791fa8d884f20d12b06a0b7a94f5c4a4fda38b13bf"
+    },
+    "agentId": "48",
+    "taskId": "0",
+    "paymentId": "0x4152f0c90c92093b6ab93301e531de114d29f45616708dabdd1c7253cc799481",
+    "refundedRaw": "10000",
+    "debtReducedRaw": "0",
+    "toCashRaw": "10000",
+    "originalInferenceState": "Unknown",
+    "originalDispatchAttempt": 7,
+    "permanentlyResolved": true,
+    "noReputationCredit": true,
+    "resolution": {
+      "version": 1,
+      "paymentId": "0x4152f0c90c92093b6ab93301e531de114d29f45616708dabdd1c7253cc799481",
+      "resolutionId": "b4c0d72a-afcb-43fb-9340-2c906ecf85e3",
+      "expectedAttemptsDigest": "0x869658689e0f3c83af260c01dbea8b4a8e0fb42a0280226d64d3d6780bddc92c",
+      "evidenceDigest": "0x63b736089854924293609b741953b0eac5942c6ad4a2dd6f37dc79c1399747dc",
+      "reason": "operator-accepted-nondelivery-cost",
+      "resolvedAt": 1791819897320
+    },
+    "refund": {
+      "txHash": "0x8de5a170ac72568abf470a73536098e56dcc2373e298dbd1b416ace6fd65f4e0",
+      "status": 1,
+      "blockNumber": 39290064
+    },
+    "events": [
+      {
+        "name": "RefundProcessed",
+        "args": {
+          "paymentId": "0x4152f0c90c92093b6ab93301e531de114d29f45616708dabdd1c7253cc799481",
+          "refundId": "0x748c1b8d76d322edfb712d9f8af5b967bb3e41cd641e512050b25568aa5add6e",
+          "amount": "10000",
+          "debtReduced": "0",
+          "toCash": "10000"
+        }
+      }
+    ],
+    "vendorCost": "unknown; operator accepts uncertain supplier billing"
+  },
+  "unknownSupplierCost": "unknown; operator accepted uncertain cost",
+  "autonomy": {
+    "label": "autonomy-validation",
+    "agentId": "49",
+    "requestId": "434cb42a-4284-456d-aea1-9c27f16234e2",
+    "completedTasks": 2,
+    "config": {
+      "version": 1,
+      "sessionId": "434cb42a-4284-456d-aea1-9c27f16234e2",
+      "maxTasks": 2,
+      "maxSpendRaw": "300000",
+      "deadlineMs": 1791825318721,
+      "maxDecisions": 3,
+      "models": [
+        "kimi-k2.6",
+        "kimi-k3"
+      ],
+      "funding": [
+        "cash",
+        "credit"
+      ],
+      "decisionReserveRaw": "10000"
+    },
+    "totalBudgetRaw": "300000",
+    "spentRaw": "260000",
+    "reservedRaw": "0"
+  },
+  "retainedPriorWindow": {
+    "agentId": "48",
+    "requestId": "ceaa64c6-ccd0-4c77-b0e7-c4ce3757f4fd",
+    "status": "Failed",
+    "result": {
+      "phase": "Stopped",
+      "terminal": true,
+      "success": false,
+      "chargedRaw": "140000",
+      "refundedRaw": "10000",
+      "reason": "NO_FEASIBLE_CANDIDATE",
+      "autonomousTasks": 1
+    },
+    "totalBudgetRaw": "300000",
+    "spentRaw": "150000",
+    "reservedRaw": "0"
+  },
+  "replay": {
+    "noNewTransactions": true,
+    "noNewModelRequests": true
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-10-12T13:14:50.028Z",
+  "chainId": "42431",
+  "deployments": [
+    {
+      "id": "deploy-ERC8004Adapter",
+      "hash": "0x3a804c14ef997d384410ad5aac50bba912577da3a4ddc1456221c070922e45e1",
+      "contract": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+      "block": 39275173,
+      "type": 2,
+      "gasUsed": "4722176",
+      "feeToken": "0x20c0000000000000000000000000000000000000",
+      "feePayer": "0x119e2eefe529815f7f5f24687ba6f6b585176b14"
+    },
+    {
+      "id": "deploy-CreditManager",
+      "hash": "0x87ae7066477543704c249c781140a5b4bb21efa4503f29a0a420e7c56e47f720",
+      "contract": "0xc1fBC944b6921C01195Ab5d1c9B73309A4c7554C",
+      "block": 39275194,
+      "type": 2,
+      "gasUsed": "18275445",
+      "feeToken": "0x20c0000000000000000000000000000000000000",
+      "feePayer": "0x119e2eefe529815f7f5f24687ba6f6b585176b14"
+    },
+    {
+      "id": "deploy-AgentAccount",
+      "hash": "0xe1acab6981ce638e763418d20b580c2fa79f9907767378590f785fac25029014",
+      "contract": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+      "block": 39275207,
+      "type": 2,
+      "gasUsed": "9789093",
+      "feeToken": "0x20c0000000000000000000000000000000000000",
+      "feePayer": "0x119e2eefe529815f7f5f24687ba6f6b585176b14"
+    },
+    {
+      "id": "deploy-TaskEscrow",
+      "hash": "0x1474859a326ad01046211c98f425903c3043f3b9a6dd14e4b97bba67c716c42b",
+      "contract": "0x665aea43F238F646d6FD712b465e38026ae59e06",
+      "block": 39275224,
+      "type": 2,
+      "gasUsed": "12849622",
+      "feeToken": "0x20c0000000000000000000000000000000000000",
+      "feePayer": "0x119e2eefe529815f7f5f24687ba6f6b585176b14"
+    }
+  ],
+  "adapter": {
+    "identity": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    "reputation": "0x8004B663056A597Dffe9eCcC1965A193B7388713",
+    "feedbackGasLimit": "4000000"
+  }
+}

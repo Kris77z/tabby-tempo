@@ -1,0 +1,34 @@
+{
+  "name": "@agentfuel/frontend",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "next dev --webpack --hostname 127.0.0.1",
+    "build": "next build --webpack",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts",
+    "test:browser": "playwright test",
+    "dev:fixture": "FRONTEND_MODE=fixture next dev --webpack --hostname 127.0.0.1"
+  },
+  "dependencies": {
+    "@agentfuel/arena": "*",
+    "@agentfuel/sdk": "*",
+    "ethers": "^6.15.0",
+    "next": "16.3.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "@agentfuel/pi-loop": "*"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

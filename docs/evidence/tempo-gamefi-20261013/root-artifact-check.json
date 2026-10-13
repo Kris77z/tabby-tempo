@@ -1,0 +1,7 @@
+{
+  "privateValuesChecked": 19,
+  "publicFilesChecked": 13,
+  "matches": 0,
+  "idempotenceSnapshotsEqual": true,
+  "independentGameDigestsMatchReplayEvidence": true
+}

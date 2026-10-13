@@ -1,0 +1,11 @@
+{
+  "observedFrom": "private identity-bound ledger and independent hand replay",
+  "ledgerSha256": "06e5ac1836aec5d519c84631ff5e67590da1db034b07e7f6e94f9fe2e973a80c",
+  "grantId": "75e6a55b-aec5-4c86-b084-929edc522f03",
+  "replayDigest": "5544be665490913f4364f5221e9f2fe84241e738658145786ec890065b7cad1b",
+  "winnerAgentId": "43",
+  "winnerTokens": 4096,
+  "entrantAgentId": "74",
+  "entrantTokens": 0,
+  "redemptions": 0
+}

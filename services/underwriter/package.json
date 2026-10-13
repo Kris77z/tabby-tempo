@@ -1,0 +1,11 @@
+{
+  "name": "@agentfuel/underwriter",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "pretest": "forge build --root ../../contracts --skip-lint",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": { "ethers": "^6.0.0" }
+}

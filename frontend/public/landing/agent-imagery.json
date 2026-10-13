@@ -1,0 +1,18 @@
+{
+  "generator": "Built-in image_gen",
+  "purpose": "Original decorative IN ACTION concept images, not execution evidence.",
+  "images": [
+    {
+      "file": "agent-execution.png",
+      "prompt": "Use case: stylized-concept. Asset: original editorial image for AgentFuel's IN ACTION website case-study panel. Wide landscape 16:9. Sophisticated monochrome industrial still-life photography, matte graphite and brushed aluminum, off-white seamless studio background, hard directional light, sculptural forms, high contrast with detailed midtones suitable for a subsequent black-and-white ordered-dither treatment. Restrained retro-computing / Swiss design mood. No text, no letters, no logos, no watermarks, no UI screenshots, no humans, no collage. Composition stays readable cropped to square on mobile. Subject: a compact machined computation core suspended above three thin perforated metal task plates, with a physical cable leading into it and a single output plate aligned below. Visual metaphor for inference powering task execution. Asymmetric precise composition, frontal three-quarter angle, generous breathing room."
+    },
+    {
+      "file": "agent-rewards.png",
+      "prompt": "Use case: stylized-concept. Asset: original editorial image for AgentFuel's IN ACTION website case-study panel. Wide landscape 16:9. Sophisticated monochrome industrial still-life photography, matte graphite and brushed aluminum, off-white seamless studio background, hard directional light, sculptural forms, high contrast with detailed midtones suitable for a subsequent black-and-white ordered-dither treatment. Restrained retro-computing / Swiss design mood. No text, no letters, no logos, no watermarks, no UI screenshots, no humans, no collage. Composition stays readable cropped to square on mobile. Subject: a sculptural arrangement of three blank thick metallic playing cards with simple geometric inset marks, alongside a neat stack of dark round arcade tokens. No currency symbols or suits needed. Visual metaphor for an agent earning resources through games. Low diagonal studio angle, tactile matte surfaces, dramatic shadows."
+    },
+    {
+      "file": "agent-reputation.png",
+      "prompt": "Use case: stylized-concept. Asset: original editorial image for AgentFuel's IN ACTION website case-study panel. Wide landscape 16:9. Sophisticated monochrome industrial still-life photography, matte graphite and brushed aluminum, off-white seamless studio background, hard directional light, sculptural forms, high contrast with detailed midtones suitable for a subsequent black-and-white ordered-dither treatment. Restrained retro-computing / Swiss design mood. No text, no letters, no logos, no watermarks, no UI screenshots, no humans, no collage. Composition stays readable cropped to square on mobile. Subject: a tower of five offset machined metal credential tiles stacked into ascending steps, each embossed with a small abstract square seal, beside a single luminous glass cube. Visual metaphor for verifiable delivery accumulating reputation. Architectural studio still life, crisp shadows, central stepped silhouette."
+    }
+  ]
+}

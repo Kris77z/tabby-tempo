@@ -1,0 +1,16 @@
+{
+  "name": "@agentfuel/provider-relay",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "refund": "tsx src/refund-cli.ts",
+    "pretest": "forge build --root ../../contracts --offline --skip-lint",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@agentfuel/sdk": "*",
+    "ethers": "^6.0.0",
+    "@agentfuel/pi-loop": "*"
+  }
+}

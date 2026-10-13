@@ -1,0 +1,115 @@
+import { test, expect } from "@playwright/test";
+import { Wallet } from "ethers";
+import { mkdir } from "node:fs/promises";
+import { resolve } from "node:path";
+import { agentId, owner, settings, uuid, makeAgent, syntheticHosted, unexpectedByPage, type Command } from "./hosted-harness";
+import { configureTerminal } from "./onboarding-steps";
+
+test.afterEach(async ({ page }) => { expect(unexpectedByPage.get(page)).toEqual([]); });
+
+test("onboarding: source terminal signs in, reviews six actual settings and selects the new Agent in dashboard", async ({ page }, info) => {
+  const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
+  const harness = await syntheticHosted(page, { authenticated: false, agents: [makeAgent({ id: "older-agent", name: "已有 Agent" })], createAtEnd: true });
+  await page.goto("/");
+  expect(harness.commands).toEqual([]);
+  await page.getByRole("link", { name: "CREATE YOUR AGENT", exact: true }).first().click();
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await expect(page.getByTestId("onboarding-terminal-header").locator('[data-testid="terminal-page-dot"]')).toHaveCount(3);
+  const shell = page.getByTestId("onboarding-terminal-shell");
+  expect(await shell.evaluate(element => getComputedStyle(element).backgroundColor)).toBe("rgb(22, 10, 2)");
+  const font = await shell.evaluate(element => { const css = getComputedStyle(element); return { family: css.fontFamily.split(",")[0], variable: css.getPropertyValue("--font-geist-mono") }; });
+  expect(font.family.replace(/['"]/g, "").trim()).toBe(font.variable.replace(/['"]/g, "").trim());
+  await page.getByRole("button", { name: "开始创建 ↵", exact: true }).click();
+  const banner = await page.getByTestId("onboarding-transcript").innerText();
+  expect(banner.split("\n").filter(line => /^[╔║╚]/.test(line)).map(line => line.length)).toEqual([34, 34, 34, 34]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  await page.getByRole("button", { name: "签名登录", exact: true }).click();
+  await configureTerminal(page, { ...settings, modelId: "synthetic-model", strategy: "conservative" }, true);
+  const review = page.getByRole("region", { name: "确认 Agent 配置" });
+  await expect(review).toContainText("Synthetic Model"); await expect(review).toContainText("保守");
+  expect(harness.commands.filter(command => command.path === "/api/hosted/agents" && command.method === "POST")).toEqual([]);
+  await page.screenshot({ path: info.outputPath("source-terminal-review.png"), fullPage: true });
+  const directory = resolve("acceptance/onboarding"); await mkdir(directory, { recursive: true });
+  await page.screenshot({ path: resolve(directory, `synthetic-terminal-review-${info.project.name}.png`), fullPage: true, style: "nextjs-portal { display:none !important; }" });
+  await page.getByRole("button", { name: "确认创建", exact: true }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByLabel("当前 Agent", { exact: true })).toHaveValue(agentId);
+  expect(harness.commands.filter(command => command.path === "/api/hosted/agents" && command.method === "POST").map(command => command.body))
+    .toEqual([{ ...settings, modelId: "synthetic-model", strategy: "conservative", requestId: expect.stringMatching(uuid) }]);
+  expect(harness.signed.map(signature => signature.message)).toEqual([harness.challenge.message]);
+  expect(harness.rpcCalls.every(call => ["eth_requestAccounts", "eth_accounts", "eth_chainId", "personal_sign"].includes(call.method))).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test("onboarding: an uncertain create reloads and confirms the original UUID and all six parameters", async ({ page }) => {
+  const harness = await syntheticHosted(page, { firstCreateFailure: "503", agents: [makeAgent({ id: "older-agent" })] });
+  const pendingKey = `agentfuel:hosted:pending:${owner.address.toLowerCase()}`;
+  await page.goto("/onboarding");
+  await configureTerminal(page, { ...settings, name: "原请求 Agent", allowCredit: false });
+  await page.getByRole("button", { name: "确认创建", exact: true }).click();
+  await expect(page.getByRole("button", { name: "继续确认原请求", exact: true })).toBeEnabled();
+  const original = harness.commands.find(command => command.path === "/api/hosted/agents" && command.method === "POST")!.body;
+  await page.reload();
+  const review = page.getByRole("region", { name: "确认 Agent 配置" });
+  await expect(review).toContainText("原请求 Agent"); await expect(review).toContainText(String(original.requestId)); await expect(review).toContainText("关闭");
+  await expect(page.getByRole("button", { name: "确认创建", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "继续确认原请求", exact: true }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByLabel("当前 Agent", { exact: true })).toHaveValue(agentId);
+  expect(harness.commands.filter(command => command.path === "/api/hosted/agents" && command.method === "POST").map(command => command.body)).toEqual([original, original]);
+  expect(await page.evaluate(key => localStorage.getItem(key), pendingKey)).toBeNull();
+});
+
+test("onboarding: an unconfigured service never offers a model, fake registration or create request", async ({ page }) => {
+  const harness = await syntheticHosted(page, { error: { status: 503, code: "HOSTED_NOT_CONFIGURED" } });
+  await page.goto("/onboarding");
+  await page.getByRole("button", { name: "开始创建 ↵", exact: true }).click();
+  await expect(page.getByRole("button", { name: "签名登录", exact: true })).toBeDisabled();
+  await expect(page.getByRole("alert").filter({ hasText: "托管服务尚未配置" })).toBeVisible();
+  await expect(page.getByLabel("模型", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "确认创建", exact: true })).toHaveCount(0);
+  expect(harness.commands.filter(command => command.method !== "GET")).toEqual([]); expect(harness.rpcCalls).toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+});
+
+test("onboarding: leaving an in-flight create keeps the destination and stops hosted reads", async ({ page }) => {
+  let release!: () => void, arrived!: () => void, held: Command | undefined;
+  const gate = new Promise<void>(resolve => { release = resolve; }), accepted = new Promise<void>(resolve => { arrived = resolve; });
+  const harness = await syntheticHosted(page, { agents: [makeAgent({ id: "older-agent" })], beforeWrite: async command => {
+    if (command.path === "/api/hosted/agents" && command.method === "POST") { held = command; arrived(); await gate; }
+  } });
+  try {
+    await page.goto("/onboarding"); await configureTerminal(page, settings);
+    await page.getByRole("button", { name: "确认创建", exact: true }).click(); await accepted;
+    await page.getByRole("link", { name: "返回 AgentFuel 产品首页", exact: true }).click();
+    await expect(page).toHaveURL(/:3014\/$/);
+    const reads = harness.commands.filter(command => command.method === "GET").length;
+    const response = page.waitForResponse(value => value.url().endsWith("/api/hosted/agents") && value.request().method() === "POST");
+    release(); await (await response).finished();
+    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await expect(page).toHaveURL(/:3014\/$/); expect(held).toBeDefined();
+    expect(harness.commands.filter(command => command.method === "GET")).toHaveLength(reads);
+    // The same provider continues to notice wallet changes outside the hosted routes.
+    await page.evaluate(() => (window as unknown as { ethereum: { __emit(event: string, payload: unknown): void } }).ethereum.__emit("accountsChanged", []));
+    await expect.poll(() => harness.commands.filter(command => command.path === "/api/hosted/auth/logout").length).toBe(1);
+    await page.getByRole("link", { name: "进入工作台", exact: true }).first().click();
+    await expect(page.getByRole("button", { name: "签名登录", exact: true })).toBeEnabled();
+    await expect(page.getByLabel("当前 Agent", { exact: true })).toHaveCount(0);
+  } finally { release(); }
+});
+
+test("onboarding: changing to another owner clears transcript, review and all draft fields before signing in", async ({ page }) => {
+  const harness = await syntheticHosted(page), other = new Wallet("0x" + "4".repeat(64));
+  await page.goto("/onboarding"); await configureTerminal(page, { ...settings, name: "A 的私有配置名称" });
+  await expect(page.getByRole("region", { name: "确认 Agent 配置" })).toContainText("A 的私有配置名称");
+  harness.useOwner(other);
+  await page.evaluate(address => (window as unknown as { ethereum: { __emit(event: string, payload: unknown): void } }).ethereum.__emit("accountsChanged", [address]), other.address);
+  await expect(page.getByRole("region", { name: "确认 Agent 配置" })).toHaveCount(0);
+  await expect(page.getByTestId("onboarding-transcript")).not.toContainText(owner.address);
+  await expect(page.getByTestId("onboarding-transcript")).not.toContainText("A 的私有配置名称");
+  await page.getByRole("button", { name: "签名登录", exact: true }).click();
+  await expect(page.getByLabel("名称", { exact: true })).toHaveValue("");
+  await expect(page.getByTestId("onboarding-transcript")).toContainText(other.address);
+  await expect(page.getByRole("button", { name: "确认创建", exact: true })).toHaveCount(0);
+  expect(harness.commands.filter(command => command.path === "/api/hosted/agents" && command.method === "POST")).toEqual([]);
+});

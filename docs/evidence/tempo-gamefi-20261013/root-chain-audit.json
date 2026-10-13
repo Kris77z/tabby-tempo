@@ -1,0 +1,260 @@
+{
+  "observedAt": "2026-10-13T01:07:14.928Z",
+  "chainId": "42431",
+  "block": {
+    "number": 39345159,
+    "hash": "0x022c60a9d27fc956c9bbe76e89c9853e29e81c1b97a501d583e7cd8aaa1e5fda"
+  },
+  "actors": [
+    {
+      "label": "cash",
+      "id": "73",
+      "wallet": "0xA2F5Bdd12B24FEc85b0F4151D43b0528Dd05CBC2",
+      "cash": "20000",
+      "repayments": "0",
+      "defaults": "0",
+      "policy": [
+        "120000",
+        "0",
+        "0",
+        "false"
+      ],
+      "walletBalance": "978518",
+      "nonceLatest": 4,
+      "noncePending": 4
+    },
+    {
+      "label": "credits",
+      "id": "74",
+      "wallet": "0xEbFD1Ea13b4b3A89A531245c5C2af639F7dE89f8",
+      "cash": "0",
+      "repayments": "0",
+      "defaults": "0",
+      "policy": [
+        "120000",
+        "0",
+        "0",
+        "false"
+      ],
+      "walletBalance": "998730",
+      "nonceLatest": 2,
+      "noncePending": 2
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "7",
+      "agentId": "0",
+      "status": "1",
+      "reward": "150000",
+      "escrowBalance": "150000",
+      "loan": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    },
+    {
+      "taskId": "8",
+      "agentId": "0",
+      "status": "1",
+      "reward": "150000",
+      "escrowBalance": "150000",
+      "loan": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    }
+  ],
+  "pool": "10058800",
+  "oldActors": [
+    {
+      "id": "46",
+      "cash": "58000"
+    },
+    {
+      "id": "47",
+      "cash": "58000"
+    },
+    {
+      "id": "48",
+      "cash": "48000"
+    },
+    {
+      "id": "49",
+      "cash": "67200"
+    }
+  ],
+  "receipts": [
+    {
+      "label": "funding-cash",
+      "hash": "0x62013584b50fbce681efed2fc2be790d16e740d180f76da9a320e3e3ba523c04",
+      "blockNumber": 39342952,
+      "blockHash": "0x8e6422c5ac3e90955e3ba7f720be9e9d3b3398903c6a6d737949a34d5e5169ec",
+      "status": 1,
+      "from": "0x20D5781919a4f9C5B1a3bFC9dC4152bfd2998387",
+      "to": "0x20C0000000000000000000000000000000000000",
+      "chainId": "42431",
+      "tokenEvents": [
+        {
+          "event": "Transfer",
+          "from": "0x20D5781919a4f9C5B1a3bFC9dC4152bfd2998387",
+          "to": "0xA2F5Bdd12B24FEc85b0F4151D43b0528Dd05CBC2",
+          "amount": "1000000"
+        },
+        {
+          "event": "Transfer",
+          "from": "0x20D5781919a4f9C5B1a3bFC9dC4152bfd2998387",
+          "to": "0xfeEC000000000000000000000000000000000000",
+          "amount": "169"
+        }
+      ]
+    },
+    {
+      "label": "funding-credits",
+      "hash": "0x767b1124c95075cce31ac551d0b9afb6ff4672490c07f8752aaf3604dcf8eb0a",
+      "blockNumber": 39343086,
+      "blockHash": "0x98645f61e7fac535d84d127949903e7e7704432412b1e3b7e0f7088ea1b3dfde",
+      "status": 1,
+      "from": "0x20D5781919a4f9C5B1a3bFC9dC4152bfd2998387",
+      "to": "0x20C0000000000000000000000000000000000000",
+      "chainId": "42431",
+      "tokenEvents": [
+        {
+          "event": "Transfer",
+          "from": "0x20D5781919a4f9C5B1a3bFC9dC4152bfd2998387",
+          "to": "0xEbFD1Ea13b4b3A89A531245c5C2af639F7dE89f8",
+          "amount": "1000000"
+        },
+        {
+          "event": "Transfer",
+          "from": "0x20D5781919a4f9C5B1a3bFC9dC4152bfd2998387",
+          "to": "0xfeEC000000000000000000000000000000000000",
+          "amount": "169"
+        }
+      ]
+    },
+    {
+      "label": "own-cash-deposit",
+      "hash": "0x07c791a18ae4a0b89d3e68016e4e30a3e107363e6b6fc689ab8781ad68791e32",
+      "blockNumber": 39343027,
+      "blockHash": "0x72d7e4642ad4ae78eee01ae5042e3479a7bb3c6a3cbf1e61dfcbcf88a1cd4e9f",
+      "status": 1,
+      "from": "0xA2F5Bdd12B24FEc85b0F4151D43b0528Dd05CBC2",
+      "to": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+      "chainId": "42431",
+      "tokenEvents": [
+        {
+          "event": "Transfer",
+          "from": "0xA2F5Bdd12B24FEc85b0F4151D43b0528Dd05CBC2",
+          "to": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+          "amount": "20000"
+        },
+        {
+          "event": "Transfer",
+          "from": "0xA2F5Bdd12B24FEc85b0F4151D43b0528Dd05CBC2",
+          "to": "0xfeEC000000000000000000000000000000000000",
+          "amount": "192"
+        }
+      ]
+    },
+    {
+      "label": "receipt-1-approve.json",
+      "hash": "0x238987395c900ae22b98666d71db24dbac5ec72b2a381d076647a6073a459cb0",
+      "blockNumber": 39344446,
+      "blockHash": "0xb2623f994f3697820f48fea4e63c008a09b6620aacb6d94c6c9f1e1b993d7bb4",
+      "status": 1,
+      "from": "0xD3235190110A780F1Ada5d04185B2aB8C80F135F",
+      "to": "0x20C0000000000000000000000000000000000000",
+      "chainId": "42431",
+      "tokenEvents": [
+        {
+          "event": "Approval",
+          "from": "0xD3235190110A780F1Ada5d04185B2aB8C80F135F",
+          "to": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+          "amount": "100000"
+        },
+        {
+          "event": "Transfer",
+          "from": "0xD3235190110A780F1Ada5d04185B2aB8C80F135F",
+          "to": "0xfeEC000000000000000000000000000000000000",
+          "amount": "20"
+        }
+      ]
+    },
+    {
+      "label": "receipt-1-deposit.json",
+      "hash": "0x2c5237537b3e27826efc13691bbfbf9780bed54206cc0e35986fb2b7c33bfef0",
+      "blockNumber": 39344451,
+      "blockHash": "0xb0c6eb83b5fcf82159e2561232962660d3d2527bde1d0bb7d7a619f9322fbd93",
+      "status": 1,
+      "from": "0xD3235190110A780F1Ada5d04185B2aB8C80F135F",
+      "to": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+      "chainId": "42431",
+      "tokenEvents": [
+        {
+          "event": "Transfer",
+          "from": "0xD3235190110A780F1Ada5d04185B2aB8C80F135F",
+          "to": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+          "amount": "100000"
+        },
+        {
+          "event": "Transfer",
+          "from": "0xD3235190110A780F1Ada5d04185B2aB8C80F135F",
+          "to": "0xfeEC000000000000000000000000000000000000",
+          "amount": "192"
+        }
+      ]
+    },
+    {
+      "label": "receipt-1-reward.json",
+      "hash": "0xcc237ae92a63859e01c6326ecfd5c33359a9c9fbf215a6f1c3e5679b421739c5",
+      "blockNumber": 39344432,
+      "blockHash": "0x52852d8c8359dade468be8c0a2a62424024160b21650e0db8717d78afac9d349",
+      "status": 1,
+      "from": "0x20D5781919a4f9C5B1a3bFC9dC4152bfd2998387",
+      "to": "0x20C0000000000000000000000000000000000000",
+      "chainId": "42431",
+      "tokenEvents": [
+        {
+          "event": "Transfer",
+          "from": "0x20D5781919a4f9C5B1a3bFC9dC4152bfd2998387",
+          "to": "0xD3235190110A780F1Ada5d04185B2aB8C80F135F",
+          "amount": "100000"
+        },
+        {
+          "event": "Transfer",
+          "from": "0x20D5781919a4f9C5B1a3bFC9dC4152bfd2998387",
+          "to": "0xfeEC000000000000000000000000000000000000",
+          "amount": "19"
+        }
+      ]
+    }
+  ],
+  "coreEvidenceUnchanged": true,
+  "platformWinner": {
+    "agentId": "43",
+    "wallet": "0xD3235190110A780F1Ada5d04185B2aB8C80F135F",
+    "cashRaw": "100000",
+    "note": "Platform bot is the actual game winner; distinct from the two hosted entrants."
+  },
+  "cashCreditedEvents": [
+    {
+      "hash": "0x07c791a18ae4a0b89d3e68016e4e30a3e107363e6b6fc689ab8781ad68791e32",
+      "agentId": "73",
+      "from": "0xA2F5Bdd12B24FEc85b0F4151D43b0528Dd05CBC2",
+      "amount": "20000"
+    },
+    {
+      "hash": "0x2c5237537b3e27826efc13691bbfbf9780bed54206cc0e35986fb2b7c33bfef0",
+      "agentId": "43",
+      "from": "0xD3235190110A780F1Ada5d04185B2aB8C80F135F",
+      "amount": "100000"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@agentfuel/sdk",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./protocol": "./src/protocol.ts" },
+  "dependencies": { "ethers": "^6.0.0" }
+}

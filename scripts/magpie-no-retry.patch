@@ -1,0 +1,73 @@
+--- a/internal/gateway/gateway.go
++++ b/internal/gateway/gateway.go
+@@ -22,6 +22,7 @@
+ 	"strconv"
+ 	"strings"
+ 	"sync"
++	"sync/atomic"
+ 	"time"
+ 
+ 	"github.com/tidwall/gjson"
+@@ -72,6 +73,10 @@
+ // out under, the body the vendor is sent, the token count asked of it. The
+ // names of one request are then one set, the way the ledger reads them once
+ // for a whole report.
++// AgentFuel limits a plain chat request to one upstream HTTP dispatch.
++// The context belongs to this request; equal bodies in other requests are independent.
++type agentFuelAttemptKey struct{}
++
+ type wiresKey struct{}
+ 
+ // withWires carries the names in force on r's context, read at most once and
+@@ -314,7 +319,7 @@
+ 	return &Server{
+ 		// a provider with a proxy of its own is sent through a transport
+ 		// kept for that proxy (#237)
+-		client: &http.Client{Transport: netproxy.Dispatch(&http.Transport{
++		client: &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }, Transport: netproxy.Dispatch(&http.Transport{
+ 			Proxy:                 netproxy.Func,
+ 			ResponseHeaderTimeout: 10 * time.Minute,
+ 			MaxIdleConnsPerHost:   8,
+@@ -850,6 +855,7 @@
+ // handle is the request path of one client API.
+ func (s *Server) handle(from provider.Protocol) http.HandlerFunc {
+ 	return func(w http.ResponseWriter, r *http.Request) {
++		r = r.WithContext(context.WithValue(r.Context(), agentFuelAttemptKey{}, new(atomic.Bool)))
+ 		body, ok := s.requestBody(w, r, from)
+ 		if !ok {
+ 			return
+@@ -2028,6 +2034,9 @@
+ 
+ // forwardOnce is one request to the provider, as forward makes it.
+ func (s *Server) forwardOnce(ctx context.Context, p provider.Provider, to provider.Protocol, path string, body []byte, in http.Header) (*http.Response, error) {
++	if used, ok := ctx.Value(agentFuelAttemptKey{}).(*atomic.Bool); ok && used.Swap(true) {
++		return nil, errors.New("AgentFuel: implicit repeated upstream dispatch disabled")
++	}
+ 	ctx = p.Via(ctx)
+ 	body = deepseekToolPatterns(p, to, body)
+ 	if to == provider.Anthropic {
+@@ -2041,6 +2050,8 @@
+ 	if err != nil {
+ 		return nil, err
+ 	}
++	// A POST whose response was lost must not be replayed by the HTTP transport.
++	req.GetBody = nil
+ 	req.Header.Set("Content-Type", "application/json")
+ 	req.Header.Set("Accept", "application/json, text/event-stream")
+ 	req.Header.Set("User-Agent", "magpie/"+Version)
+--- a/internal/gateway/fallback.go
++++ b/internal/gateway/fallback.go
+@@ -738,11 +738,11 @@
+ const (
+ 	// lastRetries is how many times the last one left is tried again after
+ 	// a failure that passes — a busy vendor, a dropped connection.
+-	lastRetries = 2
++	lastRetries = 0
+ 	// rateRetries is as many for a rate limit, which takes longer to
+ 	// clear than a busy moment: pauses of 1, 2 and 4s, or what Retry-After
+ 	// says, under half a minute in all
+-	rateRetries = 3
++	rateRetries = 0
+ 	// longestPause is the longest the vendor's Retry-After is waited for
+ 	// before that; longer, and the agent gets the error.
+ 	longestPause = 8 * time.Second

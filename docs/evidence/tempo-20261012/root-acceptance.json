@@ -1,0 +1,965 @@
+{
+  "version": 1,
+  "passed": true,
+  "compensation": {
+    "verified": true,
+    "chainId": 42431,
+    "verifiedAt": "2026-10-12T15:20:16.557Z",
+    "block": {
+      "number": 39287599,
+      "hash": "0xec138f35df486739b6af8174ad42bf2dca0d519f05f24ca4dcb1f66c1778793c"
+    },
+    "account": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+    "taskId": "3",
+    "agentId": "48",
+    "taskStatus": "4",
+    "loanStatus": "4",
+    "refund": {
+      "txHash": "0xcf46902d34b311fe3499b167a9f2797115f68f17fd76007343adb20723799c37",
+      "status": 1
+    },
+    "termination": {
+      "txHash": "0xd9eb4c697f44d0b4fe75812cb31c4009fa62589a97b9a7375561c57af8423c0f",
+      "status": 1
+    },
+    "fullRefundRaw": "120000",
+    "rewardReturnedRaw": "150000",
+    "originalInferenceState": "Unknown",
+    "ledgerSealed": true,
+    "noRepaymentOrDefaultCredit": true,
+    "closure": {
+      "version": 1,
+      "paymentId": "0x525c4a0dd5f244f8d5728fa2fff4e47e19fc599bb4273e3bc4c05fb2d444b925",
+      "resolutionId": "fe7f481b-38f5-430c-ab33-3a3d1d44c0dc",
+      "evidenceDigest": "0x82143a4ab8b652452aea646371d2bdb4fd6c0dee92f788e6c99dbe3601e49654",
+      "expectedLedgerDigest": "4241d38c970371653e52f2a32647020f929e02282e432fbde5c65e63699d1366",
+      "reason": "operator-accepted-unknown-cost",
+      "binding": {
+        "agentId": "48",
+        "taskId": "3",
+        "wallet": "0xabeecbed88d5099988d0a10b9521c9e6cfaab8d7"
+      },
+      "sealedAt": 1791817764365
+    },
+    "transactions": [
+      {
+        "kind": "refund",
+        "txHash": "0xcf46902d34b311fe3499b167a9f2797115f68f17fd76007343adb20723799c37",
+        "status": 1,
+        "blockNumber": 39286596,
+        "events": [
+          {
+            "contract": "account",
+            "name": "RefundRegistered",
+            "args": {
+              "paymentId": "0x525c4a0dd5f244f8d5728fa2fff4e47e19fc599bb4273e3bc4c05fb2d444b925",
+              "refundId": "0x51a0c855054ed1a52bb8f598004a8a86568934bb9b890d1c45df384b032ada3b",
+              "amount": "120000"
+            }
+          },
+          {
+            "contract": "token",
+            "name": "Transfer",
+            "args": {
+              "from": "0x760A4dfb7373311b88b2481611f78730F6fc932b",
+              "to": "0xc1fBC944b6921C01195Ab5d1c9B73309A4c7554C",
+              "value": "120000"
+            }
+          },
+          {
+            "contract": "manager",
+            "name": "LoanClosedByRefund",
+            "args": {
+              "taskId": "3",
+              "principalForgiven": "80000",
+              "feeForgiven": "12000"
+            }
+          },
+          {
+            "contract": "token",
+            "name": "Transfer",
+            "args": {
+              "from": "0xc1fBC944b6921C01195Ab5d1c9B73309A4c7554C",
+              "to": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+              "value": "40000"
+            }
+          },
+          {
+            "contract": "account",
+            "name": "CashCredited",
+            "args": {
+              "agentId": "48",
+              "from": "0xc1fBC944b6921C01195Ab5d1c9B73309A4c7554C",
+              "amount": "40000"
+            }
+          },
+          {
+            "contract": "manager",
+            "name": "RefundProcessed",
+            "args": {
+              "paymentId": "0x525c4a0dd5f244f8d5728fa2fff4e47e19fc599bb4273e3bc4c05fb2d444b925",
+              "refundId": "0x51a0c855054ed1a52bb8f598004a8a86568934bb9b890d1c45df384b032ada3b",
+              "amount": "120000",
+              "debtReduced": "92000",
+              "toCash": "40000"
+            }
+          },
+          {
+            "contract": "token",
+            "name": "Transfer",
+            "args": {
+              "from": "0x760A4dfb7373311b88b2481611f78730F6fc932b",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "535"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "termination",
+        "txHash": "0xd9eb4c697f44d0b4fe75812cb31c4009fa62589a97b9a7375561c57af8423c0f",
+        "status": 1,
+        "blockNumber": 39286668,
+        "events": [
+          {
+            "contract": "token",
+            "name": "Transfer",
+            "args": {
+              "from": "0x665aea43F238F646d6FD712b465e38026ae59e06",
+              "to": "0x34AE44b0B26fe71090c78d26386279685B9427A0",
+              "value": "150000"
+            }
+          },
+          {
+            "contract": "escrow",
+            "name": "TaskSettled",
+            "args": {
+              "taskId": "3",
+              "passed": false,
+              "repaid": "0",
+              "slashed": "0",
+              "toAgent": "0"
+            }
+          },
+          {
+            "contract": "token",
+            "name": "Transfer",
+            "args": {
+              "from": "0x74F15a6973e91B3C84C37dACB89c86A7ea31CA37",
+              "to": "0xfeEC000000000000000000000000000000000000",
+              "value": "51"
+            }
+          }
+        ]
+      }
+    ],
+    "vendorCost": "unknown; operator compensation does not assert zero supplier billing"
+  },
+  "plannerCompensation": {
+    "verified": true,
+    "verifiedAt": "2026-10-12T15:52:41.299Z",
+    "chainId": 42431,
+    "block": {
+      "number": 39290770,
+      "hash": "0x6cefa479df87b9a243e758791fa8d884f20d12b06a0b7a94f5c4a4fda38b13bf"
+    },
+    "agentId": "48",
+    "taskId": "0",
+    "paymentId": "0x4152f0c90c92093b6ab93301e531de114d29f45616708dabdd1c7253cc799481",
+    "refundedRaw": "10000",
+    "debtReducedRaw": "0",
+    "toCashRaw": "10000",
+    "originalInferenceState": "Unknown",
+    "originalDispatchAttempt": 7,
+    "permanentlyResolved": true,
+    "noReputationCredit": true,
+    "resolution": {
+      "version": 1,
+      "paymentId": "0x4152f0c90c92093b6ab93301e531de114d29f45616708dabdd1c7253cc799481",
+      "resolutionId": "b4c0d72a-afcb-43fb-9340-2c906ecf85e3",
+      "expectedAttemptsDigest": "0x869658689e0f3c83af260c01dbea8b4a8e0fb42a0280226d64d3d6780bddc92c",
+      "evidenceDigest": "0x63b736089854924293609b741953b0eac5942c6ad4a2dd6f37dc79c1399747dc",
+      "reason": "operator-accepted-nondelivery-cost",
+      "resolvedAt": 1791819897320
+    },
+    "refund": {
+      "txHash": "0x8de5a170ac72568abf470a73536098e56dcc2373e298dbd1b416ace6fd65f4e0",
+      "status": 1,
+      "blockNumber": 39290064
+    },
+    "events": [
+      {
+        "name": "RefundProcessed",
+        "args": {
+          "paymentId": "0x4152f0c90c92093b6ab93301e531de114d29f45616708dabdd1c7253cc799481",
+          "refundId": "0x748c1b8d76d322edfb712d9f8af5b967bb3e41cd641e512050b25568aa5add6e",
+          "amount": "10000",
+          "debtReduced": "0",
+          "toCash": "10000"
+        }
+      }
+    ],
+    "vendorCost": "unknown; operator accepts uncertain supplier billing"
+  },
+  "operatorFunding": {
+    "verified": true,
+    "chainId": 42431,
+    "txHash": "0x005cf1d54d15f5803597ab6f88526e08749e933e9f584ef79d8139270c702e52",
+    "blockNumber": 39296678,
+    "blockHash": "0x872ca9506bd5c121af92660c2d6f4d60e84bda60353cceea39fa69d3109d0a15",
+    "from": "0x20D5781919a4f9C5B1a3bFC9dC4152bfd2998387",
+    "to": "0xA8E6DD15F3291f2aecAe44dbca937928d3c01F0F",
+    "amountRaw": "1000000",
+    "asset": "0x20c0000000000000000000000000000000000000",
+    "originalFaucetStatus": "Unknown",
+    "accountDepositRaw": "50000",
+    "agentTotalBudgetRaw": "300000"
+  },
+  "verifiedAt": "2026-10-12T17:06:02.695Z",
+  "method": "Independent root agent fresh public RPC reads and receipt decoding; fixed final block",
+  "chainId": 42431,
+  "block": {
+    "number": 39297657,
+    "hash": "0x7720ba7e9a5af77650cfd0cff80dad1bcfcaf9a81b42ede275456efc252666e6"
+  },
+  "contracts": {
+    "manager": "0xc1fBC944b6921C01195Ab5d1c9B73309A4c7554C",
+    "adapter": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+    "account": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+    "escrow": "0x665aea43F238F646d6FD712b465e38026ae59e06"
+  },
+  "taskResults": [
+    {
+      "taskId": "1",
+      "agentId": "46",
+      "taskStatus": "3",
+      "loanStatus": "2",
+      "receipt": {
+        "hash": "0xba74d0e4fe14748485a036d3dc8f3ed35463087b9225c3ad1326ddb00d12f313",
+        "blockNumber": 39278513,
+        "blockTimestamp": 1791812839,
+        "status": 1,
+        "chainId": 42431,
+        "feeToken": "0x20c0000000000000000000000000000000000000",
+        "gasUsed": "3541842",
+        "effectiveGasPrice": "600000001"
+      },
+      "events": [
+        {
+          "contract": "escrow",
+          "name": "ProtocolFeeTaken",
+          "args": {
+            "taskId": "1",
+            "amount": "0"
+          }
+        },
+        {
+          "contract": "manager",
+          "name": "LoanRepaid",
+          "args": {
+            "taskId": "1",
+            "principal": "80000",
+            "fee": "12000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "TaskSettled",
+          "args": {
+            "taskId": "1",
+            "passed": true,
+            "repaid": "92000",
+            "slashed": "0",
+            "toAgent": "58000"
+          }
+        },
+        {
+          "contract": "reputation",
+          "name": "NewFeedback",
+          "args": {
+            "agentId": "46",
+            "clientAddress": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+            "feedbackIndex": "1",
+            "value": "100",
+            "valueDecimals": "0",
+            "indexedTag1": {
+              "hash": "0xa5a247d056c1498b9570ea5850790cd87de0305b5d2154f33db2e3095ed4bcf9",
+              "_isIndexed": true
+            },
+            "tag1": "infercredit",
+            "tag2": "task-success",
+            "endpoint": "",
+            "feedbackURI": "",
+            "feedbackHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "FeedbackSent",
+          "args": {
+            "taskId": "1",
+            "feedbackType": "1"
+          }
+        },
+        {
+          "contract": "reputation",
+          "name": "NewFeedback",
+          "args": {
+            "agentId": "46",
+            "clientAddress": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+            "feedbackIndex": "2",
+            "value": "100",
+            "valueDecimals": "0",
+            "indexedTag1": {
+              "hash": "0xa5a247d056c1498b9570ea5850790cd87de0305b5d2154f33db2e3095ed4bcf9",
+              "_isIndexed": true
+            },
+            "tag1": "infercredit",
+            "tag2": "repayment",
+            "endpoint": "",
+            "feedbackURI": "",
+            "feedbackHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "FeedbackSent",
+          "args": {
+            "taskId": "1",
+            "feedbackType": "2"
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "2",
+      "agentId": "47",
+      "taskStatus": "3",
+      "loanStatus": "2",
+      "receipt": {
+        "hash": "0xfa76a0e26f7e60be9bdb2450ccaa98cd3e24bfbe6d5e48460a7e42c0afc06bfc",
+        "blockNumber": 39278914,
+        "blockTimestamp": 1791813084,
+        "status": 1,
+        "chainId": 42431,
+        "feeToken": "0x20c0000000000000000000000000000000000000",
+        "gasUsed": "3291842",
+        "effectiveGasPrice": "600000001"
+      },
+      "events": [
+        {
+          "contract": "escrow",
+          "name": "ProtocolFeeTaken",
+          "args": {
+            "taskId": "2",
+            "amount": "0"
+          }
+        },
+        {
+          "contract": "manager",
+          "name": "LoanRepaid",
+          "args": {
+            "taskId": "2",
+            "principal": "80000",
+            "fee": "12000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "TaskSettled",
+          "args": {
+            "taskId": "2",
+            "passed": true,
+            "repaid": "92000",
+            "slashed": "0",
+            "toAgent": "58000"
+          }
+        },
+        {
+          "contract": "reputation",
+          "name": "NewFeedback",
+          "args": {
+            "agentId": "47",
+            "clientAddress": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+            "feedbackIndex": "1",
+            "value": "100",
+            "valueDecimals": "0",
+            "indexedTag1": {
+              "hash": "0xa5a247d056c1498b9570ea5850790cd87de0305b5d2154f33db2e3095ed4bcf9",
+              "_isIndexed": true
+            },
+            "tag1": "infercredit",
+            "tag2": "task-success",
+            "endpoint": "",
+            "feedbackURI": "",
+            "feedbackHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "FeedbackSent",
+          "args": {
+            "taskId": "2",
+            "feedbackType": "1"
+          }
+        },
+        {
+          "contract": "reputation",
+          "name": "NewFeedback",
+          "args": {
+            "agentId": "47",
+            "clientAddress": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+            "feedbackIndex": "2",
+            "value": "100",
+            "valueDecimals": "0",
+            "indexedTag1": {
+              "hash": "0xa5a247d056c1498b9570ea5850790cd87de0305b5d2154f33db2e3095ed4bcf9",
+              "_isIndexed": true
+            },
+            "tag1": "infercredit",
+            "tag2": "repayment",
+            "endpoint": "",
+            "feedbackURI": "",
+            "feedbackHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "FeedbackSent",
+          "args": {
+            "taskId": "2",
+            "feedbackType": "2"
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "4",
+      "agentId": "48",
+      "taskStatus": "3",
+      "loanStatus": "2",
+      "receipt": {
+        "hash": "0xde0f1805d0088df97a72c808f8a9e998610ebba1ff76a941d9735ec7591b2b06",
+        "blockNumber": 39288728,
+        "blockTimestamp": 1791819099,
+        "status": 1,
+        "chainId": 42431,
+        "feeToken": "0x20c0000000000000000000000000000000000000",
+        "gasUsed": "3291842",
+        "effectiveGasPrice": "600000001"
+      },
+      "events": [
+        {
+          "contract": "escrow",
+          "name": "ProtocolFeeTaken",
+          "args": {
+            "taskId": "4",
+            "amount": "0"
+          }
+        },
+        {
+          "contract": "manager",
+          "name": "LoanRepaid",
+          "args": {
+            "taskId": "4",
+            "principal": "80000",
+            "fee": "12000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "TaskSettled",
+          "args": {
+            "taskId": "4",
+            "passed": true,
+            "repaid": "92000",
+            "slashed": "0",
+            "toAgent": "58000"
+          }
+        },
+        {
+          "contract": "reputation",
+          "name": "NewFeedback",
+          "args": {
+            "agentId": "48",
+            "clientAddress": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+            "feedbackIndex": "1",
+            "value": "100",
+            "valueDecimals": "0",
+            "indexedTag1": {
+              "hash": "0xa5a247d056c1498b9570ea5850790cd87de0305b5d2154f33db2e3095ed4bcf9",
+              "_isIndexed": true
+            },
+            "tag1": "infercredit",
+            "tag2": "task-success",
+            "endpoint": "",
+            "feedbackURI": "",
+            "feedbackHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "FeedbackSent",
+          "args": {
+            "taskId": "4",
+            "feedbackType": "1"
+          }
+        },
+        {
+          "contract": "reputation",
+          "name": "NewFeedback",
+          "args": {
+            "agentId": "48",
+            "clientAddress": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+            "feedbackIndex": "2",
+            "value": "100",
+            "valueDecimals": "0",
+            "indexedTag1": {
+              "hash": "0xa5a247d056c1498b9570ea5850790cd87de0305b5d2154f33db2e3095ed4bcf9",
+              "_isIndexed": true
+            },
+            "tag1": "infercredit",
+            "tag2": "repayment",
+            "endpoint": "",
+            "feedbackURI": "",
+            "feedbackHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "FeedbackSent",
+          "args": {
+            "taskId": "4",
+            "feedbackType": "2"
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "5",
+      "agentId": "49",
+      "taskStatus": "3",
+      "loanStatus": "2",
+      "receipt": {
+        "hash": "0x5c5462ba4bb634fab04c2674c20576fb08055a5733c885fd7393c1c93e05c5a8",
+        "blockNumber": 39297149,
+        "blockTimestamp": 1791824267,
+        "status": 1,
+        "chainId": 42431,
+        "feeToken": "0x20c0000000000000000000000000000000000000",
+        "gasUsed": "3291842",
+        "effectiveGasPrice": "600000001"
+      },
+      "events": [
+        {
+          "contract": "escrow",
+          "name": "ProtocolFeeTaken",
+          "args": {
+            "taskId": "5",
+            "amount": "0"
+          }
+        },
+        {
+          "contract": "manager",
+          "name": "LoanRepaid",
+          "args": {
+            "taskId": "5",
+            "principal": "80000",
+            "fee": "12000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "TaskSettled",
+          "args": {
+            "taskId": "5",
+            "passed": true,
+            "repaid": "92000",
+            "slashed": "0",
+            "toAgent": "58000"
+          }
+        },
+        {
+          "contract": "reputation",
+          "name": "NewFeedback",
+          "args": {
+            "agentId": "49",
+            "clientAddress": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+            "feedbackIndex": "1",
+            "value": "100",
+            "valueDecimals": "0",
+            "indexedTag1": {
+              "hash": "0xa5a247d056c1498b9570ea5850790cd87de0305b5d2154f33db2e3095ed4bcf9",
+              "_isIndexed": true
+            },
+            "tag1": "infercredit",
+            "tag2": "task-success",
+            "endpoint": "",
+            "feedbackURI": "",
+            "feedbackHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "FeedbackSent",
+          "args": {
+            "taskId": "5",
+            "feedbackType": "1"
+          }
+        },
+        {
+          "contract": "reputation",
+          "name": "NewFeedback",
+          "args": {
+            "agentId": "49",
+            "clientAddress": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+            "feedbackIndex": "2",
+            "value": "100",
+            "valueDecimals": "0",
+            "indexedTag1": {
+              "hash": "0xa5a247d056c1498b9570ea5850790cd87de0305b5d2154f33db2e3095ed4bcf9",
+              "_isIndexed": true
+            },
+            "tag1": "infercredit",
+            "tag2": "repayment",
+            "endpoint": "",
+            "feedbackURI": "",
+            "feedbackHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "FeedbackSent",
+          "args": {
+            "taskId": "5",
+            "feedbackType": "2"
+          }
+        }
+      ]
+    },
+    {
+      "taskId": "6",
+      "agentId": "49",
+      "taskStatus": "3",
+      "loanStatus": "2",
+      "receipt": {
+        "hash": "0x6d7fa54c73679c6ff7c9a0c6f43fc0c590c48e19a8e85a300fb5e403b53f31c4",
+        "blockNumber": 39297380,
+        "blockTimestamp": 1791824408,
+        "status": 1,
+        "chainId": 42431,
+        "feeToken": "0x20c0000000000000000000000000000000000000",
+        "gasUsed": "2286898",
+        "effectiveGasPrice": "600000001"
+      },
+      "events": [
+        {
+          "contract": "escrow",
+          "name": "ProtocolFeeTaken",
+          "args": {
+            "taskId": "6",
+            "amount": "0"
+          }
+        },
+        {
+          "contract": "manager",
+          "name": "LoanRepaid",
+          "args": {
+            "taskId": "6",
+            "principal": "72000",
+            "fee": "10800"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "TaskSettled",
+          "args": {
+            "taskId": "6",
+            "passed": true,
+            "repaid": "82800",
+            "slashed": "0",
+            "toAgent": "67200"
+          }
+        },
+        {
+          "contract": "reputation",
+          "name": "NewFeedback",
+          "args": {
+            "agentId": "49",
+            "clientAddress": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+            "feedbackIndex": "3",
+            "value": "100",
+            "valueDecimals": "0",
+            "indexedTag1": {
+              "hash": "0xa5a247d056c1498b9570ea5850790cd87de0305b5d2154f33db2e3095ed4bcf9",
+              "_isIndexed": true
+            },
+            "tag1": "infercredit",
+            "tag2": "task-success",
+            "endpoint": "",
+            "feedbackURI": "",
+            "feedbackHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "FeedbackSent",
+          "args": {
+            "taskId": "6",
+            "feedbackType": "1"
+          }
+        },
+        {
+          "contract": "reputation",
+          "name": "NewFeedback",
+          "args": {
+            "agentId": "49",
+            "clientAddress": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+            "feedbackIndex": "4",
+            "value": "100",
+            "valueDecimals": "0",
+            "indexedTag1": {
+              "hash": "0xa5a247d056c1498b9570ea5850790cd87de0305b5d2154f33db2e3095ed4bcf9",
+              "_isIndexed": true
+            },
+            "tag1": "infercredit",
+            "tag2": "repayment",
+            "endpoint": "",
+            "feedbackURI": "",
+            "feedbackHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "FeedbackSent",
+          "args": {
+            "taskId": "6",
+            "feedbackType": "2"
+          }
+        }
+      ]
+    }
+  ],
+  "retainedUnsuccessfulTaskResults": [
+    {
+      "phase": "Failed",
+      "terminal": true,
+      "success": false,
+      "chargedRaw": "0",
+      "reason": "WORKFLOW_REFUNDED_TASK_TERMINATED",
+      "creditsUsed": 0,
+      "chainId": "42431",
+      "taskId": "3",
+      "paymentId": "0x525c4a0dd5f244f8d5728fa2fff4e47e19fc599bb4273e3bc4c05fb2d444b925",
+      "acceptTxHash": "0x593c1c744a930209145606e1026f537000bc4aeb37e08afde7bc36cd0f1ed3d7",
+      "paymentTxHash": "0xe6213cc034943d261177d9a37652929928c5fa4faf2bebf95cda896956c54772",
+      "fromCashRaw": "40000",
+      "fromCreditRaw": "80000",
+      "refundedRaw": "120000",
+      "cashRaw": "40000",
+      "principalRaw": "0",
+      "feeRaw": "0"
+    }
+  ],
+  "fullTaskLedger": [
+    {
+      "taskId": 1,
+      "agentId": "46",
+      "status": "3",
+      "escrowBalance": "0",
+      "loanStatus": "2",
+      "principal": "0",
+      "fee": "0"
+    },
+    {
+      "taskId": 2,
+      "agentId": "47",
+      "status": "3",
+      "escrowBalance": "0",
+      "loanStatus": "2",
+      "principal": "0",
+      "fee": "0"
+    },
+    {
+      "taskId": 3,
+      "agentId": "48",
+      "status": "4",
+      "escrowBalance": "0",
+      "loanStatus": "4",
+      "principal": "0",
+      "fee": "0"
+    },
+    {
+      "taskId": 4,
+      "agentId": "48",
+      "status": "3",
+      "escrowBalance": "0",
+      "loanStatus": "2",
+      "principal": "0",
+      "fee": "0"
+    },
+    {
+      "taskId": 5,
+      "agentId": "49",
+      "status": "3",
+      "escrowBalance": "0",
+      "loanStatus": "2",
+      "principal": "0",
+      "fee": "0"
+    },
+    {
+      "taskId": 6,
+      "agentId": "49",
+      "status": "3",
+      "escrowBalance": "0",
+      "loanStatus": "2",
+      "principal": "0",
+      "fee": "0"
+    },
+    {
+      "taskId": 7,
+      "agentId": "0",
+      "status": "1",
+      "escrowBalance": "150000",
+      "loanStatus": "0",
+      "principal": "0",
+      "fee": "0"
+    },
+    {
+      "taskId": 8,
+      "agentId": "0",
+      "status": "1",
+      "escrowBalance": "150000",
+      "loanStatus": "0",
+      "principal": "0",
+      "fee": "0"
+    }
+  ],
+  "agents": [
+    {
+      "label": "cheap",
+      "agentId": "46",
+      "owner": "0x7Fc6A7891473feF26D7b70635BF69Df171939686",
+      "wallet": "0x7Fc6A7891473feF26D7b70635BF69Df171939686",
+      "cash": "58000",
+      "repayments": "1",
+      "defaults": "0",
+      "successCount": "1",
+      "repaymentFeedbackCount": "1"
+    },
+    {
+      "label": "strong",
+      "agentId": "47",
+      "owner": "0xA844a5D57D29e531eaB2bb6c6E190BFa52422b5E",
+      "wallet": "0xA844a5D57D29e531eaB2bb6c6E190BFa52422b5E",
+      "cash": "58000",
+      "repayments": "1",
+      "defaults": "0",
+      "successCount": "1",
+      "repaymentFeedbackCount": "1"
+    },
+    {
+      "label": "autonomy",
+      "agentId": "48",
+      "owner": "0xAbEEcBeD88d5099988d0a10b9521C9e6cFAAB8d7",
+      "wallet": "0xAbEEcBeD88d5099988d0a10b9521C9e6cFAAB8d7",
+      "cash": "48000",
+      "repayments": "1",
+      "defaults": "0",
+      "successCount": "1",
+      "repaymentFeedbackCount": "1"
+    },
+    {
+      "label": "autonomy-validation",
+      "agentId": "49",
+      "owner": "0xA8E6DD15F3291f2aecAe44dbca937928d3c01F0F",
+      "wallet": "0xA8E6DD15F3291f2aecAe44dbca937928d3c01F0F",
+      "cash": "67200",
+      "repayments": "2",
+      "defaults": "0",
+      "successCount": "2",
+      "repaymentFeedbackCount": "2"
+    }
+  ],
+  "financials": {
+    "poolInitial": "10000000",
+    "poolBalance": "10058800",
+    "escrowBalance": "300000",
+    "accountTokenBalance": "231200",
+    "totalOutstanding": "0",
+    "repaidPrincipal": "392000",
+    "paidFees": "58800"
+  },
+  "replayEvidence": {
+    "noNewTransactions": true,
+    "noNewModelRequests": true,
+    "nonces": [
+      {
+        "address": "0x7Fc6A7891473feF26D7b70635BF69Df171939686",
+        "latest": 6,
+        "pending": 6
+      },
+      {
+        "address": "0xA844a5D57D29e531eaB2bb6c6E190BFa52422b5E",
+        "latest": 6,
+        "pending": 6
+      },
+      {
+        "address": "0xAbEEcBeD88d5099988d0a10b9521C9e6cFAAB8d7",
+        "latest": 14,
+        "pending": 14
+      },
+      {
+        "address": "0xA8E6DD15F3291f2aecAe44dbca937928d3c01F0F",
+        "latest": 10,
+        "pending": 10
+      },
+      {
+        "address": "0x5F76815cF4b5DeC8693e486DCa5AA0D5c3242169",
+        "latest": 7,
+        "pending": 7
+      },
+      {
+        "address": "0xa1eF22ee9805238D825FE0AC78C2C3aF576E0C92",
+        "latest": 0,
+        "pending": 0
+      },
+      {
+        "address": "0x74F15a6973e91B3C84C37dACB89c86A7ea31CA37",
+        "latest": 6,
+        "pending": 6
+      },
+      {
+        "address": "0x760A4dfb7373311b88b2481611f78730F6fc932b",
+        "latest": 4,
+        "pending": 4
+      },
+      {
+        "address": "0x20D5781919a4f9C5B1a3bFC9dC4152bfd2998387",
+        "latest": 1,
+        "pending": 1
+      },
+      {
+        "address": "0xD3235190110A780F1Ada5d04185B2aB8C80F135F",
+        "latest": 2,
+        "pending": 2
+      }
+    ],
+    "before": {
+      "ready": true,
+      "models": [
+        "kimi-k2.6",
+        "kimi-k3"
+      ],
+      "acceptedRequests": 12
+    },
+    "after": {
+      "ready": true,
+      "models": [
+        "kimi-k2.6",
+        "kimi-k3"
+      ],
+      "acceptedRequests": 12
+    }
+  }
+}

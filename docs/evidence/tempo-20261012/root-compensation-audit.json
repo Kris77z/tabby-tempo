@@ -1,0 +1,154 @@
+{
+  "verified": true,
+  "chainId": 42431,
+  "verifiedAt": "2026-10-12T15:20:16.557Z",
+  "block": {
+    "number": 39287599,
+    "hash": "0xec138f35df486739b6af8174ad42bf2dca0d519f05f24ca4dcb1f66c1778793c"
+  },
+  "account": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+  "taskId": "3",
+  "agentId": "48",
+  "taskStatus": "4",
+  "loanStatus": "4",
+  "refund": {
+    "txHash": "0xcf46902d34b311fe3499b167a9f2797115f68f17fd76007343adb20723799c37",
+    "status": 1
+  },
+  "termination": {
+    "txHash": "0xd9eb4c697f44d0b4fe75812cb31c4009fa62589a97b9a7375561c57af8423c0f",
+    "status": 1
+  },
+  "fullRefundRaw": "120000",
+  "rewardReturnedRaw": "150000",
+  "originalInferenceState": "Unknown",
+  "ledgerSealed": true,
+  "noRepaymentOrDefaultCredit": true,
+  "closure": {
+    "version": 1,
+    "paymentId": "0x525c4a0dd5f244f8d5728fa2fff4e47e19fc599bb4273e3bc4c05fb2d444b925",
+    "resolutionId": "fe7f481b-38f5-430c-ab33-3a3d1d44c0dc",
+    "evidenceDigest": "0x82143a4ab8b652452aea646371d2bdb4fd6c0dee92f788e6c99dbe3601e49654",
+    "expectedLedgerDigest": "4241d38c970371653e52f2a32647020f929e02282e432fbde5c65e63699d1366",
+    "reason": "operator-accepted-unknown-cost",
+    "binding": {
+      "agentId": "48",
+      "taskId": "3",
+      "wallet": "0xabeecbed88d5099988d0a10b9521c9e6cfaab8d7"
+    },
+    "sealedAt": 1791817764365
+  },
+  "transactions": [
+    {
+      "kind": "refund",
+      "txHash": "0xcf46902d34b311fe3499b167a9f2797115f68f17fd76007343adb20723799c37",
+      "status": 1,
+      "blockNumber": 39286596,
+      "events": [
+        {
+          "contract": "account",
+          "name": "RefundRegistered",
+          "args": {
+            "paymentId": "0x525c4a0dd5f244f8d5728fa2fff4e47e19fc599bb4273e3bc4c05fb2d444b925",
+            "refundId": "0x51a0c855054ed1a52bb8f598004a8a86568934bb9b890d1c45df384b032ada3b",
+            "amount": "120000"
+          }
+        },
+        {
+          "contract": "token",
+          "name": "Transfer",
+          "args": {
+            "from": "0x760A4dfb7373311b88b2481611f78730F6fc932b",
+            "to": "0xc1fBC944b6921C01195Ab5d1c9B73309A4c7554C",
+            "value": "120000"
+          }
+        },
+        {
+          "contract": "manager",
+          "name": "LoanClosedByRefund",
+          "args": {
+            "taskId": "3",
+            "principalForgiven": "80000",
+            "feeForgiven": "12000"
+          }
+        },
+        {
+          "contract": "token",
+          "name": "Transfer",
+          "args": {
+            "from": "0xc1fBC944b6921C01195Ab5d1c9B73309A4c7554C",
+            "to": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+            "value": "40000"
+          }
+        },
+        {
+          "contract": "account",
+          "name": "CashCredited",
+          "args": {
+            "agentId": "48",
+            "from": "0xc1fBC944b6921C01195Ab5d1c9B73309A4c7554C",
+            "amount": "40000"
+          }
+        },
+        {
+          "contract": "manager",
+          "name": "RefundProcessed",
+          "args": {
+            "paymentId": "0x525c4a0dd5f244f8d5728fa2fff4e47e19fc599bb4273e3bc4c05fb2d444b925",
+            "refundId": "0x51a0c855054ed1a52bb8f598004a8a86568934bb9b890d1c45df384b032ada3b",
+            "amount": "120000",
+            "debtReduced": "92000",
+            "toCash": "40000"
+          }
+        },
+        {
+          "contract": "token",
+          "name": "Transfer",
+          "args": {
+            "from": "0x760A4dfb7373311b88b2481611f78730F6fc932b",
+            "to": "0xfeEC000000000000000000000000000000000000",
+            "value": "535"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "termination",
+      "txHash": "0xd9eb4c697f44d0b4fe75812cb31c4009fa62589a97b9a7375561c57af8423c0f",
+      "status": 1,
+      "blockNumber": 39286668,
+      "events": [
+        {
+          "contract": "token",
+          "name": "Transfer",
+          "args": {
+            "from": "0x665aea43F238F646d6FD712b465e38026ae59e06",
+            "to": "0x34AE44b0B26fe71090c78d26386279685B9427A0",
+            "value": "150000"
+          }
+        },
+        {
+          "contract": "escrow",
+          "name": "TaskSettled",
+          "args": {
+            "taskId": "3",
+            "passed": false,
+            "repaid": "0",
+            "slashed": "0",
+            "toAgent": "0"
+          }
+        },
+        {
+          "contract": "token",
+          "name": "Transfer",
+          "args": {
+            "from": "0x74F15a6973e91B3C84C37dACB89c86A7ea31CA37",
+            "to": "0xfeEC000000000000000000000000000000000000",
+            "value": "51"
+          }
+        }
+      ]
+    }
+  ],
+  "vendorCost": "unknown; operator compensation does not assert zero supplier billing"
+}

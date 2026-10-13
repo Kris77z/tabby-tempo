@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "chainId": "10143",
+  "rpcUrl": "https://testnet-rpc.monad.xyz",
+  "explorerUrl": "https://testnet.monadexplorer.com",
+  "asset": { "address": "0x534b2f3A21130d7a60830c2Df862319e593943A3", "symbol": "USDC", "decimals": 6 },
+  "registries": {
+    "identity": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+    "reputation": "0x8004B663056A597Dffe9eCcC1965A193B7388713"
+  },
+  "roles": {
+    "deployer": "0xMANAGEMENT_WALLET", "guardian": "0xMANAGEMENT_WALLET",
+    "treasury": "0xMANAGEMENT_WALLET", "poster": "0xMANAGEMENT_WALLET",
+    "provider": "0xROTATED_WALLET", "refunder": "0xMANAGEMENT_WALLET",
+    "rotatedOwner": "0xMANAGEMENT_WALLET",
+    "underwriter": "0xUNDERWRITER_WALLET", "verifier": "0xVERIFIER_WALLET",
+    "hero": "0xHERO_WALLET", "veteran": "0xVETERAN_WALLET", "defaulted": "0xDEFAULT_WALLET",
+    "rotatedWallet": "0xROTATED_WALLET"
+  },
+  "keyFiles": {
+    "deployer": "/absolute/private/management.key", "guardian": "/absolute/private/management.key",
+    "treasury": "/absolute/private/management.key", "poster": "/absolute/private/management.key",
+    "rotatedOwner": "/absolute/private/management.key",
+    "underwriter": "/absolute/private/underwriter.key", "verifier": "/absolute/private/verifier.key",
+    "hero": "/absolute/private/hero.key", "veteran": "/absolute/private/veteran.key",
+    "defaulted": "/absolute/private/default.key", "rotatedWallet": "/absolute/private/rotated.key"
+  },
+  "upstream": {
+    "name": "kimi", "baseUrl": "https://api.moonshot.ai/v1", "model": "kimi-k2.5",
+    "apiKeyFile": "/absolute/private/kimi.key",
+    "requestOptions": { "max_tokens": 1024, "thinking": { "type": "disabled" } }
+  },
+  "blockedProvider": "0x000000000000000000000000000000000000dEaD",
+  "frontendOrigin": "http://127.0.0.1:3000"
+}

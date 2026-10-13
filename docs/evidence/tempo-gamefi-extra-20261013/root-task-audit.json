@@ -1,0 +1,205 @@
+{
+  "observedAt": "2026-10-13T01:42:09.933Z",
+  "tasks": [
+    {
+      "label": "cash",
+      "requestId": "519303e1-cb08-4631-8aec-2ea7ec340c83",
+      "status": "Succeeded",
+      "workflowPhase": "Succeeded",
+      "workflowSha256": "29ec0d5e9e30bd4b3c29c72399462b93b790c81fa0b6ac8b183032811400949b",
+      "modelTransport": "Magpie gateway",
+      "rounds": [
+        {
+          "tier": "cheap",
+          "requestModel": "cheap/kimi-k2.6",
+          "responseModel": "kimi-k2.6",
+          "state": "Responded",
+          "requestDigest": "ad265db3820d45cc2084f3b32e3fad47230b345c4ff635f541dd2577e2bfccb8",
+          "responseDigest": "c7018ba1d1775804c095fe15221b7858a6a98fc324576242454836aed039a936",
+          "usage": {
+            "prompt_tokens": 206,
+            "completion_tokens": 130,
+            "total_tokens": 336,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          }
+        }
+      ],
+      "tools": [
+        {
+          "id": "1:test_public_sample_0_f121b572",
+          "codeHash": "3f3de61b8ab8b6e4ed6b68273162f8c0c35093ae143ccba3959c51eb843a5f4f",
+          "result": {
+            "passed": true,
+            "stdout": "true\n"
+          }
+        }
+      ],
+      "solvePhase": "Delivered",
+      "problemId": "balanced-brackets",
+      "codeHash": "3f3de61b8ab8b6e4ed6b68273162f8c0c35093ae143ccba3959c51eb843a5f4f",
+      "arena": {
+        "liveReadMatches": true,
+        "verdict": {
+          "version": 1,
+          "runId": "fa805c07-4e6a-4a27-874f-5109a478be5d",
+          "chainId": "42431",
+          "escrowAddress": "0x665aea43F238F646d6FD712b465e38026ae59e06",
+          "taskId": "7",
+          "agentId": "73",
+          "problemId": "balanced-brackets",
+          "passed": true,
+          "mode": "docker",
+          "evidenceHash": "b27ce00371f2284fd699b0eee1f5629829d7e62b77799b0a86ed0d4627ba194d"
+        },
+        "tests": [
+          {
+            "case": 1,
+            "passed": true
+          },
+          {
+            "case": 2,
+            "passed": true
+          },
+          {
+            "case": 3,
+            "passed": true
+          },
+          {
+            "case": 4,
+            "passed": true
+          },
+          {
+            "case": 5,
+            "passed": true
+          },
+          {
+            "case": 6,
+            "passed": true
+          }
+        ],
+        "settlement": {
+          "taskId": "7",
+          "runId": "fa805c07-4e6a-4a27-874f-5109a478be5d",
+          "passed": true,
+          "txHash": "0xba0f80b900a447684dad2fe20c1442ee9fa2b5e912d95ecda584049723fbd187",
+          "blockNumber": 39348354,
+          "feedback": [
+            {
+              "type": 1,
+              "sent": true,
+              "pending": false
+            },
+            {
+              "type": 2,
+              "sent": false,
+              "pending": false
+            },
+            {
+              "type": 3,
+              "sent": false,
+              "pending": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "label": "credits",
+      "requestId": "3ec27411-3b6c-4212-884c-af2d84939b01",
+      "status": "Succeeded",
+      "workflowPhase": "Succeeded",
+      "workflowSha256": "3945c1cb39ab78700957b0487bc1364abe41a37230b50c71bf69b868bf9314e3",
+      "modelTransport": "Direct Moonshot official endpoint",
+      "rounds": [
+        {
+          "tier": "cheap",
+          "requestModel": "kimi-k2.6",
+          "responseModel": "kimi-k2.6",
+          "state": "Responded",
+          "requestDigest": "427c224ff8337289ea3e46ab3a1079fc2029065f3c3978e695973fb8b7660c55",
+          "responseDigest": "35ee0dbb639da4233566ecb3acd19d0736ebbd943ed7c3fcc150ea1caf5c2c1a",
+          "usage": {
+            "prompt_tokens": 228,
+            "completion_tokens": 67,
+            "total_tokens": 295,
+            "completion_tokens_details": {
+              "reasoning_tokens": 1
+            }
+          }
+        }
+      ],
+      "tools": [
+        {
+          "id": "1:test_public_sample_0_78cc5d6d",
+          "codeHash": "0cf51e9eded9736248c0b5e604da9b4d8ce12891e3a00fd5d0c852464cbe9dd3",
+          "result": {
+            "passed": true,
+            "stdout": "{\"pear\": 2, \"apple\": 1}\n"
+          }
+        }
+      ],
+      "solvePhase": "Delivered",
+      "problemId": "word-frequency",
+      "codeHash": "0cf51e9eded9736248c0b5e604da9b4d8ce12891e3a00fd5d0c852464cbe9dd3",
+      "arena": {
+        "liveReadMatches": true,
+        "verdict": {
+          "version": 1,
+          "runId": "ad512e6a-1d88-45b3-ae99-b75d3382f5dd",
+          "chainId": "42431",
+          "escrowAddress": "0x665aea43F238F646d6FD712b465e38026ae59e06",
+          "taskId": "8",
+          "agentId": "74",
+          "problemId": "word-frequency",
+          "passed": true,
+          "mode": "docker",
+          "evidenceHash": "ea758acee44adcba482d91afbce95bb820882fa34273f7903870609f14180934"
+        },
+        "tests": [
+          {
+            "case": 1,
+            "passed": true
+          },
+          {
+            "case": 2,
+            "passed": true
+          },
+          {
+            "case": 3,
+            "passed": true
+          },
+          {
+            "case": 4,
+            "passed": true
+          }
+        ],
+        "settlement": {
+          "taskId": "8",
+          "runId": "ad512e6a-1d88-45b3-ae99-b75d3382f5dd",
+          "passed": true,
+          "txHash": "0x62eea74315e1abd27b7991d521b944742046b8641987158c7507ec5d53b774d7",
+          "blockNumber": 39348474,
+          "feedback": [
+            {
+              "type": 1,
+              "sent": true,
+              "pending": false
+            },
+            {
+              "type": 2,
+              "sent": false,
+              "pending": false
+            },
+            {
+              "type": 3,
+              "sent": false,
+              "pending": false
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

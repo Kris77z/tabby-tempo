@@ -1,0 +1,57 @@
+/* CRT treatment adapted from Skills Curator's web crt-terminal/globals.css.
+   Local to onboarding: the shared dashboard terminal keeps its own palette. */
+.shell {
+  --background:24 83% 5%; --foreground:25 100% 62%; --primary:25 100% 62%;
+  --muted-foreground:26 39% 57%; --border:25 45% 20%; --ring:25 100% 62%;
+  --color-bg:#160a02; --color-ink:#ff8f3f; --color-card:#100803;
+  --color-line:#492b16; --color-muted:#bc8c63; --phosphor-bright:#ffc58f;
+  --phosphor-glow:#ff8f3f55;
+  height:100dvh; min-height:0; display:flex; flex-direction:column;
+  background:var(--color-bg); color:var(--color-ink); color-scheme:dark;
+  font-family:var(--font-geist-mono),monospace; font-size:16px;
+}
+.headerLink { color:var(--color-muted); font-size:11px; white-space:nowrap; text-decoration:none; }
+.screen { position:relative; isolation:isolate; flex:1; min-height:0; overflow:hidden; container-type:size; }
+.screen::before,.screen::after { content:""; position:absolute; inset:0; pointer-events:none; z-index:2; }
+.screen::before { background:linear-gradient(transparent 50%,#00000020 50%); background-size:100% 4px; }
+.screen::after { background:radial-gradient(ellipse at 45% 40%,transparent 55%,#00000052 100%); box-shadow:inset 0 0 80px #00000030; }
+.tracking { position:absolute; inset:0 0 auto; height:3px; z-index:3; background:#ffc58f18; box-shadow:0 0 18px #ff8f3f12; pointer-events:none; animation:tracking 12s linear infinite; }
+.terminal { height:100%; width:100%; max-width:none; margin:0; overflow:auto; padding:28px clamp(20px,3vw,48px) 48px; scrollbar-color:#78502e var(--color-bg); scrollbar-width:thin; text-shadow:0 0 8px var(--phosphor-glow); }
+.transcript { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.65; }
+.cmd { color:var(--phosphor-bright); font-weight:600; }.out { color:var(--color-ink); }.ok { color:var(--phosphor-bright); }.dim { color:var(--color-muted); }.accent { color:var(--color-ink); text-shadow:0 0 10px #ff8f3f88; }
+.prompt,.commandForm,.review { margin-top:20px; max-width:860px; line-height:1.8; }
+.prompt p { margin:8px 0; }.prompt span { display:block; }
+.commandForm { margin-top:0; }
+.questionLine { display:flex; align-items:baseline; gap:1ch; min-height:32px; }
+.questionMark { color:var(--phosphor-bright); font-weight:600; }
+.shell .commandForm label { flex-shrink:0; margin:0; color:var(--color-ink); font:inherit; font-weight:600; }
+.separator { color:var(--color-muted); }
+.shell .commandForm input { appearance:none; flex:1; width:0; min-width:3ch; font:inherit; line-height:1.8; color:var(--phosphor-bright); padding:0; background:transparent; border:0; border-radius:0; box-shadow:none; caret-color:var(--color-ink); caret-shape:block; text-shadow:inherit; }
+.shell .commandForm input::placeholder { color:var(--color-muted); opacity:1; }
+.shell .commandForm input:focus-visible { outline:none; }
+.questionLine:focus-within .separator { color:var(--phosphor-bright); }
+.choices { width:fit-content; max-width:100%; outline:none; }
+.choice { display:flex; gap:1ch; min-height:32px; align-items:center; cursor:pointer; color:var(--color-muted); }
+.choice > span:first-child { width:1ch; flex-shrink:0; white-space:pre; }
+.choice[aria-selected="true"] { color:var(--phosphor-bright); text-shadow:0 0 10px #ff8f3f80; }
+.choice:hover { color:var(--phosphor-bright); }
+.choices:focus-visible .choice[aria-selected="true"] > span:last-child { text-decoration:underline; text-underline-offset:4px; }
+.hint { color:var(--color-muted); font-size:11px; margin:6px 0 0 2ch; text-shadow:none; }
+.shell button { font:inherit; font-size:14px; border:0; border-radius:0; background:transparent; color:var(--phosphor-bright); padding:5px 0; cursor:pointer; margin-top:12px; min-height:36px; text-align:left; text-shadow:inherit; }
+.shell button:before { content:"[ " / ""; color:var(--color-muted); }.shell button:after { content:" ]" / ""; color:var(--color-muted); }
+.shell button:hover:not(:disabled) { color:#ffe3c8; text-decoration:underline; text-underline-offset:4px; }.shell button:disabled { opacity:.45; cursor:default; }
+.shell button:focus-visible,.shell a:focus-visible { outline:1px dashed var(--color-ink); outline-offset:4px; border-radius:0; }
+.shell .enterKey { flex-shrink:0; color:var(--color-muted); padding:0 6px; margin:0; min-height:32px; font:inherit; }
+.shell .enterKey:before,.shell .enterKey:after { content:none; }
+.review dl { margin:12px 0; }.review dl div { display:grid; grid-template-columns:160px minmax(0,1fr); gap:16px; }.review dt { color:var(--color-muted); }.review dd { margin:0; overflow-wrap:anywhere; }
+.reviewActions { display:flex; gap:12px; }.requestId { display:block; color:var(--color-muted); font-size:11px; overflow-wrap:anywhere; }
+.error { color:#ffb2a3; max-width:860px; line-height:1.7; }.terminal a { color:var(--phosphor-bright); }.cursor { color:var(--color-ink); animation:blink .8s step-end infinite; }
+.footer { flex-shrink:0; display:flex; gap:20px; padding:10px 18px; color:var(--color-muted); border-top:1px solid var(--color-line); background:var(--color-card); font-size:10px; flex-wrap:wrap; }
+.shell ::selection { color:var(--color-bg); background:var(--color-ink); text-shadow:none; }
+.shell[data-paused="true"] .tracking,.shell[data-paused="true"] .cursor { animation-play-state:paused; }
+@keyframes blink { 50% { visibility:hidden; } }
+@keyframes tracking { 0% { transform:translateY(-4cqh); opacity:0; } 8%,92% { opacity:1; } 100% { transform:translateY(104cqh); opacity:0; } }
+@media (pointer:coarse) { .choice { min-height:44px; }.shell .enterKey { min-height:44px; min-width:44px; } }
+@media (max-width:600px) { .terminal { padding:22px 16px 48px; }.shell { font-size:13px; }.shell button { font-size:12px; }.review dl div { grid-template-columns:112px minmax(0,1fr); gap:10px; }.footer { gap:8px; padding:8px 12px; }.headerLink { font-size:10px; }.screen::after { box-shadow:inset 0 0 40px #00000020; } }
+@media (max-width:360px) { .shell { font-size:12px; }.questionLine { gap:.65ch; } }
+@media (prefers-reduced-motion:reduce) { .cursor { animation:none; }.tracking { display:none; } }

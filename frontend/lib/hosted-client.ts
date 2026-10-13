@@ -1,0 +1,148 @@
+import type { AgentSettings, HostedAction, HostedAgent, HostedRun, HostedCatalogModel, HostedFinance, HostedCapabilities, HostedSponsorship } from "../../services/hosted-agents/src/types";
+import { networkName } from "./networks";
+export type { AgentSettings, HostedAction, HostedAgent, HostedRun, HostedCatalogModel, HostedFinance, HostedCapabilities, HostedSponsorship };
+export interface HostedSnapshot { capabilities?: HostedCapabilities; sponsorship?: HostedSponsorship; agents: HostedAgent[]; runs: HostedRun[]; models: HostedCatalogModel[] }
+export interface RunInput { requestId: string; action: HostedAction; rewardKind?: "usdc" | "llm-credits"; amountRaw?: string }
+export type PendingCommand = { owner: string; kind: "create"; input: AgentSettings & { requestId: string } } | { owner: string; kind: "run"; agentId: string; input: RunInput };
+export class HostedClientError extends Error {
+  constructor(readonly code: string, readonly status: number) { super(code); }
+}
+
+/** Same-origin cookies are the only credentials. Never accept/store a bearer token. */
+export async function hostedRequest<T>(path: string, method = "GET", body?: unknown): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(`/api/hosted${path}`, { method, credentials: "same-origin", cache: "no-store",
+      ...(body === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
+      // Finance may require Tempo's complete fixed-block ledger; keep the
+      // browser outside the 130s bridge deadline without changing actions.
+      signal: AbortSignal.timeout(path.endsWith("/finance") ? 140_000 : 15_000) });
+  } catch { throw new HostedClientError("HOSTED_RESPONSE_UNCERTAIN", 0); }
+  let payload: unknown;
+  try { payload = await response.json(); } catch { throw new HostedClientError("HOSTED_RESPONSE_UNCERTAIN", 0); }
+  if (!response.ok) {
+    const code = payload && typeof payload === "object" && "error" in payload && typeof payload.error === "string" ? payload.error : "HOSTED_UNAVAILABLE";
+    throw new HostedClientError(code, response.status);
+  }
+  return payload as T;
+}
+
+const messages: Record<string, string> = {
+  WORKFLOW_REFUNDED_TASK_TERMINATED: "推理服务异常，已补偿退款并终止任务。",
+  GATEWAY_PERMANENTLY_SEALED: "原推理调用已封存，不能再次派发。",
+  ALLOWANCE_COMPENSATED: "原推理额度包已补偿退款，不能继续使用。",
+  INFERENCE_FUNDING_REQUIRED: "推理额度不足，原任务已保留。奖励模式可赢取额度后恢复；按量模式请核对额度包及授信状态。",
+  AUTONOMY_TASK_LIMIT: "已达到本次连续运行的任务数上限。",
+  AUTONOMY_MODEL_STOPPED: "模型决定停止，已保留本次决策记录。",
+  AUTONOMY_BUDGET_LIMIT: "已达到本次预算边界，未再派发任务。",
+  AUTONOMY_TASK_BUDGET_REQUIRED: "剩余预算不足以覆盖下一单及规划费。",
+  AUTONOMY_PLANNER_CASH_REQUIRED: "规划费需要 Agent cash，当前现金不足。",
+  AUTONOMY_DEADLINE: "已达到本次连续运行的时间上限。",
+  AUTONOMY_DECISION_UNKNOWN: "规划调用结果未确认，已保留记录，需核对原调用。",
+  ALLOWANCE_TOO_SMALL: "当前额度包不足以覆盖这一轮的用量上限，未购买新包。",
+  ALLOWANCE_EXHAUSTED: "原任务额度包的剩余额度不足以继续，任务已保留。本演示每任务只购买一个包，充值不会重置已用额度。",
+  ALLOWANCE_TASK_UNAVAILABLE: "任务已到期、身份变化或不再可执行，已停止新推理。",
+  HOSTED_METERED_NOT_CONFIGURED: "按量推理服务尚未配置。",
+  HOSTED_AUTONOMY_NOT_CONFIGURED: "连续运行尚未配置。",
+  GATEWAY_OUTCOME_UNKNOWN: "模型调用结果未确认，已暂停扣费并保留原请求，需核对原调用。",
+  HOSTED_REWARD_MODEL_UNSUPPORTED: "奖励额度目前仅支持 Kimi K2.6 的任务推理。",
+  HOSTED_NOT_CONFIGURED: "托管服务尚未配置。当前无法登录、创建 Agent 或执行操作。",
+  HOSTED_CONFIG_INVALID: "托管服务配置不可用，请稍后重试。",
+  HOSTED_UNAVAILABLE: "托管服务暂时不可用，请稍后重试。",
+  HOSTED_AUTH_REQUIRED: "请用钱包签名登录，查看和管理自己的 Agent。",
+  HOSTED_AUTH_INVALID: "登录签名已过期或无效，请重新签名登录。",
+  HOSTED_AUTH_RATE_LIMIT: "签名请求过于频繁，请稍后重试。",
+  HOSTED_SETTINGS_INVALID: "设置未被接受，请检查模型、名称和预算是否在平台允许范围内。",
+  HOSTED_AGENT_LIMIT: "已达到平台允许创建的 Agent 数量。",
+  HOSTED_AGENT_PAUSED: "Agent 已暂停，请先继续 Agent。",
+  HOSTED_RECOVER_ORIGINAL_REQUIRED: "有尚未结束的请求，请先查看或恢复原请求。",
+  HOSTED_BUDGET_EXHAUSTED: "剩余推理预算不足，请调整累计预算后重试。",
+  HOSTED_BUDGET_BELOW_SPENT: "累计预算不能低于已确认的推理支出。",
+  HOSTED_SPONSOR_LIMIT: "免费比赛赞助名额已用完：每个登录钱包累计最多 3 局，平台最多 100 局。",
+  HOSTED_RESPONSE_UNCERTAIN: "尚未确认服务器是否收到操作。已保留原请求，请用原 ID 继续确认。",
+  HOSTED_REQUEST_CONFLICT: "原请求 ID 的参数不一致。请保留原参数，并联系平台核对。",
+  HOSTED_INVALID_ORIGIN: "当前访问地址与托管服务配置不一致。",
+  HOSTED_PROCESS_INTERRUPTED: "服务中断，原请求已保留；可以明确恢复原请求。",
+  REWARD_INSUFFICIENT_AVAILABLE_TOKENS: "当前 Agent 的可用奖励额度不足。",
+};
+export function hostedError(error: unknown): string {
+  if (error instanceof HostedClientError) return messages[error.code] ?? `操作未完成（${error.code}）。`;
+  if (error instanceof Error && error.message.startsWith("钱包")) return error.message;
+  return "操作未完成，请检查钱包或稍后重试。";
+}
+export function reasonLabel(code: string) { return messages[code] ?? code; }
+export const actionLabel: Record<HostedAction, string> = { provision: "初始化 Agent", deposit: "现金入账", task: "运行任务", game: "免费德州", credits: "奖励额度消费", "reward-task": "奖励额度运行任务", "metered-task": "按量额度运行任务", autonomous: "Pi 连续运行" };
+export const statusLabel: Record<string, string> = { Pending: "初始化中", Ready: "就绪", Paused: "已暂停", Queued: "排队中", Running: "运行中", Succeeded: "已完成", Failed: "失败" };
+export const strategyLabel = { conservative: "保守", balanced: "均衡", aggressive: "积极" };
+export function usdcRaw(value: string): string {
+  const clean = value.trim();
+  if (!/^\d+(?:\.\d{1,6})?$/.test(clean)) throw new Error("预算和入账金额须为最多六位小数的结算资产金额。");
+  const [whole, fraction = ""] = clean.split(".");
+  const raw = BigInt(whole) * 1_000_000n + BigInt(fraction.padEnd(6, "0"));
+  if (raw < 1n) throw new Error("预算和入账金额必须大于零。");
+  return raw.toString();
+}
+export function inputUsdc(raw: string): string {
+  const value = BigInt(raw);
+  const fraction = (value % 1_000_000n).toString().padStart(6, "0").replace(/0+$/, "");
+  return `${value / 1_000_000n}${fraction ? `.${fraction}` : ""}`;
+}
+export function replayInput(run: HostedRun): RunInput {
+  return { requestId: run.requestId, action: run.action, ...(run.rewardKind === undefined ? {} : { rewardKind: run.rewardKind }), ...(run.amountRaw === undefined ? {} : { amountRaw: run.amountRaw }) };
+}
+
+const pendingKey = (owner: string) => `agentfuel:hosted:pending:${owner.toLowerCase()}`;
+/** Only public request parameters persist, so an interrupted POST can reuse its UUID. */
+export function savePending(command: PendingCommand | null, owner: string) {
+  if (command) localStorage.setItem(pendingKey(owner), JSON.stringify(command));
+  else localStorage.removeItem(pendingKey(owner));
+}
+export function readPending(owner: string): PendingCommand | null {
+  try {
+    const value = JSON.parse(localStorage.getItem(pendingKey(owner)) ?? "null") as PendingCommand | null;
+    if (!value || value.owner.toLowerCase() !== owner.toLowerCase() || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.input?.requestId)) return null;
+    if (value.kind === "run" && /^[a-zA-Z0-9_-]{1,80}$/.test(value.agentId) && ["provision", "deposit", "task", "game", "credits", "reward-task", "metered-task", "autonomous"].includes(value.input.action)) {
+      const input = value.input;
+      if (input.action === "game" && !["usdc", "llm-credits"].includes(input.rewardKind ?? "") || input.action === "deposit" && !/^[1-9]\d*$/.test(input.amountRaw ?? "")) return null;
+      return { owner, kind: "run", agentId: value.agentId, input: { requestId: input.requestId, action: input.action,
+        ...(input.action === "game" ? { rewardKind: input.rewardKind } : {}), ...(input.action === "deposit" ? { amountRaw: input.amountRaw } : {}) } };
+    }
+    if (value.kind === "create") {
+      const input = value.input;
+      if (typeof input.name !== "string" || typeof input.modelId !== "string" || !["conservative", "balanced", "aggressive"].includes(input.strategy) ||
+        !/^[1-9]\d*$/.test(input.perRunBudgetRaw) || !/^[1-9]\d*$/.test(input.totalBudgetRaw) || typeof input.allowCredit !== "boolean") return null;
+      return { owner, kind: "create", input: { requestId: input.requestId, name: input.name, modelId: input.modelId,
+        strategy: input.strategy, perRunBudgetRaw: input.perRunBudgetRaw, totalBudgetRaw: input.totalBudgetRaw, allowCredit: input.allowCredit } };
+    }
+  } catch { /* An invalid local recovery hint is never an authenticated session. */ }
+  return null;
+}
+
+type Injected = { request(args: { method: string; params?: unknown[] }): Promise<unknown>; on?: (event: string, listener: (...args: unknown[]) => void) => void; removeListener?: (event: string, listener: (...args: unknown[]) => void) => void };
+export function injectedWallet(): Injected | undefined { return (window as Window & { ethereum?: Injected }).ethereum; }
+export async function signedLogin(options: { isCurrent?: () => boolean; onWalletReady?: () => void } = {}): Promise<string> {
+  const assertCurrent = () => { if (options.isCurrent && !options.isCurrent()) throw new Error("钱包账号或网络已变化，请重新签名登录。"); };
+  const injected = injectedWallet();
+  if (!injected) throw new Error("钱包未检测到。请安装并启用 EIP-1193 钱包扩展。");
+  const { BrowserProvider, getAddress } = await import("ethers");
+  assertCurrent();
+  await injected.request({ method: "eth_requestAccounts" });
+  assertCurrent();
+  const provider = new BrowserProvider(injected), signer = await provider.getSigner();
+  const wallet = getAddress(await signer.getAddress()), chain = await injected.request({ method: "eth_chainId" });
+  options.onWalletReady?.(); assertCurrent();
+  const challenge = await hostedRequest<{ id: string; message: string; expiresAt: number }>("/auth/challenge", "POST", { wallet });
+  assertCurrent();
+  const chainMatch = /^Chain: (31337|10143|42431)$/m.exec(challenge.message);
+  if (!chainMatch || BigInt(String(chain)) !== BigInt(chainMatch[1])) throw new Error(`钱包网络不匹配。请切换到 ${chainMatch ? `${networkName(chainMatch[1])}（${chainMatch[1]}）` : "平台配置的网络"} 后重新登录。`);
+  const expected = `AgentFuel hosted agent login\nOrigin: ${window.location.origin}\nWallet: ${wallet}\nChain: ${chainMatch[1]}\nNonce: ${challenge.id}\nExpires: ${new Date(challenge.expiresAt).toISOString()}\nThis signature authenticates your platform account. It authorizes no blockchain transaction.`;
+  if (challenge.message !== expected || challenge.expiresAt <= Date.now() || challenge.expiresAt > Date.now() + 301_000) throw new Error("钱包登录挑战与当前地址不一致，请刷新重试。");
+  const signature = await signer.signMessage(challenge.message);
+  assertCurrent();
+  const accounts = await injected.request({ method: "eth_accounts" }) as string[];
+  if (!accounts.some(address => address.toLowerCase() === wallet.toLowerCase()) || BigInt(String(await injected.request({ method: "eth_chainId" }))) !== BigInt(chainMatch[1])) throw new Error("钱包账号或网络已变化，请重新签名登录。");
+  assertCurrent();
+  await hostedRequest("/auth/login", "POST", { challengeId: challenge.id, signature });
+  assertCurrent();
+  return wallet;
+}

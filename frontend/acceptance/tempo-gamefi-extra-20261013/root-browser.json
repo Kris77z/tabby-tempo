@@ -1,0 +1,321 @@
+{
+  "passed": true,
+  "authentication": "Real Node owner login signature; real HTTP; read-only injected wallet, not browser extension",
+  "surfaces": [
+    {
+      "name": "desktop",
+      "walletMethods": [
+        "eth_requestAccounts",
+        "eth_chainId",
+        "eth_accounts",
+        "eth_accounts",
+        "eth_chainId",
+        "personal_sign",
+        "eth_accounts",
+        "eth_chainId"
+      ],
+      "signatures": 1,
+      "agents": [
+        {
+          "label": "cash",
+          "id": "514aaff4-2700-4d52-ab56-376308e64421",
+          "quotaText": "本地测试追加授权有效，累计 7/9 局，剩余 2 局；授权截止 2026/10/13 15:28:04。其他钱包默认 3 局，平台最多 100 局，游戏不借贷。",
+          "runs": [
+            {
+              "requestId": "4aa3302f-d15c-460d-af27-7ff583eabfd2",
+              "action": "game",
+              "text": "免费德州 · PathUSD 奖励\n[\n已完成]\n\n2026/10/13 09:37:41\n\n4aa3302f-d15c-460d-af27-7ff583eabfd2\n阶段 Succeeded\n已确认推理费 0 PathUSD\n奖励 0.1 PathUSD\n查看请求与凭证"
+            },
+            {
+              "requestId": "519303e1-cb08-4631-8aec-2ea7ec340c83",
+              "action": "task",
+              "text": "运行任务\n[\n已完成]\n\n2026/10/13 09:39:36\n\n519303e1-cb08-4631-8aec-2ea7ec340c83\n阶段 Succeeded\n已确认推理费 0.12 PathUSD\n任务结算\n\ncash 支付 0.12 · 信用支付 0 PathUSD\n\n链上任务通过 · 实际还款 0 PathUSD · 结算入账 0.15 PathUSD\n\n借款状态：纯 cash，无借款\n\n查看结算交易 · 0xba0f80…fbd187 ↗\n\nTaskSettled 已核验 · 区块 #39348354 · 2026/10/13 09:39:29\n\n查看请求与凭证"
+            }
+          ],
+          "finance": {
+            "status": "confirmed",
+            "observedAt": "2026-10-13T01:46:31.830Z",
+            "chainId": "42431",
+            "agentId": "73",
+            "wallet": "0xA2F5Bdd12B24FEc85b0F4151D43b0528Dd05CBC2",
+            "cashRaw": "150000",
+            "debtRaw": "0",
+            "scannedTaskCount": 8,
+            "ownedTaskCount": 1,
+            "block": {
+              "number": 39349007,
+              "hash": "0x24db3814677d32c885844a1ad67bb2101b30d4994df01e98b82da23d64c6a977",
+              "timestamp": 1791855967
+            },
+            "credit": {
+              "score": "530",
+              "tier": "C",
+              "tierCapRaw": "200000",
+              "feeBps": "1500",
+              "eligible": true,
+              "rejection": null
+            },
+            "policy": {
+              "maxCashPerTxRaw": "120000",
+              "maxDebtPerTxRaw": "0",
+              "maxDebtPerDayRaw": "0",
+              "ownerFrozen": false
+            },
+            "counts": {
+              "repayments": "0",
+              "defaults": "0",
+              "mirrorRepayments": "0",
+              "successes": "1",
+              "mirrorDefaults": "0"
+            }
+          },
+          "screenshot": "frontend/acceptance/tempo-gamefi-extra-20261013/root-desktop-cash-requests.png",
+          "resources": "frontend/acceptance/tempo-gamefi-extra-20261013/root-desktop-cash-resources.png",
+          "viewport": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "label": "credits",
+          "id": "893fadc6-c22c-4bed-969f-791032cc1a98",
+          "quotaText": "本地测试追加授权有效，累计 7/9 局，剩余 2 局；授权截止 2026/10/13 15:28:04。其他钱包默认 3 局，平台最多 100 局，游戏不借贷。",
+          "runs": [
+            {
+              "requestId": "031de2d5-91dc-4515-bacb-67ed8361ee92",
+              "action": "game",
+              "text": "免费德州 · LLM credits 奖励\n[\n已完成]\n\n2026/10/13 09:39:42\n\n031de2d5-91dc-4515-bacb-67ed8361ee92\n阶段 Succeeded\n已确认推理费 0 PathUSD\n奖励 0 PathUSD\n赠送 0 tokens\n查看请求与凭证"
+            },
+            {
+              "requestId": "c72aaad1-6492-4504-874f-7eac7fa4674b",
+              "action": "game",
+              "text": "免费德州 · LLM credits 奖励\n[\n已完成]\n\n2026/10/13 09:39:50\n\nc72aaad1-6492-4504-874f-7eac7fa4674b\n阶段 Succeeded\n已确认推理费 0 PathUSD\n奖励 0 PathUSD\n赠送 0 tokens\n查看请求与凭证"
+            },
+            {
+              "requestId": "fcf33e86-a6dd-4e6c-97ed-d2589e5c706b",
+              "action": "game",
+              "text": "免费德州 · LLM credits 奖励\n[\n已完成]\n\n2026/10/13 09:39:58\n\nfcf33e86-a6dd-4e6c-97ed-d2589e5c706b\n阶段 Succeeded\n已确认推理费 0 PathUSD\n奖励 0 PathUSD\n赠送 4096 tokens\n查看请求与凭证"
+            },
+            {
+              "requestId": "3ec27411-3b6c-4212-884c-af2d84939b01",
+              "action": "reward-task",
+              "text": "奖励额度运行任务\n[\n已完成]\n\n2026/10/13 09:40:48\n\n3ec27411-3b6c-4212-884c-af2d84939b01\n阶段 Succeeded\n已确认推理费 0 PathUSD\n消费 295 tokens\n任务结算\n\n链上任务通过 · 实际还款 0 PathUSD · 结算入账 0.15 PathUSD\n\n借款状态：奖励额度，无借款\n\n查看结算交易 · 0x62eea7…b774d7 ↗\n\nTaskSettled 已核验 · 区块 #39348474 · 2026/10/13 09:40:42\n\n查看请求与凭证"
+            }
+          ],
+          "finance": {
+            "status": "confirmed",
+            "observedAt": "2026-10-13T01:46:51.554Z",
+            "chainId": "42431",
+            "agentId": "74",
+            "wallet": "0xEbFD1Ea13b4b3A89A531245c5C2af639F7dE89f8",
+            "cashRaw": "150000",
+            "debtRaw": "0",
+            "scannedTaskCount": 8,
+            "ownedTaskCount": 1,
+            "block": {
+              "number": 39349055,
+              "hash": "0x555d4862abe277ac74ad3d0a08fb180581fc5e802cd0befdd9b9fc505548753a",
+              "timestamp": 1791855996
+            },
+            "credit": {
+              "score": "530",
+              "tier": "C",
+              "tierCapRaw": "200000",
+              "feeBps": "1500",
+              "eligible": true,
+              "rejection": null
+            },
+            "policy": {
+              "maxCashPerTxRaw": "120000",
+              "maxDebtPerTxRaw": "0",
+              "maxDebtPerDayRaw": "0",
+              "ownerFrozen": false
+            },
+            "counts": {
+              "repayments": "0",
+              "defaults": "0",
+              "mirrorRepayments": "0",
+              "successes": "1",
+              "mirrorDefaults": "0"
+            }
+          },
+          "screenshot": "frontend/acceptance/tempo-gamefi-extra-20261013/root-desktop-credits-requests.png",
+          "resources": "frontend/acceptance/tempo-gamefi-extra-20261013/root-desktop-credits-resources.png",
+          "viewport": 1440,
+          "scrollWidth": 1440
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "name": "mobile",
+      "walletMethods": [
+        "eth_requestAccounts",
+        "eth_chainId",
+        "eth_accounts",
+        "eth_accounts",
+        "eth_chainId",
+        "personal_sign",
+        "eth_accounts",
+        "eth_chainId",
+        "eth_requestAccounts",
+        "eth_chainId",
+        "eth_accounts",
+        "eth_accounts",
+        "eth_chainId",
+        "personal_sign",
+        "eth_accounts",
+        "eth_chainId"
+      ],
+      "signatures": 2,
+      "agents": [
+        {
+          "label": "cash",
+          "id": "514aaff4-2700-4d52-ab56-376308e64421",
+          "quotaText": "本地测试追加授权有效，累计 7/9 局，剩余 2 局；授权截止 2026/10/13 15:28:04。其他钱包默认 3 局，平台最多 100 局，游戏不借贷。",
+          "runs": [
+            {
+              "requestId": "4aa3302f-d15c-460d-af27-7ff583eabfd2",
+              "action": "game",
+              "text": "免费德州 · PathUSD 奖励\n[\n已完成]\n\n2026/10/13 09:37:41\n\n4aa3302f-d15c-460d-af27-7ff583eabfd2\n阶段 Succeeded\n已确认推理费 0 PathUSD\n奖励 0.1 PathUSD\n查看请求与凭证"
+            },
+            {
+              "requestId": "519303e1-cb08-4631-8aec-2ea7ec340c83",
+              "action": "task",
+              "text": "运行任务\n[\n已完成]\n\n2026/10/13 09:39:36\n\n519303e1-cb08-4631-8aec-2ea7ec340c83\n阶段 Succeeded\n已确认推理费 0.12 PathUSD\n任务结算\n\ncash 支付 0.12 · 信用支付 0 PathUSD\n\n链上任务通过 · 实际还款 0 PathUSD · 结算入账 0.15 PathUSD\n\n借款状态：纯 cash，无借款\n\n查看结算交易 · 0xba0f80…fbd187 ↗\n\nTaskSettled 已核验 · 区块 #39348354 · 2026/10/13 09:39:29\n\n查看请求与凭证"
+            }
+          ],
+          "finance": {
+            "status": "confirmed",
+            "observedAt": "2026-10-13T01:47:16.438Z",
+            "chainId": "42431",
+            "agentId": "73",
+            "wallet": "0xA2F5Bdd12B24FEc85b0F4151D43b0528Dd05CBC2",
+            "cashRaw": "150000",
+            "debtRaw": "0",
+            "scannedTaskCount": 8,
+            "ownedTaskCount": 1,
+            "block": {
+              "number": 39349090,
+              "hash": "0xc5d7bc97c7556f66780b04cc8c6a4aa3169b5baeea50e3cfd689f32ea07a3f47",
+              "timestamp": 1791856017
+            },
+            "credit": {
+              "score": "530",
+              "tier": "C",
+              "tierCapRaw": "200000",
+              "feeBps": "1500",
+              "eligible": true,
+              "rejection": null
+            },
+            "policy": {
+              "maxCashPerTxRaw": "120000",
+              "maxDebtPerTxRaw": "0",
+              "maxDebtPerDayRaw": "0",
+              "ownerFrozen": false
+            },
+            "counts": {
+              "repayments": "0",
+              "defaults": "0",
+              "mirrorRepayments": "0",
+              "successes": "1",
+              "mirrorDefaults": "0"
+            }
+          },
+          "screenshot": "frontend/acceptance/tempo-gamefi-extra-20261013/root-mobile-cash-requests.png",
+          "resources": "frontend/acceptance/tempo-gamefi-extra-20261013/root-mobile-cash-resources.png",
+          "viewport": 393,
+          "scrollWidth": 393
+        },
+        {
+          "label": "credits",
+          "id": "893fadc6-c22c-4bed-969f-791032cc1a98",
+          "quotaText": "本地测试追加授权有效，累计 7/9 局，剩余 2 局；授权截止 2026/10/13 15:28:04。其他钱包默认 3 局，平台最多 100 局，游戏不借贷。",
+          "runs": [
+            {
+              "requestId": "031de2d5-91dc-4515-bacb-67ed8361ee92",
+              "action": "game",
+              "text": "免费德州 · LLM credits 奖励\n[\n已完成]\n\n2026/10/13 09:39:42\n\n031de2d5-91dc-4515-bacb-67ed8361ee92\n阶段 Succeeded\n已确认推理费 0 PathUSD\n奖励 0 PathUSD\n赠送 0 tokens\n查看请求与凭证"
+            },
+            {
+              "requestId": "c72aaad1-6492-4504-874f-7eac7fa4674b",
+              "action": "game",
+              "text": "免费德州 · LLM credits 奖励\n[\n已完成]\n\n2026/10/13 09:39:50\n\nc72aaad1-6492-4504-874f-7eac7fa4674b\n阶段 Succeeded\n已确认推理费 0 PathUSD\n奖励 0 PathUSD\n赠送 0 tokens\n查看请求与凭证"
+            },
+            {
+              "requestId": "fcf33e86-a6dd-4e6c-97ed-d2589e5c706b",
+              "action": "game",
+              "text": "免费德州 · LLM credits 奖励\n[\n已完成]\n\n2026/10/13 09:39:58\n\nfcf33e86-a6dd-4e6c-97ed-d2589e5c706b\n阶段 Succeeded\n已确认推理费 0 PathUSD\n奖励 0 PathUSD\n赠送 4096 tokens\n查看请求与凭证"
+            },
+            {
+              "requestId": "3ec27411-3b6c-4212-884c-af2d84939b01",
+              "action": "reward-task",
+              "text": "奖励额度运行任务\n[\n已完成]\n\n2026/10/13 09:40:48\n\n3ec27411-3b6c-4212-884c-af2d84939b01\n阶段 Succeeded\n已确认推理费 0 PathUSD\n消费 295 tokens\n任务结算\n\n链上任务通过 · 实际还款 0 PathUSD · 结算入账 0.15 PathUSD\n\n借款状态：奖励额度，无借款\n\n查看结算交易 · 0x62eea7…b774d7 ↗\n\nTaskSettled 已核验 · 区块 #39348474 · 2026/10/13 09:40:42\n\n查看请求与凭证"
+            }
+          ],
+          "finance": {
+            "status": "confirmed",
+            "observedAt": "2026-10-13T01:51:24.915Z",
+            "chainId": "42431",
+            "agentId": "74",
+            "wallet": "0xEbFD1Ea13b4b3A89A531245c5C2af639F7dE89f8",
+            "cashRaw": "150000",
+            "debtRaw": "0",
+            "scannedTaskCount": 8,
+            "ownedTaskCount": 1,
+            "block": {
+              "number": 39349480,
+              "hash": "0x10d438c8061c726eed6d43a290c6f72a32b2d486cfc9d2a96be782e243935a4a",
+              "timestamp": 1791856255
+            },
+            "credit": {
+              "score": "530",
+              "tier": "C",
+              "tierCapRaw": "200000",
+              "feeBps": "1500",
+              "eligible": true,
+              "rejection": null
+            },
+            "policy": {
+              "maxCashPerTxRaw": "120000",
+              "maxDebtPerTxRaw": "0",
+              "maxDebtPerDayRaw": "0",
+              "ownerFrozen": false
+            },
+            "counts": {
+              "repayments": "0",
+              "defaults": "0",
+              "mirrorRepayments": "0",
+              "successes": "1",
+              "mirrorDefaults": "0"
+            }
+          },
+          "screenshot": "frontend/acceptance/tempo-gamefi-extra-20261013/root-mobile-credits-requests.png",
+          "resources": "frontend/acceptance/tempo-gamefi-extra-20261013/root-mobile-credits-resources.png",
+          "viewport": 393,
+          "scrollWidth": 393
+        }
+      ],
+      "pageErrors": [],
+      "authContexts": 2
+    }
+  ],
+  "issues": [],
+  "attempts": [
+    {
+      "file": "root-browser-first-attempt.json",
+      "passed": false,
+      "failure": {
+        "surface": "mobile",
+        "agentId": "74",
+        "stage": "finance",
+        "reason": "Underwriter temporarily unavailable; UI displayed unavailable cash/debt/score",
+        "retryScope": "Only mobile credits actor read-only view"
+      }
+    },
+    {
+      "file": "root-browser-mobile-retry.json",
+      "passed": true,
+      "scope": "mobile credits actor only"
+    }
+  ],
+  "limitation": "One transient Underwriter unavailable read was honestly displayed; scoped read-only retry confirmed current state. No game/task/transaction/model writes."
+}

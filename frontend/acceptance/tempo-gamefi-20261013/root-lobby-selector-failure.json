@@ -1,0 +1,10 @@
+{
+  "observedAt": "2026-10-13T00:47:32.163Z",
+  "build": ".next-tempo-gamefi",
+  "authenticated": false,
+  "businessOperations": 0,
+  "priorTestCorrection": "Unauthenticated CTA should select arena and request login; game actions require authentication.",
+  "surfaces": [],
+  "passed": false,
+  "error": "expect(locator).toHaveAttribute(expected) failed\n\nLocator: getByTestId('hosted-action-dock').getByRole('button', { name: '竞技场', exact: true })\nExpected: \"page\"\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toHaveAttribute\" getByTestId('hosted-action-dock').getByRole('button', { name: '竞技场', exact: true }) with timeout 5000ms\n  - waiting for getByTestId('hosted-action-dock').getByRole('button', { name: '竞技场', exact: true })\n"
+}

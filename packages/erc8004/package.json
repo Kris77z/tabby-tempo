@@ -1,0 +1,15 @@
+{
+  "name": "@agentfuel/erc8004",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./identity": "./src/identity.ts",
+    "./reputation": "./src/reputation.ts"
+  },
+  "scripts": {
+    "test": "tsx --test test/unit.test.ts",
+    "test:fork": "tsx --test test/fork.test.ts"
+  },
+  "dependencies": { "ethers": "^6.0.0" }
+}

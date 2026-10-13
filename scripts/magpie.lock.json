@@ -1,0 +1,15 @@
+{
+  "repository": "https://github.com/yetone/magpie",
+  "tag": "v0.1.814",
+  "commit": "d6096e2fb1710ba123c0d4f59ed8e7e22165de07",
+  "sourceUrl": "https://api.github.com/repos/yetone/magpie/tarball/v0.1.814",
+  "sourceSha256": "89d850fba6b96d3dfc8228ed72cdb3f3ae8385fb18a8a37ff847059ba75eaec6",
+  "goVersion": "go1.26.3",
+  "patchSha256": "a73f41c94fd4cbee820ef2708227e35c38a575fa20b5404ae2c6c2323dfedb54",
+  "patchedVersion": "0.1.814-agentfuel.1",
+  "patchedSourceSha256": {
+    "internal/gateway/gateway.go": "8e23e2840844ef4b9a534f56427947058df4b16676a0309063333693e1c422d7",
+    "internal/gateway/fallback.go": "b1bb924267c1c0486eb29310eb23fde92df76624a00389591b60d613a08f010b"
+  },
+  "officialDarwinArm64BinarySha256": "4d3250b6a047b0fc08018ea813f7ee52d7462aa6c93913c5dd53051908d30688"
+}

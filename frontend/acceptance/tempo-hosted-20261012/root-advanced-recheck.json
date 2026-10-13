@@ -1,0 +1,27 @@
+{
+  "auditor": "root",
+  "observedAt": "2026-10-12T17:29:14.093Z",
+  "frontendOrigin": "http://127.0.0.1:3028",
+  "distDir": ".next-tempo-advanced",
+  "method": "Independent real HTTP GET, no fixture, no business operations",
+  "modelCountersBefore": {
+    "acceptedRequests": 12,
+    "attemptRecords": 24
+  },
+  "advanced": {
+    "status": 200,
+    "headersMs": 15,
+    "totalMs": 68661,
+    "configuredSnapshot": true,
+    "tempoAssetVisible": true,
+    "unknownLedger": false,
+    "fixture": false,
+    "htmlSha256": "8cbd3e06209f7f78270a9a70371bd054b9331b9b4d35e7aae6e20713875dd6a0"
+  },
+  "modelCountersAfter": {
+    "acceptedRequests": 12,
+    "attemptRecords": 24
+  },
+  "noNewModelRequests": true,
+  "passed": true
+}

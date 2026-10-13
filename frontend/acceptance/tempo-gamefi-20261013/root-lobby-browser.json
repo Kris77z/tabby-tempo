@@ -1,0 +1,41 @@
+{
+  "observedAt": "2026-10-13T00:48:54.369Z",
+  "build": ".next-tempo-gamefi",
+  "authenticated": false,
+  "businessOperations": 0,
+  "testCorrections": [
+    "Unauthenticated users must sign in before game actions appear.",
+    "Use DOM selected-tab state; terminal CSS can affect accessible button names."
+  ],
+  "surfaces": [
+    {
+      "name": "desktop",
+      "width": {
+        "viewport": 1440,
+        "scroll": 1440
+      },
+      "errors": [],
+      "arenaTabSelected": true,
+      "loginRequired": true
+    },
+    {
+      "name": "mobile",
+      "width": {
+        "viewport": 393,
+        "scroll": 393
+      },
+      "errors": [],
+      "arenaTabSelected": true,
+      "loginRequired": true
+    }
+  ],
+  "/api/arena/gamefi": {
+    "status": 200,
+    "enabled": false
+  },
+  "/api/arena/credits": {
+    "status": 200,
+    "enabled": false
+  },
+  "passed": true
+}

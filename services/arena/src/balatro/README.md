@@ -1,0 +1,9 @@
+# Balatro challenge referee
+
+The local referee follows the public Token Arena `arena-balatro-v2` challenge documented at <https://token.jiqiren.ai/skills/games/balatro.md>, read on 2026-10-04. The hand bases, level increments, nine Joker effects and scoring-card selection were additionally checked against the public score-preview module at <https://token.jiqiren.ai/_next/static/chunks/agent-Cv6GIcvj.js>.
+
+This is a single-player run: seat 0 plays, while seat 1 represents the blind host and has no hand or turn. Twelve score gates span four Antes, with four hands and three discards per blind. Passing each of the first eleven blinds offers three distinct unowned Jokers and upgrades one hand type by three levels; skipping a Joker still grants the upgrade. A full five-slot construction requires an explicit replacement. Every new blind receives a fresh shuffled 52-card deck. Boss blinds only raise the score gate.
+
+`createBalatroGame()` starts a new run; the session layer owns identity, ready checks, versioning, timeouts and resignations. `view(0)` returns the player's hand. `view(1)` and `view(null)` hide it. All views are detached copies, and the future deck stays in private fields. `act()` validates before mutating. `botAction()` is a visible-card local hint and performs no network or model calls. Test-only factories are in `test-support.ts` and must never be accepted as HTTP request configuration.
+
+The reference does not specify the reward RNG algorithm. This implementation samples three eligible IDs uniformly without replacement using Node's cryptographic RNG; the exact sampled sequence need not match a separate reference run. It otherwise uses the documented v2 progression, including additive Joker effects before multiplicative ones. Score, chips and multiplier are game values and never create a balance or settlement.

@@ -1,0 +1,72 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    ".next-arena/types/**/*.ts",
+    ".next-arena/dev/types/**/*.ts",
+    ".next-arena-prod/types/**/*.ts",
+    ".next-arena-prod/dev/types/**/*.ts",
+    ".next-gamefi/types/**/*.ts",
+    ".next-gamefi/dev/types/**/*.ts",
+    ".next-gamefi-prod/types/**/*.ts",
+    ".next-gamefi-prod/dev/types/**/*.ts",
+    ".next-gamefi-work/types/**/*.ts",
+    ".next-gamefi-work/dev/types/**/*.ts",
+    ".next-practice-restart-3695e63d/types/**/*.ts",
+    ".next-practice-restart-3695e63d/dev/types/**/*.ts",
+    ".next-gamefi-final/types/**/*.ts",
+    ".next-gamefi-final/dev/types/**/*.ts",
+    ".next-hosted-test/types/**/*.ts",
+    ".next-hosted-test/dev/types/**/*.ts",
+    ".next-terminal-test/types/**/*.ts",
+    ".next-terminal-test/dev/types/**/*.ts",
+    ".next-monad-final/types/**/*.ts",
+    ".next-monad-final/dev/types/**/*.ts",
+    ".next-monad-verified/types/**/*.ts",
+    ".next-monad-verified/dev/types/**/*.ts",
+    ".next-landing-test/types/**/*.ts",
+    ".next-landing-test/dev/types/**/*.ts",
+    ".next-tempo-live/types/**/*.ts",
+    ".next-tempo-live/dev/types/**/*.ts",
+    ".next-tempo-budget/types/**/*.ts",
+    ".next-tempo-budget/dev/types/**/*.ts",
+    ".next-tempo-advanced/types/**/*.ts",
+    ".next-tempo-advanced/dev/types/**/*.ts",
+    ".next-tempo-gamefi/types/**/*.ts",
+    ".next-tempo-gamefi/dev/types/**/*.ts",
+    ".next-tempo-gamefi-extra/types/**/*.ts",
+    ".next-tempo-gamefi-extra/dev/types/**/*.ts",
+    ".next-tempo-gamefi-extra-2/types/**/*.ts",
+    ".next-tempo-gamefi-extra-2/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

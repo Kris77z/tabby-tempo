@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-10-13T00:26:09.636235+00:00",
+  "purpose": "Retain completed core acceptance before separate GameFi work",
+  "coreEvidence": [
+    {
+      "path": "docs/evidence/tempo-20261012/root-acceptance.json",
+      "sha256": "ea82a51e3059d829484ce8c35811a9871034c2f9f295bf9353b4c1dee82da5c9"
+    },
+    {
+      "path": "docs/evidence/tempo-20261012/root-model-audit.json",
+      "sha256": "265988f87a207533f1d4f473eb1444059bd5e6cbf55fd05e16aa33c847edbd81"
+    },
+    {
+      "path": "docs/evidence/tempo-20261012/financial-evidence.json",
+      "sha256": "ebffbb6c98351145553bacd6716d134886ab3af4de9300a13e5c47f231fb0c1b"
+    }
+  ]
+}

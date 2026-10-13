@@ -1,0 +1,46 @@
+{
+  "observedAt": "2026-10-13T01:33:53.576Z",
+  "grantId": "3b6116e1-ceb9-40f1-ad80-47b3df650a30",
+  "digest": "7e90a550b4caef40b7008af1a12ea25fd2606dd6c77a601cbbcc75ddf96c2783",
+  "databaseMirrorMatch": true,
+  "baselineOwnerCount": 3,
+  "admissions": [],
+  "expiry": "2026-10-13T07:28:04.166Z",
+  "final": {
+    "observedAt": "2026-10-13T01:43:19.467Z",
+    "databaseMirrorMatch": true,
+    "ownerCount": 7,
+    "additionalUsed": 4,
+    "remaining": 2,
+    "admissions": [
+      {
+        "requestId": "4aa3302f-d15c-460d-af27-7ff583eabfd2",
+        "agentId": "514aaff4-2700-4d52-ab56-376308e64421",
+        "ordinal": 1,
+        "admittedAt": "2026-10-13T01:37:09.343Z",
+        "rewardKind": "usdc"
+      },
+      {
+        "requestId": "031de2d5-91dc-4515-bacb-67ed8361ee92",
+        "agentId": "893fadc6-c22c-4bed-969f-791032cc1a98",
+        "ordinal": 2,
+        "admittedAt": "2026-10-13T01:39:36.924Z",
+        "rewardKind": "llm-credits"
+      },
+      {
+        "requestId": "c72aaad1-6492-4504-874f-7eac7fa4674b",
+        "agentId": "893fadc6-c22c-4bed-969f-791032cc1a98",
+        "ordinal": 3,
+        "admittedAt": "2026-10-13T01:39:43.001Z",
+        "rewardKind": "llm-credits"
+      },
+      {
+        "requestId": "fcf33e86-a6dd-4e6c-97ed-d2589e5c706b",
+        "agentId": "893fadc6-c22c-4bed-969f-791032cc1a98",
+        "ordinal": 4,
+        "admittedAt": "2026-10-13T01:39:51.088Z",
+        "rewardKind": "llm-credits"
+      }
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "checkedAt": "2026-10-12T13:18:20.130Z",
+  "chainId": "42431",
+  "block": {
+    "number": 39275661,
+    "hash": "0x6d3db80218e4f7397653f97a64f7cb5781f398fb897a72a5027f363f676be5d9"
+  },
+  "checks": {
+    "account": "0x1B3E3f54347C5E84C7cA2E2759636e31950D9b9B",
+    "escrow": "0x665aea43F238F646d6FD712b465e38026ae59e06",
+    "adapter": "0xeE5e8fe877AA2E4255dF5fcd346B7E3979dB3C2e",
+    "poolBalance": "10000000",
+    "escrowBalance": "1200000"
+  },
+  "tasks": [
+    {
+      "taskId": "1",
+      "status": "1",
+      "reward": "150000",
+      "escrowBalance": "150000"
+    },
+    {
+      "taskId": "2",
+      "status": "1",
+      "reward": "150000",
+      "escrowBalance": "150000"
+    },
+    {
+      "taskId": "3",
+      "status": "1",
+      "reward": "150000",
+      "escrowBalance": "150000"
+    },
+    {
+      "taskId": "4",
+      "status": "1",
+      "reward": "150000",
+      "escrowBalance": "150000"
+    },
+    {
+      "taskId": "5",
+      "status": "1",
+      "reward": "150000",
+      "escrowBalance": "150000"
+    },
+    {
+      "taskId": "6",
+      "status": "1",
+      "reward": "150000",
+      "escrowBalance": "150000"
+    },
+    {
+      "taskId": "7",
+      "status": "1",
+      "reward": "150000",
+      "escrowBalance": "150000"
+    },
+    {
+      "taskId": "8",
+      "status": "1",
+      "reward": "150000",
+      "escrowBalance": "150000"
+    }
+  ]
+}

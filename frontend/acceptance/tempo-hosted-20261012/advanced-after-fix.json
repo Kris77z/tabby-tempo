@@ -1,0 +1,25 @@
+{
+  "observedAt": "2026-10-12T17:27:25.664Z",
+  "frontendOrigin": "http://127.0.0.1:3028",
+  "distDir": ".next-tempo-advanced",
+  "pid": 68740,
+  "modelBefore": {
+    "acceptedRequests": 12,
+    "attemptRecords": 24
+  },
+  "advanced": {
+    "status": 200,
+    "headersMs": 71,
+    "totalMs": 62955,
+    "configuredSnapshot": true,
+    "tempoAssetVisible": true,
+    "unknownLedger": false,
+    "fixture": false
+  },
+  "passed": true,
+  "modelAfter": {
+    "acceptedRequests": 12,
+    "attemptRecords": 24
+  },
+  "noNewModelRequests": true
+}

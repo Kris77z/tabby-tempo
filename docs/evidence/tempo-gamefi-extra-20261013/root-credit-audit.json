@@ -1,0 +1,82 @@
+{
+  "observedAt": "2026-10-13T01:42:09.924Z",
+  "ledgerSha256": "be35fcbd652b6225cf26cadd92ded1745b2a75262ee97d89302d8ed857c70eac",
+  "grants": [
+    {
+      "id": "75e6a55b-aec5-4c86-b084-929edc522f03",
+      "replayDigest": "5544be665490913f4364f5221e9f2fe84241e738658145786ec890065b7cad1b",
+      "winners": [
+        1
+      ],
+      "allocations": [
+        0,
+        4096
+      ]
+    },
+    {
+      "id": "031de2d5-91dc-4515-bacb-67ed8361ee92",
+      "replayDigest": "a013a8a33741e100249a81bbfc4840bdf64f2437986a9dcff185a0122a84648d",
+      "winners": [
+        1
+      ],
+      "allocations": [
+        0,
+        4096
+      ]
+    },
+    {
+      "id": "c72aaad1-6492-4504-874f-7eac7fa4674b",
+      "replayDigest": "e18a7a5774ecd021ed7cdc5584a73dc7e5be4c816ec50e03d8886be659e91305",
+      "winners": [
+        1
+      ],
+      "allocations": [
+        0,
+        4096
+      ]
+    },
+    {
+      "id": "fcf33e86-a6dd-4e6c-97ed-d2589e5c706b",
+      "replayDigest": "a2ad85f7c70a9c89c0f7424bd4df0a67aee687ef6feeb11592b081817bac101b",
+      "winners": [
+        0
+      ],
+      "allocations": [
+        4096,
+        0
+      ]
+    }
+  ],
+  "redemptions": [
+    {
+      "id": "3ec27411-3b6c-4212-884c-af2d84939b01:round:0",
+      "status": "Completed",
+      "requestDigest": "ba5912465f1d214fb3e32e9dfa9d59793caed8efb9dec8b15c474719d1317146",
+      "responseDigest": "35ee0dbb639da4233566ecb3acd19d0736ebbd943ed7c3fcc150ea1caf5c2c1a",
+      "reservedTokens": 1829,
+      "chargedTokens": 295,
+      "usage": {
+        "prompt_tokens": 228,
+        "completion_tokens": 67,
+        "total_tokens": 295
+      },
+      "model": "kimi-k2.6"
+    }
+  ],
+  "balances": [
+    {
+      "agentId": "43",
+      "granted": 12288,
+      "consumed": 0,
+      "reserved": 0,
+      "available": 12288
+    },
+    {
+      "agentId": "74",
+      "granted": 4096,
+      "consumed": 295,
+      "reserved": 0,
+      "available": 3801
+    }
+  ]
+}

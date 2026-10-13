@@ -1,0 +1,58 @@
+{
+  "observedAt": "2026-10-13T01:12:19.861980+00:00",
+  "approval": "User approved up to 6 additional games, same owner and actors, max120 game calls/61440 output tokens/600000 raw test PathUSD; local only",
+  "baseline": [
+    {
+      "path": "docs/evidence/tempo-gamefi-20261013/root-artifact-check.json",
+      "sha256": "cee7e38806fa412db831c3882c947e9f5b69c2374b18974256906614a8a1f5b5"
+    },
+    {
+      "path": "docs/evidence/tempo-gamefi-20261013/financial-evidence.json",
+      "sha256": "2dc4164bb4bbcae5ad06d1a2a2afa4f50e3fb63719c95e5ff423e22a1fc25f84"
+    },
+    {
+      "path": "docs/evidence/tempo-gamefi-20261013/root-game-replay.json",
+      "sha256": "47bb855d7a63a7a75de06afa5793a1e10e0e856d87a2c94e0d46e14f0b82faf6"
+    },
+    {
+      "path": "docs/evidence/tempo-gamefi-20261013/root-chain-audit.json",
+      "sha256": "1156d7939bd740729ec7d48bdab6cdd6379b7e70556ffc8e8efcac230bdcbd83"
+    },
+    {
+      "path": "docs/evidence/tempo-gamefi-20261013/root-core-baseline.json",
+      "sha256": "10b9b3ac8117dd0d60e6a565c0736b03f3b7219fac02a1ba20c1e598215eba92"
+    },
+    {
+      "path": "docs/evidence/tempo-gamefi-20261013/practice-evidence.json",
+      "sha256": "60b39139bfa5267347b5e3adc9c04571bd108413997a479410e6224c32b64e21"
+    },
+    {
+      "path": "docs/evidence/tempo-gamefi-20261013/root-credit-grant-audit.json",
+      "sha256": "bf1802457ab6a2f1853fd177ad660c130e00f6c3b9edd3091457112447c137a2"
+    },
+    {
+      "path": "docs/evidence/tempo-20261012/root-bootstrap-audit.json",
+      "sha256": "1238aa555becab41233172460f2736fb5a300c05ba561e481f291500674e9b27"
+    },
+    {
+      "path": "docs/evidence/tempo-20261012/root-model-audit.json",
+      "sha256": "265988f87a207533f1d4f473eb1444059bd5e6cbf55fd05e16aa33c847edbd81"
+    },
+    {
+      "path": "docs/evidence/tempo-20261012/root-acceptance.json",
+      "sha256": "ea82a51e3059d829484ce8c35811a9871034c2f9f295bf9353b4c1dee82da5c9"
+    },
+    {
+      "path": "docs/evidence/tempo-20261012/root-compensation-audit.json",
+      "sha256": "b62593c004fbb78e699c8948d5768d567d4c55caec31fccef19089890e3a05be"
+    },
+    {
+      "path": "docs/evidence/tempo-20261012/root-planner-compensation-audit.json",
+      "sha256": "dd2427c4942f6d89d9d107dc4d3a75ea032be059cf4cfcbac2ade3bd5b7bb6cb"
+    },
+    {
+      "path": "docs/evidence/tempo-20261012/root-deployment-audit.json",
+      "sha256": "aa9f4c92bab245f15c17b73dafac4b8de5e65a3ed4d3713c0e2b311ad7135592"
+    }
+  ]
+}

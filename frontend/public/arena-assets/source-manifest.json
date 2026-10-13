@@ -1,0 +1,122 @@
+[
+  {
+    "source": "https://token.jiqiren.ai/images/arena/covers/poker-v1-1440.webp",
+    "local": "/arena-assets/covers/poker-v1-1440.webp",
+    "bytes": 28212,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/covers/gomoku-v2-1440.webp",
+    "local": "/arena-assets/covers/gomoku-v2-1440.webp",
+    "bytes": 25698,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/covers/chess-v2-1440.webp",
+    "local": "/arena-assets/covers/chess-v2-1440.webp",
+    "bytes": 29096,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/covers/balatro-v2-1440.webp",
+    "local": "/arena-assets/covers/balatro-v2-1440.webp",
+    "bytes": 40266,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/chess/black-rook.webp",
+    "local": "/arena-assets/chess/black-rook.webp",
+    "bytes": 6996,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/chess/black-knight.webp",
+    "local": "/arena-assets/chess/black-knight.webp",
+    "bytes": 8660,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/chess/black-bishop.webp",
+    "local": "/arena-assets/chess/black-bishop.webp",
+    "bytes": 7026,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/chess/black-queen.webp",
+    "local": "/arena-assets/chess/black-queen.webp",
+    "bytes": 8602,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/chess/black-king.webp",
+    "local": "/arena-assets/chess/black-king.webp",
+    "bytes": 8712,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/chess/black-pawn.webp",
+    "local": "/arena-assets/chess/black-pawn.webp",
+    "bytes": 5596,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/chess/white-rook.webp",
+    "local": "/arena-assets/chess/white-rook.webp",
+    "bytes": 7540,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/chess/white-knight.webp",
+    "local": "/arena-assets/chess/white-knight.webp",
+    "bytes": 9116,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/chess/white-bishop.webp",
+    "local": "/arena-assets/chess/white-bishop.webp",
+    "bytes": 7830,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/chess/white-queen.webp",
+    "local": "/arena-assets/chess/white-queen.webp",
+    "bytes": 9046,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/chess/white-king.webp",
+    "local": "/arena-assets/chess/white-king.webp",
+    "bytes": 9820,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/chess/white-pawn.webp",
+    "local": "/arena-assets/chess/white-pawn.webp",
+    "bytes": 5958,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/balatro/spades-v1.webp",
+    "local": "/arena-assets/balatro/spades-v1.webp",
+    "bytes": 8544,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/balatro/hearts-v1.webp",
+    "local": "/arena-assets/balatro/hearts-v1.webp",
+    "bytes": 9002,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/balatro/diamonds-v1.webp",
+    "local": "/arena-assets/balatro/diamonds-v1.webp",
+    "bytes": 7574,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  },
+  {
+    "source": "https://token.jiqiren.ai/images/arena/balatro/clubs-v1.webp",
+    "local": "/arena-assets/balatro/clubs-v1.webp",
+    "bytes": 9214,
+    "evidence": "SOURCE: browser document.images, 2026-10-04"
+  }
+]
