@@ -87,6 +87,15 @@ export async function verifyFixedPriceCredit(directory: string) {
       assert.equal(call!.name, "payProvider"); const feeBps = BigInt(call!.args[4].feeBps);
       return { cash: cash.toString(), credit: credit.toString(), feeBps: feeBps.toString(), fee: (credit * feeBps / 10000n).toString(), paymentTx: r!.hash };
     };
+    const rejectDeliveredRefund = async (s: FixedTaskSession, name: string) => {
+      const paymentId = s.handle!.quote.paymentId, record = await relay!.store.read(paymentId);
+      assert.equal(record.state, "Delivered"); assert.equal(record.operatorCompensation, undefined);
+      const balance = await f!.providerBalance(), nonce = await f!.provider.getTransactionCount(f!.payee), count = calls.length;
+      await assert.rejects(refunder.refund(paymentId, id(name), "120000"), { code: "REFUND_NOT_ALLOWED" });
+      assert.deepEqual((await relay!.store.read(paymentId)).refunds, record.refunds);
+      assert.equal(await f!.providerBalance(), balance); assert.equal(await f!.provider.getTransactionCount(f!.payee), nonce);
+      assert.equal(calls.length, count);
+    };
     // Unpaid requests cannot reserve another agent's task. Paid request and old handle remain bound.
     const repairConfig = cfg(taskIds[0]), attackerConfig = { ...repairConfig, solve: { ...repairConfig.solve, maxToolCalls: 1 } };
     assert.equal((await postQuote(attackerConfig)).status, 402); assert.equal((await postQuote(repairConfig)).status, 402);
@@ -142,7 +151,7 @@ export async function verifyFixedPriceCredit(directory: string) {
     const early = await run("early", earlyConfig); assert.equal(early.phase, "Succeeded", json(early)); await verifyPaid(early, earlyCash, 120000n - earlyCash);
     assert.equal(calls.length, earlyCalls); assert.equal(await f.provider.getTransactionCount(f.agentAddress), earlyNonce); assert.equal(await f.providerBalance(), 240000n);
     assert.equal((early.inference!.result as any).run.rounds.length, 1); assert.equal(early.inference!.receipt.price, "120000");
-    await assert.rejects(refunder.refund(early.handle!.quote.paymentId, id("early-refund"), "120000"), /Only paid/);
+    await rejectDeliveredRefund(early, "early-refund");
     report.scenarios.push({ name: "early-success-cache", passed: true, priceUnchanged: true, extraPaymentOrModel: false });
 
     const fullRefund = async (name: string, s: FixedTaskSession, injectFailure = false, defaulted = false) => {
@@ -183,7 +192,7 @@ export async function verifyFixedPriceCredit(directory: string) {
     queue = [response(sampleOnly)]; const failed = await run("hidden-fail", cfg(taskIds[5])); assert.equal(failed.phase, "Failed", json(failed));
     await verifyPaid(failed, 0n, 120000n);
     assert.equal((failed.inference!.result as any).run.phase, "Delivered"); assert.equal((await taskLoan(taskIds[5])).status, 3n); assert.equal((await read(f.escrow, "getTask", [taskIds[5]])).status, 4n);
-    await assert.rejects(refunder.refund(failed.handle!.quote.paymentId, id("failed-refund"), "120000"), /Only paid/);
+    await rejectDeliveredRefund(failed, "failed-refund");
     assert.equal(await f.providerBalance(), 480000n); assert.equal(queue.length, 0); report.scenarios.push({ name: "delivered-hidden-fail-default", passed: true, refundable: false, taskReward: "300000", cash: "0", credit: "120000" });
     const lateTask = await read(f.escrow, "getTask", [taskIds[6]]);
     await f.provider.send("evm_setNextBlockTimestamp", [Number(lateTask.deadline) + 1]); await f.provider.send("evm_mine", []); f.admin.reset();
