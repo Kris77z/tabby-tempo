@@ -160,17 +160,21 @@ export class HostedAutonomyExecutor implements HostedExecutor {
         const controller: AutonomyConfig = { version: 1, sessionId: input.run.requestId, maxTasks: this.config.maxTasks, maxDecisions: this.config.maxDecisions,
           maxSpendRaw: input.run.reservedRaw, deadlineMs: (this.deps.now ?? Date.now)() + this.config.durationMs, models,
           funding: input.agent.allowCredit ? ["cash", "credit"] : ["cash"], decisionReserveRaw: this.config.plannerPriceRaw };
-        snapshot = { version: 1, config: this.config, input: structuredClone(input), controller, children: {} }; await store.write(snapshot);
+        const {activity:_activity,progress:_progress,...persistedInput}=input;
+        snapshot = { version: 1, config: this.config, input: structuredClone(persistedInput), controller, children: {} }; await store.write(snapshot);
       }
       const state = snapshot, parent = state.input;
       const executeChild = async (child: HostedExecution, recover: boolean) => {
-        const result = await this.task.execute({ ...structuredClone(child), recover });
+        const result = await this.task.execute({ ...structuredClone(child), recover, activity:input.activity });
         return { terminal: result.terminal, success: result.success, chargedRaw: result.chargedRaw, ...(result.refundedRaw !== undefined ? { refundedRaw: result.refundedRaw } : {}), ...(result.reason ? { reason: result.reason } : {}) };
       };
       const result = await runAutonomy(join(input.directory, "autonomy-loop"), state.controller, {
         now: this.deps.now,
+        onProgress:async progress=>{const decision=progress.decision;await input.activity?.({scene:progress.phase==="Paused"?"interruption":"decision",state:progress.phase==="Deciding"?"started":progress.phase==="Executing"?"selected":progress.phase==="Paused"?/UNKNOWN|UNCERTAIN|UNCONFIRMED/.test(progress.reason??"")?"reconciling":"paused":progress.phase==="Stopped"||progress.phase==="Completed"?"completed":"waiting",...(progress.decisionId?{phaseId:progress.decisionId}:{}),...(decision?.action==="run-task"?{subject:{id:decision.modelId,name:decision.modelId,kind:"model" as const}}:{}),...(progress.reason&&/^[A-Z][A-Z0-9_]{0,100}$/.test(progress.reason)?{reason:progress.reason}:{}),evidence:{chargedRaw:progress.chargedRaw,completedTasks:progress.completedTasks}});},
         observe: async () => {
+          await input.activity?.({scene:"funding",state:"started"});
           const finance = await this.task.finance(parent.agent); if (finance.status !== "confirmed") throw new Error(finance.reason);
+          await input.activity?.({scene:"funding",state:"confirmed",evidence:{cashRaw:finance.cashRaw,debtRaw:finance.debtRaw,chainId:finance.chainId,blockNumber:finance.block.number,blockHash:finance.block.hash}});
           const credit = finance.credit.eligible && !finance.policy.ownerFrozen
             ? min(BigInt(finance.credit.tierCapRaw), BigInt(finance.policy.maxDebtPerTxRaw), BigInt(finance.policy.maxDebtPerDayRaw)) : 0n;
           const metered = this.task.config.metered!;
@@ -184,13 +188,13 @@ export class HostedAutonomyExecutor implements HostedExecutor {
 
         },
         decide: async (context, decisionId, limits) => {
-          if (this.deps.shouldContinue && !await this.deps.shouldContinue(parent.agent.id)) return { decision: { action: "stop", reason: "HOSTED_AGENT_PAUSED" }, chargedRaw: "0" };
-          if (BigInt(context.observation.cashRaw) < BigInt(this.config.plannerPriceRaw)) return { decision: { action: "stop", reason: "AUTONOMY_PLANNER_CASH_REQUIRED" }, chargedRaw: "0" };
+          if (this.deps.shouldContinue && !await this.deps.shouldContinue(parent.agent.id)) return { decision: { action: "stop", reason: "HOSTED_AGENT_PAUSED" }, chargedRaw: "0",source:"runtime" as const };
+          if (BigInt(context.observation.cashRaw) < BigInt(this.config.plannerPriceRaw)) return { decision: { action: "stop", reason: "AUTONOMY_PLANNER_CASH_REQUIRED" }, chargedRaw: "0",source:"runtime" as const };
           if (BigInt(context.remainingSpendRaw) < BigInt(this.config.plannerPriceRaw) + BigInt(this.task.config.metered!.priceRaw))
-            return { decision: { action: "stop", reason: "AUTONOMY_TASK_BUDGET_REQUIRED" }, chargedRaw: "0" };
+            return { decision: { action: "stop", reason: "AUTONOMY_TASK_BUDGET_REQUIRED" }, chargedRaw: "0",source:"runtime" as const };
           if (this.deps.planner) return this.deps.planner(context, decisionId, limits, parent);
           const provider = this.deps.provider ?? (ownedTransport ??= await openHostedPlannerConnection((await taskPrivateFile(this.task.config.rpcUrlFile)).trim(), parent.agent.binding!.chainId, this.task.config.rpcTransport)).provider;
-          return this.plan(parent, context, decisionId, limits, provider);
+          return this.plan({...parent,activity:input.activity}, context, decisionId, limits, provider);
         },
         recoverCachedDecision: async (context, decisionId, limits) => {
           if (this.deps.cachedPlanner) return this.deps.cachedPlanner(context, decisionId, limits, parent);
@@ -224,8 +228,8 @@ export class HostedAutonomyExecutor implements HostedExecutor {
       const terminal = result.phase === "Stopped" || result.phase === "Completed";
       const childFailed = result.steps.some(step => step.outcome?.terminal && !step.outcome.success);
       const modelStopped = result.steps.at(-1)?.decision?.action === "stop";
-      const admissionStops = ["AUTONOMY_PLANNER_CASH_REQUIRED", "AUTONOMY_TASK_BUDGET_REQUIRED"];
-      const reason = modelStopped && !admissionStops.includes(result.reason ?? "") ? "AUTONOMY_MODEL_STOPPED"
+      const admissionStops = ["AUTONOMY_PLANNER_CASH_REQUIRED", "AUTONOMY_TASK_BUDGET_REQUIRED", "HOSTED_AGENT_PAUSED"];
+      const reason = modelStopped && result.steps.at(-1)?.decisionSource!=="runtime" && !admissionStops.includes(result.reason ?? "") ? "AUTONOMY_MODEL_STOPPED"
         : result.reason && /^[A-Z][A-Z0-9_]{0,100}$/.test(result.reason) ? result.reason : "AUTONOMY_EXECUTION_STOPPED";
       return Object.assign({ phase: result.phase, terminal, success: terminal && !childFailed && (result.phase === "Completed" || result.steps.at(-1)?.decision?.action === "stop"),
         chargedRaw: result.chargedRaw, refundedRaw: result.steps.reduce((sum, step) => sum + BigInt(step.decisionRefundedRaw ?? "0") + BigInt(step.outcome?.refundedRaw ?? "0"), 0n).toString(), reason }, { autonomousTasks: result.completedTasks });
@@ -266,6 +270,7 @@ export class HostedAutonomyExecutor implements HostedExecutor {
     } finally { await store.close(); }
   }
   private async plan(input: HostedExecution, context: AutonomyContext, decisionId: string, limits: AutonomyLimits, provider: JsonRpcProvider) {
+    await input.activity?.({scene:"model",state:"selected",phaseId:decisionId,subject:{id:this.config.plannerModel,name:this.config.plannerModel,kind:"model"},evidence:{priceRaw:this.config.plannerPriceRaw}});
     const store = new SessionStore<PlannerState>(join(input.directory, "planner", decisionId)); await store.start(input.recover);
     let infer: InferCredit | undefined;
     try {
@@ -275,7 +280,7 @@ export class HostedAutonomyExecutor implements HostedExecutor {
       if (wallet.address.toLowerCase() !== input.agent.wallet.toLowerCase()) invalid("HOSTED_PLANNER_WALLET_CHANGED");
       infer = new InferCredit({ agentId: input.agent.binding!.agentId, signer: wallet, chainId: BigInt(template.chainId), account: template.account, asset: template.asset,
         provider: this.config.plannerProvider, maxPrice: BigInt(limits.maxSpendRaw), timeoutMs: Math.min(this.task.config.timeoutMs ?? 10000, Math.max(1, limits.deadlineMs - Date.now())),
-        onHandle: async handle => { if (handle.input.taskId !== "0" || journal.handle && handle.quote.paymentId !== journal.handle.quote.paymentId) invalid("HOSTED_PLANNER_HANDLE_CHANGED"); journal.handle = structuredClone(handle); await store.write(journal); },
+        onHandle: async handle => { if (handle.input.taskId !== "0" || journal.handle && handle.quote.paymentId !== journal.handle.quote.paymentId) invalid("HOSTED_PLANNER_HANDLE_CHANGED"); journal.handle = structuredClone(handle); await store.write(journal);await input.activity?.({scene:"model",state:"waiting",phaseId:decisionId,evidence:{paymentId:handle.quote.paymentId,priceRaw:handle.quote.price,...(handle.submission?{txHash:handle.submission.txHash}:{})}}); },
         beforePayment: async () => { if (Date.now() >= limits.deadlineMs) invalid("AUTONOMY_DEADLINE"); },
       });
       if (!journal.inference) {
@@ -287,6 +292,7 @@ export class HostedAutonomyExecutor implements HostedExecutor {
       await confirmPaidDelivery(journal, { chainId: template.chainId, account: template.account, agentId: input.agent.binding!.agentId, provider: this.config.plannerProvider, taskId: "0" }, provider, wallet);
       const response = journal.inference.result as { model?: unknown; choices?: { message?: { content?: unknown } }[] };
       if (response?.model !== (this.config.plannerResponseModel ?? this.config.plannerPhysicalModel)) invalid("HOSTED_PLANNER_MODEL_CHANGED");
+      await input.activity?.({scene:"model",state:"completed",phaseId:decisionId,evidence:{paymentId:receipt.paymentId,txHash:receipt.txHash,chargedRaw:receipt.fromCash}});
       return { decision: response?.choices?.[0]?.message?.content, chargedRaw: receipt.fromCash };
     } finally { infer?.close(); await store.close(); }
   }

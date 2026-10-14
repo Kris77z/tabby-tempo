@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { HostedGoalExecutor, type GoalCall, type GoalDependencies, type GoalState } from "../src/goals/executor.js";
+import {validateHostedActivity,type HostedActivityInput} from "../src/scene-types.js";
 import { inspectGoalArtifact } from "../src/goals/acceptance.js";
 import { validateGoalView, validGoal } from "../src/goal-types.js";
 import type { HostedExecution } from "../src/types.js";
@@ -114,7 +115,7 @@ test("deterministic acceptance counts Unicode characters, checks explicit limits
  assert.equal(inspectGoalArtifact("do not fabricate; at most 2 words","one two three").failures.length,1);
 });
 test('chain research is persisted before payment and never refetched during uncertain-call recovery',async t=>{
- const f=await fixture(t);f.input.run.goal='分析 0x'+'1'.repeat(40);
+ const f=await fixture(t);f.input.run.goal='分析 0x'+'1'.repeat(40);const events:HostedActivityInput[]=[];f.input.activity=async e=>{events.push(validateHostedActivity(e));};
  const research={evidence:{version:1 as const,chainId:'31337',observedAt:new Date().toISOString(),digest:'0x'+'a'.repeat(64),records:[]},context:JSON.stringify({network:'31337',facts:'immutable snapshot'})};
  let lookups=0,phaseAttempts=0,plans=0;
  const deps:GoalDependencies={lookup:async()=>{lookups++;return research;},call:async(state,c)=>{
@@ -126,7 +127,7 @@ test('chain research is persisted before payment and never refetched during unce
  const e=new HostedGoalExecutor({models:[route],durationMs:60000,chainLookup:true},{} as HostedTaskExecutorConfig,deps);
  assert.equal((await e.execute(f.input)).terminal,false);
  const done=await e.execute({...f.input,recover:true});assert.equal(done.success,true);assert.equal(lookups,1);assert.equal(plans,1);assert.equal(done.chargedRaw,'30000');
- assert.deepEqual(await e.execute({...f.input,recover:true}),done);assert.equal(lookups,1);assert.equal(phaseAttempts,2);
+ assert.deepEqual(await e.execute({...f.input,recover:true}),done);assert.equal(lookups,1);assert.equal(phaseAttempts,2);assert.ok(events.some(e=>e.scene==='chain-lookup'&&e.state==='confirmed'&&e.evidence?.researchDigest===research.evidence.digest));
 });
 
 for(const cancel of [false,true])test(`expired payment resolves terminally with prior charges retained (stop=${cancel})`,async t=>{
@@ -135,4 +136,15 @@ for(const cancel of [false,true])test(`expired payment resolves terminally with 
  assert.equal((await e.execute(f.input)).terminal,false);expired=true;
  const result=await e.execute({...f.input,recover:true});assert.equal(result.terminal,true);assert.equal(result.chargedRaw,'10000');assert.equal(result.reason,'HOSTED_GOAL_PAYMENT_VOIDED');assert.equal(result.phase,cancel?'Cancelled':'Stopped');
  const count=attempts;assert.deepEqual(await e.execute({...f.input,recover:true}),result);assert.equal(attempts,count);
+});
+
+
+test("goal events expose real catalog selection, revision and review while keeping paid prompts private",async t=>{
+ const f=await fixture(t),events:HostedActivityInput[]=[];f.input.activity=async event=>{events.push(validateHostedActivity(event));};
+ const executor=f.executor({call:async(_s,c)=>c.stage==="review"?response(JSON.stringify({passed:false,summary:"Fix B",checks:["B absent"]})):c.stage==="revision-review"?response(review):normal(c)});
+ const result=await executor.execute(f.input);assert.equal(result.success,true);
+ assert.ok(events.some(e=>e.scene==="specialists"&&e.state==="started"&&e.evidence?.candidateIds?.includes("writer")));
+ assert.deepEqual(events.filter(e=>e.scene==="specialists"&&e.state==="selected").map(e=>e.subject?.id),["analyst","writer"]);
+ assert.ok(events.some(e=>e.scene==="review"&&e.state==="revising"));assert.ok(events.some(e=>e.phaseId==="revision-review"&&e.state==="confirmed"));
+ assert.equal(JSON.stringify(events).includes("messages"),false);assert.equal(events.some(e=>e.scene==="credit"||e.scene==="settlement"||e.scene==="game"),false);
 });

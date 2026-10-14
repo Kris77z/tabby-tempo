@@ -1,4 +1,4 @@
-import {collectChainResearch,type ChainResearch} from './chain-lookup.js';
+import {chainTargets,collectChainResearch,type ChainResearch} from './chain-lookup.js';
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { SessionStore } from "@agentfuel/pi-loop/session";
@@ -12,7 +12,7 @@ import { taskLoopbackUrl } from "../../../../packages/pi-loop/src/task-runner/co
 import { getAddress } from "ethers";
 import type { GoalPaymentRecovery } from "./reconciliation.js";
 import { specialistPrompt, normalizeSpecialistOutput } from "../specialists/execution.js";
-import { specialistOutputContract } from "../specialists/catalog.js";
+import { missionSpecialists, resolveSpecialist, specialistOutputContract } from "../specialists/catalog.js";
 import { inspectGoalArtifact } from "./acceptance.js";
 export interface GoalModelRoute { id:string; relayUrl:string; provider:string; priceRaw:string; service:string; model:string; physicalModel:string; responseModel?:string }
 export interface HostedGoalConfig { models:GoalModelRoute[]; durationMs:number; chainLookup?:boolean }
@@ -43,6 +43,7 @@ export class HostedGoalExecutor implements HostedExecutor {
       const route=this.config.models.find(m=>m.id===input.agent.modelId);if(!saved&&!route)throw new HostedError("HOSTED_GOAL_MODEL_UNAVAILABLE");
       state=saved??{version:1,lookupEnabled:this.config.chainLookup===true,binding,input:identity,route:structuredClone(route!),deadlineMs:Date.now()+this.config.durationMs,view:{stage:"planning",phases:[],calls:[]},calls:[]};
       const save=()=>store.write(state);
+      const activity=input.activity;
       const publish=async()=>{state.view=validateGoalView(state.view);await save();await input.progress?.(state.view);};
       const total=()=>state.view.calls.reduce((sum,c)=>sum+BigInt(c.chargedRaw),0n)+state.calls.filter(c=>!state.view.calls.some(v=>v.stage===c.stage)).reduce((sum,c)=>sum+BigInt(c.recovery?.chargedRaw??"0"),0n);
       const refunded=()=>state.calls.reduce((sum,c)=>sum+BigInt(c.recovery?.refundedRaw??"0"),0n).toString();
@@ -51,6 +52,7 @@ export class HostedGoalExecutor implements HostedExecutor {
       };
       if(state.result)return structuredClone(state.result);
       await publish();
+      if(!state.view.phases.length)await activity?.({scene:"decision",state:"started",phaseId:"plan"});
       const call=async(stage:string,system:string,user:string,maxTokens:number,specialist?:{serviceId:string;promptDigest:string})=>{
         let entry=state.calls.find(c=>c.stage===stage);
         if(entry?.recovery?.resolved)throw new Error(entry.recovery.voided?"HOSTED_GOAL_PAYMENT_VOIDED":entry.recovery.reverted?"HOSTED_GOAL_PAYMENT_REVERTED":"HOSTED_GOAL_UNDELIVERED_REFUNDED");
@@ -66,6 +68,8 @@ export class HostedGoalExecutor implements HostedExecutor {
           // Persist dispatch intent before crossing the payment boundary. A timeout
           // remains unresolved until the same call is reconciled, including on stop.
           entry.started=true;entry.unpaid=false;await save();
+          await activity?.({scene:"model",state:"selected",phaseId:stage,subject:{id:state.route.id,name:state.route.id,kind:"model"},evidence:{priceRaw:state.route.priceRaw,budgetRaw:input.run.reservedRaw}});
+          await activity?.({scene:"model",state:"waiting",phaseId:stage,subject:{id:state.route.id,name:state.route.id,kind:"model"}});
           entry.response=await(this.deps.call?this.deps.call(state,entry,input,save):paidGoalCall(this.task,state,entry,input,save,()=>this.deps.control?.(input.agent.id,input.run.requestId)));await save();
         }
         const r=entry.response;
@@ -74,6 +78,7 @@ export class HostedGoalExecutor implements HostedExecutor {
         // A canonically paid but unusable response still consumed budget.
         if(r.deliveryError)throw new Error(r.deliveryError);
         if(typeof r.text!=="string"||!r.text.trim()||r.text.length>24000)throw new Error("HOSTED_GOAL_OUTPUT_INVALID");
+        await activity?.({scene:"model",state:"completed",phaseId:stage,subject:{id:state.route.id,name:state.route.id,kind:"model"},evidence:{chargedRaw:r.chargedRaw,promptTokens:r.promptTokens,completionTokens:r.completionTokens,...(r.paymentId?{paymentId:r.paymentId}:{}),...(r.txHash?{txHash:r.txHash}:{})}});
         return r.text;
       };
       try{
@@ -81,33 +86,47 @@ export class HostedGoalExecutor implements HostedExecutor {
           const control=await this.deps.control?.(input.agent.id,input.run.requestId);
           if(control?.cancelled||input.run.stopRequested)return await finish('cancelled',false,'HOSTED_GOAL_CANCELLED');
           if(control?.paused)throw Error('HOSTED_AGENT_PAUSED');
-          state.research=await(this.deps.lookup??collectChainResearch)(identity.goal,identity.chainId,this.task);
-          if(state.research){state.view.research=state.research.evidence;await publish();}
+          try { if(chainTargets(identity.goal).length)await activity?.({scene:"chain-lookup",state:"started",subject:{id:identity.chainId,name:identity.chainId,kind:"chain"},evidence:{chainId:identity.chainId}});state.research=await(this.deps.lookup??collectChainResearch)(identity.goal,identity.chainId,this.task); }
+          catch(error){await activity?.({scene:"chain-lookup",state:"failed",reason:error instanceof Error&&/^HOSTED_GOAL_LOOKUP_[A-Z_]+$/.test(error.message)?error.message:"HOSTED_GOAL_LOOKUP_FAILED"});throw error;}
+          if(state.research){state.view.research=state.research.evidence;await publish();
+            await activity?.({scene:"chain-lookup",state:"confirmed",evidence:{chainId:identity.chainId,researchDigest:state.research.evidence.digest,available:state.research.evidence.records.length,...(state.research.evidence.records[0]?{blockNumber:state.research.evidence.records[0].blockNumber,blockHash:state.research.evidence.records[0].blockHash}:{})}});
+            if(state.research.evidence.records.some(r=>r.source&&!r.source.codeMatched))await activity?.({scene:"chain-lookup",state:"blocked",reason:"HOSTED_GOAL_SOURCE_UNAVAILABLE",evidence:{chainId:identity.chainId}});
+          }
         }
         const research=state.research?{chainResearch:JSON.parse(state.research.context),researchDigest:state.research.evidence.digest}:{};
         if(!state.view.phases.length){const plan=parseMissionPlan(await call("plan",missionSystem,state.research?JSON.stringify({originalGoal:identity.goal,...research}):identity.goal,1024));
           if(plan.needsInput){state.view.answer=plan.needsInput;return await finish("needs-input",false,"HOSTED_GOAL_NEEDS_INPUT");}
-          state.view.phases=plan.phases;await publish();}
+          state.view.phases=plan.phases;await publish();
+          await activity?.({scene:"decision",state:"completed",phaseId:"plan"});
+          await activity?.({scene:"specialists",state:"started",evidence:{candidateIds:missionSpecialists.map(s=>s.id)}});}
         for(let index=0;index<state.view.phases.length;index++){
           const phase=state.view.phases[index];
           if(phase.output)continue;state.view.stage="executing";await publish();
+          const selected=resolveSpecialist(phase.taskType);
+          if(selected)await activity?.({scene:"specialists",state:"selected",phaseId:`phase-${index}`,subject:{id:selected.id,name:selected.name,kind:"specialist"}});
+          else await activity?.({scene:"specialists",state:"blocked",phaseId:`phase-${index}`,reason:"HOSTED_GOAL_SPECIALIST_UNAVAILABLE"});
+          await activity?.({scene:"execution",state:"started",phaseId:`phase-${index}`,...(selected?{subject:{id:selected.id,name:selected.name,kind:"specialist" as const}}:{})});
           const profile=specialistPrompt(phase.taskType,specialistSystem,identity.chainId);
           const output=normalizeSpecialistOutput(phase.taskType,await call(`phase-${index}`,profile.system,JSON.stringify({originalGoal:identity.goal,...research,assignment:phase,previous:state.view.phases.slice(0,index)}),2048,profile));
           state.view.phases[index].output=output;
           state.view.answer=output;await publish();
+          await activity?.({scene:"execution",state:"completed",phaseId:`phase-${index}`,...(selected?{subject:{id:selected.id,name:selected.name,kind:"specialist" as const}}:{})});
         }
         state.view.stage="reviewing";await publish();
         const originalArtifact=state.view.phases.at(-1)!.output!;
         const reviewArtifact=async(stage:string,artifact:string)=>{
+          await activity?.({scene:"review",state:"started",phaseId:stage,subject:{id:"independent-model-review",name:"Independent Model Review",kind:"artifact"}});
           const measurement=inspectGoalArtifact(identity.goal,artifact,state.research?.evidence.observedAt);
           const review=parseMissionReview(await call(stage,reviewSystem,JSON.stringify({originalGoal:identity.goal,...research,plan:state.view.phases.map(({output,...p})=>p),outputContract:specialistOutputContract(state.view.phases.at(-1)!.taskType),artifact,measuredLengths:measurement}),1536));
           if(measurement.failures.length){review.passed=false;review.summary=`验收未通过：${measurement.failures.join(" ")}`.slice(0,4000);review.checks=[...measurement.failures,...review.checks].slice(0,20).map(c=>c.slice(0,1000));}
+          await activity?.({scene:"review",state:review.passed?"confirmed":"failed",phaseId:stage,evidence:{passed:review.passed}});
           return review;
         };
         const firstReview=await reviewArtifact("review",originalArtifact);state.view.review=firstReview;
         // One revision only, including its independent re-review in the budget.
         if(!state.view.review.passed&&(state.calls.some(c=>c.stage==="revision")||total()+2n*BigInt(state.route.priceRaw)<=BigInt(input.run.reservedRaw))){
           await publish();
+          await activity?.({scene:"review",state:"revising",phaseId:"revision"});
           const measured=inspectGoalArtifact(identity.goal,originalArtifact);
           const compression=measured.maxCharacters!==undefined?`当前 ${measured.characters} 个非空白字符，上限 ${measured.maxCharacters}；本次请重写为不超过 ${Math.max(1,Math.floor(measured.maxCharacters*0.8))} 个非空白 Unicode 字符，留出计数余量。标点、数字、Markdown 符号也计入。优先去掉粗体等 Markdown 装饰、重复原始数据列、重复结论和冗余说明；保留用户要求的全部指标、计算、建议和邮件等交付物。精简重写，不要直接截断或遗漏必需内容。`:measured.maxWords!==undefined?`Rewrite to at most ${Math.max(1,Math.floor(measured.maxWords*0.8))} words, below the hard ${measured.maxWords}-word limit. Remove repetition and formatting, preserving every required deliverable; do not truncate.`:undefined;
           const revisionType=state.view.phases.at(-1)!.taskType,profile=specialistPrompt(revisionType,specialistSystem,identity.chainId);
@@ -122,7 +141,8 @@ export class HostedGoalExecutor implements HostedExecutor {
         if(!unresolved&&code==="HOSTED_GOAL_PAYMENT_VOIDED"&&(input.run.stopRequested||(await this.deps.control?.(input.agent.id,input.run.requestId))?.cancelled))return await finish("cancelled",false,code);
         if(!unresolved&&["HOSTED_GOAL_PAYMENT_VOIDED","HOSTED_GOAL_INPUT_TOO_LARGE","HOSTED_GOAL_LOOKUP_LIMIT","HOSTED_GOAL_LOOKUP_NETWORK","HOSTED_GOAL_CANCELLED","HOSTED_GOAL_DEADLINE","HOSTED_GOAL_BUDGET_REQUIRED","HOSTED_GOAL_PLAN_INVALID","HOSTED_GOAL_SPECIALIST_OUTPUT_INVALID","HOSTED_GOAL_REVIEW_INVALID","HOSTED_GOAL_OUTPUT_INVALID","HOSTED_GOAL_MODEL_CHANGED","HOSTED_GOAL_UNDELIVERED_REFUNDED","HOSTED_GOAL_PAYMENT_REVERTED"].includes(code))return await finish(code==="HOSTED_GOAL_CANCELLED"?"cancelled":"paused",false,code);
         if(unresolved&&["HOSTED_GOAL_CANCELLED","HOSTED_GOAL_DEADLINE"].includes(code))code="HOSTED_GOAL_RECONCILIATION_REQUIRED";
-        state.view.stage="paused";await publish();return{phase:"Paused",terminal:false,success:false,chargedRaw:total().toString(),refundedRaw:refunded(),reason:code,mission:state.view};
+        state.view.stage="paused";await publish();
+        await activity?.({scene:code==="INFERENCE_FUNDING_REQUIRED"?"funding":"interruption",state:unresolved?"reconciling":"paused",reason:code,...(code==="INFERENCE_FUNDING_REQUIRED"?{requiredAction:"deposit" as const}:unresolved?{requiredAction:"reconcile" as const}:{})});return{phase:"Paused",terminal:false,success:false,chargedRaw:total().toString(),refundedRaw:refunded(),reason:code,mission:state.view};
       }
     }finally{await store.close();}
   }

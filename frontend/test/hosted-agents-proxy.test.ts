@@ -255,3 +255,13 @@ test("goal history larger than one MiB remains readable within the bounded artif
   const response = await hostedAgentsRequest(request("/agents"), { ...config, fetcher: (async () => Response.json({ agents: [], models: [], runs })) as typeof fetch });
   assert.equal(response.status, 200); assert.equal((await response.json()).runs.length, 12);
 });
+
+test("scene activities preserve ordered public facts and reject private or malformed event envelopes", async () => {
+  const activity = { seq: 4, at: "2026-10-14T03:00:00.000Z", scene: "specialists", state: "selected", phaseId: "phase-0", subject: { id: "writer", name: "Writing Specialist", kind: "specialist" }, evidence: { candidateIds: ["writer", "analyst"], priceRaw: "10000" } };
+  const snapshot = async (activities: unknown) => hostedAgentsRequest(request("/agents"), { ...config, fetcher: (async () => Response.json({ agents: [], models: [], runs: [{ requestId: "scene-run", activities, privateJournal: "PRIVATE_SENTINEL" }] })) as typeof fetch });
+  const good = await snapshot([activity, {...activity,seq:5,state:"confirmed"}]);
+  assert.equal(good.status,200); const text = await good.text(); assert.doesNotMatch(text,/PRIVATE_SENTINEL|privateJournal/); assert.deepEqual(JSON.parse(text).runs[0].activities.map((event:{seq:number})=>event.seq),[4,5]);
+  for (const invalid of [[activity,{...activity,seq:4}],[{...activity,seq:0}],[{...activity,at:"invalid"}],[{...activity,keyFile:"PRIVATE_SENTINEL"}],[{...activity,evidence:{...activity.evidence,providerUrl:"PRIVATE_SENTINEL"}}],Array.from({length:257},(_,i)=>({...activity,seq:i+1}))]) {
+    const rejected=await snapshot(invalid);assert.equal(rejected.status,503);assert.deepEqual(await rejected.json(),{error:"HOSTED_UNAVAILABLE"});
+  }
+});

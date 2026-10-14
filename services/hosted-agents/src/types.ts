@@ -1,4 +1,5 @@
 import type { GoalView } from "./goal-types.js";
+import type { HostedActivity, HostedActivityInput } from "./scene-types.js";
 /** Owner-controlled configuration, never wallet keys, RPCs, provider URLs or reward recipients. */
 export type HostedStrategy = "conservative" | "balanced" | "aggressive";
 export interface AgentSettings { name: string; modelId: string; strategy: HostedStrategy; perRunBudgetRaw: string; totalBudgetRaw: string; allowCredit: boolean }
@@ -17,6 +18,7 @@ export interface HostedRun {
   testSponsorship?: { grantId: string; digest: string; ordinal: number };
   requestId: string; agentId: string; action: HostedAction; fundingFor?: string; rewardKind?: "usdc" | "llm-credits"; amountRaw?: string;
   goal?: string; mission?: GoalView; stopRequested?: boolean;
+  activities?: HostedActivity[];
   status: "Queued" | "Running" | "Paused" | "Succeeded" | "Failed";
   createdAt: string; updatedAt: string; reservedRaw: string; chargedRaw: string; recoverable: boolean;
   reason?: string; result?: HostedResult;
@@ -48,6 +50,7 @@ export type HostedFinance = { status: "unavailable"; observedAt: string; reason:
   counts: { repayments: string; defaults: string; mirrorRepayments: string; successes: string; mirrorDefaults: string };
 };
 export interface HostedExecution {
+  activity?: (event: HostedActivityInput) => Promise<void>;
   progress?: (view: GoalView) => Promise<void>;
   deadlineMs?: number; agent: HostedAgent; run: HostedRun; directory: string; keyFile: string; recover: boolean;
 }

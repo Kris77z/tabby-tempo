@@ -10,9 +10,9 @@ import styles from "./landing.module.css";
 export function LandingStories({ locale }: { locale: LandingLocale }) {
   const t = (text: string) => translate(locale, text);
   const stories = [
-    { title: [t("先执行，"), t("后结算。")], image: "/landing/agent-execution.png", label: t("TASK CREDIT"), description: t("Agent 接到有托管报酬的任务，现金不足时按任务申请推理信用。由 Pi 执行，独立验收后用收入还款。"), problem: t("交付前需要推理资金"), action: t("任务授信 → Pi 执行"), outcome: t("验收、还款、收入入账"), href: "/advanced", cta: t("查看协议与结算证据"), visual: t("CREDIT → INFERENCE → DELIVERY") },
-    { title: [t("赢得奖励，"), t("支持下一单。")], image: "/landing/agent-rewards.png", label: t("PLAY TO FUEL"), description: t("免费德州让 Agent 争取测试 PathUSD 或推理额度。奖励资金可以支持下一单；token 奖励目前提供独立的额度消费入口。"), problem: t("为 Agent 补充资源"), action: t("免费参赛 → 可信重放"), outcome: t("资金或推理额度奖励"), href: "/dashboard", cta: t("用托管 AGENT 参赛"), visual: t("PLAY → REWARD → NEXT TASK") },
-    { title: [t("每次交付，"), t("留下信誉。")], image: "/landing/agent-reputation.png", label: t("REPUTATION"), description: t("成功交付、真实还款与违约记录组成 Agent 的信用评分，参与下一单的授信决策。信誉与资金围绕同一个身份积累。"), problem: t("如何判断 Agent 的履约表现"), action: t("交付与结算 → 信誉反馈"), outcome: t("评分影响额度与费用"), href: "/dashboard", cta: t("查看 AGENT 信誉与账本"), visual: t("DELIVERY → REPUTATION → CREDIT") },
+    { title: [t("先执行，"), t("后结算。")], image: "/landing/agent-execution.png", label: t("TASK CREDIT"), description: t("Agent 接到有托管报酬的任务，现金不足时按任务申请推理信用。在预算内执行，独立验收后用收入还款。"), problem: t("交付前需要推理资金"), action: t("任务授信 → 预算内执行"), outcome: t("验收、还款、收入入账"), href: "/advanced", cta: t("查看协议与结算证据"), visual: t("CREDIT → INFERENCE → DELIVERY") },
+    { title: [t("赢得奖励，"), t("支持下一单。")], image: "/landing/agent-rewards.png", label: t("PLAY TO FUEL"), description: t("免费德州让 Agent 争取测试 PathUSD 或推理额度。奖励资金支持后续推理购买，Kimi 奖励额度可用于目录任务；不足时暂停，补充后恢复原任务。"), problem: t("为 Agent 补充资源"), action: t("免费参赛 → 可信重放"), outcome: t("资金或推理额度奖励"), href: "/dashboard", cta: t("用托管 AGENT 参赛"), visual: t("PLAY → REWARD → NEXT TASK") },
+    { title: [t("每次履约，"), t("留下信誉。")], image: "/landing/agent-reputation.png", label: t("REPUTATION"), description: t("有报酬任务的成功交付、真实还款与违约记录组成 Agent 的信用评分，参与下一单的授信决策。个人目标保留结果与费用记录，不增加履约信誉分。"), problem: t("如何判断 Agent 的履约表现"), action: t("交付与结算 → 信誉反馈"), outcome: t("评分影响额度与费用"), href: "/dashboard", cta: t("查看 AGENT 信誉与账本"), visual: t("DELIVERY → REPUTATION → CREDIT") },
   ];
 
 

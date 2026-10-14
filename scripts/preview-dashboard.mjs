@@ -1,0 +1,12 @@
+import {build} from 'esbuild';
+import {createServer} from 'node:http';
+import {readFile,mkdir} from 'node:fs/promises';
+import {resolve,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),source=resolve(root,'frontend/preview/dashboard'),out=resolve(root,'demo-output/dashboard-preview');
+await mkdir(out,{recursive:true});
+await build({entryPoints:[resolve(source,'entry.tsx')],bundle:true,external:['/mono.woff2'],outfile:resolve(out,'entry.js'),jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},minify:true,plugins:[{name:'isolated-preview',setup(b){b.onResolve({filter:/hosted-agents-provider$/},()=>({path:resolve(source,'state.tsx')}));for(const [id,file] of [['next/navigation','navigation.ts'],['next/link','link.tsx'],['next/dynamic','dynamic.tsx']])b.onResolve({filter:new RegExp('^'+id+'$')},()=>({path:resolve(source,file)}));}}]});
+if(process.argv.includes('--build-only'))process.exit(0);
+const files=new Map([['/',[resolve(source,'index.html'),'text/html']],['/entry.js',[resolve(out,'entry.js'),'text/javascript']],['/entry.css',[resolve(out,'entry.css'),'text/css']],['/mono.woff2',[resolve(root,'frontend/components/hosted/fonts/GeistMono-Variable.woff2'),'font/woff2']]]);
+for(const cover of ['poker-v1-1440.webp','gomoku-v2-1440.webp','chess-v2-1440.webp','balatro-v2-1440.webp'])files.set(`/arena-assets/covers/${cover}`,[resolve(root,'frontend/public/arena-assets/covers',cover),'image/webp']);
+createServer(async(req,res)=>{if(req.url==='/dashboard-frame'){res.writeHead(200,{'Content-Type':'text/html','Content-Security-Policy':"connect-src 'none'"});res.end('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/entry.css"></head><body><div id="root"></div><script src="/entry.js"></script></body></html>');return;}const f=files.get(req.url);if(!f){res.writeHead(404).end();return;}res.writeHead(200,{'Content-Type':f[1],'Cache-Control':'no-store'});res.end(await readFile(f[0]));}).listen(3033,'127.0.0.1',()=>console.log('Full Dashboard acceptance: http://localhost:3033/'));

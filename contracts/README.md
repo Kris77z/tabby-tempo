@@ -1,145 +1,106 @@
-# InferCredit — contracts (Foundry)
+# Tabby protocol contracts
 
-P0 的四个合约与它们的 Foundry 测试套件。
-规格来源：`../AGENT_CREDIT_ENGINEERING.md` §4（实现规格 v5.3）
-与 `../AGENT_CREDIT_RISK_AND_MVP.md`（攻击面与裁剪）。
+This guide is adapted for **Tabby Tempo**. The running deployment is Tempo Moderato `42431`, with **PathUSD** (`0x20c0000000000000000000000000000000000000`, 6 decimals) for settlement and fees. The [VPS runbook](../deploy/tempo-vps/README.md) describes the sole production writer at `https://tempo.tabbyai.xyz`; this documentation/code update has not been deployed.
 
-## 当前状态（2026-10-01）
+Local launch examples below are for a **new isolated Anvil fixture only**, with synthetic roles, fresh private directories and controlled inference. Never load or restart the archived local Tempo runtime, reuse its journals, or start another writer beside the VPS. Monad/MON/USDC examples and dated results are explicitly source-project history or offline fixture semantics, not current Tempo configuration or new acceptance. See [Tempo verification](../docs/VERIFICATION.md).
 
-四个 P0 合约已按六批实现并独立验收：基础权限与资金、无债务任务与 cash 支付、
-授信与混合支付、还款结算与反馈、清算、退款回补。
 
-```text
-forge build --sizes   编译通过，四个业务合约均在大小限制内
-forge test            408 tests: 404 passed / 0 failed / 4 skipped
-```
+Four Solidity contracts turn a funded task into a bounded compute budget: an agent spends its own cash first, can borrow the shortfall against the task's escrowed reward, and repays when the independent task verifier accepts its output. Borrowed funds go directly to an admitted provider through `AgentAccount`; they are not credited to the agent's withdrawable cash balance.
 
-原生币与 ERC-20 均已验证；三单 demo 残值为 0.058 / 0.0787 / 0.105396，
-第三单 710 分升 A。4 个 skip 是原生 receiver/value 专属用例的 ERC-20 镜像及反向正例。
-构建仍有静态 lint 提示，未声称零告警。
+The contracts implement the financial state machine. The [Arena](../services/arena/README.md) runs task checks, the [underwriter](../services/underwriter/README.md) signs credit terms, and the [SDK](../packages/sdk/README.md) coordinates provider payment and recovery. The verifier and underwriter remain trusted services; a contract does not evaluate code or verify a model's reasoning.
 
-本次没有部署。Monad 测试网 canonical registry 的本地 fork 与钱包绑定签名已独立复跑通过，
-见 [Day-0 核验](../docs/day0-findings.md)。最小 underwriter 的 HTTP 授权已在本地 Anvil 被真实合约消费，
-USDC/native 两种资产均通过，见 [服务说明](../services/underwriter/README.md)。
-relay、SDK、Arena、前端与真实广播联调尚未完成。
-测试索引、历史裁决与六批验收见 [TEST_PLAN.md](./TEST_PLAN.md)。
+The deployed protocol keeps the original `InferCredit` EIP-712 domain and `infercredit` reputation tag. Those identifiers are part of the signing and feedback format and are not renamed with the product.
 
-## 快速开始
+## Contract map
+
+| Contract | Responsibility | Important boundary |
+| --- | --- | --- |
+| [`ERC8004Adapter`](src/ERC8004Adapter.sol) | Live registry owner/wallet lookup, versioned identity snapshots, filtered reputation reporting | Registry ownership and wallet binding authorize actions. A snapshot version binds credit to the identity that was reviewed. |
+| [`AgentAccount`](src/AgentAccount.sol) | Per-agent cash, owner spend policy, protocol freeze, provider admission, payment/refund records | A singleton ledger, not an account factory. Only the current registry wallet pays providers; only the current owner changes its policy. |
+| [`CreditManager`](src/CreditManager.sol) | Treasury vault, task-bound draw, repayment, liquidation, refund recovery, global limits | Only `AgentAccount` can draw. A task can open one loan in its lifetime, including after repayment or refund closure. |
+| [`TaskEscrow`](src/TaskEscrow.sol) | Fund/assign/cancel/expire tasks and settle the reward waterfall | The configured verifier supplies the outcome. Funds settle atomically; external reputation reporting is retried separately. |
+
+Interfaces define structs, enums, events and custom errors in [`src/interfaces`](src/interfaces). The implementation specification is [ENGINEERING v5.3 §4](../AGENT_CREDIT_ENGINEERING.md); economic assumptions and scoped risks are in [RISK_AND_MVP](../AGENT_CREDIT_RISK_AND_MVP.md). Later hosted execution and prepaid compute packages use this same one-draw protocol; see [core runtime](../docs/core-runtime.md).
+
+## Task and payment lifecycle
+
+1. **Fund and accept.** A poster escrows a nonzero reward with a future deadline. Creation snapshots the protocol fee rate. Only the agent's current registry wallet may accept an `Open` task before that deadline. The poster may cancel an unassigned task for a full refund.
+2. **Buy compute.** `payProvider` checks the current wallet, admitted provider, owner policy, freeze flags and unused `paymentId`. It spends cash first. A shortfall requires a task-bound underwriter authorization and a successful `CreditManager.draw`. The cash debit, loan, nonce consumption, payment record and transfer to the provider occur in the same transaction; a failed transfer reverts them all.
+3. **Verify and settle.** The configured verifier calls `settle(taskId, passed)`. On success, the task's snapshotted protocol fee is paid first, then active principal plus fee, then the residual reward is credited to agent cash. A cash-only or `ClosedByRefund` task skips repayment and cannot create a repayment count.
+4. **Record history.** Successful full repayment increments the Manager's own repayment counter. The Adapter attempts `task-success` and, when appropriate, `repayment` feedback. Registry failure leaves pending feedback for an idempotent retry and does not undo the financial result.
+
+`TaskEscrow` moves from `Open` to `Assigned`, then to `Settled` or `Failed`; cancellation is possible only while `Open`. The state machine rejects repeated settlement. Loan states are `None → Active → Repaid / Defaulted / ClosedByRefund`, with no reopening or second draw. Additional cash payments can still be made subject to policy; a new nonce does not permit another loan for the same task.
+
+## Credit invariants
+
+`CreditManager.draw` enforces I1–I7 in [source](src/CreditManager.sol) and [tests](TEST_PLAN.md):
+
+| Check | Enforced rule |
+| --- | --- |
+| Protocol controls | Draws are not paused; the agent is not protocol-frozen. |
+| Authorization | A strict EIP-712 signature belongs to the configured underwriter, the nonce is unused, and `now <= authDeadline`. Nonces form a consumed set, not a monotonic sequence. |
+| Identity | Live owner/wallet still match the approved snapshot, and `identityVersion` matches. Reapproval increments the version and invalidates old authorizations. |
+| Task | The task is `Assigned` to this agent, and `now < task.deadline`. |
+| Single draw | The task's loan status is `None`. A closed or defaulted loan record still blocks a second draw. |
+| Escrow coverage | Actual principal does not exceed the signed cap. The **cap including its fee**, rather than only the actual draw, must fit the configured LTV of reward net of the task's snapshotted protocol fee. |
+| Liquidity and limits | The vault has enough lendable funds; total principal plus fee fits the global outstanding limit, and newly drawn principal fits the daily epoch limit. |
+
+The Account adds the owner's per-transaction cash limit, per-transaction credit limit and daily credit limit. Refunds do not restore the epoch draw budget. Backstop funds are accounted separately and never counted as lendable vault funds.
+
+## Failure, refunds and recovery
+
+An unsuccessful verifier result with an active loan triggers liquidation. Failed or expired tasks with no loan, or a `ClosedByRefund` loan, return their full remaining escrow to the poster without liquidation. Anyone may expire an `Open` or `Assigned` task after its deadline; an active loan can also be liquidated when the task is expired **or** `loanDueAt + GRACE` is passed. The grace period applies to the loan-due branch, not as a new task deadline. There is no separate verifier window after expiry: settlement and expiry are resolved by transaction order.
+
+The two liquidation entry paths avoid a circular callback: Escrow terminates the task before pushing funds to Manager; the Manager-initiated pull uses `releaseForLiquidation`, which never calls back into Manager. The project-owned `ReentrancyGuard` and explicit transfer flow are exercised by active reentrancy and rollback tests, not only by successful EOA transfers.
+
+Liquidation uses **agent cash → task escrow → agent backstop → recorded treasury loss**, refunding unused task escrow to the poster. It marks the loan `Defaulted`, increments the default counter and protocol-freezes the agent even if the monetary loss is zero. With LTV at most 100%, an intact escrow, stable snapshotted fees and a normally behaving settlement asset, the first two layers cover the debt. The task poster nevertheless bears escrow slashing exposure. Tests that reach deeper loss layers use explicitly isolated overleveraged harnesses, not production deployment parameters.
+
+Only the configured `relayRefunder` can return provider funds through `processRefund`. A unique `refundId` and the original payment record cap cumulative refunds at the amount actually paid. Cumulative proportional arithmetic preserves the cash/credit split across installments:
+
+| Loan state | Refund result |
+| --- | --- |
+| `Active` | Reduces the credit principal and proportional fee; uncollected fee is forgiven, and eligible previously collected fee can return to cash. Zero remaining debt closes the loan as `ClosedByRefund`, including integer-rounding boundaries. |
+| `Repaid` | Refund funds go to agent cash; already settled principal is not repaid again. |
+| `Defaulted` | Restores **treasury loss → backstop → poster escrow → agent cash**, capped by each original burden less prior recovery. Original liquidation records remain available. |
+| `ClosedByRefund` | Further refunds go to cash with any additional eligible collected-fee return. The task cannot draw again. |
+| `None` / pure cash | Credits the agent recorded on the payment, with no credit or reputation side effect. |
+
+Refund closure and recovery never count as successful repayment. An active-loan refund does not itself finish the task or return its reward escrow; task settlement or expiry remains a separate transition. P0 has no automatic backstop refill. Owner policy updates cannot clear protocol freezes, and guardian unfreezing does not erase defaults or refresh identity snapshots.
+
+## Assets, units and trust assumptions
+
+All amounts are integer **raw settlement-asset units**, not display decimals. A deployment uses one immutable settlement asset across Account, Manager and Escrow:
+
+- Tempo selects the explicit PathUSD token address above, with 6 decimals and `msg.value == 0`. Native-mode fixtures use `address(0)` and 18 decimals; Tempo deployments reject the zero asset.
+- Token-mode incoming calls require exact allowance and `transferFrom`. Tempo `120000` means `0.12` PathUSD; mock-USDC fixtures are distinct historical/local deployments.
+- Fees and LTV use basis points with denominator `10000`. Fees are charged on actual drawn principal; collateral coverage is checked against the signed principal cap.
+
+`SafeTransferLib` supports standard ERC-20 returns and tokens with no return value. The accounting assumes transfer amounts arrive intact; it does not implement fee-on-transfer or rebasing-token accounting.
+
+P0 uses a protocol treasury, an owner-controlled provider whitelist, one underwriter signer, guardian controls and a configurable verifier. It is not a permissionless lending pool or a trustless compute oracle. Provider admission is the purpose-of-credit boundary: on-chain payment proves an admitted address received funds, while the relay is responsible for delivery and operational refunds. The deployment has no proxy upgrade system or public LP interface.
+
+## Reproduce the contract checks
+
+Requirements: Foundry on `PATH`. [`foundry.toml`](foundry.toml) pins Solidity `0.8.24`, EVM `cancun`, optimizer with 200 runs and 256 fuzz runs.
 
 ```bash
-curl -L https://foundry.paradigm.xyz | bash
-~/.foundry/bin/foundryup
-export PATH="$PATH:$HOME/.foundry/bin"
-
 cd contracts
-forge build
+forge build --sizes
 forge test
-forge test --match-path test/Draw.t.sol -vvv     # 单个套件
+forge test --match-path test/AbiConformance.t.sol -vv
+forge test --match-path test/Atomicity.t.sol -vv
+forge test --match-path test/RefundSafety.t.sol -vv
+forge test --match-contract Erc20
 ```
 
-Solidity `^0.8.24`，solc 0.8.24，evm `cancun`，optimizer 开启（200 runs）。
+The default suite is offline and uses native/ERC-20 fixtures with mock registries. [`TEST_PLAN.md`](TEST_PLAN.md) indexes identity rotation, exact error gates, real-balance conservation, payment rollback/reentrancy, liquidation, installment refunds, deployment limits and reputation failures. Its 2026-10-01 baseline recorded 408 tests: 404 passed and 4 asset-specific skips; run the commands above for the current checkout.
 
-## 结构
+[`AbiConformance.t.sol`](test/AbiConformance.t.sol) compares literal ERC-8004 signature selectors rather than allowing an interface and mock to drift together. [`spike/Day0Canonical.t.sol`](spike/Day0Canonical.t.sol) separately exercises the canonical Monad testnet registries at a fixed block; the exact explicit fork command and the scope of that result are in [Day-0 findings](../docs/day0-findings.md). The protocol consumes filtered feedback **counts**, not the registry's unspecified aggregate `summaryValue`.
 
-```text
-src/
-  ERC8004Adapter.sol    §4.1  身份快照（enroll/reapprove）+ 声誉写入
-  CreditManager.sol     §4.2  vault / draw / repay / 两个清算入口 / processRefund / 全局限额
-  AgentAccount.sol      §4.3  cash + credit 双余额、SpendPolicy、provider 白名单
-  TaskEscrow.sol        §4.4  托管、waterfall、slashing、声誉写回
-  interfaces/           结构体 / 枚举 / 事件 / custom error 的唯一定义处
-                        IIdentityRegistry 与 IReputationRegistry 是
-                        ERC-8004 官方 ABI 的逐字子集（见下）
-  utils/                SafeTransferLib、ReentrancyGuard（手写，见下）
-test/
-  helpers/              部署夹具 + EIP-712 签名 + 场景组合
-  mocks/                Identity / Reputation / ERC20 / 恶意接收方
-  AbiConformance.t.sol  用规范里的字面签名算 selector，对拍我们的接口
-  Identity.t.sol        身份转让 → 清空钱包 → 重绑定 → 重审 → 旧授权失效
-  Atomicity.t.sol       支付腿失败后的全账本回滚 + 主动重入
-  其余 *.t.sol          见 TEST_PLAN.md §1
-script/Deploy.s.sol     四合约部署与接线（与测试 setUp 同构）
-```
+There are also local HTTP integration checks using the real four contracts in the [underwriter](../services/underwriter/README.md) and [provider relay](../services/provider-relay/README.md). Later Monad and real-model acceptance is documented in [the 2026-10-12 record](../docs/monad-hosted-acceptance-20261012.md); offline mocks alone do not establish that result.
 
-### ERC-8004 接口的可信来源
+## Tempo deployment and recovery
 
-`IIdentityRegistry` / `IReputationRegistry` 逐字抄自
-<https://eips.ethereum.org/EIPS/eip-8004>，不是就手发明的方便形状：
+The recorded four-contract deployment and its roles are in [Tempo runtime](../docs/tempo-runtime.md) and [VPS deployment](../docs/tempo-vps-deployment-20261013.md). This update deploys nothing. [`Deploy.s.sol`](script/Deploy.s.sol) validates the asset/network pair and role/registry wiring; do not use the historical Monad environment template for Tempo. A new deployment needs a separate explicit configuration, roles and journals.
 
-```solidity
-setAgentWallet(uint256, address newWallet, uint256 deadline, bytes signature)
-giveFeedback(uint256, int128 value, uint8 valueDecimals,
-             string tag1, string tag2, string endpoint,
-             string feedbackURI, bytes32 feedbackHash)
-getSummary(uint256, address[] clientAddresses, string tag1, string tag2)
-    returns (uint64 count, int128 summaryValue, uint8 summaryValueDecimals)
-```
-
-`AbiConformance.t.sol` 从规范的**签名字符串**算 selector 来对拍，
-所以它不可能靠"接口和 mock 一起改"来满足。
-
-`summaryValue` 的聚合方式被 ERC 有意留空，因此协议只消费 `count`；
-mock 可在 mean / sum 之间切换以证明这一点。
-
-**已验证**：测试网 canonical 部署的本地 fork，见 `spike/Day0Canonical.t.sol`。
-固定区块与命令见 [Day-0 核验](../docs/day0-findings.md)；默认离线套件不访问 RPC。
-
-### 为什么没有 OpenZeppelin
-
-`forge init --no-git` 后目录不是 git 仓库，`forge install`（依赖 git submodule）
-无法工作。按任务书给的退路，`SafeTransferLib` 与 `ReentrancyGuard`
-保留在 `src/utils/`，使用项目需要的最小接口：
-
-- `SafeTransferLib` 同时处理原生币与 ERC-20 两条结算路径（§3 item 3），
-  并容忍 USDT 式无返回值的代币（`MockERC20.cheatSetReturnsNothing` 覆盖）。
-- `ReentrancyGuard` 只提供 `nonReentrant`。§4.6 的防重入靠的是
-  **调用图无环 + 资金单向 push**，锁只是兜底；
-  `test_FailurePath_SettleToLiquidate_NoReentrancyDeadlock` 与
-  `test_ExpireTask_WithActiveLoan_PushPath_NoDeadlock` 专门钉住
-  "三个合约的锁不会互相卡死"。
-
-后续若要接入 OZ，把这两个文件替换成 `SafeERC20` / `ReentrancyGuard` 即可，
-需要同步修改调用点并重跑资金与重入测试。
-
-## 实现边界
-
-P0 保持四合约，没有引入公共 LP、代理升级、通用退款框架或额外服务。
-权限和金额类型见 `src/interfaces/`；行为以 ENGINEERING v5.3 §4 为准。
-源码已无 `NotImplemented` 业务骨架。
-
-## 结算资产双模式
-
-构造参数 `settlementAsset`：`address(0)` = 原生币（MON），否则是 ERC-20 地址。
-
-- 原生币：所有入金函数 `payable` 且校验 `msg.value == amount`。
-- ERC-20：校验 `msg.value == 0`，走 `approve + safeTransferFrom`。
-
-测试默认跑原生币模式；ERC-20 覆盖通过"继承 + 覆写 `_useErc20()`"把
-`Draw`、`Refund`、`TaskLifecycle`、`Atomicity`、`PartialRepayment`、`Feedback`、
-清算与多层 recovery harness 复用执行，另有配对校验用例（`msg.value` 必须为 0、
-无 allowance 必须失败、USDT 式无返回值代币必须被接受、分次退款的显式 amount）。
-
-## 部署
-
-以下命令尚未执行。脚本读取 BPS 配置时先验证 `0..10_000` 再转 uint16；
-测试中的 `MAX_LTV_BPS=20_000` 不可用于该 P0 部署脚本。
-
-测试网配置见 [`.env.monad-testnet.example`](./.env.monad-testnet.example)：
-RPC 为 Monad Testnet，结算资产为 6 位测试 USDC；示例角色与私钥留空，必须先填写。
-`MAX_TOTAL_OUTSTANDING=50000000` / `MAX_DRAW_PER_EPOCH=20000000` 分别表示 50 / 20 USDC。
-ERC-20 模式必须显式设置两个原始单位限额；只有原生币模式才沿用 50e18 / 20e18 默认值。
-
-`IDENTITY_REGISTRY` / `REPUTATION_REGISTRY` 按实际 chainId 选默认值：10143 为测试网，
-143 为主网；其他网络必须显式提供完整地址对。任何网络都不允许只覆盖其中一个或传零地址。
-广播前脚本检查两个地址有代码、Reputation 的 Identity 引用匹配。
-
-```bash
-# 填好配置并加载到环境后，先执行不广播的模拟：
-forge script script/Deploy.s.sol:Deploy --rpc-url "$RPC_URL"
-# 真实部署时才添加 --broadcast；本轮没有执行。
-```
-
-部署后还需要 `AgentAccount.setProviderWhitelist(relay, true)` 才能付款。
-
-demo 部署必须把 `PROTOCOL_FEE_BPS` 设为 `0`，否则 §6.1 的三单残值
-（0.058 / 0.0787 / 0.105396）对不上，见 TEST_PLAN.md F17。
+Tempo transaction fees use PathUSD separately from business transfers. A receipt can contain both fee and reward/payment `Transfer` events; canonical checks identify the emitter, direction and exact amount rather than treating every token event as the business payment.

@@ -22,7 +22,7 @@
 @media(max-width:767px){.birdPanel{height:115px}.flightNode{width:60px}.flightNode small{max-width:60px;font-size:8px}.composer{padding:12px}.notifications{right:12px;bottom:calc(45dvh + 48px);max-height:calc(55dvh - 160px);overflow:auto;width:min(320px,calc(100vw - 24px))}.runDetail{padding:16px}.birdCaption>span{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.birdPosition{transition:none}.flightNode{animation:none}}
 /* Original MissionTimeline: compact animation strip and sibling stage cards. */
-.birdPanel{height:80px;margin:0 0 8px;border:1px solid var(--color-line);background:var(--color-bg)}.birdPosition{top:-7px}.flightPath{top:43px}.flightNode small{display:none}.birdCaption{bottom:5px;left:10px;right:10px}.birdCaption strong{font-size:10px}.birdCaption>span{font-size:8px}.goalTranscript{padding:0;gap:8px}.goalTranscript>.reason,.goalTranscript>.receipts{padding:4px 8px}.resultActions{padding:0 0 8px}.resultActions:empty{display:none}
-@media(max-width:767px){.birdPanel{height:80px}.goalTranscript{padding:0}}
+.birdPanel{height:80px;margin:0 0 8px;border:1px solid var(--color-line);background:var(--color-bg)}.birdPosition{top:-7px}.flightPath{top:43px}.flightNode small{display:none}.birdCaption{bottom:5px;left:10px;right:10px}.birdCaption strong{font-size:10px}.birdCaption>span{font-size:8px}.goalTranscript{padding:16px;gap:12px}.goalTranscript>.reason,.goalTranscript>.receipts{padding:0}.resultActions{padding:12px 16px 0}.resultActions:empty{display:none}
+@media(max-width:767px){.birdPanel{height:80px}.goalTranscript{padding:12px}.resultActions{padding:10px 12px 0}}
 .ticker{height:28px}
 .selectTrigger>svg{flex-shrink:0;transition:transform .15s}.selectTrigger[aria-expanded=true]>svg{transform:rotate(180deg)}

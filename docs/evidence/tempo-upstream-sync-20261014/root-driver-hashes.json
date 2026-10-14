@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-10-14T06:11:37.205793+00:00",
+  "scope": "Root independent audit driver and first failed harness result hashes, before removing one-use drivers. Drivers use synthetic APIs and read-only old local snapshots.",
+  "files": [
+    {
+      "path": ".data/upstream-sync-20261014/root/legacy-audit.mts",
+      "sha256": "a30037f0dcdd2d035b4ac7870c4f3ac18018122eb13807994884f31d626f5b32"
+    },
+    {
+      "path": ".data/upstream-sync-20261014/root/browser-audit.mts",
+      "sha256": "e502849008295cf85da6aa400495ff30644ea9be7ab8bbf02502e745e7fb2263"
+    },
+    {
+      "path": ".data/upstream-sync-20261014/root/browser-first.json",
+      "sha256": "2558e33dacf386e198a91689f281f4e9808026b5b11529fcc48f9d50fce34b8c"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-10-14T06:37:57.199678+00:00",
+  "boundary": "Stopped local private migration snapshot and repository baseline only. No VPS business-state claim or remote write.",
+  "passed": true,
+  "privateSnapshotFiles": 232,
+  "protectedTrackedFiles": 267,
+  "privateChanged": [],
+  "protectedChanged": [],
+  "intentionalDocumentationChanges": [
+    {
+      "path": "contracts/README.md",
+      "beforeSha256": "2dcb34220ec6e688bef07e22a56909e48755fcea1b31a72b7e7d9c69109f13df",
+      "afterSha256": "7c6b1a0ea3677f4587dc1b897ef0fcf2190c01ddbd9d881857fb31072bc01e89",
+      "reason": "Selected frozen upstream documentation adapted to Tempo; financial implementation remains unchanged."
+    },
+    {
+      "path": "packages/sdk/README.md",
+      "beforeSha256": "9731cf699933f0b90c6cdb78e53aea031475dc8ec7077d102af85893ac833433",
+      "afterSha256": "cd0771bde62d3805f4da668c5d70a3dbc568b4d2660d5e729fe24df646c7f6ce",
+      "reason": "Selected frozen upstream documentation adapted to Tempo; financial implementation remains unchanged."
+    }
+  ]
+}

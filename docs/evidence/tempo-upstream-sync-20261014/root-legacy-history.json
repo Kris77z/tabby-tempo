@@ -1,0 +1,226 @@
+{
+  "checkedAt": "2026-10-14T05:28:05.838Z",
+  "boundary": "Read-only projection of the stopped local migration snapshot, not current VPS business state. No runtime started, no chain or model calls.",
+  "passed": true,
+  "actors": 6,
+  "runs": 27,
+  "inputUnchanged": true,
+  "results": [
+    {
+      "requestId": "5b97a717-b370-4778-b530-05ff3dd327a8",
+      "action": "provision",
+      "status": "Succeeded",
+      "scene": "onboarding",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "28400fbe-8418-4013-b56b-488210ed9350",
+      "action": "deposit",
+      "status": "Succeeded",
+      "scene": "funding",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "b8d40147-9dcb-477e-bea6-e37081d77b36",
+      "action": "provision",
+      "status": "Succeeded",
+      "scene": "onboarding",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "f58b8a97-1a91-46be-af26-969b7e479b14",
+      "action": "deposit",
+      "status": "Succeeded",
+      "scene": "funding",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "4103c345-a083-4cb9-b9f0-40bf56014029",
+      "action": "provision",
+      "status": "Succeeded",
+      "scene": "onboarding",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "09901dd4-05cf-4ce9-9064-c821aeaf49c1",
+      "action": "deposit",
+      "status": "Succeeded",
+      "scene": "funding",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "d6059ad0-7920-43ef-9f0a-dc8216772cb9",
+      "action": "metered-task",
+      "status": "Succeeded",
+      "scene": "settlement",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "2adae69b-899e-41f2-bcb7-9a905c7647fa",
+      "action": "metered-task",
+      "status": "Succeeded",
+      "scene": "settlement",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "bde4ae39-7469-4348-a47b-bf69ab194d24",
+      "action": "autonomous",
+      "status": "Failed",
+      "scene": "interruption",
+      "state": "failed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "03f7295e-ea84-453a-88ad-5a4184ce47a8",
+      "action": "autonomous",
+      "status": "Failed",
+      "scene": "interruption",
+      "state": "failed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "1b650d7e-aebf-44cb-91a3-78d09b999297",
+      "action": "deposit",
+      "status": "Succeeded",
+      "scene": "funding",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "ceaa64c6-ccd0-4c77-b0e7-c4ce3757f4fd",
+      "action": "autonomous",
+      "status": "Failed",
+      "scene": "interruption",
+      "state": "failed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "d939b12a-05c0-4426-9327-a5160546f2ec",
+      "action": "provision",
+      "status": "Succeeded",
+      "scene": "onboarding",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "165996ec-dcb2-4036-a5d2-5c7fa9b00d41",
+      "action": "deposit",
+      "status": "Succeeded",
+      "scene": "funding",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "434cb42a-4284-456d-aea1-9c27f16234e2",
+      "action": "autonomous",
+      "status": "Succeeded",
+      "scene": "delivery",
+      "state": "completed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "e4118c70-de73-46f4-bdd2-17333a1e9f8b",
+      "action": "provision",
+      "status": "Succeeded",
+      "scene": "onboarding",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "70c3f81f-e512-4de7-bdde-74a18d6e674f",
+      "action": "deposit",
+      "status": "Succeeded",
+      "scene": "funding",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "16209efc-9b0f-44b0-9096-b04f1ef2673b",
+      "action": "provision",
+      "status": "Succeeded",
+      "scene": "onboarding",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "0fa2bd74-a2b7-4063-9624-ef7a0a96dfe1",
+      "action": "game",
+      "status": "Failed",
+      "scene": "interruption",
+      "state": "failed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "75e6a55b-aec5-4c86-b084-929edc522f03",
+      "action": "game",
+      "status": "Succeeded",
+      "scene": "game",
+      "state": "completed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "2307882e-c1d2-455a-8629-14806e0ff33f",
+      "action": "game",
+      "status": "Succeeded",
+      "scene": "game",
+      "state": "completed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "4aa3302f-d15c-460d-af27-7ff583eabfd2",
+      "action": "game",
+      "status": "Succeeded",
+      "scene": "game",
+      "state": "completed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "519303e1-cb08-4631-8aec-2ea7ec340c83",
+      "action": "task",
+      "status": "Succeeded",
+      "scene": "settlement",
+      "state": "confirmed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "031de2d5-91dc-4515-bacb-67ed8361ee92",
+      "action": "game",
+      "status": "Succeeded",
+      "scene": "game",
+      "state": "completed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "c72aaad1-6492-4504-874f-7eac7fa4674b",
+      "action": "game",
+      "status": "Succeeded",
+      "scene": "game",
+      "state": "completed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "fcf33e86-a6dd-4e6c-97ed-d2589e5c706b",
+      "action": "game",
+      "status": "Succeeded",
+      "scene": "game",
+      "state": "completed",
+      "historyStatic": true
+    },
+    {
+      "requestId": "3ec27411-3b6c-4212-884c-af2d84939b01",
+      "action": "reward-task",
+      "status": "Succeeded",
+      "scene": "settlement",
+      "state": "confirmed",
+      "historyStatic": true
+    }
+  ]
+}

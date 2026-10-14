@@ -207,6 +207,22 @@ export class HostedTaskExecutor implements HostedExecutor {
       if (!sameAddress(asset, workflow.asset) || !sameAddress(accountEscrow, workflow.escrowAddress) || !sameAddress(managerAccount, workflow.account) || !sameAddress(managerEscrow, workflow.escrowAddress) || !sameAddress(managerAdapter, adapterAddress) || !sameAddress(registry, config.identity) || !sameAddress(adapterManager, managerAddress)) fail("HOSTED_PROTOCOL_BINDING_MISMATCH");
       const identity = new IdentityRegistry({ address: config.identity, provider: rpc, expectedChainId: BigInt(workflow.chainId) });
       const save = () => store.write(state!);
+      const publishWorkflow = async (status: WorkflowStatus) => {
+        const evidence = {...(status.choice?{taskId:status.choice.taskId,priceRaw:status.choice.price}:{}),...(status.acceptTxHash?{acceptTxHash:status.acceptTxHash}:{}),...(status.paymentId?{paymentId:status.paymentId}:{}),...(status.paymentTxHash?{paymentTxHash:status.paymentTxHash}:{})};
+        if(status.payment){const p=status.payment;await input.activity?.({scene:BigInt(p.fromCredit)>0n?"credit":"funding",state:"confirmed",evidence:{...evidence,paymentId:p.paymentId,txHash:p.txHash,fromCashRaw:p.fromCash,fromCreditRaw:p.fromCredit,chargedRaw:p.price}});return;}
+        if(status.phase==="Selected")await input.activity?.({scene:"task",state:"selected",evidence});
+        else if(status.phase==="AcceptPending")await input.activity?.({scene:"task",state:status.acceptConfirmed?"confirmed":"waiting",evidence});
+        else if(status.phase==="Running"){
+          const phase=status.childPhase;
+          if(phase==="ReadyToSubmit")await input.activity?.({scene:"review",state:"started",subject:{id:"arena-verifiable-acceptance",name:"Verifiable Task Acceptance",kind:"artifact"},evidence});
+          else if(phase==="SubmissionPending")await input.activity?.({scene:"review",state:"waiting",evidence});
+          else if(phase==="RefundPending")await input.activity?.({scene:"interruption",state:"reconciling",reason:status.reason??"REFUND_IN_PROGRESS",evidence});
+          else if(phase==="Paused"||phase==="Stopped")await input.activity?.({scene:"interruption",state:/UNKNOWN|UNCERTAIN|UNCONFIRMED/.test(status.reason??"")?"reconciling":"paused",...(status.reason?{reason:status.reason}:{}),evidence});
+          else if(status.paymentId)await input.activity?.({scene:status.choice?.funding==="task-credit"?"credit":"model",state:"waiting",subject:{id:input.agent.modelId,name:input.agent.modelId,kind:"model"},evidence});
+          else await input.activity?.({scene:"execution",state:"started",evidence});
+        }else if(["Paused","SubmissionPending","RefundPending"].includes(status.phase))await input.activity?.({scene:status.phase==="SubmissionPending"?"review":"interruption",state:status.phase==="SubmissionPending"?"waiting":status.phase==="RefundPending"||/UNKNOWN|UNCERTAIN|UNCONFIRMED/.test(status.reason??"")?"reconciling":"paused",...(status.reason?{reason:status.reason}:{}),evidence});
+        else if(status.phase==="Stopped"&&!status.choice)await input.activity?.({scene:"task",state:"blocked",reason:status.reason??"NO_FEASIBLE_CANDIDATE"});
+      };
       const step = async (id: string, signer: Wallet, to: string, data: string, value = 0n): Promise<TransactionReceipt> => {
         await checkNetwork(); let entry = state!.transactions[id];
         if (!entry) {
@@ -220,6 +236,7 @@ export class HostedTaskExecutor implements HostedExecutor {
         }
         const signed = Transaction.from(entry.raw);
         if (signed.hash !== entry.hash || !sameAddress(signed.from!, signer.address) || !sameAddress(entry.from, signer.address) || signed.chainId !== BigInt(workflow.chainId) || signed.nonce !== entry.nonce || !sameAddress(signed.to!, to) || signed.data !== data || signed.value !== value) fail("HOSTED_TRANSACTION_BINDING_CHANGED");
+        await input.activity?.({scene:snapshot.action==="provision"?"onboarding":"funding",state:"waiting",phaseId:id,evidence:{txHash:entry.hash,chainId:workflow.chainId}});
         let receipt = await rpc.getTransactionReceipt(entry.hash);
         if (!receipt) {
           if (["task", "reward-task", "metered-task"].includes(snapshot.action) && Date.now() + workflow.minRemainingMs >= workflow.deadlineMs) fail("WORKFLOW_DEADLINE");
@@ -235,7 +252,8 @@ export class HostedTaskExecutor implements HostedExecutor {
         const block = await rpc.getBlock(receipt.blockNumber);
         if (block?.hash !== receipt.blockHash || receipt.hash !== entry.hash || !sameAddress(receipt.from, signer.address) || !receipt.to || !sameAddress(receipt.to, to)) fail("HOSTED_TRANSACTION_UNCERTAIN");
         entry.receipt = receipt.toJSON(); await save();
-        if (receipt.status === 0) fail("HOSTED_TRANSACTION_REVERTED"); if (receipt.status !== 1) fail("HOSTED_TRANSACTION_UNCERTAIN"); return receipt;
+        if (receipt.status === 0) fail("HOSTED_TRANSACTION_REVERTED"); if (receipt.status !== 1) fail("HOSTED_TRANSACTION_UNCERTAIN");
+        await input.activity?.({scene:snapshot.action==="provision"?"onboarding":"funding",state:"confirmed",phaseId:id,evidence:{txHash:receipt.hash,chainId:workflow.chainId,blockNumber:receipt.blockNumber,blockHash:receipt.blockHash}});return receipt;
       };
       const directory = join(store.directory, "workflow"), walletDirectory = join(config.walletDirectory, wallet.address.toLowerCase()), walletStore = new SessionStore<WalletSlot>(walletDirectory);
       await walletStore.start(input.recover);
@@ -410,14 +428,20 @@ export class HostedTaskExecutor implements HostedExecutor {
         await walletStore.close(); held = false;
         const reward = (snapshot.action === "reward-task" || snapshot.action === "metered-task" && input.agent.modelId === "kimi-k2.6") ? await this.dependencies.reward?.(input) : undefined;
         try {
-          const status = await runTaskWorkflow(directory, workflow, { signer: wallet, provider: rpc, rpcUrl: config.publicRpcUrl, arenaUrl: config.arenaUrl, underwriterUrl: config.underwriterUrl,
+          await input.activity?.({scene:"funding",state:"started",evidence:{budgetRaw:snapshot.reservedRaw,cashRaw:String(await account.getFunction("cash").staticCall(id))}});
+          const status = await runTaskWorkflow(directory, workflow, { onProgress:publishWorkflow, signer: wallet, provider: rpc, rpcUrl: config.publicRpcUrl, arenaUrl: config.arenaUrl, underwriterUrl: config.underwriterUrl,
             walletLockDirectory: walletDirectory, runner: this.dependencies.runner, recoverLock: input.recover, timeoutMs: config.timeoutMs, pollTimeoutMs: config.pollTimeoutMs,
             ...(snapshot.action === "metered-task" ? { metered: async (child, onHandle) => openMeteredTask(join(directory, "metered"), config.metered!, child, {
               signer: wallet, provider: rpc, allowCredit: snapshot.settings.allowCredit, maxPrice: snapshot.reservedRaw,
-              key: (await taskPrivateFile(config.metered!.keyFile)).trim(), timeoutMs: config.timeoutMs, recover: input.recover, onHandle, reward, dispatch: this.dependencies.gatewayDispatch,
+              key: (await taskPrivateFile(config.metered!.keyFile)).trim(), timeoutMs: config.timeoutMs, recover: input.recover, onHandle, activity:input.activity, reward, dispatch: this.dependencies.gatewayDispatch,
             }) } : {}),
             ...(reward && snapshot.action === "reward-task" ? { reward: { ...reward, solver: { ...reward.solver, runner: this.dependencies.runner } } } : {}) });
-          state.result = await this.taskResult(directory, state, status, account, rpc); await save(); return structuredClone(state.result);
+          state.result = await this.taskResult(directory, state, status, account, rpc); await save();
+          const verifiedResult=state.result;
+          if(verifiedResult.paymentId&&verifiedResult.paymentTxHash)await input.activity?.({scene:BigInt(verifiedResult.fromCreditRaw??"0")>0n?"credit":"funding",state:"confirmed",evidence:{paymentId:verifiedResult.paymentId,paymentTxHash:verifiedResult.paymentTxHash,taskId:verifiedResult.taskId!,fromCashRaw:verifiedResult.fromCashRaw!,fromCreditRaw:verifiedResult.fromCreditRaw!,chargedRaw:verifiedResult.chargedRaw}});
+          if(verifiedResult.settlement){const settlement=verifiedResult.settlement;await input.activity?.({scene:"settlement",state:"confirmed",evidence:{taskId:verifiedResult.taskId!,txHash:settlement.txHash,blockNumber:settlement.block.number,blockHash:settlement.block.hash,passed:settlement.passed,repaidRaw:settlement.repaidRaw,slashedRaw:settlement.slashedRaw,residualRaw:settlement.residualRaw}});}
+          else if(verifiedResult.phase==="Refunded")await input.activity?.({scene:"interruption",state:"refunded",evidence:{...(verifiedResult.paymentId?{paymentId:verifiedResult.paymentId}:{}),...(verifiedResult.refundedRaw?{refundedRaw:verifiedResult.refundedRaw}:{})}});
+          return structuredClone(state.result);
         } finally { await reward?.close(); }
       } finally { if (held) await walletStore.close(); }
     } catch (error) {

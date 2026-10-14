@@ -32,7 +32,9 @@ export async function paidGoalCall(config:HostedTaskExecutorConfig,state:GoalSta
       // Quote receipt is persisted before SDK payment; recovery always uses that exact handle.
       if(!call.handle){
         await guard();
+        await input.activity?.({scene:"funding",state:"started",phaseId:call.stage,evidence:{priceRaw:route.priceRaw}});
         const cash=await account.getFunction("cash").staticCall(state.input.chainAgentId);
+        await input.activity?.({scene:"funding",state:cash<BigInt(route.priceRaw)?"blocked":"confirmed",phaseId:call.stage,evidence:{cashRaw:String(cash),priceRaw:route.priceRaw},...(cash<BigInt(route.priceRaw)?{reason:"INFERENCE_FUNDING_REQUIRED",requiredAction:"deposit" as const}:{})});
         if(cash<BigInt(route.priceRaw))throw new Error("INFERENCE_FUNDING_REQUIRED");
         const policy=await account.getFunction("getPolicy").staticCall(state.input.chainAgentId);
         if(policy.ownerFrozen||await account.getFunction("protocolFrozen").staticCall(state.input.chainAgentId))throw new Error("HOSTED_AGENT_FROZEN");
@@ -63,7 +65,7 @@ export async function paidGoalCall(config:HostedTaskExecutorConfig,state:GoalSta
       }
       sdk=new InferCredit({agentId:state.input.chainAgentId,signer:wallet,chainId:BigInt(state.input.chainId),account:template.account,asset:template.asset,
         provider:route.provider,maxPrice:BigInt(route.priceRaw),timeoutMs:config.timeoutMs??120000,
-        onHandle:async handle=>{if(handle.input.taskId!=="0"||call.handle&&call.handle.quote.paymentId!==handle.quote.paymentId)throw new Error("HOSTED_GOAL_BINDING_CHANGED");call.handle=structuredClone(handle);await save();},beforePayment:guard});
+        onHandle:async handle=>{if(handle.input.taskId!=="0"||call.handle&&call.handle.quote.paymentId!==handle.quote.paymentId)throw new Error("HOSTED_GOAL_BINDING_CHANGED");call.handle=structuredClone(handle);await save();await input.activity?.({scene:"model",state:"waiting",phaseId:call.stage,evidence:{paymentId:handle.quote.paymentId,priceRaw:handle.quote.price,...(handle.submission?{txHash:handle.submission.txHash}:{})}});},beforePayment:async()=>{await guard();await input.activity?.({scene:"funding",state:"waiting",phaseId:call.stage,evidence:{priceRaw:route.priceRaw,...(call.handle?{paymentId:call.handle.quote.paymentId}:{})}});}});
       call.started=true;await save();
       call.inference=call.handle?await sdk.resume(call.handle):await sdk.fetch(route.relayUrl,{body:{service:route.service,model:route.model,messages:call.messages as unknown as Json[],max_completion_tokens:call.max_completion_tokens,thinking:{type:"disabled"}}});await save();
     }
@@ -74,6 +76,11 @@ export async function paidGoalCall(config:HostedTaskExecutorConfig,state:GoalSta
       ||receipt.chainId!==quote.chainId||receipt.service!==quote.service||!same(receipt.payTo,quote.payTo)||!same(receipt.account,quote.account)||!same(receipt.asset,quote.asset))throw new Error("HOSTED_GOAL_RECEIPT_INVALID");
     if(receipt.fromCredit!=="0"||receipt.fromCash!==route.priceRaw||receipt.price!==route.priceRaw||receipt.paymentId!==quote.paymentId||receipt.requestDigest!==quote.requestDigest||receipt.model!==route.physicalModel||receipt.taskId!=="0"||receipt.agentId!==state.input.chainAgentId)throw new Error("HOSTED_GOAL_RECEIPT_INVALID");
     await confirmPaidDelivery(call,{chainId:template.chainId,account:template.account,agentId:state.input.chainAgentId,provider:route.provider,taskId:"0"},rpc,wallet);
+    // Accounting must survive an observer failure before entry.response exists.
+    // Only the canonical delivery proof above permits this charge, never an
+    // unverified provider receipt. Recovery still uses the original inference.
+    call.recovery={chargedRaw:receipt.fromCash,refundedRaw:"0",resolved:false};await save();
+    await input.activity?.({scene:"funding",state:"confirmed",phaseId:call.stage,evidence:{paymentId:receipt.paymentId,txHash:receipt.txHash,fromCashRaw:receipt.fromCash,fromCreditRaw:receipt.fromCredit,chargedRaw:receipt.price}});
     const result=call.inference.result as {model?:string;choices?:{message?:{content?:string}}[];usage?:{prompt_tokens?:number;completion_tokens?:number}};
     const validUsage=[result?.usage?.prompt_tokens,result?.usage?.completion_tokens].every(n=>Number.isSafeInteger(n)&&Number(n)>=0)&&isDeepStrictEqual(receipt.usage,result.usage);
     const deliveryError=result?.model!==(route.responseModel??route.physicalModel)?"HOSTED_GOAL_MODEL_CHANGED":!validUsage?"HOSTED_GOAL_OUTPUT_INVALID":undefined;
@@ -82,7 +89,8 @@ export async function paidGoalCall(config:HostedTaskExecutorConfig,state:GoalSta
     // Record canonical cash movement even when the vendor/relay response is lost.
     // Recovery never invents a new quote and never redispatches a refunded call.
     if(call.handle&&!call.inference){
-      try{const recovered=await voidExpiredGoalPayment(state,call,template.account,template.asset,rpc,wallet,save,config.timeoutMs??60000);if(recovered){call.recovery=recovered;await save();}}
+      await input.activity?.({scene:"interruption",state:"reconciling",phaseId:call.stage,reason:"HOSTED_GOAL_RECONCILIATION_REQUIRED",evidence:{paymentId:call.handle.quote.paymentId,...(call.handle.submission?{txHash:call.handle.submission.txHash}:{})}});
+      try{const recovered=await voidExpiredGoalPayment(state,call,template.account,template.asset,rpc,wallet,save,config.timeoutMs??60000);if(recovered){call.recovery=recovered;await save();await input.activity?.({scene:"interruption",state:recovered.resolved?BigInt(recovered.refundedRaw)>0n?"refunded":recovered.voided?"cancelled":"failed":"reconciling",phaseId:call.stage,evidence:{paymentId:call.handle!.quote.paymentId,chargedRaw:recovered.chargedRaw,refundedRaw:recovered.refundedRaw}});}}
       catch{/* Preserve unresolved reservation if any evidence cannot be confirmed. */}
       if(call.recovery?.resolved)throw new Error(call.recovery.voided?"HOSTED_GOAL_PAYMENT_VOIDED":call.recovery.reverted?"HOSTED_GOAL_PAYMENT_REVERTED":"HOSTED_GOAL_UNDELIVERED_REFUNDED");
     }

@@ -3,6 +3,7 @@ import test from "node:test";
 import { mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import {validateHostedActivity,type HostedActivityInput} from "../src/scene-types.js";
 import { Transaction, Wallet } from "ethers";
 import { HostedTaskExecutor, loadHostedTaskExecutorConfig, validateHostedTaskExecutorConfig } from "../src/task-executor.js";
 import { createHostedTaskFixture } from "./task-fixture.js";
@@ -48,7 +49,9 @@ test("two hosted agents register/enroll independent wallets and run the real fix
     assert.equal(fx.fx.calls.length, 0); assert.equal(await fx.fx.f.providerBalance(), 0n);
     assert.equal((await read(fx.fx.f.account, "getPolicy", ["3"])).maxDebtPerTx, 119999n);
     fx.fx.queue(fx.GOOD_CODE["sum-integers"]);
-    const task = cheap.input("task"), delivered = await fx.executor.execute(task);
+    const task = cheap.input("task"),activities:HostedActivityInput[]=[];task.activity=async e=>{activities.push(validateHostedActivity(e));};
+    const delivered = await fx.executor.execute(task);
+    assert.ok(activities.some(e=>e.scene==="task"&&e.state==="selected"));assert.ok(activities.some(e=>e.scene==="task"&&e.state==="waiting"&&e.evidence?.acceptTxHash));assert.ok(activities.some(e=>e.scene==="credit"&&e.state==="confirmed"&&e.evidence?.fromCreditRaw==="80000"));assert.ok(activities.some(e=>e.scene==="review"&&e.state==="waiting"));assert.ok(activities.some(e=>e.scene==="settlement"&&e.state==="confirmed"&&e.evidence?.txHash===delivered.settlement?.txHash));
     assert.equal(delivered.phase, "Succeeded", JSON.stringify(delivered)); assert.equal(delivered.terminal, true); assert.equal(delivered.chargedRaw, "120000"); assert.equal(delivered.principalRaw, "0"); assert.equal(delivered.feeRaw, "0");
     assert.equal(fx.fx.calls.length, 1); assert.equal(fx.fx.calls[0].model, "controlled-cheap");
     assert.equal((await read(fx.fx.f.manager, "getLoan", [delivered.taskId!])).status, 2n);

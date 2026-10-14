@@ -53,5 +53,44 @@
 @media(max-width:767px){.af-game-library{gap:10px}.af-game-library .af-game-card>img{height:120px}.af-reward-entry{flex-wrap:wrap;padding:12px}.af-reward-entry>div{flex-basis:100%}.af-lobby-note{font-size:9px}}
 
 /* Reuse the actual game interface inside the Dashboard mission column. */
-.af-arena-embedded{min-height:0;container-type:inline-size;background:var(--color-card)}.af-arena-embedded .af-arena-main{padding:14px}.af-arena-embedded .af-game-library{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.af-arena-embedded .af-game-library .af-game-card>img{height:100px}.af-arena-embedded .af-game-library .af-game-card>div{padding:10px}.af-arena-embedded .af-game-grid{grid-template-columns:minmax(0,1fr)}.af-arena-embedded .af-config-body{flex-wrap:wrap;gap:10px}.af-arena-embedded .af-config-fields{flex-wrap:wrap}.af-arena-embedded .af-reward-entry{flex-wrap:wrap}.af-arena-embedded .af-reward-entry>div{flex-basis:100%}.af-arena-embedded .af-config-meta{display:none}.af-arena-embedded .af-logs{max-height:280px;overflow:auto}.af-arena-embedded .af-api pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.af-arena-embedded{min-height:0;container-type:inline-size;background:var(--color-card)}.af-arena-embedded .af-arena-main{padding:16px}.af-arena-embedded .af-game-library{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.af-arena-embedded .af-game-library .af-game-card>img{height:100px}.af-arena-embedded .af-game-library .af-game-card>div{padding:10px 0}.af-arena-embedded .af-game-grid{grid-template-columns:minmax(0,1fr)}.af-arena-embedded .af-config-body{flex-wrap:wrap;gap:10px;padding:10px 0}.af-arena-embedded .af-config-fields{flex-wrap:wrap}.af-arena-embedded .af-reward-entry{flex-wrap:wrap;padding:16px 0;margin:0;border-top:1px solid var(--arena-line)}.af-arena-embedded .af-reward-entry>div{flex-basis:100%}.af-arena-embedded .af-config-meta{display:none}.af-arena-embedded .af-logs{max-height:280px;overflow:auto;border-top:1px solid var(--arena-line)}.af-arena-embedded .af-api pre{white-space:pre-wrap;overflow-wrap:anywhere}
+/* Dashboard supplies the shared frame; spacing and rules separate game sections. */
+.af-arena-embedded .af-panel{border:0;background:transparent;box-shadow:none}
+.af-arena-embedded .af-game-card{border:1px solid var(--arena-line);background:var(--color-card);box-shadow:none}
+.af-arena-embedded .af-game-card:hover{border-color:hsl(var(--primary)/.35)}
+.af-arena-embedded .af-game-library .af-game-card>div{padding:12px}
+.af-arena-embedded .af-panel{overflow:visible}
+.af-arena-embedded .af-logs{overflow:auto;border-top:1px solid var(--arena-line)}
+.af-arena-embedded .af-config>header,.af-arena-embedded .af-board-status{border:0;padding:10px 0}
+.af-arena-embedded .af-config>p{padding:0 0 14px}
+.af-arena-embedded .af-game-body{padding:4px 0 14px}
+.af-arena-embedded .af-seat{border:0;padding:4px 0;background:transparent}
+.af-arena-embedded .af-seat.acting strong{color:hsl(var(--primary))}
+.af-arena-embedded .af-game-panel>footer{padding:8px 0}
+.af-arena-embedded .af-logs>header{padding:12px 0 8px}
+.af-arena-embedded .af-logs>.af-tabs{margin:0 0 8px}
+.af-arena-embedded .af-log-list{padding:0}
+.af-arena-embedded .af-catalog{padding:14px 0 0;border-top:1px solid var(--arena-line)}
+.af-arena-embedded .af-history{padding:6px 0}
+@media(max-width:767px){.af-arena-embedded .af-arena-main{padding:12px}}
 @container(max-width:420px){.af-arena-embedded .af-game-library{grid-template-columns:1fr}.af-arena-embedded .af-balatro-hand{grid-template-columns:repeat(4,minmax(0,1fr))}.af-arena-embedded .af-config-fields{display:grid;grid-template-columns:1fr}.af-arena-embedded .af-config-fields input{width:100%}.af-arena-embedded .af-gamefi-heading{flex-wrap:wrap}.af-arena-embedded .af-poker-table{padding:12px 6px;min-height:370px}.af-arena-embedded .af-community-slot,.af-arena-embedded .af-community-slot .af-playing-card{width:36px}}
+
+.af-lobby-heading{flex-wrap:wrap;align-items:center}
+.af-lobby-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px 16px}
+.af-records-trigger{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--arena-muted);font:inherit;font-size:11px;padding:4px 0;white-space:nowrap}
+.af-records-trigger:hover,.af-records-trigger:focus-visible{color:hsl(var(--primary))}
+.af-records-trigger:focus-visible,.af-records-close:focus-visible,.af-records-replay:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:3px}
+.af-records-dialog{margin:auto;width:min(640px,calc(100vw - 32px));max-height:calc(100dvh - 48px);padding:0;overflow:hidden;border:1px solid var(--arena-line);background:var(--color-card);color:var(--arena-ink);font:12px/1.6 var(--font-geist-mono),monospace;box-shadow:0 16px 50px #0002}
+.af-records-dialog::backdrop{background:#0003}
+.af-records-dialog>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--arena-line)}
+.af-records-dialog>header h2{margin:0;font-size:13px}
+.af-records-close{display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;background:transparent;color:var(--arena-muted);font:inherit;font-size:20px;line-height:1}
+.af-records-body{padding:16px;max-height:calc(100dvh - 100px);overflow-y:auto;overscroll-behavior:contain}
+.af-records-body h3{margin:20px 0 8px;font-size:11px;color:var(--arena-muted)}
+.af-records-body h3 small{margin-left:6px;font-size:10px;font-weight:400}
+.af-records-replay{display:inline-flex;color:hsl(var(--primary));font-size:11px}
+.af-records-body .af-match-list>button{padding:12px 0;min-width:0;flex-wrap:wrap}
+.af-records-body .af-match-list>button>div{flex:1;min-width:160px;overflow-wrap:anywhere}
+.af-records-body .af-match-list>button>span{white-space:nowrap}
+.af-records-body .af-match-list>button>svg{flex-shrink:0}
+@media(max-width:500px){.af-lobby-actions{gap:8px 12px}.af-records-dialog{width:calc(100vw - 24px);max-height:calc(100dvh - 24px)}.af-records-dialog>header,.af-records-body{padding:12px}.af-records-body{max-height:calc(100dvh - 76px)}}

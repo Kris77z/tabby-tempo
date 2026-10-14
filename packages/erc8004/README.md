@@ -1,4 +1,13 @@
-# ERC-8004 工具层（P0）
+# ERC-8004 tools
+
+This guide is adapted for **Tabby Tempo**. The running deployment is Tempo Moderato `42431`, with **PathUSD** (`0x20c0000000000000000000000000000000000000`, 6 decimals) for settlement and fees. The [VPS runbook](../../deploy/tempo-vps/README.md) describes the sole production writer at `https://tempo.tabbyai.xyz`; this documentation/code update has not been deployed.
+
+Local launch examples below are for a **new isolated Anvil fixture only**, with synthetic roles, fresh private directories and controlled inference. Never load or restart the archived local Tempo runtime, reuse its journals, or start another writer beside the VPS. Monad/MON/USDC examples and dated results are explicitly source-project history or offline fixture semantics, not current Tempo configuration or new acceptance. See [Tempo verification](../../docs/VERIFICATION.md).
+
+
+This package wraps the canonical Identity and Reputation registries using ethers v6. It explicitly checks the configured chain and reads identity/wallet bindings and reporter-filtered feedback. It does not select an RPC fallback or load operator secrets.
+
+The identity/reputation client is distinct from the financial adapter: [ERC8004Adapter](../../contracts/src/ERC8004Adapter.sol) translates task outcomes into the protocol's feedback tags. For the recorded Tempo registry pair and real Tempo reads, see the [Tempo public audit](../../docs/evidence/tempo-20261012/root-acceptance.json) and [verification guide](../../docs/VERIFICATION.md). The Chinese API and test details below describe the supported EOA consent profile.
 
 `@agentfuel/erc8004` 提供 ethers v6 的 `IdentityRegistry` 与 `ReputationRegistry`，仅使用已验证的 canonical EOA 签名 profile。registry 地址和 `expectedChainId` 必须由调用方明确传入，不写死 InferCredit 合约部署地址，不加载 dotenv 或私钥，不选择网络 fallback。
 
@@ -39,7 +48,7 @@ const feedback = await reputation.readFeedback(registration.agentId, adapterAddr
 
 ## 来源与版本范围
 
-签名 profile 与固定区块部署的实测依据见 [day0-findings.md](/Users/jungle/Desktop/dev/agentfuel/docs/day0-findings.md) 和 [Day0Canonical.t.sol](/Users/jungle/Desktop/dev/agentfuel/contracts/spike/Day0Canonical.t.sol)。事件与函数 ABI 另核对 [官方 Identity 实现](https://github.com/erc-8004/erc-8004-contracts/blob/master/contracts/IdentityRegistryUpgradeable.sol) 和 [官方 Reputation 实现](https://github.com/erc-8004/erc-8004-contracts/blob/master/contracts/ReputationRegistryUpgradeable.sol)。本工具层没有复制旧项目代码，没有双签名 profile 或 ERC-1271 兼容层。
+签名 profile 与固定区块部署的实测依据见 [day0-findings.md](../../docs/day0-findings.md) 和 [Day0Canonical.t.sol](../../contracts/spike/Day0Canonical.t.sol)。事件与函数 ABI 另核对 [官方 Identity 实现](https://github.com/erc-8004/erc-8004-contracts/blob/master/contracts/IdentityRegistryUpgradeable.sol) 和 [官方 Reputation 实现](https://github.com/erc-8004/erc-8004-contracts/blob/master/contracts/ReputationRegistryUpgradeable.sol)。本工具层没有复制旧项目代码，没有双签名 profile 或 ERC-1271 兼容层。
 
 2026-10-02 查询的官方 master 对空 client 列表已有不同处理；本项目固定区块部署实际拒绝空列表。本 wrapper 始终主动要求非空列表，保证调用方明确 reporter 范围；不把最新版源码的聚合实现当成固定部署的语义保证。
 

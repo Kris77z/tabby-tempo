@@ -15,6 +15,7 @@ export interface WorkflowRoute extends SelectionRoute { solve: WorkflowSolvePlan
 export interface WorkflowProvider extends Omit<SelectionProvider, "routes"> { routes: WorkflowRoute[] }
 export interface WorkflowConfig extends Omit<SelectionConfig, "providers"> { providers: WorkflowProvider[]; funding?: "reward-tokens" | "inference-allowance" }
 export interface WorkflowOptions {
+  onProgress?: (status: WorkflowStatus) => Promise<void>;
   signer: Wallet; provider: JsonRpcProvider; rpcUrl: string; arenaUrl: string; underwriterUrl: string; walletLockDirectory: string;
   reward?: Pick<RewardTaskOptions, "solver" | "creditsUsed">;
   metered?: (config: FixedTaskConfig, onHandle: (handle: PaymentHandle) => Promise<void>) => Promise<Pick<RewardTaskOptions, "solver" | "creditsUsed"> & { close(): Promise<void> }> ;
@@ -33,7 +34,8 @@ interface WalletJournal { chainId: string; signer: string; account: string; dire
 export interface WorkflowStatus {
   version: 1; phase: WorkflowPhase; reason?: string; deadlineMs: number; reservedPrice: string;
   choice?: Omit<Pick<SelectionCandidate, "taskId" | "problemId" | "providerId" | "tier" | "price" | "funding">, "funding"> & { funding: SelectionCandidate["funding"] | "reward-tokens" | "inference-allowance" };
-  acceptTxHash?: string; paymentId?: string; childPhase?: string; tools?: { rounds: number; attempts: number; passed: number }; finance?: WorkflowSession["finance"];
+  acceptTxHash?: string; acceptConfirmed?: boolean; paymentId?: string; paymentTxHash?:string; childPhase?: string;
+  payment?: {paymentId:string;txHash:string;fromCash:string;fromCredit:string;price:string}; tools?: { rounds: number; attempts: number; passed: number }; finance?: WorkflowSession["finance"];
 }
 const terminal = (phase: string) => ["Succeeded", "Failed", "Refunded", "Stopped"].includes(phase);
 const effectivePhase = (state: WorkflowSession): WorkflowPhase => state.phase === "Stopped" && (state.child?.inference || state.config.funding === "inference-allowance" && state.handle?.submission) ? (state.child?.submission || state.rewardChild?.submission) ? "SubmissionPending" : "Paused" : state.phase;
@@ -77,7 +79,7 @@ function project(state: WorkflowSession): WorkflowStatus {
   const selected = state.decision.selected, run = state.rewardChild?.solve ?? (state.child?.inference?.result as unknown as { run?: { rounds?: unknown[]; tools?: { result?: { passed?: boolean } }[] } })?.run;
   const choice = selected ? { taskId: selected.taskId, problemId: selected.problemId, providerId: selected.providerId, tier: selected.tier, price: state.config.funding === "reward-tokens" ? "0" : state.config.funding === "inference-allowance" ? state.reservedPrice : selected.price, funding: state.config.funding ?? selected.funding } : undefined;
   return { version: 1, phase: effectivePhase(state), ...(state.reason ? { reason: safeCode(new Error(state.reason)) } : {}), deadlineMs: state.config.deadlineMs, reservedPrice: state.reservedPrice,
-    ...(choice ? { choice } : {}), ...(state.accept ? { acceptTxHash: state.accept.txHash } : {}), ...(state.handle ? { paymentId: state.handle.quote.paymentId } : {}),
+    ...(choice ? { choice } : {}), ...(state.accept ? { acceptTxHash: state.accept.txHash, acceptConfirmed: state.accept.confirmed } : {}), ...(state.handle ? { paymentId: state.handle.quote.paymentId,...(state.handle.submission?{paymentTxHash:state.handle.submission.txHash}:{}) } : {}),
     ...(state.child ? { childPhase: state.child.phase } : {}), ...(run ? { tools: { rounds: run.rounds?.length ?? 0, attempts: run.tools?.length ?? 0, passed: run.tools?.filter(tool => tool.result?.passed).length ?? 0 } } : {}),
     ...(state.finance ? { finance: structuredClone(state.finance) } : {}) };
 }
@@ -111,7 +113,7 @@ export async function runTaskWorkflow(directory: string, input: WorkflowConfig, 
   const walletStore = new SessionStore<WalletJournal>(options.walletLockDirectory), store = new SessionStore<WorkflowSession>(directory);
   await walletStore.start(options.recoverLock);
   let state: WorkflowSession | undefined, storeHeld = false;
-  const save = async () => { await store.write(state!); await walletStore.write({ chainId: config.chainId, signer, account: config.account, directory, binding, phase: state!.phase }); };
+  const save = async () => { await store.write(state!); await walletStore.write({ chainId: config.chainId, signer, account: config.account, directory, binding, phase: state!.phase }); await options.onProgress?.(project(state!)); };
   const account = new Contract(config.account, ACCOUNT_ABI, rpc), escrow = new Contract(config.escrowAddress, escrowAbi, rpc);
   const chain = async () => { if (BigInt(await rpc.send("eth_chainId", [])) !== BigInt(config.chainId)) stop("NETWORK_MISMATCH"); };
   const time = (deadline = config.deadlineMs) => { if (Date.now() + config.minRemainingMs >= deadline) stop("WORKFLOW_DEADLINE"); };
@@ -232,7 +234,7 @@ export async function runTaskWorkflow(directory: string, input: WorkflowConfig, 
         taskId: childConfig.taskId, agentId: childConfig.agentId, chainId: childConfig.chainId,
         escrowAddress: childConfig.escrowAddress, rpcUrl: childConfig.rpcUrl, arenaUrl: childConfig.arenaUrl,
         deadlineMs: childConfig.deadlineMs, solve: childConfig.solve,
-      }, { ...options, ...(metered ?? options.reward!), submitFailedCandidate: config.funding === "inference-allowance" });
+      }, { ...options, ...(metered ?? options.reward!), onProgress:async progress=>{await options.onProgress?.({...project(state!),childPhase:progress.phase,...(progress.reason?{reason:safeCode(new Error(progress.reason))}:{})});}, submitFailedCandidate: config.funding === "inference-allowance" });
       } finally { await metered?.close(); }
       state.phase = state.rewardChild.phase as WorkflowPhase; state.reason = state.rewardChild.reason;
       state.phase = effectivePhase(state);
@@ -244,6 +246,8 @@ export async function runTaskWorkflow(directory: string, input: WorkflowConfig, 
         (state!.handle && (state!.handle.quote.paymentId !== handle.quote.paymentId || state!.handle.creditNonce !== handle.creditNonce))) stop("WORKFLOW_QUOTE_CHANGED");
     };
     state.child = await runFixedPriceTask(join(directory, "fixed-task"), state.childConfig, { ...options,
+      onProgress:async progress=>{await options.onProgress?.({...project(state!),childPhase:progress.phase,...(progress.reason?{reason:safeCode(new Error(progress.reason))}:{})});},
+      onPayment:async payment=>{await options.onProgress?.({...project(state!),payment});},
       onHandle: async handle => { checkHandle(handle); state!.handle = handle; state!.reservedPrice = handle.quote.price; await save(); },
       beforePayment: async handle => { checkHandle(handle); if (!state!.handle) { state!.handle = structuredClone(handle); state!.reservedPrice = handle.quote.price; await save(); } await assigned(); },
     });

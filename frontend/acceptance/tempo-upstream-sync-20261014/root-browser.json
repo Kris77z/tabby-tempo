@@ -1,0 +1,28 @@
+{
+  "scope": "Isolated browser replay of old local Task7/Task8 public fields through synthetic API interception. No current VPS state or real wallet authentication. Every API mocked; external requests blocked.",
+  "checks": [
+    {
+      "view": "desktop-history",
+      "requestId": "519303e1-cb08-4631-8aec-2ea7ec340c83",
+      "tempoLinks": 3,
+      "staticHistory": true,
+      "passiveCanvas": true,
+      "noOverflow": true,
+      "businessWrites": 0,
+      "externalRequests": 0
+    },
+    {
+      "view": "mobile-history",
+      "requestId": "3ec27411-3b6c-4212-884c-af2d84939b01",
+      "tempoLinks": 2,
+      "staticHistory": true,
+      "passiveCanvas": true,
+      "noOverflow": true,
+      "businessWrites": 0,
+      "externalRequests": 0
+    }
+  ],
+  "errors": [],
+  "passed": true,
+  "completedAt": "2026-10-14T05:35:43.156Z"
+}

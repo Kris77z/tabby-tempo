@@ -2,6 +2,7 @@ import { validGoal } from "../../services/hosted-agents/src/goal-types";
 import type { AgentCreation, AgentSettings, HostedAction, HostedAgent, HostedRun, HostedCatalogModel, HostedFinance, HostedCapabilities, HostedSponsorship } from "../../services/hosted-agents/src/types";
 export type { AgentCreation, AgentSettings, HostedAction, HostedAgent, HostedRun, HostedCatalogModel, HostedFinance, HostedCapabilities, HostedSponsorship };
 export interface HostedSnapshot { capabilities?: HostedCapabilities; sponsorship?: HostedSponsorship; agents: HostedAgent[]; runs: HostedRun[]; models: HostedCatalogModel[] }
+export type { HostedActivity, HostedActivityInput, HostedActivityEvidence, HostedActivityState, HostedScene, HostedRequiredAction } from "../../services/hosted-agents/src/scene-types";
 export interface RunInput { requestId: string; action: HostedAction; rewardKind?: "usdc" | "llm-credits"; amountRaw?: string; goal?: string }
 export type PendingCommand = { owner: string; kind: "create"; input: AgentCreation & { requestId: string } } | { owner: string; kind: "run"; agentId: string; input: RunInput };
 import { networkName } from "./networks";
@@ -49,7 +50,7 @@ const messages: Record<string, string> = {
   HOSTED_GOAL_DEADLINE: "已达到本次执行时限，已保留产出。",
   HOSTED_GOAL_CANCELLED: "已停止后续执行，已发生费用保留。",
   HOSTED_GOAL_CALL_UNCERTAIN: "模型结果待核对，请恢复原请求。",
-  HOSTED_GOAL_RECONCILIATION_REQUIRED: "已请求停止；原付款或调用仍需对账。",
+  HOSTED_GOAL_RECONCILIATION_REQUIRED: "原付款或调用仍需对账；已保留原请求与确认费用。",
   HOSTED_GOAL_PLAN_INVALID: "规划结果格式无效，已停止。",
   HOSTED_GOAL_REVIEW_INVALID: "复核结果格式无效，已保留交付物。",
   WORKFLOW_REFUNDED_TASK_TERMINATED: "推理服务异常，已补偿退款并终止任务。",

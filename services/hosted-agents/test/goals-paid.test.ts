@@ -14,6 +14,24 @@ import { randomUUID } from "node:crypto";
 import { keccak256, toUtf8Bytes } from "ethers";
 import type { GoalState } from "../src/goals/executor.js";
 
+test("activity failure after canonical payment preserves cash charge and original cached response on recovery",{timeout:180000},async()=>{
+ const directory=await realpath(await mkdtemp(join(tmpdir(),"af-goal-activity-fault-"))),f=await createHostedTaskFixture(join(directory,"chain"));let dispatches=0,failActivity=true;
+ const relay=new Relay({...f.fx.relayConfig,dataDir:join(directory,"goals"),service:{id:"tabby/mission",model:"goal-model",price:10000n,upstreams:[{name:"cheap",model:"physical-goal",baseUrl:"http://127.0.0.1:9999/v1",key:"controlled"}]}},{provider:f.fx.f.provider,upstreamFetch:async()=>{dispatches++;const content=dispatches===1?JSON.stringify({phases:[{name:"Write",taskType:"writer",goal:"Use A and B"}]}):dispatches===2?"A and B":JSON.stringify({passed:true,summary:"A and B",checks:["Both supplied facts"]});return Response.json({model:"physical-goal",choices:[{finish_reason:"stop",message:{role:"assistant",content}}],usage:{prompt_tokens:21,completion_tokens:12,total_tokens:33}});}});
+ await relay.initialize();const faultRefunder=new Refunder(relay);await faultRefunder.initialize();const server=createHttpServer(relay,faultRefunder);server.listen(0,"127.0.0.1");await once(server,"listening");
+ try{
+  const actor=await f.actor(7,"cheap",40000n),provision=await f.executor.execute(actor.input("provision"));assert.equal(provision.success,true);actor.agent.binding=provision.binding;actor.agent.status="Ready";
+  const input=actor.input("task");input.run.action="goal";input.run.goal="Write A and B";input.activity=async event=>{if(failActivity&&event.scene==="funding"&&event.state==="confirmed"&&event.evidence?.paymentId&&event.evidence?.txHash){failActivity=false;throw Error("HOSTED_ACTIVITY_TEST_FAILURE");}};
+  const goals=new HostedGoalExecutor({durationMs:120000,models:[{id:"cheap",relayUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1/chat`,provider:f.fx.f.payee,priceRaw:"10000",service:"tabby/mission",model:"goal-model",physicalModel:"physical-goal"}]},f.config);
+  const initialCash=await f.fx.f.account.getFunction("cash").staticCall(actor.agent.binding!.agentId),paused=await goals.execute(input);
+  assert.equal(paused.terminal,false);assert.equal(paused.chargedRaw,"10000");assert.equal(dispatches,1);
+  const stateFile=join(input.directory,"mission/session.json"),persisted=JSON.parse(await readFile(stateFile,"utf8")) as GoalState,payment=persisted.calls[0].handle!.quote.paymentId;
+  assert.ok(persisted.calls[0].inference);assert.equal(persisted.input.reservedRaw,input.run.reservedRaw);assert.equal(await f.fx.f.account.getFunction("cash").staticCall(actor.agent.binding!.agentId),initialCash-10000n);
+  const resumed=await goals.execute({...input,recover:true});assert.equal(resumed.success,true);assert.equal(resumed.chargedRaw,"30000");assert.equal(dispatches,3);
+  const final=JSON.parse(await readFile(stateFile,"utf8")) as GoalState;assert.equal(final.calls[0].handle!.quote.paymentId,payment);assert.deepEqual(final.calls[0].inference,persisted.calls[0].inference);assert.equal(await f.fx.f.account.getFunction("cash").staticCall(actor.agent.binding!.agentId),initialCash-30000n);
+  const nonce=await f.fx.f.provider.getTransactionCount(actor.wallet.address);assert.deepEqual(await goals.execute({...input,recover:true}),resumed);assert.equal(await f.fx.f.provider.getTransactionCount(actor.wallet.address),nonce);assert.equal(dispatches,3);
+ }finally{await new Promise<void>(done=>server.close(()=>done()));relay.close();await f.close();await rm(directory,{recursive:true,force:true});}
+});
+
 test("goal pays canonical cash receipts for commander, specialist and independent reviewer; replay never pays twice",{timeout:180000},async()=>{
  const directory=await realpath(await mkdtemp(join(tmpdir(),"af-goal-paid-")));
  const f=await createHostedTaskFixture(join(directory,"chain"));

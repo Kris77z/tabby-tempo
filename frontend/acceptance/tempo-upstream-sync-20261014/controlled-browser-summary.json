@@ -1,0 +1,317 @@
+{
+  "version": 1,
+  "scope": "Controlled browser UI only; every Hosted/RPC API intercepted, synthetic agents/payment hashes, external resources blocked. No production authentication, model/chain writes or VPS deployment.",
+  "server": {
+    "frontendMode": "fixture",
+    "hostedUpstream": "http://127.0.0.1:1",
+    "port": 3038,
+    "buildId": "duF5DWw9IpOgI5QSwXere"
+  },
+  "finalRun": {
+    "privateOriginal": ".data/upstream-sync-20261014/implementation/browser-report-final-20.json",
+    "originalSha256": "6a1848842142847f65e4cc46eac16a97702a936f2637d210d4df4e654f78fdfb",
+    "stats": {
+      "startTime": "2026-10-14T06:15:16.851Z",
+      "duration": 20399.315,
+      "expected": 20,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "errors": [],
+    "tests": [
+      {
+        "title": "free-form goal supports multiline editing, Enter submit, artifact and independent review display",
+        "project": "desktop",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 1312
+          }
+        ]
+      },
+      {
+        "title": "paused goal recover uses original identity and full text",
+        "project": "desktop",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 517
+          }
+        ]
+      },
+      {
+        "title": "paused goal cancel uses original identity and full text",
+        "project": "desktop",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 491
+          }
+        ]
+      },
+      {
+        "title": "goal uncertain response persists full command and confirms same UUID after reload",
+        "project": "desktop",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 741
+          }
+        ]
+      },
+      {
+        "title": "free-form goal supports multiline editing, Enter submit, artifact and independent review display",
+        "project": "mobile",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 897
+          }
+        ]
+      },
+      {
+        "title": "paused goal recover uses original identity and full text",
+        "project": "mobile",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 527
+          }
+        ]
+      },
+      {
+        "title": "paused goal cancel uses original identity and full text",
+        "project": "mobile",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 589
+          }
+        ]
+      },
+      {
+        "title": "goal uncertain response persists full command and confirms same UUID after reload",
+        "project": "mobile",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 1017
+          }
+        ]
+      },
+      {
+        "title": "public specialist selection drives the real scene while keeping workflow progress and model costs separate",
+        "project": "desktop",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 482
+          }
+        ]
+      },
+      {
+        "title": "Paused Unknown overrides stale completed activity and freezes the cat without inventing delivery",
+        "project": "desktop",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 395
+          }
+        ]
+      },
+      {
+        "title": "Failed Unknown overrides stale completed activity and freezes the cat without inventing delivery",
+        "project": "desktop",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 480
+          }
+        ]
+      },
+      {
+        "title": "historical conversation is static, reveals original public receipts on demand and copies the complete response",
+        "project": "desktop",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 1002
+          }
+        ]
+      },
+      {
+        "title": "reduced motion blocks all cat frame advancement even for a live selected fact",
+        "project": "desktop",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 643
+          }
+        ]
+      },
+      {
+        "title": "bilingual landing architecture remains readable at desktop and narrow mobile widths with no external resources",
+        "project": "desktop",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 1296
+          }
+        ]
+      },
+      {
+        "title": "public specialist selection drives the real scene while keeping workflow progress and model costs separate",
+        "project": "mobile",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 558
+          }
+        ]
+      },
+      {
+        "title": "Paused Unknown overrides stale completed activity and freezes the cat without inventing delivery",
+        "project": "mobile",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 487
+          }
+        ]
+      },
+      {
+        "title": "Failed Unknown overrides stale completed activity and freezes the cat without inventing delivery",
+        "project": "mobile",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 613
+          }
+        ]
+      },
+      {
+        "title": "historical conversation is static, reveals original public receipts on demand and copies the complete response",
+        "project": "mobile",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 1771
+          }
+        ]
+      },
+      {
+        "title": "reduced motion blocks all cat frame advancement even for a live selected fact",
+        "project": "mobile",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 716
+          }
+        ]
+      },
+      {
+        "title": "bilingual landing architecture remains readable at desktop and narrow mobile widths with no external resources",
+        "project": "mobile",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 1957
+          }
+        ]
+      }
+    ]
+  },
+  "portabilityRecheck": {
+    "privateOriginal": ".data/upstream-sync-20261014/implementation/browser-report.json",
+    "originalSha256": "94f516bc2d662b2b8bd8f5fa96775ab81111d6f7b1948c62a0b1008f6d9970a8",
+    "stats": {
+      "startTime": "2026-10-14T06:20:08.843Z",
+      "duration": 7385.568,
+      "expected": 2,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "errors": [],
+    "tests": [
+      {
+        "title": "bilingual landing architecture remains readable at desktop and narrow mobile widths with no external resources",
+        "project": "desktop",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 1979
+          }
+        ]
+      },
+      {
+        "title": "bilingual landing architecture remains readable at desktop and narrow mobile widths with no external resources",
+        "project": "mobile",
+        "status": "expected",
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 2281
+          }
+        ]
+      }
+    ]
+  },
+  "uniqueFinalCases": 20,
+  "counting": "The two portability cases overlap the final 20 and are not added to the unique total. The current test derives its allowed origin from Playwright baseURL.",
+  "screenshots": [
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261014/landing-en-1440.png",
+      "sha256": "309e1798cee9a4c2f5be535ed1e6daa0ecf33872c51e6aa971bd757af6a54340",
+      "scope": "Synthetic landing, from two-case portability recheck; system architecture scrolled into view."
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261014/landing-zh-1440.png",
+      "sha256": "412f853f8ce6aee3f91556a48793e7d190479fcb87d393dcf1133316374760ac",
+      "scope": "Synthetic landing, from two-case portability recheck; system architecture scrolled into view."
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261014/landing-en-320.png",
+      "sha256": "190d584ab5541394aeb86606e618efeb35c3d0d0a8606dac823a36c6ef7ce457",
+      "scope": "Synthetic landing, from two-case portability recheck; system architecture scrolled into view."
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261014/landing-en-393.png",
+      "sha256": "f9ecbebda68bf19f153470c4f208d755e64da4b672d71845ee10ef88dbc991db",
+      "scope": "Synthetic landing, from two-case portability recheck; system architecture scrolled into view."
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261014/landing-zh-320.png",
+      "sha256": "b9f62a9ece9b4d95c1d0e66a9a8a0733dedbd79397d2679827ab6c87ad100202",
+      "scope": "Synthetic landing, from two-case portability recheck; system architecture scrolled into view."
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261014/landing-zh-393.png",
+      "sha256": "012d7fad172a37f14316198c8703e607f0d42a632e791078289fc7ef6dd40025",
+      "scope": "Synthetic landing, from two-case portability recheck; system architecture scrolled into view."
+    }
+  ],
+  "rootEvidence": "root-browser.json is independently owned and maintained by root."
+}

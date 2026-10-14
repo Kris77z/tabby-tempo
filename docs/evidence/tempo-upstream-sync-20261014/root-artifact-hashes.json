@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-10-14T06:49:43.092686+00:00",
+  "scope": "Root-owned acceptance artifacts, with independent verification of implementation manifest file and log hashes. No current VPS state or new live model/Tempo transaction claim.",
+  "implementationManifest": {
+    "path": "docs/evidence/upstream-sync-20261014/migration-evidence.json",
+    "sha256": "f9cb247ed7298736ec64ce0d88873f33e9911b26b6e618e221aa741507405369",
+    "verifiedTargetFiles": 103,
+    "verifiedLogsAndReports": 24,
+    "mismatches": []
+  },
+  "files": [
+    {
+      "path": "docs/evidence/tempo-upstream-sync-20261014/root-driver-hashes.json",
+      "sha256": "6aa731e0da3c43076242b000be4b76a4adced101f1f66b0f8cd3755a660d575e"
+    },
+    {
+      "path": "docs/evidence/tempo-upstream-sync-20261014/root-legacy-history.json",
+      "sha256": "241a784928f2f517e32021d920a3c1bc1e8cb1c9b3f4d142af2ee59a6c9e6570"
+    },
+    {
+      "path": "docs/evidence/tempo-upstream-sync-20261014/root-preservation.json",
+      "sha256": "13d0ea61bd83e6fed4dee0c7800015ea7a72f20c12c2b4696e38d68bfd631568"
+    },
+    {
+      "path": "docs/tempo-upstream-sync-root-acceptance-20261014.md",
+      "sha256": "d3d2b6ddc9d4a9262724933d1ead3f515097e2e3ab9cc8ad5edf56a67d399363"
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261014/desktop-history.png",
+      "sha256": "6367ab6d5a865b7850ce13bd7c1a209bdd0e24d23ea730a99e98408c50bf408b"
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261014/mobile-history.png",
+      "sha256": "edbac7c313d9fbd248f9e72627f675b62be96bf86bd0bff848cbf73342f4cbe6"
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261014/root-browser.json",
+      "sha256": "55713906cc1d657706d9c7cf8791455afc7e60019461a56161b6b359fa5c424e"
+    }
+  ],
+  "exclusions": [
+    "this hash manifest itself (no recursive hash)"
+  ]
+}

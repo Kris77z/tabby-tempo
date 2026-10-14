@@ -16,7 +16,11 @@ export interface FixedTaskSession extends SubmissionState {
   handle?: PaymentHandle; inference?: Inference; qualification?: SampleResult; qualificationCodeHash?: string;
   refundConfirmation?: { amount: string; loanStatus: string; taskStatus: string };
 }
+export interface TaskExecutionProgress { phase: string; reason?: string }
+export interface ConfirmedTaskPayment { paymentId: string; txHash: string; fromCash: string; fromCredit: string; price: string }
 export interface FixedTaskOptions { signer: Signer; provider?: JsonRpcProvider; runner?: DockerExecutor; recoverLock?: boolean; timeoutMs?: number; pollTimeoutMs?: number;
+  onProgress?: (progress: TaskExecutionProgress) => Promise<void>;
+  onPayment?: (payment: ConfirmedTaskPayment) => Promise<void>;
   onHandle?: (handle: PaymentHandle) => Promise<void> | void; beforePayment?: (handle: PaymentHandle) => Promise<void> | void }
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 function stop(code: string): never { throw new PaymentError(code, code); }
@@ -76,7 +80,7 @@ export async function runFixedPriceTask(directory: string, config: FixedTaskConf
   if (options.provider && options.signer.provider !== options.provider) { await store.close(); throw new Error("SIGNER_PROVIDER_MISMATCH"); }
   const rpc = options.provider ?? new JsonRpcProvider(config.rpcUrl, undefined, { cacheTimeout: -1, pollingInterval: 50 });
   const runner = options.runner ?? new DockerExecutor(); let state: FixedTaskSession | undefined;
-  const save = async () => store.write(state!);
+  const save = async () => { await store.write(state!); await options.onProgress?.({phase:state!.phase,...(state!.reason?{reason:state!.reason}:{})}); };
   const assertTime = () => { if (Date.now() >= config.deadlineMs) stop("SESSION_DEADLINE"); };
   try {
     const prior = await store.read();
@@ -120,6 +124,8 @@ export async function runFixedPriceTask(directory: string, config: FixedTaskConf
       } finally { infer.close(); }
     }
     const result = deliveredResult(state, config); await confirmPaidDelivery(state, config, rpc, options.signer);
+    const receipt=state.inference!.receipt;
+    await options.onPayment?.({paymentId:receipt.paymentId,txHash:receipt.txHash,fromCash:receipt.fromCash,fromCredit:receipt.fromCredit,price:receipt.price});
     if (state.submission || state.phase === "ReadyToSubmit") {
       if (state.candidate !== result.code || !state.qualification?.passed || state.qualificationCodeHash !== result.codeHash ||
         (state.submission && (state.submission.payload.code !== result.code || state.submission.payload.taskId !== config.taskId))) stop("SESSION_CANDIDATE_MISMATCH");

@@ -1,0 +1,1 @@
+@font-face{font-family:GeistPreview;src:url('/mono.woff2')}body{--font-geist-mono:GeistPreview,monospace}html,body,#root{height:100%;overflow:hidden}button,a{font-family:inherit}

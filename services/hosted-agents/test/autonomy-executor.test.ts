@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { HostedAutonomyExecutor, validateHostedAutonomyConfig, openHostedPlannerConnection, createHostedPlannerRequest, reconcileHostedPlannerPayment, type HostedAutonomyConfig } from "../src/autonomy-executor.js";
 import { keccak256, toUtf8Bytes, Wallet, type JsonRpcProvider } from "ethers";
 import { accountInterface, managerInterface, EMPTY_AUTH, requestDigest, paymentId, canonical, type PaymentHandle, type Json } from "@agentfuel/sdk";
+import {validateHostedActivity as importedValidate} from "../src/scene-types.js";
 import type { AutonomyContext } from "../../../packages/pi-loop/src/autonomy.js";
 import type { HostedExecution, HostedFinance } from "../src/types.js";
 import type { HostedTaskExecutor } from "../src/task-executor.js";
@@ -288,4 +289,21 @@ test("cached planner recovery requires canonical paid receipt, no child and orig
   const result = await executor.execute({ ...failed, agent: parent.agent, run: { ...failed.run, status: "Queued" } });
   assert.equal(result.phase, "Completed"); assert.equal(result.chargedRaw, "90"); assert.equal(tasks, 1); assert.equal(originalPlans, 1);
   const final = JSON.parse(await readFile(loopFile, "utf8")); assert.equal(final.steps[0].decisionId, step.decisionId); assert.equal(final.steps.length, 1);
+}));
+
+
+test("activity callbacks remain outside snapshots and child facts reach the parent after recovery",async()=>fixture(async directory=>{
+ const events:import("../src/scene-types.js").HostedActivityInput[]=[];let plans=0;
+ const executor=new HostedAutonomyExecutor(task(async child=>{assert.equal(typeof child.activity,"function");await child.activity?.({scene:"settlement",state:"confirmed",evidence:{taskId:"42",txHash:`0x${"ab".repeat(32)}`,passed:true}});return {phase:"Succeeded",terminal:true,success:true,chargedRaw:"80"};},async()=>({...finance,block:{...finance.block,hash:`0x${"ab".repeat(32)}`}})),{...config,maxTasks:1},{planner:async()=>{plans++;return {decision:{action:"run-task",modelId:"cheap",funding:"credit"},chargedRaw:"10"};}});
+ const parent={...input(directory),activity:async(event:import("../src/scene-types.js").HostedActivityInput)=>{events.push(importedValidate(event));}};
+ const result=await executor.execute(parent);assert.equal(result.success,true);assert.ok(events.some(e=>e.scene==="settlement"&&e.evidence?.taskId==="42"));assert.ok(events.some(e=>e.scene==="decision"&&e.state==="selected"));
+ const saved=JSON.parse(await readFile(join(directory,"autonomy-host/session.json"),"utf8"));assert.equal(saved.input.activity,undefined);assert.ok(Object.values(saved.children).every((child:any)=>child.activity===undefined));
+ assert.deepEqual(await executor.execute({...parent,recover:true}),result);assert.equal(plans,1);
+}));
+
+
+test("runtime pause is distinct from a model stop in public decisions",async()=>fixture(async directory=>{
+ const events:import("../src/scene-types.js").HostedActivityInput[]=[];
+ const executor=new HostedAutonomyExecutor(task(async()=>{throw Error("must not execute");},async()=>({...finance,block:{...finance.block,hash:`0x${"ab".repeat(32)}`}})),config,{shouldContinue:async()=>false});
+ const result=await executor.execute({...input(directory),activity:async event=>{events.push(importedValidate(event));}});assert.equal(result.reason,"HOSTED_AGENT_PAUSED");assert.ok(events.some(e=>e.reason==="HOSTED_AGENT_PAUSED"));assert.equal(events.some(e=>e.reason==="AUTONOMY_MODEL_STOPPED"),false);
 }));

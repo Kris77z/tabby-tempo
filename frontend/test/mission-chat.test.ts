@@ -1,0 +1,8 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {missionChatState} from '../lib/mission-chat';
+import type {HostedRun} from '../lib/hosted-client';
+const run={requestId:'chat',agentId:'agent',action:'goal',recoverable:false,status:'Running',createdAt:'2026-10-14T00:00:00Z',updatedAt:'2026-10-14T00:00:00Z',chargedRaw:'0',reservedRaw:'0',mission:{stage:'planning',phases:[],calls:[]}} as HostedRun;
+test('loading follows live runtime, not a timer or historical playback',()=>{assert.equal(missionChatState(run).live,true);assert.equal(missionChatState(run,true).live,false);assert.equal(missionChatState(run,false,true).live,false);for(const status of ['Paused','Failed','Succeeded'] as const)assert.equal(missionChatState({...run,status}).live,false);assert.equal(missionChatState({...run,stopRequested:true}).live,false);});
+test('a returned answer is not presented as verified delivery prematurely',()=>{const answer={...run,mission:{...run.mission!,answer:'draft',stage:'reviewing' as const}};assert.equal(missionChatState(answer).delivered,false);const success={...answer,status:'Succeeded' as const,mission:{...answer.mission,stage:'completed' as const,review:{passed:true,summary:'ok',checks:[]}}};assert.equal(missionChatState(success).delivered,true);assert.equal(missionChatState({...success,mission:{...success.mission,review:{passed:false,summary:'no',checks:[]}}}).delivered,false);});
+test('needs-input and interrupted mission stages never keep a thinking spinner alive',()=>{for(const stage of ['needs-input','paused','cancelled','completed'] as const)assert.equal(missionChatState({...run,mission:{...run.mission!,stage}}).live,false);});

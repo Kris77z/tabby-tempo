@@ -1,6 +1,15 @@
-# Arena（P0）
+# Arena: hidden-test verification and settlement
 
-四道手写 Python 3.12 / JSON stdin-stdout 题：`sum-integers`、`unique-sorted`、`balanced-brackets`、`word-frequency`。`GET /problems` 提供题意及可信任务映射，建议 reward `150000` 使用 USDC 的 6 位小数；实际 reward 与资产必须读链。Arena 不创建链上任务，也不自动把任意新 task 绑定到某道题。
+This guide is adapted for **Tabby Tempo**. The running deployment is Tempo Moderato `42431`, with **PathUSD** (`0x20c0000000000000000000000000000000000000`, 6 decimals) for settlement and fees. The [VPS runbook](../../deploy/tempo-vps/README.md) describes the sole production writer at `https://tempo.tabbyai.xyz`; this documentation/code update has not been deployed.
+
+Local launch examples below are for a **new isolated Anvil fixture only**, with synthetic roles, fresh private directories and controlled inference. Never load or restart the archived local Tempo runtime, reuse its journals, or start another writer beside the VPS. Monad/MON/USDC examples and dated results are explicitly source-project history or offline fixture semantics, not current Tempo configuration or new acceptance. See [Tempo verification](../../docs/VERIFICATION.md).
+
+
+Arena is the separate coding-task verifier. A trusted host controller keeps expected answers outside the disposable Python container, checks actual JSON outputs, and records a verdict. A separate settlement process holds the verifier signing key and authorizes the onchain financial outcome; the solver's own public tests or printed `PASS` do not authorize settlement.
+
+The catalog contains four bounded Python stdin/stdout problems. This verifier is separate from the personal-goal model Reviewer. See the [architecture](../../docs/ARCHITECTURE.md), [public task receipts](../../docs/VERIFICATION.md), and [task settlement contract](../../contracts/src/TaskEscrow.sol). The operator runbook and error semantics below remain in Chinese.
+
+四道手写 Python 3.12 / JSON stdin-stdout 题：`sum-integers`、`unique-sorted`、`balanced-brackets`、`word-frequency`。`GET /problems` 提供题意及可信任务映射，Tempo 的 reward `150000` 表示 `0.15` PathUSD（6 位小数）；实际 reward 与资产必须读链。Arena 不创建链上任务，也不自动把任意新 task 绑定到某道题。
 
 提交代码只进入一次性 Docker 容器。宿主 controller 逐条发送输入并比较 JSON 输出，预期答案和通过计数不进入容器。打印 `PASS`、退出码 0、stderr 内容都不能代替答案。错答案、无效 JSON、非零退出、超时或输出超限均失败。缺少 Docker 或基础镜像是基础设施错误，不会执行宿主代码，也不会自动改成人工通过。
 
@@ -76,7 +85,7 @@ CLI 与 `ArenaController.submit({taskId,code})` 面向可信本机运维，不�
 
 Settler 仅通过 Unix socket 接收随机 controller token；IPC 目录为 0700，token/socket/journal 为 0600。controller 进程不持 verifier key；签名进程不执行提交代码。该机制信任本机运维用户，不能防同一宿主用户主动窃取本机私有文件。容器看不到 IPC。
 
-Signer 在每次结算前复查 chain、显式 Escrow 地址、链上 verifier、task agent 和 Assigned 状态。固定 2,000,000 gas 为常规声誉写入提供预算，并报告 `sent/pending`；Registry 失败仍按合约规则不回滚资金。其私有 JSON journal 在广播前保存唯一原始签名交易，崩溃或重试使用同一 txHash；已结算 task 不接受新 verdict，重复 verdict 返回原结算结果。
+Signer 在每次结算前复查 chain、显式 Escrow 地址、链上 verifier、task agent 和 Assigned 状态。Tempo `42431` 使用 20,000,000 gas 上限，其他链使用 2,000,000，为声誉写入提供预算并报告 `sent/pending`；Registry 失败仍按合约规则不回滚资金。其私有 JSON journal 在广播前保存唯一原始签名交易，崩溃或重试使用同一 txHash；已结算 task 不接受新 verdict，重复 verdict 返回原结算结果。
 
 正常 SIGINT/SIGTERM 会关闭 socket 和清除 owner/token。SIGKILL 后，先执行恢复命令再启动：
 

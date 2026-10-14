@@ -14,6 +14,7 @@ export function useHostedAgentsController(enabled: boolean) {
   const [access, setAccess] = useState<"loading" | "signed-out" | "authenticated" | "unavailable">("loading");
   const [owner, setOwner] = useState<string | null>(null), [selectedId, setSelectedId] = useState("");
   const [error, setError] = useState(""), [notice, setNotice] = useState("");
+  const [snapshotStale, setSnapshotStale] = useState(false);
   const [busy, setBusy] = useState(false), [refreshing, setRefreshing] = useState(false);
   const [pending, setPending] = useState<PendingCommand | null>(null);
   const readInFlight = useRef(false), mutationInFlight = useRef(false), sessionEpoch = useRef(0), requireLogin = useRef(false);
@@ -56,13 +57,13 @@ export function useHostedAgentsController(enabled: boolean) {
     try {
       const next = await hostedRequest<HostedSnapshot>("/agents");
       if (epoch !== sessionEpoch.current) return;
-      sessionActive.current = true; setSnapshot(next); setAccess("authenticated"); setError("");
+      sessionActive.current = true; setSnapshot(next); setAccess("authenticated"); setSnapshotStale(false); setError("");
       if (next.agents[0]) setOwner(next.agents[0].owner);
       setSelectedId(id => next.agents.some(agent => agent.id === id) ? id : next.agents[0]?.id ?? "");
     } catch (cause) {
       if (epoch !== sessionEpoch.current) return;
       if (cause instanceof HostedClientError && cause.status === 401) invalidate();
-      else { setAccess(current => current === "authenticated" ? current : "unavailable"); setError(hostedError(cause)); }
+      else { setSnapshotStale(true); setAccess(current => current === "authenticated" ? current : "unavailable"); setError(hostedError(cause)); }
     } finally { readInFlight.current = false; readCompletion.current = null; completeRead(); setRefreshing(false); }
   }, [invalidate]);
   useEffect(() => { if (enabled) void refresh(); }, [enabled, refresh]);
@@ -200,6 +201,6 @@ export function useHostedAgentsController(enabled: boolean) {
   const financeRevision = snapshot?.runs.filter(run => run.agentId === selectedId && !["Queued", "Running"].includes(run.status))
     .map(run => `${run.requestId}:${run.status}:${run.updatedAt}`).join("|") ?? "";
   const finance = useHostedFinance(selected, enabled && access === "authenticated", financeRevision, invalidate);
-  return { snapshot, selected, selectedId, select: setSelectedId, access, owner, error, notice, busy, refreshing, pending,
+  return { snapshot, snapshotStale, selected, selectedId, select: setSelectedId, access, owner, error, notice, busy, refreshing, pending,
     finance, refresh, login, logout, create, run, recover, update, pause, cancelGoal, retryPending: () => pending ? command(pending) : Promise.resolve(false) };
 }

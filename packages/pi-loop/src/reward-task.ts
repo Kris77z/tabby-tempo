@@ -12,6 +12,7 @@ export interface RewardTaskSession extends SubmissionState {
   version: 1; config: RewardTaskConfig; solve?: ProviderSolveState; creditsUsed: number;
 }
 export interface RewardTaskOptions {
+  onProgress?: (progress: {phase:string;reason?:string}) => Promise<void>;
   submitFailedCandidate?: boolean;
   signer: Wallet; provider: JsonRpcProvider; solver: ProviderSolveOptions;
   creditsUsed: () => Promise<number>; recoverLock?: boolean; timeoutMs?: number; pollTimeoutMs?: number;
@@ -20,7 +21,7 @@ export interface RewardTaskOptions {
 export async function runRewardTask(directory: string, config: RewardTaskConfig, options: RewardTaskOptions): Promise<RewardTaskSession> {
   const store = new SessionStore<RewardTaskSession>(directory); await store.start(options.recoverLock);
   let state: RewardTaskSession | undefined;
-  const save = () => store.write(state!);
+  const save = async () => { await store.write(state!); await options.onProgress?.({phase:state!.phase,...(state!.reason?{reason:state!.reason}:{})}); };
   try {
     state = await store.read();
     if (state && (state.version !== 1 || !isDeepStrictEqual(state.config, config))) throw new Error("REWARD_TASK_CONFIG_CHANGED");

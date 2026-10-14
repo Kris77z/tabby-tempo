@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import {validateHostedActivity,type HostedActivityInput} from "../src/scene-types.js";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
 import { mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
@@ -17,7 +18,7 @@ import type { HostedAgent, HostedExecution } from "../src/types.js";
 
 async function fixture() {
   const directory = await realpath(await mkdtemp(join(tmpdir(), "agentfuel-hosted-game-"))), local = await createHoldemFixture(join(directory, "chain"));
-  const calls: any[] = []; let failNext = false, wrongModel = false, authorizationDeadline: number | undefined;
+  const calls: any[] = []; let failNext = false, wrongModel = false, loseNext = false, authorizationDeadline: number | undefined;
   const model = createServer(async (req, res) => {
     const chunks: Buffer[] = []; for await (const chunk of req) chunks.push(Buffer.from(chunk));
     const body = JSON.parse(Buffer.concat(chunks).toString()); calls.push(body);
@@ -27,7 +28,7 @@ async function fixture() {
       const view = JSON.parse(body.messages[1].content) as PlayerView;
       // Controlled actions for this fixture only. Production dispatch uses the model's legal choice.
       const raise = view.legalActions.find(action => action.type === "raise");
-      content = JSON.stringify(view.seat === 0 ? body.messages[0].content.includes("Strategy preset: conservative") && raise?.type === "raise"
+      content = JSON.stringify(view.seat === 0 && loseNext ? {type:"fold"} : view.seat === 0 ? body.messages[0].content.includes("Strategy preset: conservative") && raise?.type === "raise"
         ? { type: "raise", to: raise.minTo } : { type: "all-in" } : { type: "fold" });
     }
     res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify({ model: wrongModel ? "wrong-model" : body.model,
@@ -63,16 +64,16 @@ async function fixture() {
     try { return await ledger.balance(agents[index].binding!); } finally { await ledger.close(); }
   };
   const close = async () => { executor.close(); model.closeAllConnections(); await new Promise<void>(done => model.close(() => done())); await local.close(); await rm(directory, { recursive: true, force: true }); };
-  return { directory, local, agents, config, executor, input, balance, calls, fail: () => { failNext = true; }, wrong: () => { wrongModel = true; }, deadline: (value: number) => { authorizationDeadline = value; }, close, file };
+  return { directory, local, agents, config, executor, input, balance, calls, lose:()=>{loseNext=true;}, fail: () => { failNext = true; }, wrong: () => { wrongModel = true; }, deadline: (value: number) => { authorizationDeadline = value; }, close, file };
 }
 
 test("hosted actor receives canonical sponsored USDC cash, selected model/strategy execute, original recovery has no new request or nonce", { timeout: 90000 }, async () => {
   const f = await fixture();
   try {
-    const input = await f.input(1, "game", "usdc"), other = f.agents[0];
+    const input = await f.input(1, "game", "usdc"), other = f.agents[0],activities:HostedActivityInput[]=[];input.activity=async e=>{activities.push(validateHostedActivity(e));};
     const outstanding = await read(f.local.f.manager, "totalOutstanding"), sponsorBefore = await read(f.local.f.token!, "balanceOf", [f.local.sponsor.address]);
     const result = await f.executor.execute(input);
-    assert.equal(result.success, true); assert.equal(result.terminal, true); assert.equal(result.rewardRaw, "100000"); assert.equal(result.cashRaw, "100000");
+    assert.equal(result.success, true); assert.equal(result.terminal, true); assert.equal(result.rewardRaw, "100000");assert.ok(activities.some(e=>e.scene==="game"&&e.evidence?.outcome==="won"));assert.ok(activities.some(e=>e.scene==="settlement"&&e.state==="confirmed"&&e.evidence?.rewardRaw==="100000"&&e.evidence?.txHash===result.txHash)); assert.equal(result.cashRaw, "100000");
     assert.equal(result.chargedRaw, "0"); assert.equal(result.principalRaw, "0"); assert.equal(result.feeRaw, "0");
     assert.equal(f.calls.length, 2); assert.equal(f.calls[0].model, "kimi-k2.5"); assert.match(f.calls[0].messages[0].content, /Strategy preset: conservative/);
     assert.equal(f.calls[1].model, "kimi-k2.6"); assert.match(f.calls[1].messages[0].content, /Strategy preset: balanced/);
@@ -222,4 +223,10 @@ test("a verified completed hand can finish its pending award after authorization
     const done = await f.executor.execute({ ...input, recover: true }); assert.equal(done.success, true); assert.equal(done.rewardRaw, "100000"); assert.equal(f.calls.length, 2);
     assert.equal(await readFile(join(input.directory, "game/session.json"), "utf8"), before);
   } finally { Date.now = clock; await f.close(); }
+});
+
+test("a completed losing game never emits an actor reward confirmation",{timeout:90000},async()=>{
+ const f=await fixture();try{f.lose();const input=await f.input(0,"game","usdc"),events:HostedActivityInput[]=[];input.activity=async e=>{events.push(validateHostedActivity(e));};
+ const result=await f.executor.execute(input);assert.equal(result.success,true);assert.equal(result.rewardRaw,"0");assert.ok(events.some(e=>e.scene==="game"&&e.evidence?.outcome==="lost"));assert.equal(events.at(-1)?.evidence?.outcome,"lost");assert.equal(events.at(-1)?.evidence?.rewardRaw,"0");assert.equal(events.some(e=>e.scene==="settlement"&&e.state==="confirmed"),false);
+ }finally{await f.close();}
 });

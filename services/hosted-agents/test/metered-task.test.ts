@@ -1,4 +1,5 @@
 import test from "node:test";
+import {validateHostedActivity,type HostedActivityInput} from "../src/scene-types.js";
 import assert from "node:assert/strict";
 import { once } from "node:events";
 import { mkdtemp, realpath, writeFile, readFile, rm } from "node:fs/promises";
@@ -43,9 +44,10 @@ test("borrowed allowance runs two priced models, repairs same Pi task, independe
   try {
     const actor = await f.actor(5); const ready = await tasks.execute(actor.input("provision")); assert.equal(ready.success, true, JSON.stringify(ready));
     actor.agent.binding = ready.binding; actor.agent.status = "Ready";
-    const first = actor.input("task"); first.run.action = "metered-task";
+    const first = actor.input("task"); first.run.action = "metered-task";const activities:HostedActivityInput[]=[];first.activity=async e=>{activities.push(validateHostedActivity(e));};
     const result = await tasks.execute(first);
-    await assertSucceeded(first.directory, result); assert.equal(result.chargedRaw, "120000");
+    await assertSucceeded(first.directory, result);
+    assert.ok(activities.some(e=>e.scene==="credit"&&e.state==="confirmed"&&e.evidence?.fromCreditRaw==="80000"));assert.deepEqual(activities.filter(e=>e.scene==="model"&&e.state==="completed").map(e=>e.evidence?.usedCreditsRaw),["50","150"]);assert.ok(activities.some(e=>e.scene==="settlement"&&e.state==="confirmed"&&e.evidence?.repaidRaw==="92000")); assert.equal(result.chargedRaw, "120000");
     assert.equal(result.fromCashRaw, "40000"); assert.equal(result.fromCreditRaw, "80000"); assert.equal(result.creditsUsed, 60);
     assert.equal(result.settlement?.loanStatus, "2"); assert.equal(result.settlement?.repaidRaw, "92000"); assert.equal(result.settlement?.residualRaw, "58000");
     assert.equal(calls.length, 2); assert.deepEqual(calls.map(b => b.model), catalog.map(m => m.model));

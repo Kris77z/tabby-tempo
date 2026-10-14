@@ -1,6 +1,6 @@
 "use client";
 import { settlementSymbol } from "../../lib/networks";
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import type { HostedAgent, HostedCapabilities, HostedRun } from '../../lib/hosted-client';
 import { inputUsdc } from '../../lib/hosted-client';
 import { expertAssignments } from '../../lib/expert-assignments';
@@ -10,15 +10,17 @@ type DemoRole = keyof typeof demoReputation.profiles;
 const demoForRole = (role: string) => demoReputation.profiles[role as DemoRole];
 
 /** Agora's entry/reorder/glow/stamp effects, driven by hosted execution rather than invented hire events. */
-export function ExpertMesh({ agent, run, capabilities, onProfile }: { agent?: HostedAgent; run?: HostedRun; capabilities?: HostedCapabilities; onProfile?:(role:{id:string;name:string})=>void }) {
+export function ExpertMesh({ agent, run, capabilities, selectedExpertId, history=false, onSelectExpert, onProfile }: { agent?: HostedAgent; run?: HostedRun; capabilities?: HostedCapabilities; selectedExpertId?:string; history?:boolean; onSelectExpert?:(role:{id:string;name:string})=>void; onProfile?:(role:{id:string;name:string})=>void }) {
   const list = useRef<HTMLDivElement>(null);
   const positions = useRef(new Map<string, number>());
   const view = run?.mission ?? run?.result?.mission;
   const executionModel = view?.calls[0]?.model ?? agent?.modelId;
   const model = capabilities?.goals?.models.find(m => m.id === executionModel);
-  const rows = expertAssignments(run);
+  const rows = expertAssignments(run).map(row=>history?{...row,active:false,waiting:false}:row);
   const order = rows.map(row => row.id).join(',');
-  const planning = run?.status === 'Running' && !run.stopRequested && view?.stage === 'planning';
+  const planning = !history&&run?.status === 'Running' && !run.stopRequested && view?.stage === 'planning';
+  useEffect(()=>{if(!selectedExpertId)return;const selected=Array.from(list.current?.querySelectorAll<HTMLElement>('[data-expert-id]')??[]).find(element=>element.dataset.expertId===selectedExpertId);selected?.scrollIntoView({block:'nearest',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});},[selectedExpertId]);
+  const show=(role:{id:string;name:string})=>{onSelectExpert?.(role);onProfile?.(role);};
 
   useLayoutEffect(() => {
     const elements = list.current?.querySelectorAll<HTMLElement>('[data-expert-id]');
@@ -38,18 +40,18 @@ export function ExpertMesh({ agent, run, capabilities, onProfile }: { agent?: Ho
 
   return <div ref={list} className={styles.meshList}>
     {rows.map(s => {const supported=s.id==='reviewer'||!('directory' in s&&s.directory)||!!capabilities?.goals?.specialists?.some(role=>role.id===s.id);const demo=demoForRole(s.id),rep=demo?.reputation,filled=rep?Math.round(rep.score/5*8):0;return <div key={s.id} data-expert-id={s.id} className={styles.expertMotion}>
-      <article className={styles.expertCard} data-active={s.active} data-used={s.used > 0} data-halted={s.halted} data-planning={planning} aria-label={s.name}>
-        <div className={styles.expertHeading}><h3><button disabled={!agent} onClick={()=>onProfile?.({id:s.id,name:s.name})} aria-label={`${s.name} 信息与凭证`}>{s.name}</button></h3><span data-active={s.active}>[{s.active ? '▸ 执行中' : s.halted ? (run?.status === 'Failed' ? '! 已停止' : '! 已暂停') : s.used ? '✓ 已调用' : planning ? '· 规划中' : !agent ? '· 待登录' : !supported ? '· 未接入' : model ? '· 待调度' : '· 未配置'}]</span></div>
+      <article className={styles.expertCard} data-selected={s.id===selectedExpertId} data-active={s.active} data-used={s.used > 0} data-halted={s.halted} data-planning={planning} aria-label={s.name}>
+        <div className={styles.expertHeading}><h3><button disabled={!agent} onClick={()=>show({id:s.id,name:s.name})} aria-label={`${s.name} 信息与凭证`}>{s.name}</button></h3><span data-active={s.active}>[{s.waiting?'· 等待模型':s.active ? '▸ 执行中' : s.halted ? (run?.status === 'Failed' ? '! 已停止' : '! 已暂停') : s.id===selectedExpertId?'· 已选中':s.used ? '✓ 已调用' : planning ? '· 规划中' : !agent ? '· 待登录' : !supported ? '· 未接入' : model ? '· 待调度' : '· 未配置'}]</span></div>
         <p className={styles.expertKind}>{s.kind}<span> · {model?.id ?? '模型待配置'}</span></p>
         <dl>
           <div><dt>调用价格</dt><dd>{model&&supported ? `${inputUsdc(model.pricePerCallRaw)} ${settlementSymbol(agent?.binding?.chainId)}` : '—'}</dd></div>
           <div><dt>历史样本评分</dt><dd className={rep?styles.reputationScore:styles.unrated} data-tier={rep?(rep.score>=3.5?'high':rep.score>=2.5?'medium':'low'):undefined} title={demo?`${demo.name} (${demo.serviceId}) · 本地快照 ${demoReputation.capturedOn} · ${rep.score}/5，不是当前角色的链上评分`:'原目录没有独立 Reviewer 的评价记录'}><span aria-hidden="true">{'█'.repeat(filled)}{'░'.repeat(8-filled)}</span> {rep?`${rep.score.toFixed(1)} / 5`:'未评级'}</dd></div>
           {rep&&<div><dt>评价样本</dt><dd className={styles.reputationTrend} data-trend={rep.trend} title={`最近评价：${new Date(rep.lastUsedAt*1000).toISOString().slice(0,10)}；趋势来自原目录记录`}>{rep.count} 条 · {rep.trend==='up'?'↑ 上升':rep.trend==='down'?'↓ 下降':'→ 持平'}{!rep.qualified?' · 积累中':''}</dd></div>}
         </dl>
-        <div className={styles.expertFooter}><button disabled={!agent} className={styles.profileLink} onClick={()=>onProfile?.({id:s.id,name:s.name})}>信息与凭证 ↗</button><span>本次产出 {s.used}</span></div>
+        <div className={styles.expertFooter}><button disabled={!agent} className={styles.profileLink} onClick={()=>show({id:s.id,name:s.name})}>信息与凭证 ↗</button><span>本次产出 {s.used}</span></div>
         {s.used > 0 && <span key={`${run?.requestId}-${s.used}`} className={styles.callStamp} aria-hidden="true">CALLED{s.used > 1 && <small>×{s.used}</small>}</span>}
       </article>
-    </div>})}
+    </div>})}<p className={styles.meshNote}>内置执行角色 · 调用由当前 Agent 支付</p>
 
   </div>;
 }

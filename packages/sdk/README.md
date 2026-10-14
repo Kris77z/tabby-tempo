@@ -1,47 +1,130 @@
-# InferCredit SDK
+# Tabby payment SDK
 
-Node 22 与浏览器 ethers Signer 入口，共用 relay 报价编码，完成自建 402/receipt 支付。未声称标准 x402 兼容。Next 项目须配置 `transpilePackages: ["@agentfuel/sdk"]`。
+This guide is adapted for **Tabby Tempo**. The running deployment is Tempo Moderato `42431`, with **PathUSD** (`0x20c0000000000000000000000000000000000000`, 6 decimals) for settlement and fees. The [VPS runbook](../../deploy/tempo-vps/README.md) describes the sole production writer at `https://tempo.tabbyai.xyz`; this documentation/code update has not been deployed.
+
+Local launch examples below are for a **new isolated Anvil fixture only**, with synthetic roles, fresh private directories and controlled inference. Never load or restart the archived local Tempo runtime, reuse its journals, or start another writer beside the VPS. Monad/MON/USDC examples and dated results are explicitly source-project history or offline fixture semantics, not current Tempo configuration or new acceptance. See [Tempo verification](../../docs/VERIFICATION.md).
+
+
+`@agentfuel/sdk` is the agent-side payment client for Tabby's provider relay. It binds a 402 quote to the intended request and deployment, spends agent cash first, obtains task credit only for a shortfall, and preserves one recoverable payment handle across timeouts or restarts.
+
+The exported `InferCredit` name and `@agentfuel/sdk` package name remain for code compatibility. The protocol is the project's own **402/receipt scheme**; standard x402 facilitator compatibility has not been validated. This SDK buys provider services. It does not independently evaluate a generated answer, settle a task, verify a model's identity behind a gateway, or authenticate every field returned in a relay receipt; task correctness belongs to the [independent Arena](../../services/arena/README.md).
+
+## Use a browser signer
+
+Requirements: Node 22 or newer for Node usage; an ethers `Signer` for a browser wallet. Next.js consumers must configure `transpilePackages: ["@agentfuel/sdk"]` because the workspace exports TypeScript source.
 
 ```ts
-import { InferCredit, PaymentError, type PaymentHandle } from "@agentfuel/sdk";
+import { InferCredit, type PaymentHandle } from "@agentfuel/sdk";
 import { BrowserProvider, parseUnits } from "ethers";
 
 const signer = await new BrowserProvider(window.ethereum).getSigner();
 const infer = new InferCredit({
-  agentId: "1", signer, // Node 可用 sessionKey + rpcUrl；两入口只选一个。
-  chainId: 10143n, account: manifest.contracts.account,
-  asset: manifest.asset.address, provider: manifest.providers[0].address,
+  agentId: "1",
+  signer,
+  chainId: BigInt(manifest.chainId),
+  account: manifest.contracts.account,
+  asset: manifest.asset.address,
+  provider: manifest.providers[0].address,
   maxPrice: parseUnits("0.12", manifest.asset.decimals),
   underwriterUrl: manifest.underwriterUrl,
-  onHandle: handle => localStorage.setItem(`infer-payment:${handle.quote.paymentId}`, JSON.stringify(handle)),
+  onHandle: handle => {
+    localStorage.setItem(
+      `infer-payment:${handle.quote.paymentId}`,
+      JSON.stringify(handle),
+    );
+  },
 });
-const paid = await infer.forTask("1").fetch(`${manifest.providers[0].relayUrl}/v1/chat`, {
-  body: { service: "infercredit/coder", model: "coder", messages: [
-    { role: "user", content: "Return a Python stdin/stdout solution, code only." },
-  ] },
-});
-// paid.result 是模型 JSON；paid.receipt 含付款和实际上游证据；paid.handle 可 JSON 保存。
-const resumed = await infer.resume(savedHandle as PaymentHandle);
-infer.close(); // 只销毁 SDK 自己创建的 RPC，不销毁调用方 BrowserProvider。
+
+const paid = await infer.forTask("1").fetch(
+  `${manifest.providers[0].relayUrl}/v1/chat`,
+  {
+    body: {
+      service: "infercredit/coder",
+      model: "coder",
+      messages: [{
+        role: "user",
+        content: "Return a Python stdin/stdout solution, code only.",
+      }],
+    },
+  },
+);
+// result: provider output; receipt: relay delivery/payment metadata.
+// A subsequent cache read reuses the persisted payment identity:
+const savedHandle = JSON.parse(localStorage.getItem(
+  `infer-payment:${paid.handle.quote.paymentId}`,
+)!) as PaymentHandle;
+const resumed = await infer.resume(savedHandle);
+infer.close();
 ```
 
-`infer.fetch(url,{body})` 无任务，报价 taskId=0，只允许纯 cash；不足报 CASH_REQUIRED。forTask 仍先用 cash，不足才请求 underwriter。同 task 已有 loan 就报 TASK_ALREADY_BORROWED，换 nonce 不能绕过。金额用 BigInt，ID 用十进制字符串。SDK 校验原始请求摘要、paymentId、期望 chain/asset/account/provider、逻辑 service/model 和 maxPrice，不能被任意 402 诱导付款。
+`manifest` is the configured deployment manifest, not a constant exported by the SDK. Select exactly one signer entry: a supplied `signer`, or Node `sessionKey` plus `rpcUrl`. `close()` destroys only an RPC provider created by this SDK, leaving a caller's `BrowserProvider` usable. Underwriter and Relay must allow the browser's exact `FRONTEND_ORIGIN`.
 
-两档 Relay 请求在 body 显式加 `tier: "cheap"` 或 `"strong"`；SDK 验证 quote.tier 与请求一致，并继续使用既有 `maxPrice` 作为每次推理的付款上限。strong 超预算会在保存付款 handle、请求授权、签名或广播前报 `UNTRUSTED_QUOTE`；SDK 不自动改请求档位。调用方可先选择符合能力和预算的档位。单档 coder demo 继续省略 tier，格式不变。
+After a timeout, use `PaymentError.handle` or the handle already saved by `onHandle`; `paid` exists only after a successful fetch. On restart, load that saved handle and call `resume` instead of calling `fetch` again.
 
-原 quote 的 tier、price 和请求摘要随 handle 保存；fallback/恢复使用同 paymentId，不重新报价或二次付费。未付 quote 若 status.deliveryError 表明原路由不可履约，SDK 返回该错误且不提交付款。已付路由失效时仍能查询状态/运营退款，恢复返回 `ROUTE_UNAVAILABLE`；旧未交付记录缺快照返回 `ROUTE_SNAPSHOT_REQUIRED`，已交付缓存仍可领取。receipt.model 归因于实际请求的配置物理模型，result.model 保留上游自报值，尚未验证网关后的模型归因。
+## Payment and credit boundaries
 
-`PaymentHandle` 包含 version/relayUrl/input/quote/creditNonce，以及已提交的钱包 from/nonce/hash；私钥 Wallet 模式还保存公开 rawTransaction。onHandle 在广播前 await，调用方应持久化它。Signer 模式直接使用 BrowserProvider 的 provider，无须暴露 server RPC key；sessionKey 模式要求 rpcUrl。服务 browser origin 必须列入 Underwriter/Relay 的 FRONTEND_ORIGIN。
+| Entry or option | Meaning |
+| --- | --- |
+| `fetch(url, { body })` | No task: quotes use `taskId="0"` and require cash. A shortfall yields `CASH_REQUIRED`. |
+| `forTask(taskId).fetch(...)` | Binds the provider request to a task. Cash is still used first; credit requires an underwriter and an eligible assigned task. |
+| `maxPrice` | Maximum raw settlement-asset amount for **each provider payment**, not a cumulative session budget. |
+| `onHandle(handle)` | Awaited persistence callback. A failure prevents the next payment action. |
+| `beforePayment(handle)` | Awaited host budget/deadline guard before signing or submitting/rebroadcasting payment; may run multiple times. |
+| `resume(handle)` | Reconciles the original payment and retrieves its original delivery. It keeps the request, quote and payment identity. |
 
-可选 `beforePayment(handle)` 为宿主的时间/预算检查：Wallet签名前、原raw广播/重播前、Browser send前均await；拒绝时不付款。它可能多次调用，应无副作用或幂等。已确认链上付款和Delivered缓存领取不调用该guard，允许截止后只领取原结果。未配置时保留旧调用行为。`onHandle`保存失败同样停止付款；[受限Pi循环](../pi-loop/README.md)据此先持久预留报价，再允许纯cash付款。
+Amounts use `BigInt` or decimal strings in raw asset units. On Tempo, PathUSD has 6 decimals: `120000` is `0.12` PathUSD. Native 18-decimal and mock-USDC modes are separate Anvil/legacy fixtures; Tempo does not expose a usable native balance through `eth_getBalance`. IDs use canonical decimal strings. Browser handles are JSON-serializable and do not contain the session private key.
 
-超时或重启用同 handle 调 resume，先查询服务状态与链上 payment/receipt，禁止另造 paymentId 或盲目再付。Wallet 若确实需要重播只播已保存的相同 raw bytes；已知 pending、nonce 已消费但无证明或签名已过期都明确等待/拒绝，不重新签付款。浏览器 signer 无 raw bytes时，先保存 from/nonce 意图；丢 hash 的未知 send 结果绝不二次 send，relay 可从链上事件发现已付款。钱包明确 4001/ACTION_REJECTED 时清除未广播意图，允许同 handle 显式恢复。
+The SDK checks both RPC and signer chain, Account settlement asset, current registry wallet, and a quote's chain/account/asset/provider/agent/task/service/model/tier/request digest/payment ID/price ceiling. A received 402 is therefore insufficient to select an arbitrary payment destination. Canonical request encoding and payment ID derivation live in [`src/protocol.ts`](src/protocol.ts).
 
-PaymentError 提供 code、handle、可选 reason；SpendRejected reason=1..5 和 Manager IdentityChanged/AuthExpired/NonceAlreadyUsed 等 custom errors可用于反向 demo。UPSTREAM_FAILED/RELAY_UNAVAILABLE 仍保留同付款 handle；Refunded 终态返回 REFUNDED。同实例同 ID 并发共享一次恢复，钱包付款签名按实例串行；不同客户端共用一个钱包应由调用方协调，SDK 不是后台 nonce 服务。
+The [contracts](../../contracts/README.md) are the final authority for policy, signature validity, identity version, LTV, vault liquidity and global limits. When cash is insufficient, the SDK refuses a task with **any existing loan record** using `TASK_ALREADY_BORROWED`; changing `creditNonce` cannot permit a second draw. Cash-only requests do not call the credit path, even when their provider quote is associated with a task.
 
-真实本地验收在 `services/provider-relay/test/flow.test.ts`：SDK→402→Underwriter→四合约→受控上游→receipt，USDC6d/native18d；覆盖现金路径、并发/缓存、错误请求/receipt、晚付款退款、Processing 重启、顺序 fallback、分次退款与文件提交故障、BrowserProvider 拒绝/丢 hash恢复、日志分块与确认水位、过期签名禁止重新广播。运行 `npm test --workspace @agentfuel/provider-relay`。
+One credit-backed request can purchase a [fixed-price multi-round solve](../pi-loop/FIXED_PRICE.md) or [prepaid inference package](../../docs/core-runtime.md). Internal rounds do not imply further per-round draws. The metered package implementation and consumption ledger are outside this SDK; the SDK pays for the bound package request.
 
-显式 cheap/strong 的本地受控验收另见 `services/provider-relay/test/tiers.test.ts`，使用 Anvil 付款与退款。2026-10-04另通过SDK→本地Anvil付款→Relay→真实K2.6/K3，各一次128输出上限的短探针，两次均最终OK/stop；运营价0.01/0.03 mock-USDC，缓存恢复零新付款/模型请求。见[报告](../../demo-output/live-tiers-20261004-k26-k3-128/report.json)与[离线审计](../../demo-output/live-tiers-20261004-k26-k3-128/offline-audit.json)。原Anvil已关闭且本次未保存raw transaction receipt，离线审计只能核验签名交易、Relay proof与保存结果一致性，不能独立复验原ProviderPaid事件；复用脚本已补raw receipt保存/校验。探针未评估能力、真实链资金或标准x402，该短探针未使用Pi/Magpie。前一批[受限Pi cash循环](../pi-loop/README.md)使用受控上游；随后真实K2.6经SDK→Relay→Pi实际工具调用，公开样例与独立Arena本地结算已通过。该次只用1轮/0.01 mock-USDC，未使用strong或验证真实多轮修复；raw付款/结算receipts、请求响应与签名journal均保存，见[报告](../../demo-output/live-pi-20261004-kimi-once/report.json)和[root独立验收](../../demo-output/live-pi-20261004-kimi-once/root-acceptance.json)。它不是Monad Pi或信用loop验证。
+## Durable recovery
 
+[`PaymentHandle`](src/index.ts) records `version`, `relayUrl`, the original `input` and `quote`, `creditNonce`, and any submitted wallet `from`/`nonce`/transaction hash. Wallet mode also saves the publicly broadcastable signed raw transaction; browser mode records submission intent before `sendTransaction`. `onHandle` is awaited before broadcast, so the host can make that state durable. Without configured durable storage, application restart recovery is the caller's responsibility.
 
-[固定价求解服务B](../pi-loop/FIXED_PRICE.md)通过一次 `forTask` 请求购买最多N轮求解，cash不足时复用原单task一次draw。服务内部轮次不改PaymentHandle body、不另造nonce或逐轮提款；agent只恢复原handle，交付后的最终Arena与未交付运营退款分开。本地受控spike不是本次真实Kimi cash验证的扩展证据。
+`resume` first queries relay status; before a payment attempt it checks the Account's original `paymentId`. A recorded chain payment is never paid a second time. Already delivered results return from cache, and `Refunded` is terminal. `UPSTREAM_FAILED`, `RELAY_UNAVAILABLE` or delivery-pending errors retain the same handle for reconciliation.
+
+| Uncertain state | Recovery behavior |
+| --- | --- |
+| Saved Wallet transaction needs retransmission | Broadcasts only the **same signed bytes**, after expiry and nonce checks; it does not sign another payment. |
+| Transaction is known and pending | Reports `PAYMENT_PENDING`; preserves the original handle. |
+| Wallet nonce was consumed without a confirmed payment | Reports `PAYMENT_UNCERTAIN`; no replacement send. |
+| Browser send may have happened but hash was lost | Keeps durable from/nonce intent; no second send. Relay chain-event discovery can reconcile the original payment. |
+| Wallet explicitly rejects with `4001` / `ACTION_REJECTED` | Removes the unbroadcast submission intent and returns `WALLET_REJECTED`, permitting an explicit retry with the same handle. |
+| Original payment has a canonical status-0 receipt | Persists the reverted receipt and returns `PAYMENT_REVERTED`; that handle will not sign or pay again. |
+| Quote has expired | Does not sign or broadcast a new payment; the original handle can still reconcile confirmed payment or delivery. The contract separately enforces the credit authorization deadline. |
+
+Canonical status-0 classification checks the receipt's block hash. Quote liveness checks both latest chain time and wall-clock time so a stalled local chain cannot authorize a late send. Within one client instance, concurrent resume calls for the same payment share work and wallet payment submissions are serialized. Separate clients sharing a wallet must coordinate their own nonce use.
+
+The optional `beforePayment` guard is a host admission check, not a rollback of an already paid request. It may run repeatedly and should be idempotent. Confirmed payments and `Delivered` cache reads bypass new-payment admission, allowing result retrieval after a host deadline. See the [bounded Pi loop](../pi-loop/README.md) for durable budget reservation before pure-cash payment.
+
+## Routing and attribution
+
+To select one of a two-tier relay's configured routes, set `tier: "cheap"` or `"strong"` in the body. The SDK binds quote tier to the original request and applies the same `maxPrice`. An over-budget strong quote returns `UNTRUSTED_QUOTE` before saving a payment handle, obtaining credit or signing/submitting payment; the SDK does not silently change tier. Single-route coder requests may omit it.
+
+The original quote and request remain in the handle. Delivery fallback and recovery keep the same payment ID and do not purchase a new quote. When an unpaid route is unavailable, a relay `deliveryError` stops payment. A paid route without a usable original snapshot can yield `ROUTE_UNAVAILABLE` or `ROUTE_SNAPSHOT_REQUIRED`; an already delivered cache remains retrievable. Refund availability is an operational Relay/Refunder decision, not an SDK-created transfer.
+
+`receipt.model` identifies the Relay's configured physical route; `result.model` is the upstream's self-reported value. Neither establishes model provenance behind a gateway. The SDK trusts the configured relay's returned delivery metadata, while the [relay](../../services/provider-relay/README.md) verifies its payment proof against on-chain events. Independent review should inspect canonical receipts/events and Arena evidence for financial and task-result claims.
+
+## Errors and reproducible checks
+
+`PaymentError` contains a `code`, the recoverable `handle` when available and an optional `reason`. Contract custom errors such as `IdentityChanged`, `AuthExpired`, `NonceAlreadyUsed` and `SpendRejected` are decoded. `SpendRejected` reasons `1..5` identify provider admission, limits, freezing, authorization shape and authorization-agent mismatch. They are diagnostics, not proof that every concurrent invalid condition has a specified precedence.
+
+From the repository root, with Node 22+, npm and Foundry on `PATH`:
+
+```sh
+npm ci
+npm run typecheck
+npm test --workspace @agentfuel/provider-relay
+```
+
+The SDK is exercised through the real local Relay and contracts, rather than a separate SDK mock-only suite:
+
+- [`flow.test.ts`](../../services/provider-relay/test/flow.test.ts): SDK → 402 → Underwriter → four Anvil contracts → controlled upstream → receipt, including cash/credit, browser rejection/hash loss, restart, fallback, payment proof, refunds and persistence failures.
+- [`tiers.test.ts`](../../services/provider-relay/test/tiers.test.ts): original cheap/strong quotes and routes survive recovery without changing payment identity.
+- [`payment-guard.test.ts`](../../services/provider-relay/test/payment-guard.test.ts) and [`payment-reverted.test.ts`](../../services/provider-relay/test/payment-reverted.test.ts): host payment admission and canonical failed-transaction recovery.
+- [`allowance.test.ts`](../../services/provider-relay/test/allowance.test.ts): one paid package, unchanged one-task draw limit and original-payment refund behavior.
+
+These tests use local assets and controlled model responses. Later real-model and Monad acceptance has a separate [tracked record](../../docs/monad-hosted-acceptance-20261012.md); it does not turn each local test into proof of live deployment or standard x402 interoperability.

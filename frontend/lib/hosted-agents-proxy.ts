@@ -1,4 +1,5 @@
 import { validateGoalView } from "../../services/hosted-agents/src/goal-types.js";
+import { HOSTED_ACTIVITY_LIMIT, validateHostedActivity } from "../../services/hosted-agents/src/scene-types.js";
 const COOKIE = "agentfuel_hosted_session";
 const responseHeaders = { "cache-control": "private, no-store", "x-content-type-options": "nosniff" };
 const settings = ["name", "modelId", "strategy", "perRunBudgetRaw", "totalBudgetRaw", "allowCredit"];
@@ -19,6 +20,16 @@ function run(value: unknown) {
   const result = select(value, ["requestId", "agentId", "action", "fundingFor", "rewardKind", "amountRaw", "status", "createdAt", "updatedAt", "reservedRaw", "chargedRaw", "recoverable", "reason", "goal", "stopRequested"]);
   if (object(value) && value.mission !== undefined) result.mission = validateGoalView(value.mission);
   if (object(value) && value.testSponsorship !== undefined) result.testSponsorship = select(value.testSponsorship, ["grantId", "digest", "ordinal"]);
+  if (object(value) && value.activities !== undefined) {
+    if (!Array.isArray(value.activities) || value.activities.length > HOSTED_ACTIVITY_LIMIT) fail("HOSTED_UNAVAILABLE", 503);
+    let previous = 0;
+    result.activities = value.activities.map((activity: unknown) => {
+      if (!object(activity) || !Number.isSafeInteger(activity.seq) || activity.seq <= previous || typeof activity.at !== "string" || !Number.isFinite(Date.parse(activity.at))) fail("HOSTED_UNAVAILABLE", 503);
+      const { seq, at, ...input } = activity;
+      const projected = validateHostedActivity(input); previous = seq;
+      return { ...projected, seq, at };
+    });
+  }
   if (object(value) && value.result !== undefined) {
     result.result = select(value.result, ["phase", "terminal", "success", "chargedRaw", "reason", "taskId", "paymentId", "txHash", "matchId", "cashRaw", "principalRaw", "feeRaw", "rewardRaw", "creditsGranted", "creditsUsed", "chainId", "acceptTxHash", "paymentTxHash", "fromCashRaw", "fromCreditRaw", "refundedRaw", "autonomousTasks"]);
     if (object(value.result) && value.result.mission !== undefined) result.result.mission = validateGoalView(value.result.mission);

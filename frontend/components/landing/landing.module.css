@@ -514,13 +514,21 @@
 .networkDiagram .systemNode{width:110px;padding:8px;background:transparent}
 .networkDiagram .systemNode>svg{margin-bottom:6px;width:24px;height:24px}
 .networkDiagram .systemNode>span{font-family:var(--landing-mono),monospace}
-.networkWallet{left:8%;top:15%}.networkModel{right:5%;top:16%}.networkPi{right:0;top:49%}.networkTask{right:20%;bottom:3%}.networkGame{left:10%;bottom:11%}.networkTrust{left:0;top:48%}
+.networkAccount{left:8%;top:15%}.networkEscrow{right:5%;top:16%}.networkCredit{right:0;top:49%}.networkInference{right:20%;bottom:3%}.networkExecution{left:10%;bottom:3%}.networkReputation{left:0;top:48%}
 .networkDiagram .systemCore{border:0;box-shadow:none;background-color:var(--paper)}
 .networkDiagram .systemCore:after{content:"";position:absolute;inset:11px;border:1px solid var(--orange);clip-path:polygon(0 0,12% 0,12% 1px,1px 1px,1px 12%,0 12%,0 0,100% 0,100% 12%,calc(100% - 1px) 12%,calc(100% - 1px) 1px,88% 1px,88% 0,100% 0,100% 100%,88% 100%,88% calc(100% - 1px),calc(100% - 1px) calc(100% - 1px),calc(100% - 1px) 88%,100% 88%,100% 100%,0 100%,0 88%,1px 88%,1px calc(100% - 1px),12% calc(100% - 1px),12% 100%,0 100%)}
 [data-in-view=true] .playingCard{animation:cardFan 4s ease-in-out infinite}
 [data-in-view=true] .playingCard+span{animation-name:cardFanRight}
 @keyframes cardFan{0%,100%{transform:rotate(-12deg) translateY(0)}50%{transform:rotate(-18deg) translateY(-7px)}}
 @keyframes cardFanRight{0%,100%{transform:rotate(12deg) translateY(0)}50%{transform:rotate(18deg) translateY(-7px)}}
+.architectureLayers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #dad6cd;margin:0 0 32px}
+.architectureLayers>article{padding:24px 20px 0 0;min-width:0}
+.architectureLayers>article+article{border-left:1px solid #dad6cd;padding-left:20px}
+.architectureLayers .code{font-size:8px;color:#89847b;line-height:1.6}
+.architectureLayers h3{font-size:15px;letter-spacing:-.02em;margin:12px 0}
+.architectureLayers p{font-size:12px;line-height:1.8;color:#7a756b}
+.systemNote.architectureNote{padding-left:0;max-width:700px}
+.architectureNote>p{max-width:100%}
 @media(min-width:810px){.processSection{padding-bottom:100px}.cardContent p{max-width:210px}.capabilities{padding-top:110px}.side{padding-right:40px}.systemNote{padding-left:50%}}
 @media(max-width:1199px){.cardContent{grid-template-columns:1fr}.reputationRows article{gap:16px}.reputationRows strong{font-size:27px}.storyCopy{padding-right:25px}.storyCopy h3{font-size:32px;margin-bottom:25px}.storyCopy p{font-size:13px}}
 @media(max-width:809px){
@@ -552,10 +560,13 @@
   .storyBottom{grid-template-columns:1fr 1fr;gap:0;padding-top:20px}
   .storyBottom>div{min-height:80px;padding-right:15px}.storyBottom>div:first-child{grid-column:1/-1}
   .storyBottom p{font-size:11px;margin-top:7px}.storyBottom>.action{grid-column:1/-1;margin-top:15px}
+  .architectureLayers{grid-template-columns:1fr;margin-bottom:25px}
+  .architectureLayers>article,.architectureLayers>article+article{border-left:0;padding:20px 0}
+  .architectureLayers>article+article{border-top:1px solid #dad6cd}
   .networkDiagram{height:350px;margin:auto auto 25px;width:100%}
   .networkDiagram .systemNode{width:90px;padding:6px}
   .networkDiagram .systemNode>span{font-size:10px}.networkDiagram .systemNode>small{font-size:6px}
-  .networkWallet{left:3%;top:6%}.networkModel{right:3%;top:6%}.networkPi{right:-6px;top:44%}.networkTrust{left:-6px;top:44%}.networkTask{right:7%;bottom:2%}.networkGame{left:7%;bottom:2%}
+  .networkAccount{left:3%;top:6%}.networkEscrow{right:3%;top:6%}.networkCredit{right:-6px;top:44%}.networkReputation{left:-6px;top:44%}.networkInference{right:7%;bottom:2%}.networkExecution{left:7%;bottom:2%}
 }
 @media(scripting:none),(prefers-reduced-motion:reduce){
   .textReady [data-section-character]{opacity:1}

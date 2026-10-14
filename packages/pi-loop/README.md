@@ -1,4 +1,29 @@
-# 受限 Pi 编程循环
+# Pi task execution and durable workflows
+
+This guide is adapted for **Tabby Tempo**. The running deployment is Tempo Moderato `42431`, with **PathUSD** (`0x20c0000000000000000000000000000000000000`, 6 decimals) for settlement and fees. The [VPS runbook](../../deploy/tempo-vps/README.md) describes the sole production writer at `https://tempo.tabbyai.xyz`; this documentation/code update has not been deployed.
+
+Local launch examples below are for a **new isolated Anvil fixture only**, with synthetic roles, fresh private directories and controlled inference. Never load or restart the archived local Tempo runtime, reuse its journals, or start another writer beside the VPS. Monad/MON/USDC examples and dated results are explicitly source-project history or offline fixture semantics, not current Tempo configuration or new acceptance. See [Tempo verification](../../docs/VERIFICATION.md).
+
+
+`@agentfuel/pi-loop` supplies bounded model/tool execution, task selection, payment recovery and autonomous task control. The current hosted task path is **select/accept an escrow-backed catalog task → obtain inference → Pi public-sample tools → separate Arena hidden tests → confirmed chain settlement**. The [architecture](../../docs/ARCHITECTURE.md) distinguishes this path from cash-funded personal goals, whose model review does not run this programming loop or settle an escrow task.
+
+## Implementation map
+
+| Entry | Responsibility | Read next |
+| --- | --- | --- |
+| [Task workflow](src/workflow.ts) | Bind configured task/provider selection, journal acceptance, retain the original payment/child session, submit to independent Arena and verify final task/loan state. | [Workflow runbook](WORKFLOW.md), [hosted adapter](../../services/hosted-agents/src/task-executor.ts) |
+| [Fixed-price task](src/fixed-task.ts) and [provider solve](src/provider.ts) | One task-bound purchase covers a bounded Pi solve. Provider-side tools test public samples; final acceptance stays with Arena. | [Fixed-price service B](FIXED_PRICE.md) |
+| [Reward/allowance task](src/reward-task.ts) | Run the same bounded solve and independent submission with a supplied reward or metered solver. | [Metered adapter](../../services/hosted-agents/src/metered-task.ts), [gateway ledger](../../services/hosted-agents/src/inference-gateway.ts) |
+| [Autonomy controller](src/autonomy.ts) | Validate only allowed `run-task`/`stop` decisions; enforce task, decision, spend and time limits; recover the original child. | [Hosted planner](../../services/hosted-agents/src/autonomy-executor.ts) |
+| [Session store](src/session.ts) | Atomic, fsynced records; one local writer; explicit stale-lock recovery. | [Recovery tests](test/workflow.test.ts), [autonomy tests](test/autonomy.test.ts) |
+
+Pi's public-sample tool has no wallet, signing key, hidden tests or general shell. Public-sample success only permits final submission; actual task success requires the separate Docker verdict and canonical `TaskSettled` evidence. Inference quotes, signed transaction bytes, payment handles, tool IDs and submission payloads are saved before external effects. Unknown payment/model/submission outcomes keep their reservation and original ID; recovery reads a cached result or reconciles the original operation instead of buying or dispatching a replacement.
+
+The pricing adapters are distinct: the legacy cash loop pays a fixed quote for each round; service B charges once for its bounded solve; hosted `metered-task` pays once for a task-bound allowance and consumes microcredits at model token rates. `reward-task` explicitly uses supported reward tokens and pauses when insufficient. Neither a framework `usage.cost=0` placeholder nor public-sample success means free inference or earned income.
+
+For reproducible checks, start with [verification](../../docs/VERIFICATION.md). The Chinese sections below preserve the legacy cash-entry setup and historical runbooks; their `demo-output/` paths refer to private developer archives excluded from Git, not downloadable repository evidence.
+
+## 受限 Pi 现金编程循环（运维与历史说明）
 
 `@earendil-works/pi-agent-core`、`pi-ai` 锁定 **1.0.1**，使用 Node **22.19.0+**；只引入 Agent 核心、它的必需依赖和工具 schema，不引 coding CLI、LangChain 或多 Agent 框架。自定义 `streamFn` 把非流式 SDK/Relay 响应转换为 Pi 消息及工具事件，Pi 默认 provider 不参与模型请求。
 
@@ -37,7 +62,7 @@ const session = await runProgrammingLoop(sessionDirectory, config, { signer });
 
 前一批本地受控验证使用新 Anvil/mock-USDC、真实 Docker 与独立 settler，覆盖错误后的修复与恢复。2026-10-04另执行一次有界真实 Kimi 验证：K2.6通过SDK→Relay→Pi返回实际 `test_public_sample` 工具调用，公开样例及独立Arena的5项判题通过，并完成本地链TaskSettled。请求/返回模型均为 `kimi-k2.6`，usage输入190/输出45/总235（reasoning1），1次请求、零付费重试，报价10000原始单位（0.01 mock-USDC）。运营报价不等于模型成本或实际账单。
 
-见[报告](../../demo-output/live-pi-20261004-kimi-once/report.json)、[最终离线审计](../../demo-output/live-pi-20261004-kimi-once/offline-pi-audit.json)和[root独立验收](../../demo-output/live-pi-20261004-kimi-once/root-acceptance.json)。付款与结算raw receipts、签名交易journal、原请求响应和会话在关闭Anvil前保存；root独立核对证据并重新Docker判题5/5，Pi 11/11、脚本与审计33/33、typecheck:all含前端通过。运行时源码hash保留原样；当次运行结束后强化离线auditor的签名settle核验，差异记录在[post-run-audit](../../demo-output/live-pi-20261004-kimi-once/post-run-audit.json)。
+见报告（本机档案 `demo-output/live-pi-20261004-kimi-once/report.json`）、最终离线审计（本机档案 `demo-output/live-pi-20261004-kimi-once/offline-pi-audit.json`）和root独立验收（本机档案 `demo-output/live-pi-20261004-kimi-once/root-acceptance.json`）。付款与结算raw receipts、签名交易journal、原请求响应和会话在关闭Anvil前保存；root独立核对证据并重新Docker判题5/5，Pi 11/11、脚本与审计33/33、typecheck:all含前端通过。运行时源码hash保留原样；当次运行结束后强化离线auditor的签名settle核验，差异记录在post-run-audit（本机档案 `demo-output/live-pi-20261004-kimi-once/post-run-audit.json`）。
 
 复现脚本默认只显示去敏计划；显式 `--execute` 才使用私有配置与系统HTTPS代理，创建新Anvil/Docker隔离环境。最多3轮、每轮2048 completion tokens、总报价预算70000原始单位、5分钟deadline，首个样例通过就停止模型循环。`tierParameters`只允许指定 `thinking: {type: "disabled"}` 和 `reasoning_effort: "low"`；不能覆盖消息、模型或token上限。输出目录必须全新；离线审计不读取私有配置、不访问网络：
 
@@ -61,11 +86,11 @@ Docker daemon 和 Arena 已固定镜像须预先可用；测试不静默改用�
 
 固定价信用服务 B 是独立 opt-in 入口，见[规格与复现](FIXED_PRICE.md)。它将最多三轮求解打包成一次SDK `forTask`购买；provider内部Pi不接钱包或Arena。早成功仍按固定价，未交付终稿由provider原收款全退，最终hidden tests失败走原贷款清算。上述cash入口继续使用taskId0。
 
-root已独立验收[真实Kimi信用B与实际Magpie本地流程](../../demo-output/live-local-credit-20261004-root/root-acceptance.json)：一次K2.6实际工具调用后独立Arena结算，固定价120000、cash40000+draw80000、fee12000、还款92000原始单位；原请求响应、物理模型归因和链上证据均核验。本次首轮成功，没有人为凑修复或strong轮次。运营报价不等于模型成本。受控回归另覆盖修复、未交付退款和恢复，不能替代这份真实证据。
+root已独立验收真实Kimi信用B与实际Magpie本地流程（本机档案 `demo-output/live-local-credit-20261004-root/root-acceptance.json`）：一次K2.6实际工具调用后独立Arena结算，固定价120000、cash40000+draw80000、fee12000、还款92000原始单位；原请求响应、物理模型归因和链上证据均核验。本次首轮成功，没有人为凑修复或strong轮次。运营报价不等于模型成本。受控回归另覆盖修复、未交付退款和恢复，不能替代这份真实证据。
 
-[Monad Task11真实流程](../../demo-output/live-monad-pi-20261004-alchemy-root/root-acceptance.json)也已由root独立验收，另有[canonical固定区块审计](../../demo-output/live-monad-pi-20261004-alchemy-root/root-canonical-audit.json)。Alchemy直连和root进程500ms请求间隔下，253个宿主RPC全部成功，独立settler不计在内。一次真实K2.6经实际Magpie返回工具调用，usage输入190/输出40/总230；独立Arena5/5和目标链TaskSettled通过。实际cash105396+draw14604=120000，fee438、还款15042原始单位；最终cash134958、还款次数4、违约0、未偿0。provider=poster=refunder的有意角色复用及原provider保留已在报告中说明。首轮成功不等于多轮修复，运营报价也不是vendor账单；Task9/10失败及退款仍保留为历史证据。
+Monad Task11真实流程（本机档案 `demo-output/live-monad-pi-20261004-alchemy-root/root-acceptance.json`）也已由root独立验收，另有canonical固定区块审计（本机档案 `demo-output/live-monad-pi-20261004-alchemy-root/root-canonical-audit.json`）。Alchemy直连和root进程500ms请求间隔下，253个宿主RPC全部成功，独立settler不计在内。一次真实K2.6经实际Magpie返回工具调用，usage输入190/输出40/总230；独立Arena5/5和目标链TaskSettled通过。实际cash105396+draw14604=120000，fee438、还款15042原始单位；最终cash134958、还款次数4、违约0、未偿0。provider=poster=refunder的有意角色复用及原provider保留已在报告中说明。首轮成功不等于多轮修复，运营报价也不是vendor账单；Task9/10失败及退款仍保留为历史证据。
 
-[真实验证脚本](../../scripts/verify-live-fixed-price.ts)支持既有Monad部署、原handle/交易journal恢复和离线证据审计；Alchemy私有RPC文件配合`--rpc-transport direct`的具体预检与审计命令见[固定价入口](FIXED_PRICE.md#真实执行入口)。[Magpie](../../docs/magpie-gateway.md)与[双Agent五子棋现金Arena](../../docs/gomoku-arena.md)已有独立实现，不再列为P1排除。棋牌当前只使用双方独立cash预算；共享奖金授信、逐轮储值退款、by-intent和完整自主选任务仍未实现，标准x402亦未验证。
+[真实验证脚本](../../scripts/verify-live-fixed-price.ts)支持既有Monad部署、原handle/交易journal恢复和离线证据审计；Alchemy私有RPC文件配合`--rpc-transport direct`的具体预检与审计命令见[固定价入口](FIXED_PRICE.md#真实执行入口)。[Magpie](../../docs/magpie-gateway.md)与[双Agent五子棋现金Arena](../../docs/gomoku-arena.md)已有独立实现，不再列为P1排除。棋牌当前只使用双方独立cash预算；共享奖金授信、逐轮储值退款、by-intent 尚未实现；受任务数、预算和时限约束的托管自主入口见[Hosted autonomy](../../services/hosted-agents/src/autonomy-executor.ts)，标准x402亦未验证。
 
 ## 预设候选任务的统一工作流
 
@@ -120,4 +145,4 @@ node --import tsx --test scripts/test/live-selection.test.ts
 ```
 
 
-2026-10-07 root真实选择验收通过：宿主预设求和/括号候选及能力标签，选择器选出括号cheap→真实Kimi K2.6一次（输入76/输出1454/总1530 tokens，含1301 reasoning）。本地cash40000→30000、credit0；重复读取同session没有新增模型、付款或nonce。保存签名和ProviderPaid原始回执已离线复核，见[独立验收](../../demo-output/live-selection-20261007-root/root-acceptance.json)。root独立12+4项测试和typecheck:all通过；这次不执行返回代码、不调用Arena、不证明题目已完成，不参与Monad或Magpie。能力标签来自宿主策略，不是模型能力测试结果。
+2026-10-07 root真实选择验收通过：宿主预设求和/括号候选及能力标签，选择器选出括号cheap→真实Kimi K2.6一次（输入76/输出1454/总1530 tokens，含1301 reasoning）。本地cash40000→30000、credit0；重复读取同session没有新增模型、付款或nonce。保存签名和ProviderPaid原始回执已离线复核，见独立验收（本机档案 `demo-output/live-selection-20261007-root/root-acceptance.json`）。root独立12+4项测试和typecheck:all通过；这次不执行返回代码、不调用Arena、不证明题目已完成，不参与Monad或Magpie。能力标签来自宿主策略，不是模型能力测试结果。

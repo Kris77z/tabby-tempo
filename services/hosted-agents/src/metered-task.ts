@@ -1,3 +1,4 @@
+import type {HostedActivityInput} from "./scene-types.js";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { join } from "node:path";
@@ -38,6 +39,7 @@ interface Purchase { version: 1; config: MeteredTaskConfig; task: FixedTaskConfi
 /** Trusted hosted custody boundary: grants are issued only after direct, canonical Account payment verification. */
 export async function openMeteredTask(directory: string, config: MeteredTaskConfig, task: FixedTaskConfig,
   options: { signer: Wallet; provider: JsonRpcProvider; allowCredit: boolean; maxPrice: string; key: string; recover?: boolean; timeoutMs?: number;
+    activity?: (event:HostedActivityInput)=>Promise<void>;
     reward?: NonNullable<WorkflowOptions["reward"]>;
     onHandle(handle: PaymentHandle): Promise<void>; dispatch?: Parameters<typeof InferenceGateway.open>[3] }) {
   if (BigInt(config.priceRaw) > BigInt(options.maxPrice)) throw new PaymentError("ALLOWANCE_PRICE_LIMIT", "Allowance exceeds budget");
@@ -65,11 +67,12 @@ export async function openMeteredTask(directory: string, config: MeteredTaskConf
         || !block || block.timestamp * 1000 >= task.deadlineMs || Date.now() >= task.deadlineMs) throw new InferenceFundingRequired("ALLOWANCE_TASK_UNAVAILABLE");
     };
     const purchase = async () => {
+      await options.activity?.({scene:"funding",state:"started",evidence:{taskId:task.taskId,priceRaw:config.priceRaw}});
       if (!snapshot.inference) {
         const infer = new InferCredit({ agentId: task.agentId, signer: options.signer, chainId: BigInt(task.chainId), account: task.account, asset: task.asset,
           provider: config.payTo, ...(options.allowCredit ? { underwriterUrl: task.underwriterUrl } : {}), maxPrice: BigInt(config.priceRaw), timeoutMs: meteredPurchaseTimeout(task.deadlineMs, options.timeoutMs),
           onHandle: async handle => { checkHandle(handle); snapshot.handle = structuredClone(handle); await store.write(snapshot); await options.onHandle(handle); },
-          beforePayment: async handle => { checkHandle(handle); await assigned(); if (Date.now() >= task.deadlineMs) throw new PaymentError("SESSION_DEADLINE", "Task expired"); },
+          beforePayment: async handle => { checkHandle(handle); await assigned();await options.activity?.({scene:"funding",state:"waiting",evidence:{taskId:task.taskId,paymentId:handle.quote.paymentId,priceRaw:config.priceRaw}}); if (Date.now() >= task.deadlineMs) throw new PaymentError("SESSION_DEADLINE", "Task expired"); },
         });
         try { snapshot.inference = snapshot.handle ? await infer.resume(structuredClone(snapshot.handle)) : await infer.forTask(task.taskId).fetch(config.relayUrl, {
           body: allowanceBody({ creditsRaw: config.creditsRaw, modelCatalogDigest: modelCatalogDigest(config.catalog) }),
@@ -82,6 +85,7 @@ export async function openMeteredTask(directory: string, config: MeteredTaskConf
         throw new PaymentError("ALLOWANCE_RECEIPT_INVALID", "Invalid allowance receipt");
       await confirmPaidDelivery(snapshot, { ...task, provider: config.payTo }, options.provider, options.signer);
       await ledger.grant(result.paymentId, config.creditsRaw, { kind: "chain-payment", paymentId: result.paymentId, txHash: receipt.txHash });
+      await options.activity?.({scene:BigInt(receipt.fromCredit)>0n?"credit":"funding",state:"confirmed",evidence:{taskId:task.taskId,paymentId:receipt.paymentId,txHash:receipt.txHash,fromCashRaw:receipt.fromCash,fromCreditRaw:receipt.fromCredit,chargedRaw:receipt.price}});
       await options.onHandle(snapshot.handle!);
     };
     if (snapshot.inference) await purchase();
@@ -109,6 +113,7 @@ export async function openMeteredTask(directory: string, config: MeteredTaskConf
         }
       }
       const required = ledger.quote(body).reservedCredits;
+      await options.activity?.({scene:"model",state:"selected",phaseId:`round-${index}`,subject:{id:model.id,name:model.id,kind:"model"},evidence:{taskId:task.taskId,inputMicroCreditsPerToken:model.inputMicroCreditsPerToken,outputMicroCreditsPerToken:model.outputMicroCreditsPerToken,reservedCreditsRaw:required}});
       if (BigInt(ledger.balance().availableCredits) < BigInt(required)) {
         if (snapshot.inference) throw new InferenceFundingRequired("ALLOWANCE_EXHAUSTED");
         if (BigInt(config.creditsRaw) < BigInt(required)) throw new InferenceFundingRequired("ALLOWANCE_TOO_SMALL");
@@ -120,7 +125,9 @@ export async function openMeteredTask(directory: string, config: MeteredTaskConf
       if (BigInt(ledger.balance().availableCredits) < BigInt(required)) throw new InferenceFundingRequired();
     }, invoke: async (_tier: string, body: JsonObject) => {
       if (useReward) return { ...await options.reward!.solver.invoke("cheap", { ...body, model: "kimi-k2.6" }, AbortSignal.timeout(Math.max(1, task.deadlineMs - Date.now()))), model: body.model };
+      await options.activity?.({scene:"model",state:"waiting",phaseId:`round-${round}`,subject:{id:String(body.model),name:String(body.model),kind:"model"},evidence:{taskId:task.taskId}});
       const delivery = await ledger.invoke(`round:${round}`, body);
+      await options.activity?.({scene:"model",state:"completed",phaseId:`round-${round}`,subject:{id:String(body.model),name:String(body.model),kind:"model"},evidence:{taskId:task.taskId,promptTokens:delivery.usage.promptTokens,completionTokens:delivery.usage.completionTokens,usedCreditsRaw:delivery.chargedCredits}});
       // Pi binds its public route ID; the ledger independently checks the physical response model.
       return { ...(delivery.response as Record<string, Json>), model: body.model };
     }, recoverResponse: async (body: JsonObject, index: number) => {

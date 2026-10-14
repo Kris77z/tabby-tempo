@@ -39,8 +39,7 @@ export function AgentIdentityCard({ agent, description, balance, nameControl }: 
     timer.current = setTimeout(() => setCopyState(""), 2500);
   }
   return <div className={styles.identity}>
-    <div className={styles.identityHeading}><span aria-hidden="true">🤖</span><div>{nameControl??<h2>{agent.name}</h2>}{description!==""&&<p>{description??"平台托管 Agent · 独立钱包执行与结算"}</p>}</div></div>
-    <div className={styles.walletBlock}><span>Agent 钱包</span>{hostedAddressUrl(agent.binding?.chainId,agent.wallet)&&<a href={hostedAddressUrl(agent.binding?.chainId,agent.wallet)!} target="_blank" rel="noopener noreferrer" aria-label="查看钱包 ↗"> ↗</a>}<code title={agent.wallet}>{short(agent.wallet,4)}</code><button className={styles.iconButton} aria-label="复制地址" title={copyState || "复制地址"} onClick={() => void copyAddress()}><Icon name={copyState === "已复制" ? "check" : "copy"} size={14} /></button>{balance&&<small style={{color:"#57996a",fontSize:10}}>{balance}</small>}<span className={styles.srOnly} role="status">{copyState}</span></div>
+    <div className={styles.identityHeading}><span aria-hidden="true">🤖</span><div><div className={styles.identityTitle}>{nameControl??<h2>{agent.name}</h2>}<div className={styles.walletBlock}>{hostedAddressUrl(agent.binding?.chainId,agent.wallet)&&<a href={hostedAddressUrl(agent.binding?.chainId,agent.wallet)!} target="_blank" rel="noopener noreferrer" aria-label="查看钱包 ↗"> ↗</a>}<code title={agent.wallet}>{short(agent.wallet,4)}</code><button className={styles.iconButton} aria-label="复制地址" title={copyState || "复制地址"} onClick={() => void copyAddress()}><Icon name={copyState === "已复制" ? "check" : "copy"} size={14} /></button><span className={styles.srOnly} role="status">{copyState}</span></div></div>{description!==""&&<p>{description??"平台托管 Agent · 独立钱包执行与结算"}</p>}{balance&&<small className={styles.identityBalance}>{balance}</small>}</div></div>
   </div>;
 }
 

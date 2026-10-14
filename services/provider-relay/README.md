@@ -1,5 +1,36 @@
 # Provider relay
 
+This guide is adapted for **Tabby Tempo**. The running deployment is Tempo Moderato `42431`, with **PathUSD** (`0x20c0000000000000000000000000000000000000`, 6 decimals) for settlement and fees. The [VPS runbook](../../deploy/tempo-vps/README.md) describes the sole production writer at `https://tempo.tabbyai.xyz`; this documentation/code update has not been deployed.
+
+Local launch examples below are for a **new isolated Anvil fixture only**, with synthetic roles, fresh private directories and controlled inference. Never load or restart the archived local Tempo runtime, reuse its journals, or start another writer beside the VPS. Monad/MON/USDC examples and dated results are explicitly source-project history or offline fixture semantics, not current Tempo configuration or new acceptance. See [Tempo verification](../../docs/VERIFICATION.md).
+
+
+`@agentfuel/provider-relay` binds an inference/service request to a 402 quote, verifies the original on-chain payment and returns a durable receipt or cached result. It uses the project's own payment protocol; standard x402 scheme/facilitator compatibility has not been established. Read [architecture](../../docs/ARCHITECTURE.md) for the separate escrow-task and cash-goal money flows, or [SDK](../../packages/sdk/src/index.ts) for quote validation and `PaymentHandle` recovery.
+
+## Three service adapters
+
+| Adapter | What the buyer pays for | Pricing and completion |
+| --- | --- | --- |
+| [Ordinary Relay](src/relay.ts) | One non-streaming model request, including hosted goal/planner calls | Fixed operator quote per call. The saved tier/route stays bound to the paid request; model usage is reported separately. |
+| [Inference allowance](src/allowance.ts) | One prepaid package for an active assigned task | No LLM call occurs when the package is issued. Credits and catalog digest are inside the request digest; [hosted gateway](../hosted-agents/src/inference-gateway.ts) later meters actual input/output usage through Magpie. |
+| [Fixed-price solving Relay](src/fixed-price.ts) | One bounded provider-side Pi solve | A single payment may cover several solve rounds. Its explicit full-price nondelivery rule differs from ordinary Relay's uncertain-dispatch policy; see [service B](../../packages/pi-loop/FIXED_PRICE.md). |
+
+Operator prices are settlement-asset raw units, not supplier invoices. Prepaid microcredits are separate off-chain accounting units, not cash, loan principal or transferable tokens. Underwriting and loan repayment remain in the SDK/contracts and task settlement; Relay does not accept a model's assertion as payment evidence.
+
+## Payment and unknown outcomes
+
+[Relay](src/relay.ts) checks the configured chain/account/provider, request digest, successful canonical receipt, payment calldata and unique `ProviderPaid` event before delivery. [Record storage](src/store.ts) retains the request, quoted price/route, dispatch attempts and response. Normal state progresses `Quoted → Paid → Processing → Delivered`; repeated reads of `Delivered` reuse the result.
+
+The ordinary adapter saves dispatch intent before a provider request. Only explicit configured rejection responses permit the next saved candidate in the same tier. Timeouts, disconnects, ambiguous server responses and interrupted writes remain uncertain: no automatic redispatch, new payment or assumed refund. Original status/handle recovery can still retrieve a result that was durably saved after the client stopped waiting. [Unknown-outcome tests](test/upstream-uncertain.test.ts) exercise these cases with controlled upstreams and local on-chain payments.
+
+[Refunder](src/refunder.ts) journals original refund IDs and signed transaction bytes; confirmed refund events determine refunded amounts. Ordinary unknown calls require separately recorded operator resolution before an eligible refund. Allowance compensation additionally verifies permanent closure of the original ledger, preventing later use of compensated credits. [Allowance tests](test/allowance.test.ts), [compensation tests](test/allowance-compensation.test.ts) and [refund recovery](test/refunder-wait.test.ts) are the direct checks.
+
+The daemon stores protected local records for one Relay process; its in-process locks do not make shared storage safe for multiple instances. Physical provider keys remain server-side. The configured local operator interface is separate from the browser-facing delivery API. Runtime directories and `demo-output/` archives are excluded from Git.
+
+For current test/evidence boundaries see [verification](../../docs/VERIFICATION.md), [core runtime](../../docs/core-runtime.md) and [Magpie integration](../../docs/magpie-gateway.md). The Chinese sections below retain ordinary Relay configuration and historical operation details; private archive paths are not repository downloads.
+
+## 运维配置与历史验收（中文）
+
 自建 402 quote/receipt 服务，使用 Node 22 native HTTP、ethers 和原子 JSON 文件。它不是标准 x402 facilitator 实现，标准 scheme 兼容性尚未验证。2026-10-06 的普通 Relay fallback 安全修复只运行新本地 Anvil 与受控上游，没有新增公网模型调用或测试网交易；先前真实验收见下方证据。
 
 从仓库根目录验证：
@@ -11,14 +42,9 @@ npm run typecheck:all
 npm test --workspace @agentfuel/provider-relay
 ```
 
-复制本目录 `.env.example` 到 `.env` 并填写部署后的 Account、已白名单 provider、上游 API keys，再启动：
+本目录 `.env.example` 锁定 Monad testnet `10143`、USDC 6 位，只保留为历史字段说明，不能复制后用作 Tempo 启动配置。Tempo 运行配置由独立 VPS supervisor 管理；本地回归使用上述测试入口生成的新 Anvil、合成角色和受控上游。
 
-```sh
-cd services/provider-relay
-node --env-file=.env --import tsx src/main.ts
-```
-
-示例锁定 Monad testnet `10143`、USDC 6 位；Account/provider 未部署时留空，不能直接启动。`PRICE=120000` 是代币原始单位。原生币模式显式设零地址、18 位与对应原始单位价格。只有一个 P0 逻辑 group：`SERVICE_ID=infercredit/coder`、`LOGICAL_MODEL=coder`；物理 Kimi/Qwen 配置按顺序 fallback，不改变已报价的 service/model/price。部署清单 `providers[]` 须显式包含 `service`、`model`，展示 `name` 不参与路由。Arena 题目是 Python stdout 程序，后续 demo 的推理 prompt 必须要求 Python 代码。
+`PRICE=120000` 是代币原始单位；Tempo 表示 `0.12` PathUSD。原生币模式仅适用于另行配置的本地/历史 fixture，显式设零地址、18 位与对应原始单位价格。只有一个 P0 逻辑 group：`SERVICE_ID=infercredit/coder`、`LOGICAL_MODEL=coder`；物理 Kimi/Qwen 配置按顺序 fallback，不改变已报价的 service/model/price。部署清单 `providers[]` 须显式包含 `service`、`model`，展示 `name` 不参与路由。Arena 题目是 Python stdout 程序，fixture 的推理 prompt 必须要求 Python 代码。
 
 ENGINEERING §6.6 第一步提供显式 `cheap` / `strong` 两档。保留上述 `PRICE` + `UPSTREAMS_JSON` 单档配置和现有 coder demo；启用两档时用 `TIERS_JSON` 替代这两个变量，不能混用：
 
@@ -50,7 +76,9 @@ tier 不转发给 OpenAI-compatible 上游。receipt 的 tier/price 是原约定
 
 未知结果保留 `Processing` 与 `UPSTREAM_UNCERTAIN`，不把已付款记为未消费。status 返回无密钥的候选记录、HTTP 状态和固定原因码；不保存上游错误正文或异常消息。原 ID 的 chat 返回 409，SDK 抛出携原 handle 的 `PaymentError("UPSTREAM_UNCERTAIN")`；status 仍可查询，原付款 proof、请求和 journal 保留在受保护的记录文件中。重复请求、`recover()`、重启、换路由、报价到期均不能再次派发该未知调用。崩溃发生在 `Dispatching` 写入后，即使实际尚未发送，也保守地要求人工核对；成功响应保存失败同样不能重调模型。客户端自己的等待超时不会撤销已发出的调用，稍后已原子保存的 Delivered 仍可凭原 handle 领取。
 
-启动只恢复没有发出候选的新 `Processing`（空 journal）或已经持久保存拒绝、尚有下一候选的记录；恢复跳过已拒绝候选。所有可用候选明确拒绝后回到 Paid+`UPSTREAM_FAILED`，允许原付款退款，不自动重试同一已拒绝候选。旧 Processing、或旧 Paid+`UPSTREAM_FAILED` 没有候选 journal 时，无法证明当时没有发生模型调用，也按未知阻止派发和直接退款；旧 Delivered 缓存保持可领取。没有自动清除未知并重试/退款的 HTTP 入口。运营应先停服务，凭 paymentId/requestDigest、原请求、候选模型和时间与上游核对交付事实，再进行受控维护；不能用改配置、删记录或新 paymentId 代替核对。
+启动只恢复没有发出候选的新 `Processing`（空 journal）或已经持久保存拒绝、尚有下一候选的记录；恢复跳过已拒绝候选。所有可用候选明确拒绝后回到 Paid+`UPSTREAM_FAILED`，允许原付款退款，不自动重试同一已拒绝候选。旧 Processing、或旧 Paid+`UPSTREAM_FAILED` 没有候选 journal 时，无法证明当时没有发生模型调用，也按未知阻止派发和直接退款；旧 Delivered 缓存保持可领取。没有自动清除未知并重试/退款的 HTTP 入口。运营需凭 paymentId/requestDigest、原请求、候选模型和时间核对交付事实；不能用改配置、删记录或新 paymentId 代替核对。
+
+当前另有显式本机运营入口 `POST /ops/resolve-undelivered`：仅接受已确认付款、没有结果/退款、派发记录只含 Unknown/Rejected 且至少一项 Unknown 的原请求。操作者提交绑定原派发摘要的不可变决议与证据摘要，承担未知供应商成本；服务核验 canonical 付款后永久禁止该付款再派发，仅允许原价一次全额退款。这不是自动认定未消费，原 Unknown 证据仍保留；源码与受控检查见 [Relay](src/relay.ts) 和 [operator resolution tests](test/operator-resolution.test.ts)。已交付额度包的补偿另走封存账本核验，不能套用普通推理的决议。
 
 仅付款区块时间受 quoteExpiry 约束，及时付款之后永久可领取；完整真实的晚付款保存为 Paid+expiredPayment，禁止推理，允许运营退款。
 
@@ -64,7 +92,7 @@ tier 不转发给 OpenAI-compatible 上游。receipt 的 tier/price 是原约定
 node --env-file=.env --import tsx src/refund-cli.ts PAYMENT_ID REFUND_ID RAW_AMOUNT
 ```
 
-运营入口 `/ops/refund` body `{paymentId,refundId,amount}`。仅已收款且交付未发生可确认、或晚付款可退款；模型 dispatch 未知时不准备或广播退款，旧 Prepared 退款在 `Refunder.recover()` 中也暂停，等待人工核对，不因 refundPending 绕过。每次 amount 为原始单位，refundId 是全局单次 bytes32。先保存意图及已签 approve/processRefund rawTx/hash/nonce，再广播相同字节，确认成功的 RefundProcessed、refundConsumed 和累计金额才确认这一笔。链上未成功不增加退款累计；部分退款设置 refundPending 禁止推理，全额才 Refunded。重复同 refundId/amount 不重复退款，不同 amount 拒绝。显式重试已确认 revert 的操作可以重新签交易，退款交易未知结果不换交易；只有交付可退款事实明确时，重启才继续已有 journal。若退款成功后文件写入失败，恢复核验同 receipt，不发第二次。
+运营入口 `/ops/refund` body `{paymentId,refundId,amount}`。仅已收款且交付未发生可确认、晚付款，或具有上述有效运营决议的原 Unknown 可退款；已交付额度包另需有效封存补偿决议。未经有效决议的模型 dispatch 未知时不准备或广播退款，旧 Prepared 退款在 `Refunder.recover()` 中也暂停，等待人工核对，不因 refundPending 绕过。每次 amount 为原始单位，refundId 是全局单次 bytes32。先保存意图及已签 approve/processRefund rawTx/hash/nonce，再广播相同字节，确认成功的 RefundProcessed、refundConsumed 和累计金额才确认这一笔。链上未成功不增加退款累计；普通可退款请求的部分退款设置 refundPending 禁止推理，全额才 Refunded；Unknown 决议与封存补偿只允许原价一次全额退款。重复同 refundId/amount 不重复退款，不同 amount 拒绝。显式重试已确认 revert 的操作可以重新签交易，退款交易未知结果不换交易；只有交付可退款事实或运营决议明确时，重启才继续已有 journal。若退款成功后文件写入失败，恢复核验同 receipt，不发第二次。
 
 `DATA_DIR` 默认启动工作目录下 `relay-data/`，已忽略提交；持久目录只供一个 relay 进程使用，锁仅进程内，不支持多实例共享。文件保存推理输入/结果及公开交易字节，不保存私钥/API key。`FRONTEND_ORIGIN` 精确 CORS 默认关闭；运营入口从不接受浏览器跨域。请求上限 128KiB。RPC/存储未知错误只返通用 503，不返 secrets 或 ethers 原始 error。
 
@@ -72,7 +100,7 @@ node --env-file=.env --import tsx src/refund-cli.ts PAYMENT_ID REFUND_ID RAW_AMO
 
 普通 Relay 的未知派发回归见 `test/upstream-uncertain.test.ts`：新 Anvil/mock-USDC 真付款，受控 fetch 计数，覆盖完整拒绝后同档 fallback、408/409/5xx、timeout/断连、无效/截断响应、派发/结果保存故障、原 ID 重复和重启、删路由/旧 Prepared 退款/旧记录不能绕过、SDK 等待超时后领取已保存结果。没有使用真实模型或新增 Monad 交易。
 
-2026-10-04 真实两档短探针使用新 Anvil/mock-USDC 与实际 Kimi API，各一次 `max_completion_tokens=128`、零付费重试。cheap 请求/返回 `kimi-k2.6`（thinking disabled），strong 请求/返回 `kimi-k3`（reasoning_effort low）；两次均 HTTP200、最终 `OK`、finish_reason stop。usage 分别为输入11/输出4/总15（reasoning1）与输入90/输出45/总135（reasoning29）。本地运营报价0.01/0.03 mock-USDC，收款总40000原始单位、agent nonce +2；缓存恢复没有新增付款或模型请求。见[原报告](../../demo-output/live-tiers-20261004-k26-k3-128/report.json)与[离线审计](../../demo-output/live-tiers-20261004-k26-k3-128/offline-audit.json)。原Anvil已关闭，首版脚本未保存raw transaction receipt；离线审计只能验证签名交易、Relay付款proof与保存结果的一致性，无法再独立复读原ProviderPaid事件。后续脚本已补保存/校验原始本地receipt，本次没有追加付费请求。
+2026-10-04 真实两档短探针使用新 Anvil/mock-USDC 与实际 Kimi API，各一次 `max_completion_tokens=128`、零付费重试。cheap 请求/返回 `kimi-k2.6`（thinking disabled），strong 请求/返回 `kimi-k3`（reasoning_effort low）；两次均 HTTP200、最终 `OK`、finish_reason stop。usage 分别为输入11/输出4/总15（reasoning1）与输入90/输出45/总135（reasoning29）。本地运营报价0.01/0.03 mock-USDC，收款总40000原始单位、agent nonce +2；缓存恢复没有新增付款或模型请求。见原报告（本机档案 `demo-output/live-tiers-20261004-k26-k3-128/report.json`）与离线审计（本机档案 `demo-output/live-tiers-20261004-k26-k3-128/offline-audit.json`）。原Anvil已关闭，首版脚本未保存raw transaction receipt；离线审计只能验证签名交易、Relay付款proof与保存结果的一致性，无法再独立复读原ProviderPaid事件。后续脚本已补保存/校验原始本地receipt，本次没有追加付费请求。
 
 官方中国区[定价](https://platform.kimi.com/docs/pricing/chat.md)于2026-10-04查阅：人民币每百万tokens，K2.6输入未命中6.50/缓存命中1.10/输出27；K3未缓存输入20/缓存命中2/输出100，缓存写入5min20、1h40。K3命中、写入、未缓存输入计数互斥；reasoning与最终content共同占用输出上限。公开单价不是本次实际账单或运营报价换算。此探针未评估能力、真实链资金或标准x402兼容性，未接入Magpie/分类器/Pi。
 
@@ -86,15 +114,15 @@ node --import tsx --test scripts/test/live-tiers.test.ts
 
 第一条仅从受限配置读取Kimi endpoint/key，原Monad RPC、地址和角色不参与运行，资金用新本地fixture。不带 `--execute` 仅输出去敏方案，不发网络请求；`--audit-output` 仅验证已有文件。空最终content、仅reasoning或finish_reason length不计任务完成，脚本非成功退出。私有配置/API key不进入报告；查看已有结果用audit，不重复执行付费路径。
 
-ENGINEERING §6.6另有[受限Pi cash循环](../../packages/pi-loop/README.md)：自定义streamFn只走本SDK/Relay，显式选档与持久报价预留，每次infer.fetch的taskId为0，不借款；固定公开样例自测不结算，最终由现有Arena/独立settler验收。前一批为本地Anvil和受控上游；随后真实K2.6已通过SDK→Relay→Pi实际工具调用、公开样例及独立Arena本地结算。只用1轮/0.01 mock-USDC，未使用strong、未验证真实两轮修复或K3工具兼容；raw付款/结算receipts与完整请求响应均保存，见[报告](../../demo-output/live-pi-20261004-kimi-once/report.json)和[root独立验收](../../demo-output/live-pi-20261004-kimi-once/root-acceptance.json)。该 cash 验收范围未包含Monad Pi或多轮信用；后续 B 的独立验收见下节，旧demo/网页配置未切换。
+ENGINEERING §6.6另有[受限Pi cash循环](../../packages/pi-loop/README.md)：自定义streamFn只走本SDK/Relay，显式选档与持久报价预留，每次infer.fetch的taskId为0，不借款；固定公开样例自测不结算，最终由现有Arena/独立settler验收。前一批为本地Anvil和受控上游；随后真实K2.6已通过SDK→Relay→Pi实际工具调用、公开样例及独立Arena本地结算。只用1轮/0.01 mock-USDC，未使用strong、未验证真实两轮修复或K3工具兼容；raw付款/结算receipts与完整请求响应均保存，见报告（本机档案 `demo-output/live-pi-20261004-kimi-once/report.json`）和root独立验收（本机档案 `demo-output/live-pi-20261004-kimi-once/root-acceptance.json`）。该 cash 验收范围未包含Monad Pi或多轮信用；后续 B 的独立验收见下节，旧demo/网页配置未切换。
 
 
-另有独立opt-in [固定价求解服务B](../../packages/pi-loop/FIXED_PRICE.md)：`FixedPriceSolvingRelay`/`FixedPriceRefunder`沿用原402与资金证据，一次task-bound付款支持provider内部有界Pi公开样例循环。固定价早成功不退差额，未交付仅原全价运营退款；其独立 solve journal 对模型结果未知不重发，但由 provider 承担未知模型成本，未交付合格终稿仍允许全额退款。这是 B 的明确交付规则，不适用普通 Relay 的未知退款禁令。receipt为最后一轮模型/usage摘要，各轮实际请求和响应在run中。它不改变普通Relay/旧demo启动配置。实际 Magpie→Kimi 的本地信用和 Monad Task11 已由 root 独立验收，分别见[本地证据](../../demo-output/live-local-credit-20261004-root/root-acceptance.json)和[Monad证据](../../demo-output/live-monad-pi-20261004-alchemy-root/root-acceptance.json)；两次均首轮成功，不证明真实多轮修复或 strong 工具兼容。
+另有独立opt-in [固定价求解服务B](../../packages/pi-loop/FIXED_PRICE.md)：`FixedPriceSolvingRelay`/`FixedPriceRefunder`沿用原402与资金证据，一次task-bound付款支持provider内部有界Pi公开样例循环。固定价早成功不退差额，未交付仅原全价运营退款；其独立 solve journal 对模型结果未知不重发，但由 provider 承担未知模型成本，未交付合格终稿仍允许全额退款。这是 B 的明确交付规则，不适用普通 Relay 的未知退款禁令。receipt为最后一轮模型/usage摘要，各轮实际请求和响应在run中。它不改变普通Relay/旧demo启动配置。实际 Magpie→Kimi 的本地信用和 Monad Task11 已由 root 独立验收，分别见本地证据（本机档案 `demo-output/live-local-credit-20261004-root/root-acceptance.json`）和Monad证据（本机档案 `demo-output/live-monad-pi-20261004-alchemy-root/root-acceptance.json`）；两次均首轮成功，不证明真实多轮修复或 strong 工具兼容。
 
 
 ### 2026-10-07 备用路由真实调用验收
 
-`verify-live-fallback.ts` 在新 Anvil 上注入首个候选的完整 429 拒绝（不向供应商发请求），随后同 cheap 档调用真实 Kimi K2.6 一次。该次返回 OK，usage 为输入11/输出4/总15；0.01 mock-USDC 只付一次，重复读取及 Relay 重启后的原 handle 恢复均未新增付款或模型调用。已独立核对保存的原始请求/响应、签名交易、ProviderPaid raw receipt 和派发记录，见[验收](../../demo-output/live-fallback-20261007-root/root-acceptance.json)。这是“注入拒绝 + 真实备用模型”演练，不是自然供应商故障，也不证明跨档自动降级、Magpie 或 Monad fallback。
+`verify-live-fallback.ts` 在新 Anvil 上注入首个候选的完整 429 拒绝（不向供应商发请求），随后同 cheap 档调用真实 Kimi K2.6 一次。该次返回 OK，usage 为输入11/输出4/总15；0.01 mock-USDC 只付一次，重复读取及 Relay 重启后的原 handle 恢复均未新增付款或模型调用。已独立核对保存的原始请求/响应、签名交易、ProviderPaid raw receipt 和派发记录，见验收（本机档案 `demo-output/live-fallback-20261007-root/root-acceptance.json`）。这是“注入拒绝 + 真实备用模型”演练，不是自然供应商故障，也不证明跨档自动降级、Magpie 或 Monad fallback。
 
 ```sh
 # 不带 --execute 只输出方案；固定最多1次真实请求、128 completion tokens，不自动重试。

@@ -188,8 +188,10 @@ export class HostedGameExecutor implements HostedExecutor {
       if (input.run.action === "credits") {
         const ledger = await this.ledger(input.agent.id, actor, bot, input.recover);
         try {
+          await input.activity?.({scene:"model",state:"waiting",subject:{id:INFERENCE_REWARD_POLICY.model,name:INFERENCE_REWARD_POLICY.model,kind:"model"}});
           const record = await ledger.redeem(actor, { redemptionId: input.run.requestId, prompt: "Confirm this reward-funded hosted Agent inference request.", maxCompletionTokens: 128 });
           const done = ["Completed", "Failed"].includes(record.status);
+          await input.activity?.({scene:"model",state:record.status==="Completed"?"completed":done?"failed":"reconciling",evidence:{creditsUsed:record.chargedTokens??0}});
           output = result(record.status, record.status === "Completed", done, { creditsUsed: record.chargedTokens ?? 0, ...(record.error ? { reason: record.error } : {}) });
         } catch (error) {
           if ((error as Error)?.message !== "REWARD_INSUFFICIENT_AVAILABLE_TOKENS") throw error;
@@ -198,6 +200,11 @@ export class HostedGameExecutor implements HostedExecutor {
       } else {
         const matchId = `hosted-${input.run.requestId}`;
         const game = await runLiveHand(input.directory, { matchId, startedAtMs: state.startedAtMs, deadlineMs: state.deadlineMs, profiles, recover: input.recover }, {
+          onProgress:async view=>{
+            const attempt=view.attempts.at(-1),unknown=attempt?.outcome==="OutcomeUnknown"||view.reason==="EXISTING_GAME_NO_REDISPATCH";
+            const outcome=view.result?view.result.winners.length>1?"draw":view.result.winners.includes(0)?"won":"lost":undefined;
+            await input.activity?.({scene:unknown?"interruption":"game",state:view.phase==="Complete"?"completed":view.phase==="Stopped"?unknown?"reconciling":"failed":attempt?.outcome==="IntentPersisted"?"waiting":"started",subject:{id:view.matchId,name:"Heads-up Hold’em",kind:"game"},...(attempt?.seat===1&&view.phase==="Running"?{reason:"HOSTED_GAME_WAITING_OPPONENT"}:view.reason?{reason:/^[A-Z][A-Z0-9_]{0,100}$/.test(view.reason)?view.reason:"HOSTED_GAME_NOT_COMPLETE"}:{}),evidence:{matchId:view.matchId,...(outcome?{outcome}:{})}});
+          },
           dispatch: async (request, signal) => {
             const model = this.config.models.find(m => m.id === request.model)!;
             const key = await privateText(model.keyFile), url = new URL(model.baseUrl);
@@ -211,16 +218,20 @@ export class HostedGameExecutor implements HostedExecutor {
           output = result(game.phase, false, !unknown, { matchId, reason: game.reason ?? "HOSTED_GAME_NOT_COMPLETE" });
         } else {
           if (view.handStatus !== "complete" || !view.result) fail("HOSTED_GAME_REPLAY_NOT_TERMINAL");
+          const wins=view.result.winners.includes(0);
+          if(wins)await input.activity?.({scene:"settlement",state:"waiting",evidence:{matchId},reason:input.run.rewardKind==="usdc"?"HOSTED_GAME_REWARD_PENDING":"HOSTED_GAME_CREDITS_PENDING"});
           state.phase = input.run.rewardKind === "usdc" ? "RewardPending" : "CreditsPending"; await store.write(state);
           if (input.run.rewardKind === "llm-credits") {
             const ledger = await this.ledger(input.agent.id, actor, bot, input.recover);
             try {
               const grant = await ledger.grantTerminal({ grantId: input.run.requestId, matchId, replayDigest: digest(hand.exportTrustedReplay()), players: [actor, bot], winners: view.result.winners });
               output = result("Succeeded", true, true, { matchId, creditsGranted: grant.allocations[0], rewardRaw: "0" });
+              await input.activity?.({scene:grant.allocations[0]>0?"settlement":"game",state:grant.allocations[0]>0?"confirmed":"completed",evidence:{matchId,creditsGranted:grant.allocations[0],outcome:view.result.winners.length>1?"draw":wins?"won":"lost"}});
             } finally { await ledger.close(); }
           } else {
             const reward = await this.award(input, state, store, rpc, [actorWallet, botWallet], sponsor, [actor, bot], view.result.winners, digest(hand.exportTrustedReplay()));
             output = result("Succeeded", true, true, { matchId, rewardRaw: state.award!.allocations[0], cashRaw: String(await account.getFunction("cash").staticCall(actor.agentId)), ...(reward ? { txHash: reward } : {}) });
+            await input.activity?.({scene:BigInt(output.rewardRaw!)>0n?"settlement":"game",state:BigInt(output.rewardRaw!)>0n?"confirmed":"completed",evidence:{matchId,rewardRaw:output.rewardRaw!,...(reward?{txHash:reward}:{}),outcome:view.result.winners.length>1?"draw":wins?"won":"lost"}});
           }
         }
       }
@@ -263,6 +274,7 @@ export class HostedGameExecutor implements HostedExecutor {
         routes: { cheap: { name: model.id, model: model.id, baseUrl: model.baseUrl }, strong: { name: model.id, model: model.id, baseUrl: model.baseUrl } },
         beforeDispatch: async (body, index) => {
           round = index;
+          await input.activity?.({scene:"model",state:"selected",phaseId:`round-${index}`,subject:{id:model.id,name:model.id,kind:"model"}});
           const prepared = prepareRewardChat({ redemptionId: `${prefix}${index}`, request: body });
           const balance = await ledger.balance(actor);
           if (balance.blocked) throw new Error("REWARD_ACCOUNT_BLOCKED_BY_USAGE_OVERRUN");
@@ -271,9 +283,11 @@ export class HostedGameExecutor implements HostedExecutor {
         recoverResponse: async (_body, index) => (await ledger.taskResponse(actor, `${prefix}${index}`)) ?? undefined,
         invoke: async (_tier, body) => {
           const redemptionId = `${prefix}${round}`;
+          await input.activity?.({scene:"model",state:"waiting",phaseId:`round-${round}`,subject:{id:model.id,name:model.id,kind:"model"}});
           const record = await ledger.redeemChat(actor, { redemptionId, request: body });
           const response = await ledger.taskResponse(actor, redemptionId);
           if (!response) throw new Error(record.error ?? "REWARD_TASK_RESPONSE_UNAVAILABLE");
+          await input.activity?.({scene:"model",state:"completed",phaseId:`round-${round}`,subject:{id:model.id,name:model.id,kind:"model"},evidence:{creditsUsed:record.chargedTokens??0}});
           return response;
         },
       },

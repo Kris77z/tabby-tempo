@@ -1,0 +1,53 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,realpath,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {Wallet} from 'ethers';
+import {HostedService} from '../../services/hosted-agents/src/service';
+import type {HostedConfig,HostedExecutor} from '../../services/hosted-agents/src/types';
+import {hostedAgentsRequest} from '../lib/hosted-agents-proxy';
+import {tabbyScene,tabbySceneHistory} from '../lib/tabby-scenes';
+import type {HostedSnapshot} from '../lib/hosted-client';
+
+test('persisted executor facts survive the browser bridge and restart without making partial refunds terminal',async t=>{
+ const directory=await realpath(await mkdtemp(join(tmpdir(),'tabby-scene-contract-')));
+ let release!:()=>void,entered!:()=>void;
+ const waiting=new Promise<void>(r=>release=r),selected=new Promise<void>(r=>entered=r);
+ const executor:HostedExecutor={capabilities:{goals:{maxPhases:4,models:[{id:'kimi-k2.6',pricePerCallRaw:'10000'}]}},async execute(input){
+  if(input.run.action==='provision')return {phase:'Ready',terminal:true,success:true,chargedRaw:'0',binding:{chainId:'31337',agentId:'42',wallet:input.agent.wallet}};
+  await input.activity?.({scene:'specialists',state:'selected',phaseId:'phase-0',subject:{id:'abi-interact',name:'ABI Reader & Explainer',kind:'specialist'}});
+  entered();await waiting;
+  await input.activity?.({scene:'interruption',state:'reconciling',reason:'HOSTED_GOAL_RECONCILIATION_REQUIRED',requiredAction:'reconcile',evidence:{chargedRaw:'20000',refundedRaw:'10000'}});
+  return {phase:'Paused',terminal:false,success:false,chargedRaw:'20000',refundedRaw:'10000',reason:'HOSTED_GOAL_RECONCILIATION_REQUIRED'};
+ }};
+ const config:HostedConfig={directory,origin:'http://localhost:3900',chainId:'31337',models:[{id:'kimi-k2.6',label:'Kimi K2.6'}],maxAgentsPerOwner:2,maxTotalBudgetRaw:'1000000',maxPerRunBudgetRaw:'200000'};
+ let service=await HostedService.open(config,executor);
+ t.after(async()=>{release();await service.waitUntilIdle();await service.close();await rm(directory,{recursive:true,force:true});});
+ const owner=Wallet.createRandom().address;
+ const agent=await service.create(owner,{requestId:randomUUID(),name:'Scene contract',modelId:'kimi-k2.6',strategy:'balanced',perRunBudgetRaw:'120000',totalBudgetRaw:'240000',allowCredit:false});
+ await service.waitUntilIdle();
+ const requestId=randomUUID();
+ await service.command(owner,agent.id,{action:'goal',goal:'Read this contract interface',requestId});
+ await selected;
+ const throughBridge=async()=>{
+  const response=await hostedAgentsRequest(new Request('http://localhost:3900/api/hosted/agents',{headers:{host:'localhost:3900',cookie:'agentfuel_hosted_session=scene_contract_local_test_token'}}),{origin:'http://localhost:3900',upstreamUrl:'http://127.0.0.1:3901',fetcher:(async()=>Response.json(await service.snapshot(owner))) as typeof fetch});
+  assert.equal(response.status,200);
+  return await response.json() as HostedSnapshot;
+ };
+ const live=await throughBridge(),running=live.runs.find(r=>r.requestId===requestId)!;
+ const scene=tabbyScene(running,{agent:live.agents[0]});
+ assert.equal(scene.scene,'specialists');assert.equal(scene.state,'selected');assert.equal(scene.selectedExpert?.id,'abi-interact');
+ release();await service.waitUntilIdle();
+ const paused=(await throughBridge()).runs.find(r=>r.requestId===requestId)!;
+ assert.equal(paused.status,'Paused');assert.equal(tabbyScene(paused).state,'reconciling');
+ const before=paused.activities!.map(a=>a.seq);
+ assert.ok(before.length>=4);assert.ok(before.every((seq,i)=>i===0||seq>before[i-1]));
+ assert.equal(tabbySceneHistory(paused).find(s=>s.scene==='specialists')?.selectedExpert?.id,'abi-interact');
+ await service.close();service=await HostedService.open(config,executor);
+ const after=(await throughBridge()).runs.find(r=>r.requestId===requestId)!;
+ assert.deepEqual(after.activities,paused.activities);
+ assert.equal(tabbyScene(after).state,'reconciling');assert.equal(after.result?.refundedRaw,'10000');
+ const foreign=await service.snapshot(Wallet.createRandom().address);assert.equal(foreign.runs.length,0);
+});

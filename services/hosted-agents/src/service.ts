@@ -8,12 +8,46 @@ import { taskPrivateDirectory } from "../../../packages/pi-loop/src/task-runner/
 import { HostedError, type AgentCreation, type AgentSettings, type HostedAgent, type HostedConfig, type HostedExecution, type HostedExecutor, type HostedFinance, type HostedResult, type HostedRun } from "./types.js";
 import { validateHostedFinance } from "./finance-projection.js";
 import { assertTestSponsorshipActor, loadTestSponsorship, type TestSponsorshipState } from "./test-sponsorship.js";
+import { HOSTED_ACTIVITY_LIMIT, validateHostedActivity, type HostedActivityInput } from "./scene-types.js";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const amount = (v: unknown): v is string => typeof v === "string" && /^(0|[1-9][0-9]{0,29})$/.test(v);
 const hash = (v: string) => createHash("sha256").update(v).digest("hex");
 const now = () => new Date().toISOString();
 const safeCode = (e: unknown) => { const v = (e as any)?.code ?? (e as any)?.message; return typeof v === "string" && /^[A-Z][A-Z0-9_]{0,100}$/.test(v) ? v : "HOSTED_EXECUTION_UNCERTAIN"; };
+function appendActivity(run: HostedRun, input: HostedActivityInput) {
+  const event = validateHostedActivity(input), activities = run.activities ??= [];
+  const seq = (activities.at(-1)?.seq ?? 0) + 1;
+  if (!Number.isSafeInteger(seq)) fail("HOSTED_ACTIVITY_INVALID", 503);
+  activities.push({ ...event, seq, at: now() });
+  if (activities.length > HOSTED_ACTIVITY_LIMIT) activities.splice(0, activities.length - HOSTED_ACTIVITY_LIMIT);
+}
+function runOutcomeActivity(run: HostedRun, result: HostedResult): HostedActivityInput {
+  const reason = result.reason, evidence = { chargedRaw: result.chargedRaw, ...(result.refundedRaw !== undefined ? { refundedRaw: result.refundedRaw } : {}),
+    ...(result.txHash?{txHash:result.txHash}:{}),...(result.taskId?{taskId:result.taskId}:{}),...(result.paymentId?{paymentId:result.paymentId}:{}),...(result.matchId?{matchId:result.matchId}:{}) };
+  if (reason === "HOSTED_AGENT_PAUSED") return {scene:"interruption",state:"paused",reason,requiredAction:"resume",evidence};
+  if (reason === "AUTONOMY_PLANNER_CASH_REQUIRED") return {scene:"funding",state:"blocked",reason,requiredAction:"deposit",evidence};
+  if (reason === "AUTONOMY_TASK_BUDGET_REQUIRED"||reason === "HOSTED_GOAL_BUDGET_REQUIRED") return {scene:"funding",state:"blocked",reason,requiredAction:"configure",evidence};
+  if (reason === "HOSTED_GOAL_NEEDS_INPUT") return {scene:"decision",state:"blocked",reason,requiredAction:"provide-input",evidence};
+  if (reason === "INFERENCE_FUNDING_REQUIRED") return {scene:"funding",state:"blocked",reason,requiredAction:run.action === "reward-task"?"play-game":"deposit",evidence};
+  if (["CASH_REQUIRED","HOSTED_AGENT_FUNDS_REQUIRED"].includes(reason??"")) return {scene:"funding",state:"blocked",reason,requiredAction:"deposit",evidence};
+  if (["UNDERWRITER_REQUIRED","AUTHORIZATION_REJECTED","AUTHORIZATION_MISMATCH"].includes(reason??"")) return {scene:"credit",state:"blocked",reason,evidence};
+  if (["ALLOWANCE_PRICE_LIMIT","HOSTED_TASK_BUDGET_INVALID","HOSTED_TASK_BUDGET_EXCEEDED"].includes(reason??"")) return {scene:"funding",state:"blocked",reason,requiredAction:"configure",evidence};
+  if (reason === "HOSTED_WALLET_GAS_REQUIRED") return {scene:"funding",state:"blocked",reason,requiredAction:"fund-gas",evidence};
+  if (!result.terminal) return { scene: "interruption", state: /RECONCIL|UNCERTAIN|UNKNOWN|UNCONFIRMED|INTERRUPTED|PENDING/.test(reason ?? "") ? "reconciling" : "paused", ...(reason ? { reason } : {}), evidence };
+  if (result.settlement) { const s=result.settlement; return {scene:"settlement",state:"confirmed",evidence:{...evidence,txHash:s.txHash,blockNumber:s.block.number,blockHash:s.block.hash,passed:s.passed,repaidRaw:s.repaidRaw,slashedRaw:s.slashedRaw,residualRaw:s.residualRaw}}; }
+  if (run.action === "provision" && result.success) return {scene:"onboarding",state:result.binding?"confirmed":"completed",...(result.binding?{evidence:{...evidence,chainId:result.binding.chainId,agentId:result.binding.agentId}}:{evidence})};
+  if (run.action === "deposit" && result.success) return {scene:"funding",state:"confirmed",evidence:{...evidence,...(run.amountRaw?{amountRaw:run.amountRaw}:{}),...(result.cashRaw?{cashRaw:result.cashRaw}:{})}};
+  if (run.action === "game" && result.success) {
+    const rewarded=BigInt(result.rewardRaw??"0")>0n||Number(result.creditsGranted??0)>0;
+    const outcome=run.activities?.slice().reverse().find(event=>event.scene==="game"&&event.evidence?.matchId===result.matchId&&event.evidence?.outcome!==undefined&&event.evidence?.outcome!=="no-reward")?.evidence?.outcome;
+    return {scene:rewarded?"settlement":"game",state:rewarded?"confirmed":"completed",evidence:{...evidence,...(result.rewardRaw!==undefined?{rewardRaw:result.rewardRaw}:{}),...(result.creditsGranted!==undefined?{creditsGranted:result.creditsGranted}:{}),...(outcome?{outcome}:!rewarded?{outcome:"no-reward" as const}:{})}};
+  }
+  if (run.action === "credits") return {scene:"model",state:result.success?"completed":"failed",...(reason?{reason}:{}),evidence:{...evidence,...(result.creditsUsed!==undefined?{creditsUsed:result.creditsUsed}:{})}};
+  if (reason === "HOSTED_GOAL_REVIEW_FAILED") return {scene:"review",state:"failed",reason,evidence:{...evidence,passed:false}};
+  return { scene: result.phase === "Cancelled" || /CANCELLED|PAYMENT_VOIDED/.test(reason ?? "") ? "interruption" : "delivery",
+    state: result.success ? "completed" : result.phase === "Cancelled" || reason === "HOSTED_GOAL_CANCELLED" ? "cancelled" : result.phase === "Refunded" ? "refunded" : "failed", ...(reason ? { reason } : {}), evidence };
+}
 function fail(code: string, status = 400): never { throw new HostedError(code, status); }
 function object(v: unknown, fields: string[]): asserts v is Record<string, any> {
   if (!v || typeof v !== "object" || Array.isArray(v) || Object.keys(v).some(k => !fields.includes(k))) fail("HOSTED_INPUT_INVALID");
@@ -68,7 +102,7 @@ export class HostedService {
         }
         sponsorshipStore = new SessionStore(join(dirname(config.testSponsorshipFile), "admissions")); await sponsorshipStore.start(options.recover);
       }
-      for (const run of state.runs) if (["Queued", "Running"].includes(run.status)) { run.status = "Paused"; run.recoverable = true; run.reason = "HOSTED_PROCESS_INTERRUPTED"; run.updatedAt = now(); }
+      for (const run of state.runs) if (["Queued", "Running"].includes(run.status)) { run.status = "Paused"; run.recoverable = true; run.reason = "HOSTED_PROCESS_INTERRUPTED"; run.updatedAt = now(); appendActivity(run, { scene: "interruption", state: "reconciling", reason: "HOSTED_PROCESS_INTERRUPTED", requiredAction: "reconcile" }); }
       await store.write(state);
       const service = new HostedService(structuredClone(config), executor, store, state, sponsorshipStore); await service.syncSponsorship(); return service;
     } catch (e) { await sponsorshipStore?.close(); await store.close(); throw e; }
@@ -191,7 +225,10 @@ export class HostedService {
   }); }
   pause(who: string, agentId: string, paused: boolean) { return this.serial(async () => {
     if (typeof paused !== "boolean") fail("HOSTED_INPUT_INVALID"); const a = this.agent(who, agentId);
-    a.status = paused ? "Paused" : a.binding ? "Ready" : "Pending"; a.updatedAt = now(); await this.save(); return structuredClone(a);
+    a.status = paused ? "Paused" : a.binding ? "Ready" : "Pending"; a.updatedAt = now();
+    const active = this.state.runs.find(run => run.requestId === a.activeRequestId && run.agentId === a.id);
+    if (active && paused) appendActivity(active, { scene: "interruption", state: "stopping", reason: "HOSTED_AGENT_PAUSED" });
+    await this.save(); return structuredClone(a);
   }); }
   command(who: string, agentId: string, input: HostedCommand) { return this.serial(async () => {
     object(input, ["action", "requestId", "rewardKind", "amountRaw", "goal"]); id(input.requestId);
@@ -221,12 +258,13 @@ export class HostedService {
           for (const key of Object.keys(a)) delete (a as any)[key]; Object.assign(a, beforeAgent);
           for (const key of Object.keys(previous)) delete (previous as any)[key]; Object.assign(previous, beforeRun); throw error;
         }
+        appendActivity(previous, { scene: "idle", state: "queued", reason: "HOSTED_CACHED_DECISION_RECOVERY" }); await this.save();
         this.launch(a, previous, true); return structuredClone(previous);
       }
       if (previous.status !== "Paused") return structuredClone(previous);
       if (a.activeRequestId !== previous.requestId) fail("HOSTED_RECOVER_ORIGINAL_REQUIRED", 409);
       if (previous.testSponsorship) await this.syncSponsorship();
-      previous.status = "Queued"; previous.recoverable = false; delete previous.reason; previous.updatedAt = now(); await this.save();
+            previous.status = "Queued"; previous.recoverable = false; delete previous.reason; previous.updatedAt = now(); appendActivity(previous, { scene: "idle", state: "queued", reason: "HOSTED_RECOVERY_QUEUED" }); await this.save();
       this.launch(a, previous, true); return structuredClone(previous);
     }
     if (a.configurationRequired && !["provision", "deposit"].includes(input.action)) fail("HOSTED_CONFIGURATION_REQUIRED", 409);
@@ -257,6 +295,7 @@ export class HostedService {
       this.state.sponsoredOwners[a.owner] = (this.state.sponsoredOwners[a.owner] ?? 0) + 1; this.state.sponsoredTotal++;
     }
     const run: HostedRun = { ...input, ...(testSponsorship ? { testSponsorship } : {}), ...(fundingFor ? { fundingFor } : {}), agentId: a.id, status: "Queued", createdAt: now(), updatedAt: now(), reservedRaw: reserve, chargedRaw: "0", recoverable: false };
+    appendActivity(run, { scene: "idle", state: "queued" });
     if (testSponsorship) this.state.testSponsorship!.admissions.push({ requestId: run.requestId, agentId: a.id, ordinal: testSponsorship.ordinal, admittedAt: run.createdAt, rewardKind: input.rewardKind! });
     a.reservedRaw = fundingFor ? awaiting!.reservedRaw : reserve; a.activeRequestId = run.requestId; a.updatedAt = now(); this.state.runs.push(run);
     try { await this.save(); } catch (error) { this.state = (await this.store.read())!; throw error; }
@@ -289,10 +328,14 @@ export class HostedService {
   private launch(a: HostedAgent, run: HostedRun, recover: boolean) {
     const snapshot = structuredClone(a), original = structuredClone(run);
     const job = (async () => {
-      await this.serial(async () => { run.status = "Running"; run.updatedAt = now(); await this.save(); });
+      await this.serial(async () => { run.status = "Running"; run.updatedAt = now(); appendActivity(run, { scene: run.action === "provision" ? "onboarding" : run.action === "deposit" ? "funding" : run.action === "game" ? "game" : run.action === "credits" ? "model" : run.action === "autonomous" ? "decision" : run.action === "goal" ? "decision" : "task", state: "started" }); await this.save(); });
       try {
         const directory = join(this.config.directory, "agents", a.id, "runs", run.requestId); await taskPrivateDirectory(directory);
-        const result = await this.executor.execute({ agent: snapshot, run: original, directory, keyFile: join(this.config.directory, "agents", a.id, "wallet.key"), recover, ...(run.action === "goal" ? { progress: (view: import("./goal-types.js").GoalView) => this.serial(async () => { run.mission = validateGoalView(view); run.updatedAt = now(); await this.save(); }) } : {}) });
+        const execution:HostedExecution={ agent: snapshot, run: original, directory, keyFile: join(this.config.directory, "agents", a.id, "wallet.key"), recover,
+          ...(run.action === "goal" ? { progress: (view: import("./goal-types.js").GoalView) => this.serial(async () => { run.mission = validateGoalView(view); run.updatedAt = now(); await this.save(); }) } : {}) };
+        // Keep legacy whole-input snapshots cloneable; callbacks never belong in durable custody state.
+        Object.defineProperty(execution,"activity",{value:(event:HostedActivityInput)=>this.serial(async()=>{if(["Succeeded","Failed"].includes(run.status))return;appendActivity(run,event);run.updatedAt=now();await this.save();}),enumerable:false});
+        const result = await this.executor.execute(execution);
         await this.serial(async () => {
           const safe = this.result(result, a, run); run.result = safe; run.updatedAt = now();
           if (safe.terminal) {
@@ -305,9 +348,10 @@ export class HostedService {
             } else { a.reservedRaw = "0"; delete a.activeRequestId; }
             if (safe.binding) { a.binding = safe.binding; if (a.status !== "Paused") a.status = "Ready"; }
           } else { run.status = "Paused"; run.recoverable = true; }
-          if (safe.reason) run.reason = safe.reason; else delete run.reason; await this.save();
+          if (safe.reason) run.reason = safe.reason; else delete run.reason;
+          appendActivity(run, runOutcomeActivity(run, safe)); await this.save();
         });
-      } catch (e) { await this.serial(async () => { run.status = "Paused"; run.reason = safeCode(e); run.recoverable = true; run.updatedAt = now(); await this.save(); }); }
+      } catch (e) { await this.serial(async () => { run.status = "Paused"; run.reason = safeCode(e); run.recoverable = true; run.updatedAt = now(); appendActivity(run, { scene: "interruption", state: "reconciling", reason: run.reason, requiredAction: "reconcile" }); await this.save(); }); }
     })();
     this.jobs.add(job); void job.finally(() => this.jobs.delete(job)).catch(() => undefined);
   }
@@ -320,7 +364,7 @@ export class HostedService {
     if (!run || run.action!=="goal") fail("HOSTED_GOAL_NOT_FOUND",404);
     if (["Succeeded","Failed"].includes(run.status)) return structuredClone(run);
     if (agent.activeRequestId !== requestId) fail("HOSTED_RECOVER_ORIGINAL_REQUIRED",409);
-    run.stopRequested=true; await this.save();
+    run.stopRequested=true; appendActivity(run, { scene: "interruption", state: "stopping", reason: "HOSTED_GOAL_CANCELLED" }); await this.save();
     if(run.status==="Paused"){run.status="Queued";run.recoverable=false;await this.save();this.launch(agent,run,true);}
     return structuredClone(run);
   }); }

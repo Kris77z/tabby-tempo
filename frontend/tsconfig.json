@@ -68,7 +68,9 @@
     ".next-upstream-sync-20261013-2/types/**/*.ts",
     ".next-upstream-sync-20261013-2/dev/types/**/*.ts",
     ".next-upstream-sync-round2-20261013-2/types/**/*.ts",
-    ".next-upstream-sync-round2-20261013-2/dev/types/**/*.ts"
+    ".next-upstream-sync-round2-20261013-2/dev/types/**/*.ts",
+    ".next-upstream-sync-20261014/types/**/*.ts",
+    ".next-upstream-sync-20261014/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

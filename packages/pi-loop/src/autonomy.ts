@@ -43,10 +43,15 @@ export interface AutonomyDecisionRecovery {
   /** Trusted, persisted reconciliation evidence; never supplied by the model. */
   evidence?: { paymentId: string; resolutionId: string; evidenceDigest: string };
 }
+export interface AutonomyProgress {
+  phase:AutonomyState["phase"]; chargedRaw:string; startedTasks:number; completedTasks:number;
+  decisionId?:string; decision?:{action:"stop"}|Extract<AutonomyDecision,{action:"run-task"}>; reason?:string;
+}
 export interface AutonomyDependencies {
+  onProgress?(progress:AutonomyProgress):Promise<void>;
   observe(): Promise<AutonomyObservation>;
   /** Invoke the real planner once. The supplied ID must also bind any metering journal. */
-  decide(context: AutonomyContext, decisionId: string, limits: AutonomyLimits): Promise<{ decision: unknown; chargedRaw: string }>;
+  decide(context: AutonomyContext, decisionId: string, limits: AutonomyLimits): Promise<{ decision: unknown; chargedRaw: string; source?:"runtime"|"model" }>;
   /** Read only the original completed planner response; no network dispatch or additional charge. */
   recoverCachedDecision?(context: AutonomyContext, decisionId: string, limits: AutonomyLimits): Promise<{ decision: unknown; chargedRaw: string }>;
   /** Read-only reconciliation of the original planner payment. Must never dispatch or pay. */
@@ -57,7 +62,7 @@ export interface AutonomyDependencies {
   now?: () => number;
 }
 export interface AutonomyStep {
-  decisionId: string; context: AutonomyContext; decision?: AutonomyDecision; decisionChargedRaw?: string; decisionRefundedRaw?: string; decisionRecovery?: AutonomyDecisionRecovery;
+  decisionId: string; context: AutonomyContext; decisionSource?:"runtime"|"model"; decision?: AutonomyDecision; decisionChargedRaw?: string; decisionRefundedRaw?: string; decisionRecovery?: AutonomyDecisionRecovery;
   childId?: string; childLimits?: AutonomyLimits; outcome?: AutonomyOutcome;
 }
 export interface AutonomyState {
@@ -138,7 +143,7 @@ export async function runAutonomy(directory: string, config: AutonomyConfig, dep
     if (state && (state.version !== 1 || JSON.stringify(state.config) !== JSON.stringify(input))) throw new Error("AUTONOMY_CONFIG_MISMATCH");
     if (!state) { state = { version: 1, config: input, phase: "Ready", chargedRaw: "0", startedTasks: 0, completedTasks: 0, steps: [] }; await store.write(state); }
     const current = state;
-    const save = () => store.write(current);
+    const save = async () => { await store.write(current);const step=current.steps.at(-1);await deps.onProgress?.({phase:current.phase,chargedRaw:current.chargedRaw,startedTasks:current.startedTasks,completedTasks:current.completedTasks,...(step?{decisionId:step.decisionId}:{}),...(step?.decision?{decision:step.decision.action==="stop"?{action:"stop" as const}:{...step.decision}}:{}),...(current.reason?{reason:step?.decision?.action==="stop"&&step.decisionSource!=="runtime"?"AUTONOMY_MODEL_STOPPED":current.reason}:{})}); };
     const end = async (phase: AutonomyState["phase"], reason: string) => { current.phase = phase; current.reason = reason; await save(); return current; };
     // Refunds lower the reported net charge, but never reopen this session's spending ceiling.
     const grossSpent = () => money(current.chargedRaw) + current.steps.reduce((sum, step) => sum + money(step.outcome?.refundedRaw ?? "0") + money(step.decisionRefundedRaw ?? "0"), 0n);
@@ -219,14 +224,14 @@ export async function runAutonomy(directory: string, config: AutonomyConfig, dep
       const fundingQuote = quoteAutonomyFunding(observation, context.remainingSpendRaw, input.funding);
       if (fundingQuote) context.fundingQuote = fundingQuote;
       const step: AutonomyStep = { decisionId: randomUUID(), context }; current.steps.push(step); current.phase = "Deciding"; delete current.reason; await save();
-      let planned: { decision: unknown; chargedRaw: string };
+      let planned: { decision: unknown; chargedRaw: string; source?:"runtime"|"model" };
       try { planned = await deps.decide(context, step.decisionId, { maxSpendRaw: input.decisionReserveRaw!, deadlineMs: input.deadlineMs }); }
       catch { if (!await reconcileDecision(step)) return current; continue; }
       try {
         const charged = money(planned.chargedRaw); current.chargedRaw = (money(current.chargedRaw) + charged).toString(); step.decisionChargedRaw = charged.toString();
         if (charged > money(input.decisionReserveRaw!) || remaining() < 0n) return await end("Paused", "AUTONOMY_BUDGET_EXCEEDED");
       } catch { return await end("Paused", "AUTONOMY_DECISION_UNKNOWN"); }
-      try { step.decision = parseAutonomyDecision(planned.decision, input); } catch { return await end("Stopped", "AUTONOMY_INVALID_DECISION"); }
+      try { step.decision = parseAutonomyDecision(planned.decision, input); step.decisionSource=planned.source??"model"; } catch { return await end("Stopped", "AUTONOMY_INVALID_DECISION"); }
       if (!await dispatchDecision(step)) return current;
     }
   } finally { await store.close(); }
