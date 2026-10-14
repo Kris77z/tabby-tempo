@@ -21,6 +21,8 @@ contracts/broadcast/
 *.pem
 *.p12
 *.log
+__pycache__/
+*.py[cod]
 
 # Internal agent instructions and historical local browser artifacts
 AGENTS.md

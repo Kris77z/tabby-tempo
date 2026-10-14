@@ -1,0 +1,167 @@
+name: Tempo CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Release retry or rollback to a previously successful release
+        type: choice
+        options: [release, rollback]
+        default: release
+        required: true
+      sha:
+        description: Exact lowercase 40-character commit SHA (release must be the current main tip)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ci:
+    # Keep candidate validation inside the required job: a failed validation must fail this check.
+    name: Offline checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    outputs:
+      sha: ${{ steps.candidate.outputs.sha }}
+      operation: ${{ steps.candidate.outputs.operation }}
+    env:
+      CI: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      SPECIALIST_LIVE: '0'
+      ARENA_PLAY_TEST_URL: ''
+    steps:
+      - name: Checkout workflow commit without persisted credentials
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate repository, event and exact candidate
+        id: candidate
+        run: python3 .github/scripts/resolve-candidate.py
+
+      - name: Install pinned Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: '22.23.2'
+          package-manager-cache: false
+
+      - name: Test current workflow and restricted deployment guards
+        run: |
+          python3 -m unittest discover -s .github/test -p 'test_*.py'
+          python3 -m unittest discover -s deploy/tempo-vps/cicd/test -p 'test_*.py'
+
+      - name: Check documentation with the current workflow version
+        run: |
+          node scripts/check-doc-links.mjs
+          node scripts/check-doc-links.mjs deploy/tempo-vps/cicd/README.md
+
+      - name: Checkout the validated historical candidate for rollback checks
+        if: steps.candidate.outputs.sha != github.sha
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ steps.candidate.outputs.sha }}
+          persist-credentials: false
+
+      - name: Install pinned Foundry and Anvil
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1.9.1
+        with:
+          version: v1.8.1
+          cache: false
+
+      - name: Install locked dependencies without production secrets
+        run: npm ci
+
+      - name: Prepare the pinned Python sandbox image
+        run: docker pull python:3.12-alpine@sha256:4c47124a8391cb7a9f571164147d154777cf012a4ece5f86097130d7a4478111
+
+      - name: Build and test Solidity locally
+        run: |
+          forge build --root contracts --skip-lint
+          forge test --root contracts --offline
+
+      - name: Build the fixture frontend and generate Next.js type declarations
+        env:
+          FRONTEND_MODE: fixture
+          HOSTED_AGENTS_URL: http://127.0.0.1:1
+        run: npm run build --workspace @agentfuel/frontend
+
+      - name: Check backend and frontend types
+        run: npm run typecheck:all
+
+      - name: Run the complete offline workspace suite
+        run: npm run test:all
+
+      - name: Run offline Tempo runtime, migration, RPC and journal checks
+        run: |
+          node --import tsx --test --test-concurrency=1 \
+            scripts/test/tempo-hosted-runtime.test.ts \
+            scripts/test/tempo-runtime-upgrade.test.ts \
+            scripts/test/tempo-vps-migrate.test.ts \
+            scripts/test/tempo-rpc.test.ts \
+            scripts/test/tempo-rpc-pacing.test.ts \
+            scripts/test/journal-chain.test.ts
+
+      - name: Check candidate documentation links when the historical version provides the command
+        run: npm run docs:check --if-present
+
+  deploy:
+    name: Deploy exact SHA to Tempo production
+    needs: ci
+    if: >-
+      github.repository == 'Kris77z/tabby-tempo' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      needs.ci.result == 'success' &&
+      (needs.ci.outputs.operation == 'release' || needs.ci.outputs.operation == 'rollback')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 110
+    permissions: {}
+    environment:
+      name: production
+      url: https://tempo.tabbyai.xyz
+    concurrency:
+      group: tempo-production
+      cancel-in-progress: false
+    steps:
+      # This job never checks out code, restores a cache, installs dependencies or downloads artifacts.
+      - name: Invoke the forced SSH command with the exact validated SHA
+        env:
+          RELEASE_SHA: ${{ needs.ci.outputs.sha }}
+          RELEASE_OPERATION: ${{ needs.ci.outputs.operation }}
+          TEMPO_DEPLOY_SSH_KEY: ${{ secrets.TEMPO_DEPLOY_SSH_KEY }}
+          TEMPO_DEPLOY_KNOWN_HOSTS: ${{ vars.TEMPO_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || { printf '%s\n' 'Invalid release SHA' >&2; exit 2; }
+          [[ "$RELEASE_OPERATION" == release || "$RELEASE_OPERATION" == rollback ]] || { printf '%s\n' 'Invalid release operation' >&2; exit 2; }
+          [[ -n "$TEMPO_DEPLOY_SSH_KEY" && -n "$TEMPO_DEPLOY_KNOWN_HOSTS" ]] || { printf '%s\n' 'Missing production SSH configuration' >&2; exit 2; }
+          umask 077
+          ssh_directory=$(mktemp -d "$RUNNER_TEMP/tempo-deploy-ssh.XXXXXX")
+          trap 'rm -rf -- "$ssh_directory"' EXIT
+          printf '%s\n' "$TEMPO_DEPLOY_SSH_KEY" > "$ssh_directory/key"
+          printf '%s\n' "$TEMPO_DEPLOY_KNOWN_HOSTS" > "$ssh_directory/known_hosts"
+          unset TEMPO_DEPLOY_SSH_KEY TEMPO_DEPLOY_KNOWN_HOSTS
+          ssh-keygen -y -P '' -f "$ssh_directory/key" > /dev/null
+          ssh-keygen -F 154.12.34.51 -f "$ssh_directory/known_hosts" > /dev/null
+          ssh -F /dev/null -T \
+            -i "$ssh_directory/key" \
+            -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o UpdateHostKeys=no -o VerifyHostKeyDNS=no \
+            -o "UserKnownHostsFile=$ssh_directory/known_hosts" -o GlobalKnownHostsFile=/dev/null \
+            -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no \
+            -o ForwardAgent=no -o ClearAllForwardings=yes \
+            -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
+            tabby-tempo-deploy@154.12.34.51 "$RELEASE_OPERATION $RELEASE_SHA"
