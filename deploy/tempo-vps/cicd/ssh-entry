@@ -1,0 +1,27 @@
+#!/usr/bin/python3 -I
+"""No shell, file transfer, user-provided paths or environment forwarding."""
+import os
+import re
+import sys
+
+ENGINE = '/usr/local/libexec/tabby-tempo/engine.py'
+PATTERN = re.compile(r'(release|rollback) ([0-9a-f]{40})\Z')
+
+
+def parse(value):
+    if not isinstance(value, str) or len(value) > 64:
+        raise ValueError('DEPLOY_COMMAND_INVALID')
+    matched = PATTERN.fullmatch(value)
+    if not matched:
+        raise ValueError('DEPLOY_COMMAND_INVALID')
+    return matched.groups()
+
+
+if __name__ == '__main__':
+    try:
+        operation, sha = parse(os.environ.get('SSH_ORIGINAL_COMMAND'))
+    except ValueError:
+        print('DEPLOY_COMMAND_INVALID', file=sys.stderr)
+        sys.exit(64)
+    os.execve('/usr/bin/sudo', ['sudo', '-n', '/usr/bin/python3', '-I', ENGINE, operation, sha],
+              {'PATH': '/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8'})
