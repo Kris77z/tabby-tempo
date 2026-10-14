@@ -1,6 +1,6 @@
 # Tempo CI/CD 运维说明
 
-本目录实现 GitHub CI 与 VPS 的受限应用发布入口。代码已在本地实现并验证，GitHub `production` 环境和 main 保护已配置，VPS 的 root 持有固定入口、本站 nginx 维护 include 和专用账户已安装；受限 SSH 认证配置正在核验。安装回执确认三个应用服务未停止、没有发布新应用、没有恢复私密数据；生产应用仍沿用成功基线与既有合约，尚待首次 PR 合并后的发布验收。实施进度见[本轮记录](../../../docs/tempo-cicd-20261014.md)，原服务器配置见[Tempo VPS 部署](../README.md)。
+本目录实现 GitHub CI 与 VPS 的受限应用发布入口。GitHub `production` 环境和 main 保护已配置；VPS 的 root 固定入口、本站 nginx 维护 include、专用账户和受限 SSH 认证已安装并验收。安装回执确认三个应用服务未停止、没有发布新应用、没有恢复私密数据；生产应用仍沿用成功基线与既有合约，尚待首次 PR 合并后的发布验收。实施进度见[本轮记录](../../../docs/tempo-cicd-20261014.md)，原服务器配置见[Tempo VPS 部署](../README.md)。
 
 ## 固定边界
 
@@ -19,6 +19,8 @@
 
 SSH 公钥由 root 管理，带 `restrict,command="/usr/local/libexec/tabby-tempo/ssh-entry"`。入口只接受 `release <40位小写SHA>` 或 `rollback <40位小写SHA>`；不提供 shell、上传、任意路径或环境转发。GitHub 使用独立部署私钥，不能使用日常 root SSH key。
 
+服务器原全局配置禁用公钥认证。安装器只在 `sshd_config` 末尾追加 `Match User tabby-tempo-deploy`：启用 publickey、禁用 password/keyboard-interactive、要求 `AuthenticationMethods publickey`，关闭 forwarding/TTY/user rc，并固定 `ForceCommand`。`sshd -t` 和 root、应用用户、nobody 的完整 effective 配置前后相等后才 reload SSH；失败恢复原配置。真实密钥探针已确认 shell、SCP、任意 SHA 均被拒绝。
+
 ## GitHub 配置与 CI
 
 [Tempo CI 工作流](../../../.github/workflows/tempo-ci.yml)在 PR 和 main push 上使用同一个 `Offline checks` job；候选校验在这个 required check 内执行，校验失败会使检查失败。CI token 仅有 `contents: read`，不注入生产 secret，不使用 `pull_request_target` 或跨事件发布，也不上传构建 artifact。
@@ -36,9 +38,9 @@ main 已要求最新分支上的 `Offline checks`（GitHub Actions app `15368`�
 
 ## 一次性安装
 
-固定入口已按基线 `a59d0230c3d6a33058998da40566f04fe3261cb4` 安装，BUILD_ID 为 `o0pAbXOA3yOoMP7KaivVM`。回执记录 `appServicesStopped=false`、`applicationDeployed=false`、`privateDataRestored=false`，并保留本站 nginx 配置修改前后摘要。受限 SSH 认证配置正在由主线程核验；首次生产应用发布尚未执行。
+固定入口已按基线 `a59d0230c3d6a33058998da40566f04fe3261cb4` 安装，BUILD_ID 为 `o0pAbXOA3yOoMP7KaivVM`。回执记录 `appServicesStopped=false`、`applicationDeployed=false`、`privateDataRestored=false`，并保留本站 nginx 与 SSH 配置修改前后摘要。本站维护开关已验证 503 后恢复 200，保护状态没有变化；首次生产应用发布尚未执行。
 
-安装只由运维人员通过既有管理通道执行。服务器要求 Linux、root、`/usr/bin/python3 >=3.12`，既有三个服务健康，私密状态静止，源文件与已成功的基线一致。安装器不会停应用、部署应用或恢复私密数据；它登记基线、安装固定入口和专用账户，仅给本站 nginx 配置加入维护 include。已有入口、账户、维护标记或冲突配置会使安装失败，不会被覆盖。
+安装只由运维人员通过既有管理通道执行。服务器要求 Linux、root、`/usr/bin/python3 >=3.12`，既有三个服务健康，私密状态静止，源文件与已成功的基线一致。安装器不会停应用、部署应用或恢复私密数据；它登记基线、安装固定入口和专用账户，给本站 nginx 配置加入维护 include，并为 deploy 用户配置公钥认证。已有入口、账户、维护标记或冲突配置会使安装失败，不会被覆盖。
 
 首次安装时，把已经审核的本目录文件放在 root 私有审核目录，并把部署**公钥文件**单独放在 root 私有目录。公钥内容不写入文档；应用目录内的可变副本不能作为后续自动执行入口。以下为一次性安装命令模板，当前已安装后不再执行：
 
@@ -48,7 +50,7 @@ sudo /usr/bin/python3 -I /root/tempo-cicd-reviewed/install.py --apply \
   --public-key-file /root/tempo-deploy-ed25519.pub
 ```
 
-完成后核对 `/var/lib/tabby-tempo-cicd/installation.json` 的基线、trusted 文件摘要、nginx 摘要及 `applicationDeployed=false`、`privateDataRestored=false`；核对两个专用账户仅属于自身组，以及三个应用服务和原 BUILD_ID。安装失败会撤销本次新增设施并恢复本站原 nginx 配置，应用代码和业务数据保持原样。
+完成后核对 `/var/lib/tabby-tempo-cicd/installation.json` 的基线、trusted 文件摘要、nginx/SSH 摘要及 `applicationDeployed=false`、`privateDataRestored=false`；核对两个专用账户仅属于自身组，以及三个应用服务和原 BUILD_ID。安装失败会撤销本次新增设施并恢复原 nginx/SSH 配置，应用代码和业务数据保持原样。
 
 ## 发布与回滚
 

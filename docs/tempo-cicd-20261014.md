@@ -1,6 +1,6 @@
 # Tempo CI/CD 实施记录 · 2026-10-14
 
-本轮已实现 GitHub CI 与受限 VPS 应用发布器，完成本地部署测试，并将 root 持有固定入口、本站 nginx 维护 include 和专用账户安装到 VPS；受限 SSH 认证配置正在核验。GitHub `production` 环境、生产配置与 main 分支保护已经由主线程设置。安装回执确认三个应用服务未停止、没有发布新应用、没有恢复私密数据；生产应用仍沿用原成功基线、Tempo 42431 合约和业务状态，尚待首次 PR 合并后的发布验收。
+本轮已实现 GitHub CI 与受限 VPS 应用发布器，完成本地部署测试，并将 root 固定入口、本站 nginx 维护 include、专用账户和受限 SSH 认证安装到 VPS，现场验收通过。GitHub `production` 环境、生产配置与 main 分支保护已经设置。安装回执确认三个应用服务未停止、没有发布新应用、没有恢复私密数据；生产应用仍沿用原成功基线、Tempo 42431 合约和业务状态，尚待首次 PR 合并后的发布验收。
 
 ## 已实现与验证
 
@@ -10,7 +10,7 @@
 
 [VPS 固定入口](../deploy/tempo-vps/cicd/engine.py)独立 fetch 固定仓库：release 仅允许当前 main tip，rollback 仅允许 main 祖先中的已成功版本及匹配构建包。部署检查既有源文件、合约源码、运行目录和私密状态；使用无生产凭据的构建账户，停三个关联服务后冷备、切换代码与构建、只读验收。失败恢复仅恢复代码，绝不自动恢复数据。完整步骤和错误处理见[运维说明](../deploy/tempo-vps/cicd/README.md)。
 
-本地验证结果：工作流门禁与 SSH mock 测试 16 项通过，部署 Python 测试 46 项通过，`actionlint` 通过。安装器的真实临时配置测试覆盖安装成功与失败清理；这些用例不构成 VPS 已安装或应用已发布的证据。三个 action pins 和 Foundry 版本已通过当前官方仓库 `git ls-remote` 重新核实，原始 stdout 保留在 ignored `.github/evidence/action-pins.log`。
+本地验证结果：工作流门禁与 SSH mock 测试 16 项通过，部署 Python 测试 48 项通过，`actionlint` 通过。安装器的真实临时配置测试覆盖安装成功、失败清理和 SSH 配置失败恢复；现场安装结果另由回执和只读核验确认。三个 action pins 和 Foundry 版本已通过官方仓库 `git ls-remote` 重新核实，原始 stdout 保留在 ignored `.github/evidence/action-pins.log`。
 
 初始成功基线 `a59d0230c3d6a33058998da40566f04fe3261cb4` 包含六组显式 Tempo 测试，但没有后来增加的 `docs:check`。回滚先运行当前版本的 Python/文档安全检查，再切历史代码；历史目标文档命令使用 `--if-present`，不依赖历史版本包含新 CI 文件。
 
@@ -24,7 +24,11 @@
 
 主线程已核对安装回执：baseline 为 `a59d0230c3d6a33058998da40566f04fe3261cb4`，BUILD_ID 为 `o0pAbXOA3yOoMP7KaivVM`，`appServicesStopped=false`、`applicationDeployed=false`、`privateDataRestored=false`。本站 nginx 配置修改前后 SHA-256 已写入回执。安装仅登记健康的既有版本并增加固定入口，生产应用没有切换到本轮代码。
 
-已安装固定 `engine.py` 的 SHA-256 为 `61ea676b5a980654928f39226d943505a9948e393017d743c3eb15579a272a93`，`state_guard.py` 为 `8ec48fa991a97d67359b23336844a02007b52fc058339249578b3eae89ac7efe`。受限 SSH 认证配置正在由主线程核验。首次 main 应用发布、SSH 断连后的持久回执处理和生产回滚仍需后续实际验收。
+已安装固定 `engine.py` 的 SHA-256 为 `61ea676b5a980654928f39226d943505a9948e393017d743c3eb15579a272a93`，`state_guard.py` 为 `8ec48fa991a97d67359b23336844a02007b52fc058339249578b3eae89ac7efe`。两个专用账户仅属于自身组，固定文件由 root 持有且不可被组或其他用户写入。
+
+服务器原本全局禁用公钥认证，现只在 `sshd_config` 末尾追加 deploy 用户的 `Match`，启用 publickey、禁用 password/keyboard-interactive、关闭 forwarding/TTY/user rc，并固定命令。`sshd -t` 通过，root、应用用户和 nobody 的完整 effective 配置前后相等。专用密钥实际探针：shell 与 SCP 返回 `DEPLOY_COMMAND_INVALID`，任意 40 位 SHA 返回 `RELEASE_NOT_CURRENT_MAIN`，均未进入应用切换。
+
+本站维护 flag 已实际验证 503 后恢复 200。安装后保护状态变化为空、guard issues 为空，原网关 journal 未变；首页、Dashboard、Onboarding 为 200，匿名 Hosted 为 `401 / HOSTED_AUTH_REQUIRED`，外部 Origin 为 403。首次 main 应用发布、SSH 断连后的持久回执处理和生产回滚仍需后续实际验收。
 
 worker 由 PID 1 持有，75 分钟运行预算加 30 分钟停止/失败恢复预算；Actions 生产 job 为 110 分钟，CI 为 45 分钟。此设置覆盖旧三服务最长共 1260 秒的启动预算，并预留停止、解包和健康检查时间。SSH 断连后先查看 request receipt，再决定是否重试，不能据客户端失败判定服务器事务已终止。
 
