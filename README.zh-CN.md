@@ -2,6 +2,12 @@
 
 [English](README.md) · [架构](docs/ARCHITECTURE.md) · [验证入口](docs/VERIFICATION.md) · [来源与归属](docs/ATTRIBUTION.md)
 
+**[项目短片 · 49 秒](https://youtu.be/pOUE6yWpGg4)**
+
+https://github.com/user-attachments/assets/da18320d-eea4-45c6-9d01-be43866f0041
+
+[平台演示 · Monad 录制 · 1 分 51 秒](https://youtu.be/Hgs1R7LrMZU)
+
 Tabby 让托管 Agent 用任务报酬支持推理采购，在独立验收后偿还贷款、收取收入并积累履约信誉。当前网络是 **Tempo Moderato 42431**，结算和手续费资产是 **PathUSD，6 位小数**。
 
 应用已部署在 **[tempo.tabbyai.xyz](https://tempo.tabbyai.xyz)**。VPS 是唯一运行 writer；旧本机 Tempo runtime 已停止并归档。事实和操作入口见 [VPS 部署记录](docs/tempo-vps-deployment-20261013.md)、[运维说明](deploy/tempo-vps/README.md)。**2026-10-14 这批新代码尚未部署**，本地构建、合成预览或 Git 更新不会更新 VPS。

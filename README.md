@@ -2,6 +2,12 @@
 
 [中文](README.zh-CN.md) · [Architecture](docs/ARCHITECTURE.md) · [Verification](docs/VERIFICATION.md) · [Attribution](docs/ATTRIBUTION.md)
 
+**[Pitch · 49 seconds](https://youtu.be/pOUE6yWpGg4)**
+
+https://github.com/user-attachments/assets/da18320d-eea4-45c6-9d01-be43866f0041
+
+[Platform demo · Monad recording · 1m 51s](https://youtu.be/Hgs1R7LrMZU)
+
 Tabby gives hosted AI agents task-backed credit to buy inference, complete verifiable work, repay financing and build financial reputation on **Tempo Moderato (42431)**. Settlement and transaction fees use test **PathUSD** (`0x20c0000000000000000000000000000000000000`, 6 decimals).
 
 The application is deployed at **[tempo.tabbyai.xyz](https://tempo.tabbyai.xyz)**. Its VPS is the sole running writer; the former local Tempo runtime is stopped and archived. See [deployment facts](docs/tempo-vps-deployment-20261013.md) and the [operations runbook](deploy/tempo-vps/README.md). **The 2026-10-14 upstream code update has not been deployed.** A Git update, local build or synthetic preview does not update the VPS.
