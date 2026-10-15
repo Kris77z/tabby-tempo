@@ -1,3 +1,4 @@
+import { externalServiceView } from "../services/hosted-agents/src/external/registry.js";
 import {missionSpecialists} from "../services/hosted-agents/src/specialists/catalog.js";
 import { HostedGoalExecutor, validateHostedGoalConfig, type HostedGoalConfig } from "../services/hosted-agents/src/goals/executor.js";
 import { HostedAutonomyExecutor, validateHostedAutonomyConfig, type HostedAutonomyConfig } from "../services/hosted-agents/src/autonomy-executor.js";
@@ -48,17 +49,17 @@ export async function loadHostedDaemonConfig(path: string): Promise<LoadedHosted
 }
 export async function startHostedDaemon(loaded: LoadedHostedDaemon, options: { recover?: boolean } = {}) {
   const game = createHostedGameExecutor(loaded.game, { gameDeadline: input => service.gameDeadline(input) }), task = createHostedTaskExecutor(loaded.task, { reward: input => game.rewardTask(input) });
-  const autonomous = loaded.config.autonomy ? new HostedAutonomyExecutor(task, loaded.config.autonomy, { shouldContinue: agentId => service.mayContinue(agentId) }) : undefined;
+  const autonomous = loaded.config.autonomy ? new HostedAutonomyExecutor(task, loaded.config.autonomy, { shouldContinue: agentId => service.mayContinue(agentId), games: game, admitGame: (parent,child) => service.admitAutonomyGame(parent.run.requestId,child.run.requestId,parent.agent.id) }) : undefined;
   const goals = loaded.config.goals ? new HostedGoalExecutor(loaded.config.goals, loaded.task, { control: (agentId,requestId) => service.goalControl(agentId,requestId) }) : undefined;
   const executor: HostedExecutor = { capabilities: {
-    ...(goals ? { goals: { maxPhases: 3, ...(goals.config.chainLookup?{chainLookup:{chainId:loaded.config.hosted.chainId,maxTargets:2}}:{}), specialists:missionSpecialists.map(({id,serviceId,name,output})=>({id,serviceId,name,output})), models: goals.config.models.map(m=>({id:m.id,pricePerCallRaw:m.priceRaw})) } } : {}),
+    ...(goals ? { goals: { maxPhases: 3, ...(goals.config.external?{external:{services:goals.config.external.services.map(s=>externalServiceView(s))}}:{}), ...(goals.config.chainLookup?{chainLookup:{chainId:loaded.config.hosted.chainId,maxTargets:2}}:{}), specialists:missionSpecialists.map(({id,serviceId,name,output})=>({id,serviceId,name,output})), models: goals.config.models.map(m=>({id:m.id,pricePerCallRaw:m.priceRaw})) } } : {}),
     ...(loaded.task.metered ? { inference: { priceRaw: loaded.task.metered.priceRaw, creditsRaw: loaded.task.metered.creditsRaw,
       models: loaded.task.metered.catalog.map(({ id, inputMicroCreditsPerToken, outputMicroCreditsPerToken }) => ({ id, inputMicroCreditsPerToken, outputMicroCreditsPerToken })) } } : {}),
-    ...(autonomous ? { autonomy: { maxTasks: autonomous.config.maxTasks, durationMs: autonomous.config.durationMs, plannerPriceRaw: autonomous.config.plannerPriceRaw } } : {}),
+    ...(autonomous ? { autonomy: { maxTasks: autonomous.config.maxTasks, durationMs: autonomous.config.durationMs, plannerPriceRaw: autonomous.config.plannerPriceRaw, ...(autonomous.config.games?{games:{maxGames:autonomous.config.games.maxGames,rewardKinds:autonomous.config.games.rewardKinds}}:{}) } } : {}),
   }, execute(input) { if(input.run.action === "goal"){ if(!goals)throw new HostedError("HOSTED_GOAL_NOT_CONFIGURED",503);return goals.execute(input); } if (input.run.action === "autonomous") { if (!autonomous) throw new HostedError("HOSTED_AUTONOMY_NOT_CONFIGURED", 503); return autonomous.execute(input); } return ["provision", "deposit", "task", "reward-task", "metered-task"].includes(input.run.action) ? task.execute(input) : game.execute(input); }, finance: agent => task.finance(agent),
     canRecoverTerminal: input => input.run.action === "autonomous" && autonomous ? autonomous.canRecoverTerminal(input) : Promise.resolve(false) };
   let service: HostedService;
-  try { service = await HostedService.open(loaded.config.hosted, executor, options); } catch (error) { await game.close(); throw error; }
+  try { service = await HostedService.open(loaded.config.hosted, executor, {...options,...(autonomous?.config.games ? {autonomyFunding:(input: import("../services/hosted-agents/src/types.js").HostedExecution)=>autonomous.resolveFundingTarget(input)} : {})}); } catch (error) { await game.close(); throw error; }
   const server = createHostedHttpServer(service);
   let closing: Promise<void> | undefined;
   const close = () => closing ??= (async () => {

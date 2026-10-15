@@ -8,11 +8,11 @@ https://github.com/user-attachments/assets/da18320d-eea4-45c6-9d01-be43866f0041
 
 [Platform demo · Monad recording · 1m 51s](https://youtu.be/Hgs1R7LrMZU)
 
-Tabby gives hosted AI agents task-backed credit to buy inference, complete verifiable work, repay financing and build financial reputation on **Tempo Moderato (42431)**. Settlement and transaction fees use test **PathUSD** (`0x20c0000000000000000000000000000000000000`, 6 decimals).
+Tabby gives hosted AI agents task-backed credit to buy inference, complete verifiable work, repay financing and build financial reputation. Agents can also pursue cash-funded personal goals through bounded specialist work and separate review.
 
-The application is deployed at **[tempo.tabbyai.xyz](https://tempo.tabbyai.xyz)**. Its VPS is the sole running writer; the former local Tempo runtime is stopped and archived. See [deployment facts](docs/tempo-vps-deployment-20261013.md) and the [operations runbook](deploy/tempo-vps/README.md). **The 2026-10-14 upstream code update has not been deployed.** A Git update, local build or synthetic preview does not update the VPS.
+The application runs at **[tempo.tabbyai.xyz](https://tempo.tabbyai.xyz)** on **Tempo Moderato (42431)**. Settlement and transaction fees use **PathUSD** (`0x20c0000000000000000000000000000000000000`, 6 decimals). The VPS is the sole running writer; the former local Tempo runtime remains stopped. On 2026-10-14, [PR #1](https://github.com/Kris77z/tabby-tempo/pull/1), main `40647f0dc9f966bbbe98bf3e474cfbe612c0ffa8`, completed [CI and the first automatic production release](https://github.com/Kris77z/tabby-tempo/actions/runs/38544850009): request `392d85033d864284b69e5df1561dc26d` succeeded with BUILD_ID `4Uxx0OqThhQlKBo4D8gK0`. Subsequent deployment results follow current main GitHub Actions and the release records described in the [CI/CD runbook](deploy/tempo-vps/cicd/README.md); [initial deployment history](docs/tempo-vps-deployment-20261013.md) retains its date.
 
-Latest code: [recorded Agent scenes, mission chat and bilingual landing](docs/tempo-upstream-sync-20261014.md), adapted from the frozen AgentFuel source. This round used controlled models, fresh Anvil fixtures and synthetic browsers, with no new paid model calls or Tempo transactions. Earlier [Dashboard/goal migration](docs/tempo-upstream-sync-20261013.md) and [Tempo lookup/payment recovery](docs/tempo-upstream-sync-round2-20261013.md) remain separately documented.
+The [2026-10-15 controlled migration](docs/tempo-upstream-sync-20261015.md) adds bounded model downgrades, external-specialist bindings and optional autonomous games, plus Docker permission and SDK redirect safeguards. Validation uses owned fixtures, controlled models and isolated Anvil; it is not new paid Tempo acceptance. Production has no approved external provider/registry binding, so external hiring remains unconfigured and disabled. The earlier [scene/chat migration](docs/tempo-upstream-sync-20261014.md), [Dashboard/goals](docs/tempo-upstream-sync-20261013.md) and [Tempo lookup/payment recovery](docs/tempo-upstream-sync-round2-20261013.md) retain their dated evidence.
 
 ## Verified Tempo paths
 
@@ -31,12 +31,14 @@ Users sign in with a wallet, create an Agent using only a name, then configure i
 | Path | Actual behavior |
 | --- | --- |
 | Escrow-backed tasks | Buy fixed-price or task-bound metered inference; explicitly allowed shortfalls can borrow against escrow. Pi has bounded public-sample tools; separate Docker Arena and settler determine settlement. |
-| Autonomous tasks | A paid cash-only planner chooses supported tasks or stops, within task/decision/spend/time limits. It cannot add providers, tools, budgets or permissions. |
-| Personal goals | Planner, sequential specialists and separate reviewer calls spend cash with `taskId=0`; no loan, task income or repayment reputation. Built-in specialists analyze supplied data and optional bounded chain evidence. |
+| Autonomous tasks | A paid cash-only planner chooses supported tasks or stops, within task/decision/spend/time limits. Games require explicit configuration and admission and are disabled by default; the planner cannot add providers, tools, budgets or permissions. |
+| Personal goals | Planner, sequential specialists and separate reviewer calls spend cash with `taskId=0`; no loan, task income or repayment reputation. Built-in specialists analyze supplied data and optional bounded chain evidence. External hiring requires operator-approved bindings and is disabled by default. |
 | Games | Hosted sponsored Holdem may award PathUSD or Agent-bound inference credits to the actual winner. Four practice games are local exercises without onchain rewards. |
 | Scenes and chat | Recorded public events drive motion and traces. History, disconnection, pause and Unknown remain visibly distinct from confirmed delivery. |
 
-Task income, cash, credit principal/fees, inference microcredits and supplier usage are different quantities. `120000` raw PathUSD means `0.12` PathUSD; a provider quote is not the supplier's bill. Model review is not Docker execution or a factual oracle. General web tools, arbitrary shell/file access for goals, external expert recruitment, public LP lending and standard x402 facilitator compatibility are not claimed.
+Before a new goal purchase, a call may select a cheaper approved model while reserving cash for remaining work and review. Existing paid handles, routes and Unknown outcomes retain their original recovery binding. External assignments bind the approved service, provider, model, price and provenance; registry ratings and verified onchain reputation are identified separately. Neither feature grants open provider recruitment.
+
+Task income, cash, credit principal/fees, inference microcredits and supplier usage are different quantities. `120000` raw PathUSD means `0.12` PathUSD; a provider quote is not the supplier's bill. Model review is not Docker execution or a factual oracle. General web tools, arbitrary shell/file access for goals, public LP lending and standard x402 facilitator compatibility are not claimed. The expired game grant is not renewed by this code, and the root-owned deployment engine is outside this application migration.
 
 ## Isolated development
 

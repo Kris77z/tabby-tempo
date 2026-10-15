@@ -46,6 +46,58 @@ test("actual Docker executes all four problems without exposing answers", { time
   }
 });
 
+test("actual Docker reads a submission created under private service umask 0077 in an isolated process", { timeout: 30000 }, async () => {
+  // Never change the test worker's process-wide umask: other suites may write
+  // private state concurrently. The child reproduces systemd's production mask.
+  const moduleUrl = new URL("../src/docker.ts", import.meta.url).href;
+  const script = `import {DockerExecutor} from ${JSON.stringify(moduleUrl)};
+process.umask(0o077);
+const runner=new DockerExecutor();await runner.ready();
+const result=await runner.execute(${JSON.stringify(correct["sum-integers"])},'[4,8,-3]\\n');
+console.log(JSON.stringify({umask:process.umask(),result}));`;
+  const observed = await new Promise<{ code: number | null; stdout: string; stderr: string }>((resolve, reject) => {
+    const child = spawn(process.execPath, ["--import", "tsx", "--input-type=module", "-e", script], { stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "", stderr = "";
+    child.stdout.on("data", part => { stdout += part; }); child.stderr.on("data", part => { stderr += part; });
+    child.on("error", reject); child.on("close", code => resolve({ code, stdout, stderr }));
+  });
+  assert.equal(observed.code, 0, observed.stderr);
+  const result = JSON.parse(observed.stdout); assert.equal(result.umask, 0o077);
+  assert.equal(result.result.failure, undefined, JSON.stringify(result.result)); assert.equal(result.result.exitCode, 0);
+  assert.equal(JSON.parse(result.result.stdout), 9);
+});
+
+test("unreadable/missing staging fails before the trusted marker; candidate syntax/permission/memory errors remain code failures", { timeout: 60000 }, async () => {
+  const directory = await mkdtemp(join(tmpdir(), "arena-staging-failure-"));
+  try {
+    for (const sabotage of ["unreadable", "missing"] as const) {
+      const wrapper = join(directory, `docker-${sabotage}`);
+      const mutation = sabotage === "unreadable" ? 'chmod 000 "$staging/main.py"' : 'rm "$staging/main.py"';
+      await writeFile(wrapper, `#!/bin/sh
+if [ "$1" = create ]; then
+  for argument in "$@"; do
+    case "$argument" in
+      type=bind,src=*,dst=/submission,readonly)
+        staging="\${argument#type=bind,src=}"
+        staging="\${staging%,dst=/submission,readonly}"
+        ${mutation} || exit 90
+        ;;
+    esac
+  done
+fi
+exec docker "$@"
+`, { mode: 0o700 });
+      await assert.rejects(new DockerExecutor({ dockerBin: wrapper }).execute(correct["sum-integers"], "[]\n"), /DOCKER_START_FAILED/);
+    }
+    const runner = new DockerExecutor();
+    for (const code of ["if syntax is broken:\n", "raise PermissionError('candidate error')\n", "bytearray(100*1024*1024)\n"]) {
+      const result = await runner.execute(code, "");
+      assert.equal(result.failure, "runtime", JSON.stringify(result));
+      assert.notEqual(result.exitCode, 0);
+    }
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
 test("actual container is nonroot/read-only/offline, sees code only and receives no host env", { timeout: 30000 }, async () => {
   const directory = await mkdtemp(join(tmpdir(), "arena-host-secret-"));
   process.env.ARENA_TEST_SECRET = "only-on-host";

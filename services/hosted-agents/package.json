@@ -9,6 +9,8 @@
   "dependencies": {
     "ethers": "^6.0.0",
     "@agentfuel/pi-loop": "*",
-    "@agentfuel/arena": "*"
+    "@agentfuel/arena": "*",
+    "@agentfuel/sdk": "*",
+    "@agentfuel/erc8004": "*"
   }
 }

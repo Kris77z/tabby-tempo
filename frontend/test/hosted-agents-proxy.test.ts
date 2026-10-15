@@ -265,3 +265,9 @@ test("scene activities preserve ordered public facts and reject private or malfo
     const rejected=await snapshot(invalid);assert.equal(rejected.status,503);assert.deepEqual(await rejected.json(),{error:"HOSTED_UNAVAILABLE"});
   }
 });
+
+test("new funding/game and external identities project public facts without private routes", async()=>{
+ const service={id:"external-writer-cheap",name:"Synthetic External Writer",taskType:"writer",serviceId:"tabby/external/writer",modelId:"cheap",provider:"0x"+"1".repeat(40),priceRaw:"10000",identity:{chainId:"42431",registry:"0x"+"2".repeat(40),agentId:"73",wallet:"0x"+"1".repeat(40)},reputation:{score:null,samples:0,source:"registry"},endpoint:"PRIVATE_ENDPOINT",keyFile:"PRIVATE_KEY"};
+ const response=await hostedAgentsRequest(request("/agents"),{...config,fetcher:(async()=>Response.json({agents:[],runs:[{requestId:"paused",fundingNeed:"reward-tokens",result:{autonomousGames:2},privateRoute:"PRIVATE_ROUTE"}],models:[],capabilities:{goals:{maxPhases:3,models:[],external:{services:[service]}},autonomy:{maxTasks:2,games:{maxGames:2,rewardKinds:["llm-credits"],privateKey:"PRIVATE_KEY"}}}}))as typeof fetch});
+ assert.equal(response.status,200);const body=await response.json();assert.equal(body.runs[0].fundingNeed,"reward-tokens");assert.equal(body.runs[0].result.autonomousGames,2);assert.equal(body.capabilities.goals.external.services[0].identity.chainId,"42431");assert.equal(body.capabilities.goals.external.services[0].reputation.score,null);assert.doesNotMatch(JSON.stringify(body),/PRIVATE|endpoint|keyFile|privateRoute|privateKey/);
+});

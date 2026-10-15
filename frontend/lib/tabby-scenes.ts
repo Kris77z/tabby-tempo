@@ -99,7 +99,7 @@ function labelFor(scene:HostedScene,state:HostedActivityState,evidence:HostedAct
   case 'idle':return state==='queued'?'请求排队 · 尚未执行':'等待下一项目标';
   case 'decision':return terminal?'决策已保存':state==='waiting'?'等待下一轮决策':'读取目标 · 规划步骤';
   case 'chain-lookup':return terminal?'链上快照已取得':'查询链上来源';
-  case 'specialists':return state==='selected'?'已选中内置专家':state==='waiting'?'筛选可调用角色':'读取内置专家目录';
+  case 'specialists':return state==='selected'?'已选中专家':state==='waiting'?'筛选可调用服务':'读取专家目录';
   case 'task':return terminal?'接单已确认':state==='selected'?'已选择报酬任务':state==='waiting'?'接单待确认':'查找托管报酬任务';
   case 'funding':return terminal?'资金状态已确认':'核对现金 / 额度 / Gas';
   case 'credit':return terminal?'信用支付已确认':state==='waiting'?'信用支付待确认':'核对本次任务授信';
@@ -120,7 +120,7 @@ function objectsFor(scene:HostedScene,activity:ReturnType<typeof fallback>|Hoste
  const subject=activity.subject,symbol=settlementSymbol(e.chainId);
  if(scene==='specialists'){
   const candidates=e.candidateIds??[];
-  const rows=candidates.map(id=>roleObject(id,context.capabilities?.goals?.specialists?.find(s=>s.id===id)?.name,subject?.id===id&&activity.state==='selected'));
+  const rows=candidates.map(id=>roleObject(id,context.capabilities?.goals?.external?.services.find(s=>s.id===id)?.name??context.capabilities?.goals?.specialists?.find(s=>s.id===id)?.name,subject?.id===id&&activity.state==='selected'));
   if(subject&&!rows.some(r=>r.id===(resolveSpecialist(subject.id)?.id??subject.id)))rows.push(roleObject(subject.id,subject.name,activity.state==='selected'));
   return rows.slice(0,3);
  }
@@ -130,7 +130,7 @@ function objectsFor(scene:HostedScene,activity:ReturnType<typeof fallback>|Hoste
   const snapshot=context.finance?.status==='confirmed'&&!context.history&&!context.activity&&['task','reward-task','metered-task','autonomous'].includes(run?.action??'')&&e.blockNumber!==undefined&&context.finance.block.number>=e.blockNumber?context.finance:undefined;
   return [{id:'cash',name:'结算收入',label:'CASH',kind:'cash',detail:e.residualRaw!==undefined?`${Number(e.residualRaw)/1e6} ${symbol}`:undefined},{id:'debt',name:'实际还款',label:'DEBT',kind:'credit',detail:e.repaidRaw!==undefined?`${Number(e.repaidRaw)/1e6} ${symbol}`:undefined},...(run?.action==='goal'?[{id:'receipt',name:'结算凭证',label:'RECEIPT',kind:'receipt',detail:e.txHash}]:[{id:'reputation',name:snapshot?'已核验信誉快照':'信誉待刷新',label:snapshot?`REP ${snapshot.credit.score}`:'REP ...',kind:'reputation',detail:snapshot?`InferScore ${snapshot.credit.score} · 区块 #${snapshot.block.number} · ${snapshot.observedAt}（快照值，不表示本次增长）`:'尚未取得本次结算之后的信誉快照'}])];
  }
- if(subject?.kind==='specialist')return [roleObject(subject.id,subject.name,true),{id:'output',name:'阶段产出',label:'OUTPUT',kind:'artifact',detail:context.history?undefined:(run?.mission??run?.result?.mission)?.phases.find(p=>resolveSpecialist(p.taskType)?.id===subject.id)?.output?.slice(0,160)}];
+ if(subject?.kind==='specialist'||subject?.kind==='agent'&&['specialists','execution'].includes(scene))return [roleObject(subject.id,subject.name,true),{id:'output',name:'阶段产出',label:'OUTPUT',kind:'artifact',detail:context.history?undefined:(run?.mission??run?.result?.mission)?.phases.find(p=>resolveSpecialist(p.taskType)?.id===subject.id)?.output?.slice(0,160)}];
  const defaults:Record<HostedScene,SceneObject>={
   onboarding:{id:'identity',name:'链上身份',label:'AGENT',kind:'agent'},idle:{id:'goal',name:'目标纸条',label:'GOAL',kind:'note'},decision:{id:'goal',name:'目标与决策',label:'GOAL',kind:'note'},'chain-lookup':{id:'chain',name:'链上证据',label:'CHAIN',kind:'chain'},specialists:{id:'catalog',name:'内置专家目录',label:'ROLES',kind:'specialist'},task:{id:'task-board',name:'托管报酬任务板',label:'TASKS',kind:'task'},funding:{id:'funds',name:'资金',label:'CASH',kind:'cash'},credit:{id:'credit',name:'本次信用支付',label:'CREDIT',kind:'credit'},model:{id:'model',name:'模型网关',label:'MODEL',kind:'model'},execution:{id:'terminal',name:'执行终端',label:'EXEC',kind:'terminal'},review:{id:'review',name:'复核工作台',label:'REVIEW',kind:'review'},game:{id:'table',name:'对局桌',label:'GAME',kind:'game'},settlement:{id:'receipt',name:'结算凭证',label:'RECEIPT',kind:'receipt'},delivery:{id:'artifact',name:'交付物',label:'OUTPUT',kind:'artifact'},interruption:{id:'request',name:'原请求',label:'REQUEST',kind:'note'},
  };
@@ -158,7 +158,7 @@ export function tabbyScene(run?:HostedRun,context:TabbySceneContext={}):TabbySce
  const pose:TabbyPose=activity.state==='revising'?'revise':['blocked','failed','paused','reconciling','stopping','cancelled','refunded'].includes(activity.state)?'blocked':activity.state==='waiting'||activity.state==='queued'?'rest':activity.scene==='idle'?'rest':activity.scene==='decision'?'read':activity.scene==='specialists'?'hunt':activity.scene==='chain-lookup'?'inspect':activity.scene==='task'?'read':['funding','credit'].includes(activity.scene)?'pay':activity.scene==='game'?'play':activity.scene==='review'?'hand':activity.scene==='delivery'?'hand':activity.scene==='settlement'?'inspect':activity.scene==='onboarding'?'think':'work';
  const phaseId='phaseId' in activity?activity.phaseId:undefined;
  const earlier=run?.activities?.filter(event=>!latest||event.seq<=latest.seq)??[];
- const selectedFact=activity.subject?.kind==='specialist'?activity.subject:phaseId&&['model','funding','credit'].includes(activity.scene)?earlier.findLast(event=>event.phaseId===phaseId&&event.subject?.kind==='specialist')?.subject:undefined;
+ const selectedFact=activity.subject&&['specialist','agent'].includes(activity.subject.kind)?activity.subject:phaseId&&['model','funding','credit'].includes(activity.scene)?earlier.findLast(event=>event.phaseId===phaseId&&event.subject&&['specialist','agent'].includes(event.subject.kind))?.subject:undefined;
  let selected=selectedFact?roleObject(selectedFact.id,selectedFact.name):undefined;
  if(phaseId==='review'||phaseId==='revision-review')selected=roleObject('reviewer');
  if(phaseId==='revision'){const phase=(run?.mission??run?.result?.mission)?.phases.at(-1);if(phase)selected=roleObject(phase.taskType);}

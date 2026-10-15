@@ -8,7 +8,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { setDefaultStreamFn } from "@earendil-works/pi-agent-core";
 import { DockerExecutor, type Execution } from "@agentfuel/arena/docker";
 import type { Json } from "@agentfuel/sdk";
-import { runProviderSolver, validateSolveSpec, type ProviderSolveOptions, type ProviderSolveState, type SolveSpec } from "../src/provider.js";
+import { runProviderSolver, providerRequestForTier, validateSolveSpec, type ProviderSolveOptions, type ProviderSolveState, type SolveSpec } from "../src/provider.js";
 import { SessionStore } from "../src/session.js";
 import { PUBLIC_SAMPLE, publicSampleFor } from "../src/public-sample.js";
 import { problemCatalog } from "@agentfuel/arena";
@@ -228,6 +228,34 @@ test("refueling between rounds preserves prior response and tool feedback", asyn
   assert.equal(paused.phase, "AwaitingFunds"); assert.equal(paused.rounds.length, 1); assert.equal(calls, 1);
   funded = true; const complete = await runProviderSolver(directory, input, options);
   assert.equal(complete.phase, "Delivered"); assert.equal(calls, 2); assert.deepEqual(runner.calls, [wrong, good]);
+}));
+
+test("budget admission downgrades a later strong round in the same Pi session and keeps tool feedback", async () => directoryTest(async directory => {
+  const input=spec({tiers:["strong","strong","strong"]}),runner=new ControlledRunner();let calls=0,admissions=0;
+  const options:ProviderSolveOptions={routes,runner,beforeDispatch:async(_body,round)=>{admissions++;if(round===1)return{tier:"cheap"};},invoke:async(tier,body)=>{
+    calls++;assert.equal(body.model,routes[tier].model);
+    if(calls===2){assert.equal(tier,"cheap");assert.equal("reasoning_effort" in body,false);assert.deepEqual(body.thinking,{type:"disabled"});assert.ok((body.messages as {role:string}[]).some(m=>m.role==="tool"));}
+    return response(calls===1?wrong:good,routes[tier].model);
+  }};
+  const result=await runProviderSolver(directory,input,options);assert.equal(result.phase,"Delivered");assert.equal(calls,2);assert.equal(admissions,2);
+  assert.deepEqual(result.rounds.map(r=>[r.tier,r.model,r.budgetFallbackFrom]),[["strong",routes.strong.model,undefined],["cheap",routes.cheap.model,"strong"]]);
+  assert.deepEqual(runner.calls,[wrong,good]);assert.deepEqual(await runProviderSolver(directory,input,options),JSON.parse(JSON.stringify(result)));assert.equal(calls,2);
+}));
+
+test("an unknown downgraded round recovers its original cheap route without another admission or dispatch", async () => directoryTest(async directory => {
+  const input=spec({tiers:["strong","strong","strong"]}),runner=new ControlledRunner();let calls=0,admissions=0,recover=false;let sent:Record<string,Json>|undefined;
+  const options:ProviderSolveOptions={routes,runner,beforeDispatch:async()=>{admissions++;return{tier:"cheap"};},invoke:async(tier,body)=>{calls++;assert.equal(tier,"cheap");sent=structuredClone(body);throw Error("lost response");},recoverResponse:async body=>{
+    assert.deepEqual(body,sent);return recover?response(good,routes.cheap.model):undefined;
+  }};
+  assert.equal((await runProviderSolver(directory,input,options)).phase,"Unknown");
+  assert.equal((await runProviderSolver(directory,input,options)).phase,"Unknown");assert.equal(calls,1);assert.equal(admissions,1);
+  recover=true;const done=await runProviderSolver(directory,input,options);assert.equal(done.phase,"Delivered");assert.equal(done.rounds[0].tier,"cheap");assert.equal(calls,1);assert.equal(admissions,1);
+}));
+
+test("budget admission override is valid only for a strong-to-cheap downgrade", async () => directoryTest(async directory => {
+  let calls=0;const result=await runProviderSolver(directory,spec(),{routes,runner:new ControlledRunner(),beforeDispatch:async()=>({tier:"cheap"}),invoke:async tier=>{calls++;return response(good,routes[tier].model);}});
+  assert.equal(result.phase,"AwaitingFunds");assert.equal(result.reason,"INVALID_SOLVE_ADMISSION_ROUTE");assert.equal(calls,0);assert.equal(result.rounds.length,0);
+  assert.deepEqual(providerRequestForTier({model:"strong",messages:[],reasoning_effort:"low",max_completion_tokens:256},"cheap","cheap").thinking,{type:"disabled"});
 }));
 
 

@@ -24,7 +24,7 @@ export async function verifyMagpieBinary(binaryPath: string, officialBaseline = 
 }
 
 export async function stopMagpie(child: ChildProcess) {
-  if (child.exitCode !== null || !child.pid) return;
+  if (child.exitCode !== null || child.signalCode !== null || !child.pid) return;
   const exited = once(child, "exit"); child.kill("SIGTERM");
   if (!await Promise.race([exited.then(() => true), delay(2000).then(() => false)])) { child.kill("SIGKILL"); await exited; }
 }
@@ -45,7 +45,7 @@ export async function startMagpie(options: { binary: string; stateDirectory: str
   });
   await writeFile(join(config, "providers.json"), JSON.stringify({ providers, noAutoGroups: true }), { mode: 0o600 });
   await writeFile(join(config, "settings.json"), JSON.stringify({ noAutoUpdate: true, noStats: true, proxy: "direct", lightweight: true }), { mode: 0o600 });
-  // Inert discovery commands also keep the macOS Keychain out of this test process.
+  // Explicit routing plus inert discovery commands keep host agent credentials out of Magpie.
   const inert = join(state, "bin"); await mkdir(inert, { recursive: true });
   for (const name of ["security", "secret-tool", "claude", "codex", "cursor-agent", "devin", "grok", "kiro-cli"]) {
     await writeFile(join(inert, name), "#!/bin/sh\nexit 1\n", { mode: 0o755 });

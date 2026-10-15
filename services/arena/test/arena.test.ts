@@ -11,6 +11,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { Contract, ContractFactory, JsonRpcProvider, keccak256, NonceManager, toUtf8Bytes, Wallet, ZeroAddress, type Signer } from "ethers";
 import { AUTH_TYPES } from "../../underwriter/src/underwriter.js";
 import { ArenaController } from "../src/controller.js";
+import { DEFAULT_IMAGE } from "../src/docker.js";
 import { ArenaSettler } from "../src/settler.js";
 import { createArenaHttpServer } from "../src/http.js";
 import { readControllerToken, requestSettlement } from "../src/ipc.js";
@@ -147,11 +148,37 @@ test("container startup timeout never settles failure or slashes an active task 
     f = await fixture(local.rpc, directory, true);
     settler = new ArenaSettler(f.config, key(4), f.provider); await settler.start();
     await f.draw(f.taskIds[0], 1);
-    const wrapper = join(directory, "docker-delayed");
-    await writeFile(wrapper, '#!/bin/sh\nif [ "$1" = start ]; then sleep 1; fi\nexec docker "$@"\n', { mode: 0o700 });
+    const wrapper = join(directory, "docker-startup-timeout"), traceFile = join(directory, "docker-commands");
+    // Isolate this infrastructure failure from the shared daemon: normal ready
+    // probes and create succeed, only start hangs before the trusted marker.
+    // Real daemon/image/container behavior remains covered by docker.test.ts.
+    const traceLiteral = "'" + traceFile.replaceAll("'", "'\\''") + "'";
+    await writeFile(wrapper, `#!/bin/sh
+set -eu
+{ printf '%s\\0' "$@"; printf '\\n'; } >> ${traceLiteral}
+case "$1" in
+  info) printf 'fixture-docker\\n' ;;
+  image) test "$2" = inspect; printf '[{}]\\n' ;;
+  create) printf 'fixture-container\\n' ;;
+  start) exec sleep 30 ;;
+  rm) exit 0 ;;
+  *) exit 90 ;;
+esac
+`, { mode: 0o700 });
     controller = new ArenaController(f.config, { dockerBin: wrapper, timeoutMs: 600, startupTimeoutMs: 100 }, f.provider);
     const loan = await read(f.manager, "getLoan", [f.taskIds[0]]);
-    await assert.rejects(controller.submit({ taskId: f.taskIds[0], code: "import json,sys\nprint(sum(json.load(sys.stdin)))\n" }), /DOCKER_START_TIMEOUT/);
+    await assert.rejects(controller.submit({ taskId: f.taskIds[0], code: "import json,sys\nprint(sum(json.load(sys.stdin)))\n" }), { message: "DOCKER_START_TIMEOUT" });
+    const commands = (await readFile(traceFile, "utf8")).trimEnd().split("\n").map(line => line.split("\0").slice(0, -1));
+    assert.deepEqual(commands.map(args => args[0]), ["info", "image", "create", "start", "rm"]);
+    assert.deepEqual(commands[0], ["info", "--format", "{{.ServerVersion}}"]);
+    assert.deepEqual(commands[1], ["image", "inspect", DEFAULT_IMAGE]);
+    const created = commands[2], name = created[created.indexOf("--name") + 1];
+    assert.match(name, /^agentfuel-arena-[0-9a-f-]{36}$/);
+    assert.deepEqual(commands[3], ["start", "--attach", "--interactive", name]);
+    assert.deepEqual(commands[4], ["rm", "--force", name]);
+    const mount = created[created.indexOf("--mount") + 1], staging = /^type=bind,src=(.*),dst=\/submission,readonly$/.exec(mount)?.[1];
+    assert.ok(staging, "the timed-out submission must retain its owned read-only mount until cleanup");
+    await assert.rejects(stat(staging), { code: "ENOENT" });
     assert.equal((await read(f.escrow, "getTask", [f.taskIds[0]])).status, 2n);
     assert.deepEqual(Array.from(await read(f.manager, "getLoan", [f.taskIds[0]])), Array.from(loan));
     await assert.rejects(stat(join(f.config.ipcDirectory, "settlements.json")), { code: "ENOENT" });

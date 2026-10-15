@@ -14,3 +14,12 @@ test('all imported specialists follow the real phase state, including paused exe
  assert.equal(expertAssignments({...current,status:'Paused'}).find(r=>r.id===id)?.halted,true);
  }
 });
+
+test('external execution selects the real service identity and does not double count the internal role',()=>{
+ const external={id:'external-writer-cheap',name:'Independent Writer',taskType:'writer',serviceId:'peer/writer',modelId:'cheap',provider:'0x'+'1'.repeat(40),priceRaw:'10000',reputation:{score:4.5,samples:4,source:'registry' as const}};
+ const current:HostedRun={...run,mission:{stage:'executing',phases:[{name:'writing',taskType:'writer',goal:'facts',external}],calls:[]}};
+ const roles=expertAssignments(current,[external]);assert.equal(roles[0].id,external.id);assert.equal(roles[0].active,true);
+ assert.equal(roles.find(r=>r.id==='writer')?.active??false,false);
+ const complete=expertAssignments({...current,status:'Succeeded',mission:{...current.mission!,stage:'completed',phases:[{...current.mission!.phases[0],output:'facts'}]}},[external]);
+ assert.equal(complete.find(r=>r.id===external.id)?.used,1);assert.equal(complete.find(r=>r.id==='writer')?.used??0,0);
+});

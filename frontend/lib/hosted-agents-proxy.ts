@@ -1,4 +1,4 @@
-import { validateGoalView } from "../../services/hosted-agents/src/goal-types.js";
+import { validateGoalView, validateExternalService } from "../../services/hosted-agents/src/goal-types.js";
 import { HOSTED_ACTIVITY_LIMIT, validateHostedActivity } from "../../services/hosted-agents/src/scene-types.js";
 const COOKIE = "agentfuel_hosted_session";
 const responseHeaders = { "cache-control": "private, no-store", "x-content-type-options": "nosniff" };
@@ -17,7 +17,7 @@ function agent(value: unknown) {
   return result;
 }
 function run(value: unknown) {
-  const result = select(value, ["requestId", "agentId", "action", "fundingFor", "rewardKind", "amountRaw", "status", "createdAt", "updatedAt", "reservedRaw", "chargedRaw", "recoverable", "reason", "goal", "stopRequested"]);
+  const result = select(value, ["requestId", "agentId", "action", "fundingFor", "rewardKind", "amountRaw", "status", "createdAt", "updatedAt", "reservedRaw", "chargedRaw", "recoverable", "reason", "goal", "stopRequested", "fundingNeed"]);
   if (object(value) && value.mission !== undefined) result.mission = validateGoalView(value.mission);
   if (object(value) && value.testSponsorship !== undefined) result.testSponsorship = select(value.testSponsorship, ["grantId", "digest", "ordinal"]);
   if (object(value) && value.activities !== undefined) {
@@ -31,7 +31,7 @@ function run(value: unknown) {
     });
   }
   if (object(value) && value.result !== undefined) {
-    result.result = select(value.result, ["phase", "terminal", "success", "chargedRaw", "reason", "taskId", "paymentId", "txHash", "matchId", "cashRaw", "principalRaw", "feeRaw", "rewardRaw", "creditsGranted", "creditsUsed", "chainId", "acceptTxHash", "paymentTxHash", "fromCashRaw", "fromCreditRaw", "refundedRaw", "autonomousTasks"]);
+    result.result = select(value.result, ["phase", "terminal", "success", "chargedRaw", "reason", "taskId", "paymentId", "txHash", "matchId", "cashRaw", "principalRaw", "feeRaw", "rewardRaw", "creditsGranted", "creditsUsed", "chainId", "acceptTxHash", "paymentTxHash", "fromCashRaw", "fromCreditRaw", "refundedRaw", "autonomousTasks", "autonomousGames"]);
     if (object(value.result) && value.result.mission !== undefined) result.result.mission = validateGoalView(value.result.mission);
     if (object(value.result) && value.result.binding !== undefined) result.result.binding = select(value.result.binding, ["chainId", "agentId", "wallet"]);
     if (object(value.result) && value.result.settlement !== undefined) {
@@ -157,7 +157,14 @@ export async function hostedAgentsRequest(request: Request, config: { upstreamUr
         if (object(payload.capabilities.inference) && Array.isArray(payload.capabilities.inference.models)) capabilities.inference = {
           ...select(payload.capabilities.inference, ["priceRaw", "creditsRaw"]), models: payload.capabilities.inference.models.map((model: unknown) => select(model, ["id", "inputMicroCreditsPerToken", "outputMicroCreditsPerToken"])) };
         if (object(payload.capabilities.goals) && Array.isArray(payload.capabilities.goals.models)) capabilities.goals = { ...select(payload.capabilities.goals,["maxPhases"]), ...(object(payload.capabilities.goals.chainLookup)?{chainLookup:select(payload.capabilities.goals.chainLookup,["chainId","maxTargets"])}:{}), ...(Array.isArray(payload.capabilities.goals.specialists)?{specialists:payload.capabilities.goals.specialists.map((s:unknown)=>select(s,["id","serviceId","name","output"]))}:{}), models: payload.capabilities.goals.models.map((m:unknown)=>select(m,["id","pricePerCallRaw"])) };
-        if (object(payload.capabilities.autonomy)) capabilities.autonomy = select(payload.capabilities.autonomy, ["maxTasks", "durationMs", "plannerPriceRaw"]);
+        if (object(capabilities.goals) && object(payload.capabilities.goals.external) && Array.isArray(payload.capabilities.goals.external.services)) {
+          capabilities.goals.external = {services: payload.capabilities.goals.external.services.map(validateExternalService)};
+        }
+        if (object(payload.capabilities.autonomy)) {
+          const autonomous = select(payload.capabilities.autonomy, ["maxTasks", "durationMs", "plannerPriceRaw"]);
+          if (object(payload.capabilities.autonomy.games)) autonomous.games = select(payload.capabilities.autonomy.games, ["maxGames", "rewardKinds"]);
+          capabilities.autonomy = autonomous;
+        }
         value = { ...value, capabilities } as typeof value;
       }
     } else value = match?.[2] === "finance" ? finance(payload) : ["runs", "cancel"].includes(match?.[2] ?? "") ? run(payload) : agent(payload);

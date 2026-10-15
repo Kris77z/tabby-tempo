@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, realpath, readFile, rm, stat } from "node:fs/promises";
+import { mkdtemp, realpath, readFile, writeFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { Wallet } from "ethers";
-import { HostedService } from "../src/service.js";
+import { HostedService, type HostedServiceOptions } from "../src/service.js";
 import type { AgentSettings, HostedConfig, HostedExecution, HostedExecutor, HostedResult } from "../src/types.js";
 const settings: AgentSettings = { name: "Alice", modelId: "kimi-k2.6", strategy: "balanced", perRunBudgetRaw: "120000", totalBudgetRaw: "240000", allowCredit: true };
 test("name-only creation survives restart without spending authority; settings unlock execution and original creation remains idempotent", async t => {
@@ -33,7 +33,7 @@ test("name-only creation survives restart without spending authority; settings u
   assert.equal((await f.service.snapshot(who)).agents[0].spentRaw, "100000");
   await assert.rejects(f.service.create(who, { name: "Partial", allowCredit: true, requestId: randomUUID() } as any), /HOSTED_SETTINGS_INVALID/);
 });
-async function fixture(t: any, execute?: (input: HostedExecution) => Promise<HostedResult>) {
+async function fixture(t: any, execute?: (input: HostedExecution) => Promise<HostedResult>, options: HostedServiceOptions = {}) {
   const directory = await realpath(await mkdtemp(join(tmpdir(), "hosted-core-"))); let counter = 0;
   const seen: HostedExecution[] = [];
   const executor: HostedExecutor = { async execute(input) {
@@ -43,9 +43,9 @@ async function fixture(t: any, execute?: (input: HostedExecution) => Promise<Hos
     return { phase: "Complete", terminal: true, success: true, chargedRaw: input.run.action === "task" ? "100000" : "0" };
   } };
   const config: HostedConfig = { directory, origin: "http://localhost:3020", chainId: "31337", models: [{ id: "kimi-k2.6", label: "Kimi K2.6" }], maxAgentsPerOwner: 5, maxTotalBudgetRaw: "1000000", maxPerRunBudgetRaw: "200000" };
-  let service = await HostedService.open(config, executor);
+  let service = await HostedService.open(config, executor, options);
   t.after(async () => { await service.close(); await rm(directory, { recursive: true, force: true }); });
-  return { executor, get service() { return service; }, config, seen, async restart() { await service.close(); service = await HostedService.open(config, executor); return service; } };
+  return { executor, get service() { return service; }, config, seen, async restart() { await service.close(); service = await HostedService.open(config, executor, options); return service; } };
 }
 test("signed owner login is domain-bound, single-use, expiring and revocable; only token hashes persist", async t => {
   const f = await fixture(t), wallet = Wallet.createRandom(), other = Wallet.createRandom();
@@ -114,6 +114,138 @@ test("free game sponsorship is owner-scoped, persists across restart and cannot 
   const b = await f.service.create(who, { ...settings, requestId: randomUUID() }); await f.service.waitUntilIdle(); await f.restart();
   await assert.rejects(f.service.command(who, b.id, { action: "game", requestId: randomUUID(), rewardKind: "usdc" }), /HOSTED_SPONSOR_LIMIT/);
   assert.equal((await f.service.snapshot(who)).agents[0].spentRaw, "0");
+});
+
+test("funded autonomous parent runs consume no sponsorship slots and may continue after the game ceiling", async t => {
+  const f = await fixture(t), who = Wallet.createRandom().address;
+  f.executor.capabilities = { autonomy: { maxTasks: 1, durationMs: 60000, plannerPriceRaw: "10000", games: { maxGames: 2, rewardKinds: ["usdc", "llm-credits"] } } };
+  const actor = await f.service.create(who, { ...settings, requestId: randomUUID() }); await f.service.waitUntilIdle();
+  const parentId = randomUUID(); await f.service.command(who, actor.id, { action: "autonomous", requestId: parentId }); await f.service.waitUntilIdle();
+  await f.restart(); await f.service.command(who, actor.id, { action: "autonomous", requestId: parentId });
+  await f.service.command(who, actor.id, { action: "autonomous", requestId: randomUUID() }); await f.service.waitUntilIdle();
+  const database = JSON.parse(await readFile(join(f.config.directory, "database", "session.json"), "utf8"));
+  assert.equal(database.sponsoredOwners[who] ?? 0, 0); assert.equal(database.sponsoredTotal, 0);
+  for (let n = 0; n < 3; n++) { await f.service.command(who, actor.id, { action: "game", rewardKind: "llm-credits", requestId: randomUUID() }); await f.service.waitUntilIdle(); }
+  const other = await f.service.create(who, { ...settings, requestId: randomUUID() }); await f.service.waitUntilIdle(); await f.restart();
+  await f.service.command(who, other.id, { action: "autonomous", requestId: randomUUID() }); await f.service.waitUntilIdle();
+  await assert.rejects(f.service.command(who, other.id, { action: "game", rewardKind: "usdc", requestId: randomUUID() }), /HOSTED_SPONSOR_LIMIT/);
+  assert.equal(f.seen.filter(input => input.run.action === "autonomous").length, 3);
+});
+
+test("automatic child admission persists each actual entry once across unknown recovery and rejects the fourth before dispatch", async t => {
+  const children = [randomUUID(), randomUUID(), randomUUID(), randomUUID()]; let parents = 0, modelRequests = 0;
+  const f = await fixture(t, async input => {
+    if (input.run.action === "provision") return { phase: "Ready", terminal: true, success: true, chargedRaw: "0", binding: { chainId: "31337", agentId: "1", wallet: input.agent.wallet } };
+    if (input.recover) {
+      await f.service.admitAutonomyGame(input.run.requestId, children[0], input.agent.id);
+      return { phase: "Completed", terminal: true, success: true, chargedRaw: "0", autonomousTasks: 0, autonomousGames: 1 };
+    }
+    parents++;
+    for (const child of parents === 1 ? children.slice(0, 1) : parents === 2 ? children.slice(1, 3) : children.slice(3)) {
+      try { await f.service.admitAutonomyGame(input.run.requestId, child, input.agent.id); }
+      catch (error) { assert.match((error as Error).message, /HOSTED_SPONSOR_LIMIT/); return { phase: "Stopped", terminal: true, success: false, chargedRaw: "0", reason: "HOSTED_SPONSOR_LIMIT", autonomousGames: 0, autonomousTasks: 0 }; }
+      await f.service.admitAutonomyGame(input.run.requestId, child, input.agent.id); modelRequests++;
+    }
+    return parents === 1 ? { phase: "Paused", terminal: false, success: false, chargedRaw: "0", reason: "HOSTED_GAME_UPSTREAM_UNKNOWN", autonomousGames: 0 }
+      : { phase: "Completed", terminal: true, success: true, chargedRaw: "0", autonomousGames: 2, autonomousTasks: 0 };
+  });
+  f.executor.capabilities = { autonomy: { maxTasks: 1, durationMs: 60000, plannerPriceRaw: "10000", games: { maxGames: 2, rewardKinds: ["usdc", "llm-credits"] } } };
+  const who = Wallet.createRandom().address, actor = await f.service.create(who, { ...settings, requestId: randomUUID() }); await f.service.waitUntilIdle();
+  const first = randomUUID(); await f.service.command(who, actor.id, { action: "autonomous", requestId: first }); await f.service.waitUntilIdle(); await f.restart();
+  await f.service.command(who, actor.id, { action: "autonomous", requestId: first }); await f.service.waitUntilIdle(); assert.equal(modelRequests, 1);
+  await f.service.command(who, actor.id, { action: "autonomous", requestId: randomUUID() }); await f.service.waitUntilIdle();
+  const denied = randomUUID(); await f.service.command(who, actor.id, { action: "autonomous", requestId: denied }); await f.service.waitUntilIdle();
+  const run = (await f.service.snapshot(who)).runs.find(run => run.requestId === denied)!;
+  assert.equal(run.status, "Failed"); assert.equal(run.reason, "HOSTED_SPONSOR_LIMIT"); assert.equal(modelRequests, 3);
+  const database = JSON.parse(await readFile(join(f.config.directory, "database", "session.json"), "utf8"));
+  assert.equal(database.sponsoredOwners[who], 3); assert.equal(database.sponsoredTotal, 3); assert.equal(Object.keys(database.autonomousGameAdmissions).length, 3);
+  await assert.rejects(f.service.command(who, actor.id, { action: "game", rewardKind: "usdc", requestId: children[0] }), /HOSTED_REQUEST_CONFLICT/);
+  await assert.rejects(f.service.create(who, { ...settings, requestId: children[0] }), /HOSTED_REQUEST_CONFLICT/);
+  await assert.rejects(f.service.admitAutonomyGame(denied, randomUUID(), actor.id), /HOSTED_AUTONOMY_GAME_ADMISSION_INVALID/);
+});
+
+test("automatic child admission shares the global sponsor ceiling and never dispatches a game beyond 100", async t => {
+  let requests = 0;
+  const f = await fixture(t, async input => {
+    if (input.run.action === "provision") return { phase: "Ready", terminal: true, success: true, chargedRaw: "0", binding: { chainId: "31337", agentId: "1", wallet: input.agent.wallet } };
+    for (let n = 0; n < 2; n++) {
+      try { await f.service.admitAutonomyGame(input.run.requestId, randomUUID(), input.agent.id); }
+      catch (error) { assert.match((error as Error).message, /HOSTED_SPONSOR_LIMIT/); return { phase: "Stopped", terminal: true, success: false, chargedRaw: "0", reason: "HOSTED_SPONSOR_LIMIT", autonomousGames: 1 }; }
+      requests++;
+    }
+    throw new Error("global limit must have rejected second new game");
+  });
+  f.executor.capabilities = { autonomy: { maxTasks: 1, durationMs: 60000, plannerPriceRaw: "10000", games: { maxGames: 2, rewardKinds: ["usdc"] } } };
+  await f.service.close(); const path = join(f.config.directory, "database", "session.json");
+  const state = JSON.parse(await readFile(path, "utf8")); state.sponsoredTotal = 99; await writeFile(path, JSON.stringify(state)); await f.restart();
+  const who = Wallet.createRandom().address, actor = await f.service.create(who, { ...settings, requestId: randomUUID() }); await f.service.waitUntilIdle();
+  const requestId = randomUUID(); await f.service.command(who, actor.id, { action: "autonomous", requestId }); await f.service.waitUntilIdle();
+  assert.equal(requests, 1); assert.equal((await f.service.snapshot(who)).runs.find(run => run.requestId === requestId)?.reason, "HOSTED_SPONSOR_LIMIT");
+  const database = JSON.parse(await readFile(path, "utf8")); assert.equal(database.sponsoredTotal, 100); assert.equal(database.sponsoredOwners[who], 1);
+});
+
+test("manual autonomous token replenishment uses a private bound child route, recovers unknown same game and restores original parent", async t => {
+  let funded = false, gameRecovered = false, resolutions = 0; const childId = randomUUID();
+  const f = await fixture(t, async input => {
+    if (input.run.action === "provision") return { phase: "Ready", terminal: true, success: true, chargedRaw: "0", binding: { chainId: "31337", agentId: "1", wallet: input.agent.wallet } };
+    if (input.run.action === "game") {
+      assert.equal(input.run.fundingFor, childId); assert.equal(input.agent.modelId, "kimi-k2.6"); assert.equal(input.agent.allowCredit, false);
+      assert.equal(input.directory, join(f.config.directory, "agents", input.agent.id, "runs", parentId, "children", input.run.requestId));
+      if (!input.recover) return { phase: "Paused", terminal: false, success: false, chargedRaw: "0", reason: "HOSTED_GAME_UPSTREAM_UNKNOWN" };
+      gameRecovered = true; funded = true; return { phase: "Succeeded", terminal: true, success: true, chargedRaw: "0", creditsGranted: 4096 };
+    }
+    assert.equal(input.run.action, "autonomous");
+    if (!input.recover) {
+      await f.service.admitAutonomyGame(input.run.requestId, automaticGameIds[0], input.agent.id);
+      await f.service.admitAutonomyGame(input.run.requestId, automaticGameIds[1], input.agent.id);
+    }
+    return funded ? { phase: "Completed", terminal: true, success: true, chargedRaw: "0", autonomousTasks: 1, autonomousGames: 2 }
+      : { phase: "Paused", terminal: false, success: false, chargedRaw: "0", reason: "AUTONOMY_GAME_LIMIT", autonomousTasks: 0, autonomousGames: 2 };
+  }, { autonomyFunding: async input => { resolutions++; assert.equal(input.run.requestId, parentId); return { childId, modelId: "kimi-k2.6", funding: "reward-tokens" }; } });
+  f.executor.capabilities = { autonomy: { maxTasks: 1, durationMs: 60000, plannerPriceRaw: "10000", games: { maxGames: 2, rewardKinds: ["llm-credits"] } } };
+  const who = Wallet.createRandom().address, other = Wallet.createRandom().address;
+  const actor = await f.service.create(who, { ...settings, requestId: randomUUID() }); await f.service.waitUntilIdle();
+  const parentId = randomUUID(), automaticGameIds = [randomUUID(), randomUUID()]; await f.service.command(who, actor.id, { action: "autonomous", requestId: parentId }); await f.service.waitUntilIdle();
+  await assert.rejects(f.service.command(other, actor.id, { action: "game", rewardKind: "llm-credits", requestId: randomUUID() }), /HOSTED_AGENT_NOT_FOUND/);
+  assert.equal((await f.service.snapshot(who)).runs.find(run => run.requestId === parentId)?.fundingNeed, "reward-tokens");
+  await assert.rejects(f.service.command(who, actor.id, { action: "game", rewardKind: "usdc", requestId: randomUUID() }), /HOSTED_RECOVER_ORIGINAL_REQUIRED/);
+  await assert.rejects(f.service.command(who, actor.id, { action: "game", rewardKind: "llm-credits", requestId: randomUUID(), fundingFor: childId } as any), /HOSTED_INPUT_INVALID/);
+  const gameId = randomUUID(), game = await f.service.command(who, actor.id, { action: "game", rewardKind: "llm-credits", requestId: gameId });
+  assert.equal(game.fundingFor, parentId); await f.service.waitUntilIdle(); await f.restart();
+  await assert.rejects(f.service.command(who, actor.id, { action: "autonomous", requestId: parentId }), /HOSTED_RECOVER_ORIGINAL_REQUIRED/);
+  const calls = resolutions; await f.service.command(who, actor.id, { action: "game", rewardKind: "llm-credits", requestId: gameId }); await f.service.waitUntilIdle();
+  assert.equal(resolutions, calls); assert.equal(gameRecovered, true);
+  const resumed = await f.service.snapshot(who); assert.equal(resumed.agents[0].activeRequestId, parentId); assert.equal(resumed.agents[0].reservedRaw, "240000");
+  assert.equal(JSON.stringify(resumed).includes(childId), false, "private child route is not caller-controlled or public metadata");
+  await f.service.command(who, actor.id, { action: "autonomous", requestId: parentId }); await f.service.waitUntilIdle();
+  const final = await f.service.snapshot(who); assert.equal(final.agents[0].activeRequestId, undefined); assert.equal(final.runs.find(run => run.requestId === parentId)?.status, "Succeeded");
+  assert.equal(final.runs.find(run => run.requestId === parentId)?.fundingNeed, undefined);
+  const database = JSON.parse(await readFile(join(f.config.directory, "database", "session.json"), "utf8")); assert.equal(database.sponsoredOwners[who], 3);
+  assert.equal(f.seen.filter(input => input.run.action === "game" && !input.recover).length, 1);
+});
+
+test("cash deposit for paused autonomous child preserves the parent reservation and original sibling wallet journal", async t => {
+  let deposited = false; const childId = randomUUID(), parentId = randomUUID();
+  const f = await fixture(t, async input => {
+    if (input.run.action === "provision") return { phase: "Ready", terminal: true, success: true, chargedRaw: "0", binding: { chainId: "31337", agentId: "1", wallet: input.agent.wallet } };
+    if (input.run.action === "deposit") {
+      assert.equal(input.run.fundingFor, childId); assert.equal(input.run.amountRaw, "40000");
+      assert.equal(input.directory, join(f.config.directory, "agents", input.agent.id, "runs", parentId, "children", input.run.requestId)); deposited = true;
+      return { phase: "Succeeded", terminal: true, success: true, chargedRaw: "0", cashRaw: "40000" };
+    }
+    return deposited ? { phase: "Completed", terminal: true, success: true, chargedRaw: "130000", autonomousTasks: 1 }
+      : { phase: "Paused", terminal: false, success: false, chargedRaw: "10000", reason: "INFERENCE_FUNDING_REQUIRED", autonomousTasks: 0 };
+  }, { autonomyFunding: async () => ({ childId, modelId: "kimi-k2.6", funding: "cash" }) });
+  f.executor.capabilities = { autonomy: { maxTasks: 1, durationMs: 60000, plannerPriceRaw: "10000" } };
+  const who = Wallet.createRandom().address, actor = await f.service.create(who, { ...settings, requestId: randomUUID() }); await f.service.waitUntilIdle();
+  await f.service.command(who, actor.id, { action: "autonomous", requestId: parentId }); await f.service.waitUntilIdle();
+  assert.equal((await f.service.snapshot(who)).runs.find(run => run.requestId === parentId)?.fundingNeed, "cash");
+  await assert.rejects(f.service.command(who, actor.id, { action: "game", rewardKind: "llm-credits", requestId: randomUUID() }), /HOSTED_RECOVER_ORIGINAL_REQUIRED/);
+  const deposit = await f.service.command(who, actor.id, { action: "deposit", requestId: randomUUID(), amountRaw: "40000" }); await f.service.waitUntilIdle();
+  assert.equal(deposit.fundingFor, parentId); const snapshot = await f.service.snapshot(who); assert.equal(snapshot.agents[0].activeRequestId, parentId); assert.equal(snapshot.agents[0].reservedRaw, "240000");
+  assert.equal(snapshot.agents[0].spentRaw, "0"); await f.restart();
+  await f.service.command(who, actor.id, { action: "autonomous", requestId: parentId }); await f.service.waitUntilIdle();
+  assert.equal((await f.service.snapshot(who)).agents[0].spentRaw, "130000");
 });
 
 test("deposit is owner-bound with exact immutable amount and does not consume inference budget", async t => {

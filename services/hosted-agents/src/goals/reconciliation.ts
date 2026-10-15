@@ -8,7 +8,7 @@ export interface GoalPaymentRecovery { chargedRaw:string; refundedRaw:string; re
  * nondelivery resolution and its canonical full refund; a timeout is not proof. */
 export async function reconcileGoalPayment(state:GoalState, call:GoalCall, accountAddress:string, asset:string, rpc:JsonRpcProvider):Promise<GoalPaymentRecovery|undefined>{
  const handle=call.handle;if(!handle)return;
- const quote=handle.quote,route=state.route,same=(a:string,b:string)=>a.toLowerCase()===b.toLowerCase();
+ const quote=handle.quote,route=call.route??state.route,same=(a:string,b:string)=>a.toLowerCase()===b.toLowerCase();
  const hash=(v:unknown):v is string=>typeof v==="string"&&/^0x[0-9a-f]{64}$/.test(v);
  if(handle.version!==1||handle.relayUrl!==route.relayUrl||quote.chainId!==state.input.chainId||!same(quote.account,accountAddress)||!same(quote.asset,asset)||!same(quote.payTo,route.provider)||quote.agentId!==state.input.chainAgentId||quote.taskId!=="0"||quote.service!==route.service||quote.model!==route.model||quote.price!==route.priceRaw
   ||quote.requestDigest!==requestDigest(handle.input)||quote.paymentId!==paymentId("0",quote.requestDigest,quote.serverNonce)

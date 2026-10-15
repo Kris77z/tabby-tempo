@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const guides = [
-  'README.md', 'README.zh-CN.md', 'CONTRIBUTING.md',
+  'README.md', 'README.zh-CN.md', 'CONTRIBUTING.md', 'docs/tempo-upstream-sync-20261015.md',
   'docs/README.md', 'docs/ARCHITECTURE.md', 'docs/VERIFICATION.md', 'docs/ATTRIBUTION.md',
   'contracts/README.md', 'services/underwriter/README.md', 'services/provider-relay/README.md',
   'services/hosted-agents/README.md', 'services/arena/README.md',
