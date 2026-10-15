@@ -80,4 +80,14 @@ CI 仅在一次性 Ubuntu runner 安装 `apparmor` / `apparmor-profiles`，读�
 
 真实 `linux-magpie.test.ts` 现在先在当前 workflow 版本执行，早于历史候选 checkout、Solidity/前端构建与完整长测试。它仍验证文件隐藏、未批准 loopback 拒绝、批准 peer 代理和原 `--unshare-all` 边界。回滚时再安装历史候选依赖；历史版本尚无 external stack 时无需执行不存在的功能测试，包含该功能的候选必须执行对应 fixture。生产 deploy job、可信 helper、VPS 和应用源码均未改变。
 
-本机补充验证为 workflow contract **19/19**、7 个 multiline shell block 的 `bash -n`、维护文档链接及 diff 检查；macOS 不能验证 Linux profile 生效。本节记录的是等待 GitHub Linux 实测的修复，未宣称新一轮 CI 或部署成功。候选摘要保留已提交内容，不纳入本次范围外的并行 README 工作区编辑。
+本机补充验证为 workflow contract **19/19**、7 个 multiline shell block 的 `bash -n`、维护文档链接及 diff 检查；macOS 不能验证 Linux profile 生效。以上是该修复提交前的本地验证，不能代替 Linux 实测；后续 GitHub 结果见下一节。候选摘要保留已提交内容，不纳入本次范围外的并行 README 工作区编辑。
+
+## 第二轮 CI：隔离通过与启动超时夹具修复
+
+提交 `733e6fb7c065aeb10a882172441501163c97f248` 的 [Actions 38741584072](https://github.com/Kris77z/tabby-tempo/actions/runs/38741584072) 已通过前置真实 Linux namespace gate，确认前述发行版 profile 修复有效。Solidity、fixture 构建和全部类型检查也通过。随后完整 workspace 步骤在 Arena 组结束后失败：107 项中 105 pass、1 fail、1 skip；后续 Pi/Frontend/Hosted 等 workspace 及末尾脚本组在这次 run 中未继续执行，部署跳过。首轮完整 workspace 的成功仍是首轮证据，不能移作第二轮的通过记录。
+
+本次失败是 `arena.test.ts` 的 `container startup timeout never settles failure or slashes an active task loan`：期待 `DOCKER_START_TIMEOUT`，实际在 `ready()` 得到 `DOCKER_UNAVAILABLE`。`ready()` 的 Docker info 探针使用固定 **5000ms**，日志不能区分 daemon 响应超时或命令失败。此前本机失败则是 `docker.test.ts` 中另一个 startup-delay / 600ms 执行预算测试，两者不混同。
+
+只修该故障注入用例：可控 Docker shim 为 info、image inspect 和 create 返回成功，唯独 start 在可信执行 marker 之前阻塞；不依赖共享 daemon 恰好及时响应。断言核对完整 `info → image → create → start → rm` 轨迹、固定镜像、同一 owned container 名与只读 staging 清理，仍要求精确 `DOCKER_START_TIMEOUT`。原 `startupTimeoutMs=100`、`timeoutMs=600` 未变，未加重试、未接受其他基础设施错误；任务继续 Assigned、贷款完整不变、settlements journal 不存在等业务断言全部保留。实际 Docker 行为仍由现有真实集成用例覆盖，生产执行器、业务代码、VPS 和可信 helper 均未改动。
+
+本地定向结果：修复用例 **1/1**；真实 Docker 的 `0077` staging 与 marker 前不可读/缺失分类 **2/2**；backend typecheck、文档和 diff 检查通过。root 另独立复验该用例 1/1。最终完整候选仍交 GitHub CI 验证，本节不宣称新一轮完整 CI 或部署成功。

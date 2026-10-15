@@ -18,9 +18,9 @@
     "baseCommit": "40647f0dc9f966bbbe98bf3e474cfbe612c0ffa8",
     "branch": "codex/tempo-upstream-sync-20261015",
     "finalCommit": null,
-    "finalCommitMeaning": "Committed application migration is c36111e; follow-up CI environment fix is an uncommitted owned delta. Future SHA is not invented. README files are hashed from c36111e, excluding unrelated concurrent workspace edits.",
-    "contentFileCount": 73,
-    "contentSha256": "61c1522d4eea8a4c766f674693cb655f92d1e02370e74290624fc12d4832b9d9",
+    "finalCommitMeaning": "Application migration c36111e and CI namespace fix733e6fb are committed. Current owned delta only fixes a deterministic Arena test fixture and records evidence; its future SHA is not invented. README bytes remain from committed c36111e, excluding unrelated concurrent workspace edits.",
+    "contentFileCount": 74,
+    "contentSha256": "8d8dbe762e900b7a3c0266d17b25e6b674f710a5891d7575cddc3b1c35f9d75d",
     "contentAlgorithm": "SHA256(UTF8(concat sorted path + NUL + file SHA256 + LF)); excludes this self-referential manifest, ignored/private files and independent root artifacts. README.md and README.zh-CN.md use committed c36111e Git bytes; other entries use owned candidate contents.",
     "files": [
       {
@@ -62,8 +62,8 @@
       },
       {
         "path": "docs/tempo-upstream-sync-20261015.md",
-        "bytes": 12491,
-        "sha256": "959cff46ca0863c4bc1bb6c400b613ed6866e5c2235e54d34f33acd67cb6744e"
+        "bytes": 14610,
+        "sha256": "0beea332845d42d9658d1f85e3291a969162f385b1cb527294b2eff1babf9fe3"
       },
       {
         "path": "frontend/acceptance/tempo-upstream-sync-20261015/README.md",
@@ -256,6 +256,11 @@
         "sha256": "dd915d0fa799bc9ebd24ca396b23e6723ae932c47bea419dc10c7a8a0abed59e"
       },
       {
+        "path": "services/arena/test/arena.test.ts",
+        "bytes": 32644,
+        "sha256": "7bd3a7b0655903f5b120092504ff459aca23afbe89b1176884793184d7b21df6"
+      },
+      {
         "path": "services/arena/test/docker.test.ts",
         "bytes": 12791,
         "sha256": "1680c4fec1ed287e8a1c2e8ea3acca6e42b79ec6948cd34251202550af069190"
@@ -393,11 +398,25 @@
     ],
     "committedImplementation": "c36111e09768d376209e6e20129bd194c0a7338a",
     "followupOwnedFiles": [
-      ".github/workflows/tempo-ci.yml",
-      ".github/test/test_workflow_boundary.py",
+      "services/arena/test/arena.test.ts",
       "docs/tempo-upstream-sync-20261015.md",
       "docs/evidence/upstream-sync-20261015/migration-evidence.json"
-    ]
+    ],
+    "committedCiNamespaceFollowup": "733e6fb7c065aeb10a882172441501163c97f248",
+    "followupHistory": [
+      {
+        "baseCommit": "c36111e09768d376209e6e20129bd194c0a7338a",
+        "commit": "733e6fb7c065aeb10a882172441501163c97f248",
+        "ownedFiles": [
+          ".github/workflows/tempo-ci.yml",
+          ".github/test/test_workflow_boundary.py",
+          "docs/tempo-upstream-sync-20261015.md",
+          "docs/evidence/upstream-sync-20261015/migration-evidence.json"
+        ],
+        "purpose": "restricted ephemeral CI namespace profile and early unprivileged gate"
+      }
+    ],
+    "currentFollowupBaseCommit": "733e6fb7c065aeb10a882172441501163c97f248"
   },
   "classificationCounts": {
     "upstream-instructions-excluded": 1,
@@ -2166,6 +2185,10 @@
     {
       "path": "services/hosted-agents/test/sdk-redirect.test.ts",
       "reason": "Real loopback307 rejection without forwarding prompt or payment."
+    },
+    {
+      "path": "services/arena/test/arena.test.ts",
+      "reason": "Deterministic infrastructure fault fixture: readiness/image/create succeed in a controlled shim, only start hangs. Assert exact startup timeout, command trace/owned cleanup, Assigned task, unchanged active loan and absent settlement journal. Real Docker integrations and production code unchanged."
     }
   ],
   "preservedFiles": [
@@ -2495,7 +2518,7 @@
       "reasonConfidence": "AppArmor userns capability restriction is strongly indicated by Ubuntu documentation; initial log lacks kernel audit; fix awaits next Linux CI execution."
     },
     "ciNamespaceFollowup": {
-      "status": "local contracts/docs/shell syntax passed; actual Linux fix pending PR CI",
+      "status": "Confirmed by the real unprivileged Linux namespace gate in PR CI38741584072; no global control changes.",
       "localWorkflowTests": {
         "pass": 19,
         "fail": 0,
@@ -2528,7 +2551,75 @@
       "sources": [
         "https://discourse.ubuntu.com/t/understanding-apparmor-user-namespace-restriction/58007",
         "https://gitlab.com/apparmor/apparmor/-/raw/apparmor-4.0/profiles/apparmor/profiles/extras/bwrap-userns-restrict"
-      ]
+      ],
+      "confirmedRunId": 38741584072
+    },
+    "githubSecondPrCi": {
+      "url": "https://github.com/Kris77z/tabby-tempo/actions/runs/38741584072",
+      "runId": 38741584072,
+      "headSha": "733e6fb7c065aeb10a882172441501163c97f248",
+      "conclusion": "failure",
+      "namespaceGate": "success",
+      "buildAndTypes": "success",
+      "deploy": "skipped",
+      "failedStep": "Run the complete offline workspace suite",
+      "arena": {
+        "tests": 107,
+        "pass": 105,
+        "fail": 1,
+        "skipped": 1,
+        "failedTest": "container startup timeout never settles failure or slashes an active task loan",
+        "expected": "DOCKER_START_TIMEOUT",
+        "observed": "DOCKER_UNAVAILABLE in ready()",
+        "readinessTimeoutMs": 5000,
+        "causeLimit": "Log does not distinguish Docker info command failure from its5s timeout. This is distinct from the earlier local docker.test startup-delay600ms execution-budget case."
+      },
+      "laterWorkspaceAndScriptGroups": "not executed in this run after Arena failure"
+    },
+    "arenaStartupFixtureFollowup": {
+      "status": "Targeted local and independent root check passed; final full PR CI pending",
+      "productionCodeChanged": false,
+      "retriesAdded": false,
+      "errorExpectation": "exact message DOCKER_START_TIMEOUT",
+      "startupTimeoutMs": 100,
+      "executionTimeoutMs": 600,
+      "shimCommandTrace": [
+        "info",
+        "image",
+        "create",
+        "start",
+        "rm"
+      ],
+      "assertions": [
+        "same owned container name",
+        "fixed image",
+        "owned read-only staging removed",
+        "task remains Assigned",
+        "entire active loan unchanged",
+        "no settlements journal"
+      ],
+      "targeted": {
+        "pass": 1,
+        "fail": 0,
+        "log": "review/arena-startup-shim-final.log"
+      },
+      "realDocker": {
+        "pass": 2,
+        "fail": 0,
+        "log": "review/arena-real-staging-final.log"
+      },
+      "backendTypecheck": {
+        "exitCode": 0,
+        "log": "review/arena-shim-typecheck.log"
+      },
+      "docs": {
+        "exitCode": 0,
+        "log": "review/arena-shim-docs-check.log"
+      },
+      "diff": {
+        "exitCode": 0,
+        "log": "review/arena-shim-diff-check.log"
+      }
     }
   },
   "logs": [
@@ -2613,6 +2704,36 @@
       "sha256": "0dfb746b3bda981adf752758339cb1fc6c4aec6c4da3793da019c16f460ab622"
     },
     {
+      "path": ".data/upstream-sync-20261015/review/arena-real-staging-final.log",
+      "bytes": 703,
+      "sha256": "4dffd0b36096ebc727536cfc9e9bc0a89e003310238557fdffd95165e817e4b5"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/arena-shim-diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/arena-shim-docs-check.log",
+      "bytes": 145,
+      "sha256": "4d2f1b0ec54bf337f896c105d3620a01dd80e5f382c274237f1e982df8a92812"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/arena-shim-typecheck.log",
+      "bytes": 29,
+      "sha256": "8fa1cf5506304e8abac55868e7f1a136c9b1dde57a3981a382da4c21ea129a6f"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/arena-startup-shim-final.log",
+      "bytes": 349,
+      "sha256": "e7a2b9b8aa91da4b9261b185f16e2400e85ee009e81485ad1dd4cd5e9c108ea3"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/arena-startup-shim.log",
+      "bytes": 351,
+      "sha256": "42d6e9a7f559d5f87f392b4a8a57e2c642cd98e66d97a84bbd06161ba95d1437"
+    },
+    {
       "path": ".data/upstream-sync-20261015/review/namespace-diff-check.log",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -2621,6 +2742,11 @@
       "path": ".data/upstream-sync-20261015/review/namespace-docs-check.log",
       "bytes": 145,
       "sha256": "4d2f1b0ec54bf337f896c105d3620a01dd80e5f382c274237f1e982df8a92812"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/namespace-manifest-integrity.log",
+      "bytes": 378,
+      "sha256": "3a1ebc9dee9ad53cb3e617222d55adf4bb71ea5a5310a30352e11396c4f5008e"
     },
     {
       "path": ".data/upstream-sync-20261015/review/namespace-shell-check.log",
@@ -2661,6 +2787,11 @@
       "path": ".data/upstream-sync-20261015/review/pr-ci-first-failure.log",
       "bytes": 29174,
       "sha256": "723ea635a36574aa4dd16b81e0cf7cd759d201569e5fe6f503dc0e370b28e872"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/pr-ci-second-failure.log",
+      "bytes": 143430,
+      "sha256": "e7a4756af349503132f826ff00acd3a280f56b36da32a5ecf21d9f8817dd991e"
     },
     {
       "path": ".data/upstream-sync-20261015/scripts-offline.log",
@@ -2718,9 +2849,9 @@
       "sha256": "1bbe318a758f30d734e96c7db2ef0ab0c820f767dce8cd6cb6e73dda771f6200"
     },
     {
-      "path": ".data/upstream-sync-20261015/review/namespace-manifest-integrity.log",
-      "bytes": 378,
-      "sha256": "3a1ebc9dee9ad53cb3e617222d55adf4bb71ea5a5310a30352e11396c4f5008e"
+      "path": ".data/upstream-sync-20261015/review/arena-shim-manifest-integrity.log",
+      "bytes": 151,
+      "sha256": "4ca7da8f5b63443a78ebeae40f65e3e868a13b4975e7a4c2d63665d2c68191cf"
     }
   ],
   "reports": [
@@ -2758,6 +2889,11 @@
       "path": ".data/upstream-sync-20261015/review/ci-namespace-review.md",
       "bytes": 6836,
       "sha256": "7f226fef6c61c4f2014f2bbd549572bd4c66f157c22d1ca234932a7ef789e589"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/pr-ci-second-metadata.json",
+      "bytes": 5038,
+      "sha256": "bcd7c027351f714b37175383a396a575c1f7589b4a1444122f904006a4a2d725"
     }
   ]
 }
