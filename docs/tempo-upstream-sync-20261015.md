@@ -69,3 +69,15 @@
 Arena 的 skip 是既有需显式 live URL 的 Free Arena HTTP 用例；Linux namespace 用例因本机是 macOS 而跳过，不能声称本机完成 Linux 实测。CI 保持该项在 Linux 执行，不以 skip 或裸宿主进程替代隔离。
 
 所有浏览器 API 都被合成拦截，没有钱包 RPC 或写命令。两张[合成身份卡截图](../frontend/acceptance/tempo-upstream-sync-20261015/README.md)仅证明显示，不是已支付、注册、评分或 Tempo 新实跑证据。既有真实结果仍以[核心验收](tempo-root-acceptance-20261012.md)、[奖励验收](tempo-gamefi-extra-root-acceptance-20261013.md)和[验证索引](VERIFICATION.md)为准。
+
+## 首轮 PR CI 与 Linux runner 修复
+
+[PR #2](https://github.com/Kris77z/tabby-tempo/pull/2) 的首轮 [Actions 38738305925](https://github.com/Kris77z/tabby-tempo/actions/runs/38738305925) 对应 PR head `c36111e09768d376209e6e20129bd194c0a7338a`。Solidity、Next 构建、完整类型和全部 workspace 测试均已通过；末尾脚本组 26 项中 25 pass、1 fail、0 skip。失败是 Linux 实测 `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`，没有触发部署。GitHub step 状态和原失败日志摘要均写入机器清单，不把整轮称为绿色。
+
+该现象与 [Ubuntu 的 user namespace 能力限制](https://discourse.ubuntu.com/t/understanding-apparmor-user-namespace-restriction/58007)吻合：创建 namespace 后，未获专用策略的进程仍可能无法获得初始化 loopback 所需能力。原日志没有 kernel audit，因此这是高可信诊断，最终仍须下一轮 Linux CI 实测确认。
+
+CI 仅在一次性 Ubuntu runner 安装 `apparmor` / `apparmor-profiles`，读取发行版固定路径 `/usr/share/apparmor/extra-profiles/bwrap-userns-restrict`，先校验、再以 root:root `0644` 安装并加载。这个 [ABI 4.0 官方 profile](https://gitlab.com/apparmor/apparmor/-/raw/apparmor-4.0/profiles/apparmor/profiles/extras/bwrap-userns-restrict)匹配 `/usr/bin/bwrap`，允许初始化；`unpriv_bwrap` 为执行的子程序叠加 capability 禁止。CI 不下载 master profile、不改全局 sysctl、不禁用 AppArmor、不以 root 运行 namespace 测试，也不使用共享网络或未隔离 fallback。准备前后的 userns restriction 值必须相等，日志记录内核、包版本、profile hash 和加载状态；测试失败时追加相关 kernel audit。
+
+真实 `linux-magpie.test.ts` 现在先在当前 workflow 版本执行，早于历史候选 checkout、Solidity/前端构建与完整长测试。它仍验证文件隐藏、未批准 loopback 拒绝、批准 peer 代理和原 `--unshare-all` 边界。回滚时再安装历史候选依赖；历史版本尚无 external stack 时无需执行不存在的功能测试，包含该功能的候选必须执行对应 fixture。生产 deploy job、可信 helper、VPS 和应用源码均未改变。
+
+本机补充验证为 workflow contract **19/19**、7 个 multiline shell block 的 `bash -n`、维护文档链接及 diff 检查；macOS 不能验证 Linux profile 生效。本节记录的是等待 GitHub Linux 实测的修复，未宣称新一轮 CI 或部署成功。候选摘要保留已提交内容，不纳入本次范围外的并行 README 工作区编辑。

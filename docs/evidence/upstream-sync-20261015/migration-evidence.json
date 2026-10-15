@@ -18,30 +18,32 @@
     "baseCommit": "40647f0dc9f966bbbe98bf3e474cfbe612c0ffa8",
     "branch": "codex/tempo-upstream-sync-20261015",
     "finalCommit": null,
-    "finalCommitMeaning": "Implementation working tree before independent root commit; exact content digest provided instead of inventing a future SHA.",
+    "finalCommitMeaning": "Committed application migration is c36111e; follow-up CI environment fix is an uncommitted owned delta. Future SHA is not invented. README files are hashed from c36111e, excluding unrelated concurrent workspace edits.",
     "contentFileCount": 73,
-    "contentSha256": "b24986d611acce2df114d8882ef5e6d3aff8bd4662d39e273060579c5a021c6e",
-    "contentAlgorithm": "SHA256(UTF8(concat sorted path + NUL + file SHA256 + LF)); excludes this self-referential manifest, ignored/private files and independent root artifacts",
+    "contentSha256": "61c1522d4eea8a4c766f674693cb655f92d1e02370e74290624fc12d4832b9d9",
+    "contentAlgorithm": "SHA256(UTF8(concat sorted path + NUL + file SHA256 + LF)); excludes this self-referential manifest, ignored/private files and independent root artifacts. README.md and README.zh-CN.md use committed c36111e Git bytes; other entries use owned candidate contents.",
     "files": [
       {
         "path": ".github/test/test_workflow_boundary.py",
-        "bytes": 6829,
-        "sha256": "2a4f7c20603c280bbda46f5e36860b0ba20c410411ec3dc4bb35bc8c31b4eb45"
+        "bytes": 8794,
+        "sha256": "50a949c454a5118356fa2f25f2d8064ac73543659cd55ef6cbc860d2868be3c0"
       },
       {
         "path": ".github/workflows/tempo-ci.yml",
-        "bytes": 6923,
-        "sha256": "8ec3a0a6d5a847998e9de9cd9cdbd27e1920c8daef7e57869b162d3089ef0d15"
+        "bytes": 8728,
+        "sha256": "31b1dfb6de566522c1016c96ef8f5444397ea84add5c5f36335ff5dddea970f4"
       },
       {
         "path": "README.md",
         "bytes": 8167,
-        "sha256": "a9b80d2debc751493c50df68d9bbd29e3c237a85ccb0a7873c715263d2a88c02"
+        "sha256": "a9b80d2debc751493c50df68d9bbd29e3c237a85ccb0a7873c715263d2a88c02",
+        "contentSource": "git:c36111e09768d376209e6e20129bd194c0a7338a"
       },
       {
         "path": "README.zh-CN.md",
         "bytes": 5470,
-        "sha256": "a6e03f0e7dcd649340076c59f2ce92d83afb02b47f47ef82f0ac499f80b8c6bb"
+        "sha256": "a6e03f0e7dcd649340076c59f2ce92d83afb02b47f47ef82f0ac499f80b8c6bb",
+        "contentSource": "git:c36111e09768d376209e6e20129bd194c0a7338a"
       },
       {
         "path": "docs/ARCHITECTURE.md",
@@ -60,8 +62,8 @@
       },
       {
         "path": "docs/tempo-upstream-sync-20261015.md",
-        "bytes": 9891,
-        "sha256": "98a004d066ccd79b6a793b1bfcdb0c1b8d3a5ad4bc0b7f9326e91dadf8636976"
+        "bytes": 12491,
+        "sha256": "959cff46ca0863c4bc1bb6c400b613ed6866e5c2235e54d34f33acd67cb6744e"
       },
       {
         "path": "frontend/acceptance/tempo-upstream-sync-20261015/README.md",
@@ -388,6 +390,13 @@
         "bytes": 42292,
         "sha256": "b1db64464e33f9c64ffe5cf885655347638997a3b7b490dcfcc4cc59a44af2e9"
       }
+    ],
+    "committedImplementation": "c36111e09768d376209e6e20129bd194c0a7338a",
+    "followupOwnedFiles": [
+      ".github/workflows/tempo-ci.yml",
+      ".github/test/test_workflow_boundary.py",
+      "docs/tempo-upstream-sync-20261015.md",
+      "docs/evidence/upstream-sync-20261015/migration-evidence.json"
     ]
   },
   "classificationCounts": {
@@ -2092,11 +2101,11 @@
   "nativeChanges": [
     {
       "path": ".github/test/test_workflow_boundary.py",
-      "reason": "Verify serial retained script set and namespace dependencies; existing credential/event/SSH boundaries retained."
+      "reason": "19 workflow/candidate contracts enforce early unprivileged namespace gate, restrictive distro profile and unchanged host controls/deploy boundaries."
     },
     {
       "path": ".github/workflows/tempo-ci.yml",
-      "reason": "Include retained offline launcher tests and Linux fixture packages in CI; production job unchanged."
+      "reason": "Current-workflow unprivileged namespace gate runs before long suites and historical checkout; distro restrictive bwrap AppArmor profile loaded only on ephemeral CI, global controls unchanged. Historical feature fixtures gated by their presence. Production job unchanged."
     },
     {
       "path": "docs/tempo-upstream-sync-20261015.md",
@@ -2463,6 +2472,63 @@
       "fixtureFrontend3039Stopped": true,
       "temporaryHelpersRemoved": true,
       "frozenArchiveCopiesLogsAndReusableBrowserConfigRetained": true
+    },
+    "githubFirstPrCi": {
+      "url": "https://github.com/Kris77z/tabby-tempo/actions/runs/38738305925",
+      "runId": 38738305925,
+      "headSha": "c36111e09768d376209e6e20129bd194c0a7338a",
+      "conclusion": "failure",
+      "deploy": "skipped",
+      "passedSteps": [
+        "Solidity build/test",
+        "Next fixture build",
+        "typecheck:all",
+        "complete offline workspace suite"
+      ],
+      "scriptGroup": {
+        "tests": 26,
+        "pass": 25,
+        "fail": 1,
+        "skipped": 0,
+        "error": "bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted"
+      },
+      "reasonConfidence": "AppArmor userns capability restriction is strongly indicated by Ubuntu documentation; initial log lacks kernel audit; fix awaits next Linux CI execution."
+    },
+    "ciNamespaceFollowup": {
+      "status": "local contracts/docs/shell syntax passed; actual Linux fix pending PR CI",
+      "localWorkflowTests": {
+        "pass": 19,
+        "fail": 0,
+        "log": "review/namespace-workflow-contract.log"
+      },
+      "shellSyntax": {
+        "blocks": 7,
+        "exitCode": 0,
+        "log": "review/namespace-shell-check.log"
+      },
+      "docs": {
+        "exitCode": 0,
+        "log": "review/namespace-docs-check.log"
+      },
+      "diff": {
+        "exitCode": 0,
+        "log": "review/namespace-diff-check.log"
+      },
+      "distroProfile": "/usr/share/apparmor/extra-profiles/bwrap-userns-restrict",
+      "profileNames": [
+        "bwrap",
+        "unpriv_bwrap"
+      ],
+      "globalSysctlsChanged": false,
+      "rootTestExecution": false,
+      "skipAdded": false,
+      "sandboxHelperChanged": false,
+      "productionTouched": false,
+      "earlyGateBeforeHistoricalCheckout": true,
+      "sources": [
+        "https://discourse.ubuntu.com/t/understanding-apparmor-user-namespace-restriction/58007",
+        "https://gitlab.com/apparmor/apparmor/-/raw/apparmor-4.0/profiles/apparmor/profiles/extras/bwrap-userns-restrict"
+      ]
     }
   },
   "logs": [
@@ -2547,6 +2613,26 @@
       "sha256": "0dfb746b3bda981adf752758339cb1fc6c4aec6c4da3793da019c16f460ab622"
     },
     {
+      "path": ".data/upstream-sync-20261015/review/namespace-diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/namespace-docs-check.log",
+      "bytes": 145,
+      "sha256": "4d2f1b0ec54bf337f896c105d3620a01dd80e5f382c274237f1e982df8a92812"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/namespace-shell-check.log",
+      "bytes": 69,
+      "sha256": "3a2b06444676b86c6b7cb0e1bc2800c556fe32d649702877356f37fe4a500587"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/namespace-workflow-contract.log",
+      "bytes": 118,
+      "sha256": "bb79b04a4df10eeb7af2d40af194283bf7fc61fc6f8d6a6fae10150f1e7a0bd1"
+    },
+    {
       "path": ".data/upstream-sync-20261015/review/policy-combined-final.log",
       "bytes": 5569,
       "sha256": "d6b6c2f37894a5739922c638034fd8f6140e61db405438afd86d53e4e82e8148"
@@ -2570,6 +2656,11 @@
       "path": ".data/upstream-sync-20261015/review/policy-typecheck.log",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/pr-ci-first-failure.log",
+      "bytes": 29174,
+      "sha256": "723ea635a36574aa4dd16b81e0cf7cd759d201569e5fe6f503dc0e370b28e872"
     },
     {
       "path": ".data/upstream-sync-20261015/scripts-offline.log",
@@ -2625,6 +2716,11 @@
       "path": ".data/upstream-sync-20261015/workflow.log",
       "bytes": 116,
       "sha256": "1bbe318a758f30d734e96c7db2ef0ab0c820f767dce8cd6cb6e73dda771f6200"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/namespace-manifest-integrity.log",
+      "bytes": 378,
+      "sha256": "3a1ebc9dee9ad53cb3e617222d55adf4bb71ea5a5310a30352e11396c4f5008e"
     }
   ],
   "reports": [
@@ -2652,6 +2748,16 @@
       "path": ".data/upstream-sync-20261015/reviews/external-sdk-fallback-review.md",
       "sha256": "98862da0c855b38daea3ab9b36c59469ee4cb4d35acfea87391c2b94a48e11ac",
       "bytes": 10620
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/pr-ci-first-metadata.json",
+      "bytes": 4613,
+      "sha256": "b6132517e5c8a1bb6cf61fcc970437bbda655e075f487120b67d5a36ccc49620"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/ci-namespace-review.md",
+      "bytes": 6836,
+      "sha256": "7f226fef6c61c4f2014f2bbd549572bd4c66f157c22d1ca234932a7ef789e589"
     }
   ]
 }

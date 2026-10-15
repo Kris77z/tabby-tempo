@@ -61,12 +61,39 @@ class WorkflowBoundaryTests(unittest.TestCase):
 
     def test_offline_script_group_is_serial_and_covers_retained_new_launchers(self):
         group = self.ci.split("- name: Run offline Tempo runtime, migration, RPC and journal checks", 1)[1].split("      - name:", 1)[0]
-        expected = {"tempo-hosted-runtime", "tempo-runtime-upgrade", "tempo-vps-migrate", "tempo-rpc", "tempo-rpc-pacing", "journal-chain", "external-stack", "linux-magpie"}
+        expected = {"tempo-hosted-runtime", "tempo-runtime-upgrade", "tempo-vps-migrate", "tempo-rpc", "tempo-rpc-pacing", "journal-chain", "external-stack"}
         self.assertEqual(set(re.findall(r"scripts/test/([a-z0-9-]+)\.test\.ts", group)), expected)
         self.assertIn("--test-concurrency=1", group)
         self.assertNotIn("prepare-external-provider", group)
-        self.assertIn("sudo apt-get install --no-install-recommends -y bubblewrap socat", self.ci)
-        self.assertLess(self.ci.index("Install Linux namespace fixture dependencies"), self.ci.index("Run offline Tempo runtime, migration, RPC and journal checks"))
+        self.assertIn("sudo apt-get install --no-install-recommends -y bubblewrap socat apparmor apparmor-profiles", self.ci)
+        self.assertIn("if [[ -f scripts/test/external-stack.test.ts ]]; then", group)
+
+    def test_unprivileged_namespace_gate_precedes_historical_checkout_and_long_suites(self):
+        prepare = self.ci.index("Prepare the hosted runner's restricted Linux namespace fixture")
+        gate = self.ci.index("Test current Linux namespace boundary before long suites")
+        historical = self.ci.index("Checkout the validated historical candidate")
+        self.assertLess(prepare, gate)
+        self.assertLess(gate, historical)
+        self.assertLess(gate, self.ci.index("Build and test Solidity locally"))
+        self.assertLess(gate, self.ci.index("Run the complete offline workspace suite"))
+        block = self.ci[gate:historical]
+        self.assertIn('test "$(id -u)" -ne 0', block)
+        self.assertIn("node --import tsx --test --test-concurrency=1 scripts/test/linux-magpie.test.ts", block)
+        self.assertIn("exit 1", block)
+        self.assertNotIn("sudo node", block)
+        self.assertNotIn("continue-on-error", self.ci)
+        self.assertIn("Install current workflow dependencies without production secrets", self.ci[:gate])
+        self.assertIn("Install historical candidate dependencies for rollback checks", self.ci[historical:])
+
+    def test_namespace_preparation_keeps_global_controls_and_restrictive_distro_child_policy(self):
+        block = self.ci.split("Prepare the hosted runner's restricted Linux namespace fixture", 1)[1].split("      - name:", 1)[0]
+        self.assertIn("profile=/usr/share/apparmor/extra-profiles/bwrap-userns-restrict", block)
+        self.assertIn('sudo apparmor_parser -Q "$profile"', block)
+        self.assertIn('sudo apparmor_parser -r /etc/apparmor.d/bwrap-userns-restrict', block)
+        self.assertIn('sudo install -o root -g root -m 0644 "$profile"', block)
+        self.assertIn('test "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns)" = "$restriction"', block)
+        for forbidden in ("sysctl -w", "sysctl --write", "systemctl stop apparmor", "aa-disable", "chmod u+s", "--share-net"):
+            self.assertNotIn(forbidden, self.ci)
 
     def run_ssh(self, sha="a" * 40, operation="release", known_hosts="154.12.34.51 ssh-ed25519 synthetic"):
         with tempfile.TemporaryDirectory() as directory:

@@ -68,6 +68,36 @@ jobs:
           node scripts/check-doc-links.mjs
           node scripts/check-doc-links.mjs deploy/tempo-vps/cicd/README.md
 
+      - name: Prepare the hosted runner's restricted Linux namespace fixture
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y bubblewrap socat apparmor apparmor-profiles
+          # Distro policy permits bwrap initialization and stacks a capability-denying
+          # child profile. Keep the host-wide AppArmor/userns controls unchanged.
+          profile=/usr/share/apparmor/extra-profiles/bwrap-userns-restrict
+          test -f "$profile"
+          restriction=$(sysctl -n kernel.apparmor_restrict_unprivileged_userns)
+          sudo apparmor_parser -Q "$profile"
+          sudo install -o root -g root -m 0644 "$profile" /etc/apparmor.d/bwrap-userns-restrict
+          sudo apparmor_parser -r /etc/apparmor.d/bwrap-userns-restrict
+          test "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns)" = "$restriction"
+          uname -r
+          dpkg-query -W bubblewrap apparmor apparmor-profiles
+          sha256sum "$profile"
+          sysctl kernel.unprivileged_userns_clone user.max_user_namespaces kernel.apparmor_restrict_unprivileged_userns
+          sudo cat /sys/kernel/security/apparmor/profiles | sed -n '/^bwrap /p; /^unpriv_bwrap /p'
+
+      - name: Install current workflow dependencies without production secrets
+        run: npm ci
+
+      - name: Test current Linux namespace boundary before long suites
+        run: |
+          test "$(id -u)" -ne 0
+          if ! node --import tsx --test --test-concurrency=1 scripts/test/linux-magpie.test.ts; then
+            sudo journalctl -k --since '-2 minutes' --no-pager | rg -i 'apparmor|bwrap|userns|RTM_NEWADDR' || true
+            exit 1
+          fi
+
       - name: Checkout the validated historical candidate for rollback checks
         if: steps.candidate.outputs.sha != github.sha
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -81,13 +111,9 @@ jobs:
           version: v1.8.1
           cache: false
 
-      - name: Install locked dependencies without production secrets
+      - name: Install historical candidate dependencies for rollback checks
+        if: steps.candidate.outputs.sha != github.sha
         run: npm ci
-
-      - name: Install Linux namespace fixture dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y bubblewrap socat
 
       - name: Prepare the pinned Python sandbox image
         run: docker pull python:3.12-alpine@sha256:4c47124a8391cb7a9f571164147d154777cf012a4ece5f86097130d7a4478111
@@ -117,9 +143,12 @@ jobs:
             scripts/test/tempo-vps-migrate.test.ts \
             scripts/test/tempo-rpc.test.ts \
             scripts/test/tempo-rpc-pacing.test.ts \
-            scripts/test/journal-chain.test.ts \
-            scripts/test/external-stack.test.ts \
-            scripts/test/linux-magpie.test.ts
+            scripts/test/journal-chain.test.ts
+          # Successful historical releases may predate the optional external stack.
+          # Current candidates containing it must exercise their owned-Anvil fixture.
+          if [[ -f scripts/test/external-stack.test.ts ]]; then
+            node --import tsx --test --test-concurrency=1 scripts/test/external-stack.test.ts
+          fi
 
       - name: Check candidate documentation links when the historical version provides the command
         run: npm run docs:check --if-present
