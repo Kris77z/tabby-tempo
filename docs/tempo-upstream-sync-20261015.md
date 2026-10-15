@@ -80,7 +80,7 @@ CI 仅在一次性 Ubuntu runner 安装 `apparmor` / `apparmor-profiles`，读�
 
 真实 `linux-magpie.test.ts` 现在先在当前 workflow 版本执行，早于历史候选 checkout、Solidity/前端构建与完整长测试。它仍验证文件隐藏、未批准 loopback 拒绝、批准 peer 代理和原 `--unshare-all` 边界。回滚时再安装历史候选依赖；历史版本尚无 external stack 时无需执行不存在的功能测试，包含该功能的候选必须执行对应 fixture。生产 deploy job、可信 helper、VPS 和应用源码均未改变。
 
-本机补充验证为 workflow contract **19/19**、7 个 multiline shell block 的 `bash -n`、维护文档链接及 diff 检查；macOS 不能验证 Linux profile 生效。以上是该修复提交前的本地验证，不能代替 Linux 实测；后续 GitHub 结果见下一节。候选摘要保留已提交内容，不纳入本次范围外的并行 README 工作区编辑。
+本机补充验证为 workflow contract **19/19**、7 个 multiline shell block 的 `bash -n`、维护文档链接及 diff 检查；macOS 不能验证 Linux profile 生效。以上是该修复提交前的本地验证，不能代替 Linux 实测；后续 GitHub 结果见下一节。当时的候选摘要保留已提交内容，不纳入范围外的并行 README 工作区编辑；之后 PR #3 正式进入主线的整合见下节。
 
 ## 第二轮 CI：隔离通过与启动超时夹具修复
 
@@ -91,3 +91,11 @@ CI 仅在一次性 Ubuntu runner 安装 `apparmor` / `apparmor-profiles`，读�
 只修该故障注入用例：可控 Docker shim 为 info、image inspect 和 create 返回成功，唯独 start 在可信执行 marker 之前阻塞；不依赖共享 daemon 恰好及时响应。断言核对完整 `info → image → create → start → rm` 轨迹、固定镜像、同一 owned container 名与只读 staging 清理，仍要求精确 `DOCKER_START_TIMEOUT`。原 `startupTimeoutMs=100`、`timeoutMs=600` 未变，未加重试、未接受其他基础设施错误；任务继续 Assigned、贷款完整不变、settlements journal 不存在等业务断言全部保留。实际 Docker 行为仍由现有真实集成用例覆盖，生产执行器、业务代码、VPS 和可信 helper 均未改动。
 
 本地定向结果：修复用例 **1/1**；真实 Docker 的 `0077` staging 与 marker 前不可读/缺失分类 **2/2**；backend typecheck、文档和 diff 检查通过。root 另独立复验该用例 1/1。最终完整候选仍交 GitHub CI 验证，本节不宣称新一轮完整 CI 或部署成功。
+
+## 整合并行 README 主线更新
+
+主线 [PR #3](https://github.com/Kris77z/tabby-tempo/pull/3) 以 `e9325cb5fd25860653bfb93144f0f90971ebfbd0` 合并，双语 README 各增加 6 行视频入口；该文档提交带 `[skip ci]`，没有发布到生产。本分支在 `cd71942` 上以普通 merge 整合该主线，只解决 README 冲突，不重写历史或 force push。
+
+每份合并结果严格保留 PR #3 的视频 URL、标签和来源说明，同时保留本分支产品功能描述、Tempo 运行事实、首次 CI/CD 历史和可选功能边界。视频 block 逐字核对，不把 Monad 录制当作 Tempo 新验收。
+
+机器清单现在从相对 `e9325cb5fd25860653bfb93144f0f90971ebfbd0` 的真实差异计算目标集合，并使用合并后的 README 候选字节。PR #3 自有的 12 行作为已有主线贡献单列，不计为本轮上游迁移；原目标冻结基线 `40647f0`、source commit、有效上游基线、124 项冻结差异和历史测试记录全部保留。只运行文档链接、格式、冲突消解和内容摘要核对，不重跑业务测试或触发部署；最终 merge commit 由独立验收线程完成。

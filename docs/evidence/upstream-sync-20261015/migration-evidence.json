@@ -15,390 +15,537 @@
     "priorEvidence": "docs/evidence/upstream-sync-20261014/migration-evidence.json"
   },
   "target": {
-    "baseCommit": "40647f0dc9f966bbbe98bf3e474cfbe612c0ffa8",
+    "baseCommit": "e9325cb5fd25860653bfb93144f0f90971ebfbd0",
     "branch": "codex/tempo-upstream-sync-20261015",
     "finalCommit": null,
-    "finalCommitMeaning": "Application migration c36111e and CI namespace fix733e6fb are committed. Current owned delta only fixes a deterministic Arena test fixture and records evidence; its future SHA is not invented. README bytes remain from committed c36111e, excluding unrelated concurrent workspace edits.",
+    "finalCommitMeaning": "Application and CI/test fixes are committed through cd71942. Main e9325cb is integrated by a no-commit merge with resolved README conflicts; the future merge SHA is not invented. Candidate hashes now use all merged bytes, including preserved main video blocks.",
     "contentFileCount": 74,
-    "contentSha256": "8d8dbe762e900b7a3c0266d17b25e6b674f710a5891d7575cddc3b1c35f9d75d",
-    "contentAlgorithm": "SHA256(UTF8(concat sorted path + NUL + file SHA256 + LF)); excludes this self-referential manifest, ignored/private files and independent root artifacts. README.md and README.zh-CN.md use committed c36111e Git bytes; other entries use owned candidate contents.",
+    "contentSha256": "54530d030cf43101f71a81860f8a96601767d358dab2d2b8712cd5c98777108c",
+    "contentAlgorithm": "SHA256(UTF8(concat sorted path + NUL + file SHA256 + LF)); file set is the actual candidate diff relative to e9325cb main, excluding this self-referential manifest, ignored/private files and independent root artifacts. Each hash uses merged candidate bytes; pre-existing main video additions are not owned migration changes.",
     "files": [
       {
         "path": ".github/test/test_workflow_boundary.py",
         "bytes": 8794,
-        "sha256": "50a949c454a5118356fa2f25f2d8064ac73543659cd55ef6cbc860d2868be3c0"
+        "sha256": "50a949c454a5118356fa2f25f2d8064ac73543659cd55ef6cbc860d2868be3c0",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "45203b9e95aab872a6f69a39637330ee33ba3bdd147ace2934f6f52cef47d7ab"
       },
       {
         "path": ".github/workflows/tempo-ci.yml",
         "bytes": 8728,
-        "sha256": "31b1dfb6de566522c1016c96ef8f5444397ea84add5c5f36335ff5dddea970f4"
+        "sha256": "31b1dfb6de566522c1016c96ef8f5444397ea84add5c5f36335ff5dddea970f4",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "2d8e51c619a81b2f99fd0b0694c63041d086332f1d4563fc5313d24b41af079c"
       },
       {
         "path": "README.md",
-        "bytes": 8167,
-        "sha256": "a9b80d2debc751493c50df68d9bbd29e3c237a85ccb0a7873c715263d2a88c02",
-        "contentSource": "git:c36111e09768d376209e6e20129bd194c0a7338a"
+        "bytes": 8381,
+        "sha256": "bf965858b0ab3c964640b175e16c7d49ceb3ab790bc3e8f7bfe9fc16ad3f14f7",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "9a0fcc395757b72ad0141878ac9c44211317fc86e456a350af1b5188ace5b607"
       },
       {
         "path": "README.zh-CN.md",
-        "bytes": 5470,
-        "sha256": "a6e03f0e7dcd649340076c59f2ce92d83afb02b47f47ef82f0ac499f80b8c6bb",
-        "contentSource": "git:c36111e09768d376209e6e20129bd194c0a7338a"
+        "bytes": 5689,
+        "sha256": "a6ff28a5f366c40a3a51a54663ca7b4ee79b9de0594b22887c3e15557465a58b",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "bcec9fb6465258d5e8291ed0e2b4ab16958eac093eb87393f563b32d81e07cbf"
       },
       {
         "path": "docs/ARCHITECTURE.md",
         "bytes": 9904,
-        "sha256": "e0a479bf84923d838c4b9990f0ebdd05940cdd5e5ef300d0160fa482c6ba48f0"
+        "sha256": "e0a479bf84923d838c4b9990f0ebdd05940cdd5e5ef300d0160fa482c6ba48f0",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "4344306ed60deaaff4d92019d086f4f1a81687eba5c197aebf1d41e764fc4e34"
       },
       {
         "path": "docs/README.md",
         "bytes": 3570,
-        "sha256": "586cd1102551ee606d3f3645ad3db730cd4532806ac5a92fdc650d4ae00e98b3"
+        "sha256": "586cd1102551ee606d3f3645ad3db730cd4532806ac5a92fdc650d4ae00e98b3",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "700e33267869f2357163056770a0a8130120201607b94c1138c0005ee247374e"
       },
       {
         "path": "docs/VERIFICATION.md",
         "bytes": 7745,
-        "sha256": "59ad167431fd467c8e8df6fc2ff56c9ee63562c61101a600b01edb04d0633fa1"
+        "sha256": "59ad167431fd467c8e8df6fc2ff56c9ee63562c61101a600b01edb04d0633fa1",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "a602511d174ddf89996247df3761895fc83ae91fff5f1e6fee160b24f978a705"
       },
       {
         "path": "docs/tempo-upstream-sync-20261015.md",
-        "bytes": 14610,
-        "sha256": "0beea332845d42d9658d1f85e3291a969162f385b1cb527294b2eff1babf9fe3"
+        "bytes": 15820,
+        "sha256": "4fd4cd7c2850d5e84b9f8d22587c2924feb6f1dba79585ad16bd4bd494e4849d",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "frontend/acceptance/tempo-upstream-sync-20261015/README.md",
         "bytes": 821,
-        "sha256": "0994579e399bb57af5361a12720583c3036a507b3d651467ffdd3fba9a83a84c"
+        "sha256": "0994579e399bb57af5361a12720583c3036a507b3d651467ffdd3fba9a83a84c",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "frontend/acceptance/tempo-upstream-sync-20261015/controlled-browser-summary.json",
         "bytes": 1917,
-        "sha256": "8305148e83fc4f7a80904596d91562d98d61898ed39fc65387eec4841690a1cf"
+        "sha256": "8305148e83fc4f7a80904596d91562d98d61898ed39fc65387eec4841690a1cf",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "frontend/acceptance/tempo-upstream-sync-20261015/desktop-synthetic-external-identity.png",
         "bytes": 125960,
-        "sha256": "600b62bd6a3b31e93d23bdd61c54c0bcc174f2c5bb8e5c8a7866ac3a87899e7d"
+        "sha256": "600b62bd6a3b31e93d23bdd61c54c0bcc174f2c5bb8e5c8a7866ac3a87899e7d",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "frontend/acceptance/tempo-upstream-sync-20261015/mobile-synthetic-external-identity.png",
         "bytes": 173423,
-        "sha256": "01deee0f7f2f37a0b91b0cf266ff168cb22f27e5a0ce4415c3a0f2f3d16cbcf8"
+        "sha256": "01deee0f7f2f37a0b91b0cf266ff168cb22f27e5a0ce4415c3a0f2f3d16cbcf8",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "frontend/components/hosted/agent-profile.tsx",
         "bytes": 5724,
-        "sha256": "8c4acfa48dced1f4a3ae76a0d039c2f02527edae55803c05c1c37f3c3af0b327"
+        "sha256": "8c4acfa48dced1f4a3ae76a0d039c2f02527edae55803c05c1c37f3c3af0b327",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "88213ec70990762788475fb11b8203117ce4fdf5415c3a0a312ac709c0f72b95"
       },
       {
         "path": "frontend/components/hosted/expert-mesh.tsx",
         "bytes": 6809,
-        "sha256": "79dad904470984ec21529b8bb838be301f81b2031a37a96c7e292526c17674a1"
+        "sha256": "79dad904470984ec21529b8bb838be301f81b2031a37a96c7e292526c17674a1",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "8824ce2ceee05eb1099b7205b1c03006fa70c3df758c3561649490a82e0f50e5"
       },
       {
         "path": "frontend/components/hosted/finance-app.tsx",
         "bytes": 5060,
-        "sha256": "ee37636ef59163aba30a3897a41f673706f683e57412e03571e7d349fcbad210"
+        "sha256": "ee37636ef59163aba30a3897a41f673706f683e57412e03571e7d349fcbad210",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "ce666114b5c8b517455dec04b7b49454ba1d1da4e6e59f521c8eb24291c535cf"
       },
       {
         "path": "frontend/components/hosted/goal-composer.tsx",
         "bytes": 8565,
-        "sha256": "22000d29236ef923c19d7aae3f1324cf445a87b0ebf929702acf24ab47cacfca"
+        "sha256": "22000d29236ef923c19d7aae3f1324cf445a87b0ebf929702acf24ab47cacfca",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "3ebf6b90e6af4e032f8cda6fa96f88e60430cee41fa94fc0f66f9e717fc774e8"
       },
       {
         "path": "frontend/components/hosted/hosted-app.tsx",
         "bytes": 21601,
-        "sha256": "b9a445773a5d0fba8c02f8ac0d162ecf90f41a543bbce5832b4a2d6f664198dc"
+        "sha256": "b9a445773a5d0fba8c02f8ac0d162ecf90f41a543bbce5832b4a2d6f664198dc",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "e7f5287491e49620a6ce6494d91a0f4c3d4360e483079576aff607f68fb7648f"
       },
       {
         "path": "frontend/lib/agent-evidence.ts",
         "bytes": 1994,
-        "sha256": "8028a524b6f1e680f911407f5369c5d5c4632eb73beffe7c9f94c7db4dd810e9"
+        "sha256": "8028a524b6f1e680f911407f5369c5d5c4632eb73beffe7c9f94c7db4dd810e9",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "a435784174b2925524dc0ef73d1dfb553975627438d38419d5a1d6e7667b7b0b"
       },
       {
         "path": "frontend/lib/expert-assignments.ts",
         "bytes": 2921,
-        "sha256": "631335447d9e806eb0fa8fec72cca4e21dfab67418f8f2bf17ac98416e13c4d0"
+        "sha256": "631335447d9e806eb0fa8fec72cca4e21dfab67418f8f2bf17ac98416e13c4d0",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "c9d73ed0c8567ea768597a41435f5a2bc1f0e1048a2494776aab033a3dabe7cc"
       },
       {
         "path": "frontend/lib/hosted-agents-proxy.ts",
         "bytes": 15694,
-        "sha256": "89e512dfcc8c51db9b10a52f28653b44584653442175116f7d850dfc4a000844"
+        "sha256": "89e512dfcc8c51db9b10a52f28653b44584653442175116f7d850dfc4a000844",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "b9e637a54d98c10704e250649f818f09efaf2a460b997967ebb3c5597cd76f34"
       },
       {
         "path": "frontend/lib/hosted-client.ts",
         "bytes": 16610,
-        "sha256": "0a09fc91145b1a6d4399bdae00852beea2c3e6e1b6776e8845169161ee35ac64"
+        "sha256": "0a09fc91145b1a6d4399bdae00852beea2c3e6e1b6776e8845169161ee35ac64",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "c2eebde2aa2004f437f2dece9fd71ef711a06507265b41344e583e4679d4d5ad"
       },
       {
         "path": "frontend/lib/read.ts",
         "bytes": 17353,
-        "sha256": "30c51014e7f92149d6074be944e7b24f2f688b2826680939390c6574c70df913"
+        "sha256": "30c51014e7f92149d6074be944e7b24f2f688b2826680939390c6574c70df913",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "3952d8253d952168732b52bd682571f2228c8efe759cbe54da66aaefdf3a0bdd"
       },
       {
         "path": "frontend/lib/run-funding.ts",
         "bytes": 705,
-        "sha256": "70c049ac2e35d65b6cff48e1b60a62043ab8a318bdb450782aae4e9b92254400"
+        "sha256": "70c049ac2e35d65b6cff48e1b60a62043ab8a318bdb450782aae4e9b92254400",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "frontend/lib/tabby-scenes.ts",
         "bytes": 22524,
-        "sha256": "1865cac73da2085d3b999e26c3e0b082c11b5c534e71d26dafd16ca1f1b4bc0b"
+        "sha256": "1865cac73da2085d3b999e26c3e0b082c11b5c534e71d26dafd16ca1f1b4bc0b",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "a405e41a1ab209d152bb48462b2899a201122fc1c2ee18e8d95bf1f443f8f923"
       },
       {
         "path": "frontend/next-env.d.ts",
         "bytes": 334,
-        "sha256": "80b3cb58e60759018c932eb5772c1467fa12ede51b3aa43333f91b3af21bf271"
+        "sha256": "80b3cb58e60759018c932eb5772c1467fa12ede51b3aa43333f91b3af21bf271",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "3898d7853bd5b3ff9494a5c7d63c09ae045f36dc48f02afb727a0d9f69691888"
       },
       {
         "path": "frontend/test/agent-evidence.test.ts",
         "bytes": 3116,
-        "sha256": "8f5f6a4b2453527a9992a5af9a4a119092d83277a34f5e82c957ec6c95135d92"
+        "sha256": "8f5f6a4b2453527a9992a5af9a4a119092d83277a34f5e82c957ec6c95135d92",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "7f3d24a31e278bd87662483cb4c8bdd486db8edc059dbb4fcaf256ccebebe82f"
       },
       {
         "path": "frontend/test/browser/upstream-sync-20261015.spec.ts",
         "bytes": 3527,
-        "sha256": "67ab0ffb279d1b2079bc373ed91b2b1eaab52b8f2598806e1fa7a0bcef680e3f"
+        "sha256": "67ab0ffb279d1b2079bc373ed91b2b1eaab52b8f2598806e1fa7a0bcef680e3f",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "frontend/test/expert-assignments.test.ts",
         "bytes": 3271,
-        "sha256": "a54d1004283910b4e549c315ee3b32b839b882e78d9b5c70fdb11ea8cd02c939"
+        "sha256": "a54d1004283910b4e549c315ee3b32b839b882e78d9b5c70fdb11ea8cd02c939",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "4a78cd557f9be8416f4af3837fb244769345ee3776eeb06e9d7061a121595944"
       },
       {
         "path": "frontend/test/hosted-agents-proxy.test.ts",
         "bytes": 27672,
-        "sha256": "93456755dd147df59379afb443ae360ed41342005a5e146850e9fe0c6e79115d"
+        "sha256": "93456755dd147df59379afb443ae360ed41342005a5e146850e9fe0c6e79115d",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "f8f4617ed263ca7637fd08b79bf2e23e98b9c7f34fb29cdf34b717dbcdfa803a"
       },
       {
         "path": "frontend/test/rpc-read-limits.test.ts",
         "bytes": 8005,
-        "sha256": "c7d6e5aef7e1eb0d50dbca4440c22cc8aa6f3038488b616136f7e85c31b48437"
+        "sha256": "c7d6e5aef7e1eb0d50dbca4440c22cc8aa6f3038488b616136f7e85c31b48437",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "frontend/test/run-funding.test.ts",
         "bytes": 1173,
-        "sha256": "9b044d025d6228245f6c816666733ee74b5990aa1e6ad093e884944d2ad2de41"
+        "sha256": "9b044d025d6228245f6c816666733ee74b5990aa1e6ad093e884944d2ad2de41",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "frontend/tsconfig.json",
         "bytes": 2612,
-        "sha256": "ceea0add3403c682d9e376729e12e3cd982201f819dcdb7f44152d8aab695a28"
+        "sha256": "ceea0add3403c682d9e376729e12e3cd982201f819dcdb7f44152d8aab695a28",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "d112942ed78b2afd93389bfc3a1ea08dda662e072edb22ff2cf56ae180df7fa9"
       },
       {
         "path": "package-lock.json",
         "bytes": 99276,
-        "sha256": "76f3d4049ed5b708a2b00f5b9765f248714068d21d22ea112ae7dc5fa920c969"
+        "sha256": "76f3d4049ed5b708a2b00f5b9765f248714068d21d22ea112ae7dc5fa920c969",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "1d3c5e438a1243697d2dd6c167b0554e5ab5b96af24693efff64b46193ffc00b"
       },
       {
         "path": "packages/pi-loop/src/autonomy.ts",
         "bytes": 32839,
-        "sha256": "8716a856784e8cb65ae233bfb289d1d9554c1dacc6fbf931058e9c6cf2397ae1"
+        "sha256": "8716a856784e8cb65ae233bfb289d1d9554c1dacc6fbf931058e9c6cf2397ae1",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "3b024b028c0d0393bd7c2786644c0c876a4ea7f0ee4446e80f3e07e929da6cef"
       },
       {
         "path": "packages/pi-loop/src/provider.ts",
         "bytes": 20809,
-        "sha256": "c635bd8e2a34c4f71ee6345144bf01790d6c4310b73e40af6ed495ffb29e4b84"
+        "sha256": "c635bd8e2a34c4f71ee6345144bf01790d6c4310b73e40af6ed495ffb29e4b84",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "4b8e22b29e6527bba3c565571a4270afb06c0b8c3450f70294822450380fa08c"
       },
       {
         "path": "packages/pi-loop/test/autonomy.test.ts",
         "bytes": 37990,
-        "sha256": "c28ed2864f44b308d04d33d825a86006b20cdc255c9e326a3e02c90de6a790c0"
+        "sha256": "c28ed2864f44b308d04d33d825a86006b20cdc255c9e326a3e02c90de6a790c0",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "3d4c16b62b5ad9b76844a2824da1f30dd089ecb64ca59bc92c32d10a4ba9e4a7"
       },
       {
         "path": "packages/pi-loop/test/provider.test.ts",
         "bytes": 27818,
-        "sha256": "56f7fd2f1b8f6366281b51142b995dc9f2a385a812677df5abcfbef0b8c37bec"
+        "sha256": "56f7fd2f1b8f6366281b51142b995dc9f2a385a812677df5abcfbef0b8c37bec",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "0c666ab514b3e89879bd77c674079a7168ed1e120ffb847e25505c6e5026fb84"
       },
       {
         "path": "packages/sdk/src/index.ts",
         "bytes": 16208,
-        "sha256": "a96e3b260efc1b5d7cbb22d46d14f07e184e35b37302ba9392d5504606d695b5"
+        "sha256": "a96e3b260efc1b5d7cbb22d46d14f07e184e35b37302ba9392d5504606d695b5",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "f51c07db6e5015808557b3a9e6bb2f84f63254d5fddf8203fd1689d0b0a58b9a"
       },
       {
         "path": "scripts/check-doc-links.mjs",
         "bytes": 4682,
-        "sha256": "bea87d700ad482cb33b4665564223dc8be7687821a04241727ecae6e88465c77"
+        "sha256": "bea87d700ad482cb33b4665564223dc8be7687821a04241727ecae6e88465c77",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "e8ef99693aa09252e13dcf6bd95d199ff5118a9db1020f06d88dbbf526c8d980"
       },
       {
         "path": "scripts/external-specialist-stack.ts",
         "bytes": 4573,
-        "sha256": "54f53b4fe969aa6eff4f6b802f98d0ed8a310e42cc555129a8566dc3ee7a2b93"
+        "sha256": "54f53b4fe969aa6eff4f6b802f98d0ed8a310e42cc555129a8566dc3ee7a2b93",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "scripts/hosted-agents.ts",
         "bytes": 10176,
-        "sha256": "6eb746e01ff87c86b6a8d538e966dbfab39cae5d2179cc7338860947c47b904e"
+        "sha256": "6eb746e01ff87c86b6a8d538e966dbfab39cae5d2179cc7338860947c47b904e",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "c9aacb3a573da3ba03121a2510d4b9a2868de786d6ad002399633ee69fd1b473"
       },
       {
         "path": "scripts/local-hosted.ts",
         "bytes": 15554,
-        "sha256": "a5663052ddba5e74e184817b94b4d79486b180f5cf2c0c7b0d06b166a706714a"
+        "sha256": "a5663052ddba5e74e184817b94b4d79486b180f5cf2c0c7b0d06b166a706714a",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "086e77cfd996fa18933d9836aed9eda15e82bda618c327c6bd2d57ddd6da389a"
       },
       {
         "path": "scripts/magpie-gateway.ts",
         "bytes": 8123,
-        "sha256": "693c761a5b76c9ad4b7bcfdbb54193495b47ee46016be61999a536501c5d620a"
+        "sha256": "693c761a5b76c9ad4b7bcfdbb54193495b47ee46016be61999a536501c5d620a",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "48c867ffe79754a68184f0f89cceca89dc769bacf0e044c1ab88c33a32b19259"
       },
       {
         "path": "scripts/test/external-stack.test.ts",
         "bytes": 6293,
-        "sha256": "9cd0318f76e5788de23b03169994afd7e0c3157fdfc746fa104f8241a89ce64c"
+        "sha256": "9cd0318f76e5788de23b03169994afd7e0c3157fdfc746fa104f8241a89ce64c",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "scripts/test/linux-magpie.test.ts",
         "bytes": 6064,
-        "sha256": "132f7b601b1e5278b86125ac701767d1be66b79db0f8f981b89f701821ce8a11"
+        "sha256": "132f7b601b1e5278b86125ac701767d1be66b79db0f8f981b89f701821ce8a11",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "services/arena/src/docker.ts",
         "bytes": 9407,
-        "sha256": "dd915d0fa799bc9ebd24ca396b23e6723ae932c47bea419dc10c7a8a0abed59e"
+        "sha256": "dd915d0fa799bc9ebd24ca396b23e6723ae932c47bea419dc10c7a8a0abed59e",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "ab7484b381ca89932573072fde2659ae8ebff41e85fe9e9908ad7b918e1c2ef1"
       },
       {
         "path": "services/arena/test/arena.test.ts",
         "bytes": 32644,
-        "sha256": "7bd3a7b0655903f5b120092504ff459aca23afbe89b1176884793184d7b21df6"
+        "sha256": "7bd3a7b0655903f5b120092504ff459aca23afbe89b1176884793184d7b21df6",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "3f80e46322344a6a23272db41110b29fc912e5ac195cb013a154300a72be7d38"
       },
       {
         "path": "services/arena/test/docker.test.ts",
         "bytes": 12791,
-        "sha256": "1680c4fec1ed287e8a1c2e8ea3acca6e42b79ec6948cd34251202550af069190"
+        "sha256": "1680c4fec1ed287e8a1c2e8ea3acca6e42b79ec6948cd34251202550af069190",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "262e3e747e3559dc19934d885aa2fc782da332b80950e0686261c66d182b5775"
       },
       {
         "path": "services/hosted-agents/README.md",
         "bytes": 8880,
-        "sha256": "e865aa4be101b0ca6be71ce3336cbfbdec0a12135f85621bc20d832bcd609a73"
+        "sha256": "e865aa4be101b0ca6be71ce3336cbfbdec0a12135f85621bc20d832bcd609a73",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "f885920b4fd06a0e78ef0a0a64e5b2edb4b9d735f8cef63b9e8659bab57c8409"
       },
       {
         "path": "services/hosted-agents/package.json",
         "bytes": 402,
-        "sha256": "799cacd811c6f0d50eae90fc43ece4d49b6a7a14fdccdd6d7648efd2e6be16cd"
+        "sha256": "799cacd811c6f0d50eae90fc43ece4d49b6a7a14fdccdd6d7648efd2e6be16cd",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "ead82d5cf498b6eec89edb32ba7fec89d10db96abdd5346d667db90b28b6cb7d"
       },
       {
         "path": "services/hosted-agents/src/autonomy-executor.ts",
         "bytes": 47954,
-        "sha256": "4e88c56ccc2307d6c427f05abbf8bf3396a0ec4420d200b4cf5e202a78d0b44c"
+        "sha256": "4e88c56ccc2307d6c427f05abbf8bf3396a0ec4420d200b4cf5e202a78d0b44c",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "ee5ad43319927cad58b72fa8ca972e6a5fe74e15bf27ba1196ff4f809fb5fd60"
       },
       {
         "path": "services/hosted-agents/src/external/hiring.ts",
         "bytes": 8873,
-        "sha256": "43efbcbf34b11635a7bee499e49804ae049268f09b3b88515b91c5dec76fa669"
+        "sha256": "43efbcbf34b11635a7bee499e49804ae049268f09b3b88515b91c5dec76fa669",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "services/hosted-agents/src/external/registry.ts",
         "bytes": 14485,
-        "sha256": "80a26225c1d5b0337b17270f8da78ecdc8aa140291aa7253bc6fefb76c020db7"
+        "sha256": "80a26225c1d5b0337b17270f8da78ecdc8aa140291aa7253bc6fefb76c020db7",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "services/hosted-agents/src/external/service.ts",
         "bytes": 4183,
-        "sha256": "a9ca6c3f28e85e9a547626cc7083ac48f1c99ca514278601d3342fb1122e6cba"
+        "sha256": "a9ca6c3f28e85e9a547626cc7083ac48f1c99ca514278601d3342fb1122e6cba",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "services/hosted-agents/src/game-executor.ts",
         "bytes": 34434,
-        "sha256": "f257954b5f6d12b727e86883b9fe9a944caf80a21e5f56947960683974df6f85"
+        "sha256": "f257954b5f6d12b727e86883b9fe9a944caf80a21e5f56947960683974df6f85",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "a7a95e123bfa515dc40a6e20d3bd6ab6ae07d15016df341d54c747558e7cab6a"
       },
       {
         "path": "services/hosted-agents/src/goal-types.ts",
         "bytes": 6875,
-        "sha256": "495f727f8d9811e91e30325c66a253e8f0652d21d9978d86c35c7f2a08b1d913"
+        "sha256": "495f727f8d9811e91e30325c66a253e8f0652d21d9978d86c35c7f2a08b1d913",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "428b0e891b0c9e6dec6c3289c466197d0c92834c4e340d8dd824660eb51e6749"
       },
       {
         "path": "services/hosted-agents/src/goals/executor.ts",
         "bytes": 27635,
-        "sha256": "245936c55c2d7d4dd7a005786e7ef71212204ba62058abe0e82a4fe995e1933d"
+        "sha256": "245936c55c2d7d4dd7a005786e7ef71212204ba62058abe0e82a4fe995e1933d",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "5e077dab2f4141490d73566c580c19aeb73c2c6086f965c25ba89282145793d9"
       },
       {
         "path": "services/hosted-agents/src/goals/payment.ts",
         "bytes": 15275,
-        "sha256": "47d1004f1398d14926f978558f1717cf164c6df2302b6bc67164c2ba16260602"
+        "sha256": "47d1004f1398d14926f978558f1717cf164c6df2302b6bc67164c2ba16260602",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "42d617ff6716402f67b263f103ff5dae46a435f11642cefccc3a8b240948f8e4"
       },
       {
         "path": "services/hosted-agents/src/goals/reconciliation.ts",
         "bytes": 8760,
-        "sha256": "f90e6d97d99ac1c093b46637a2dfeaf90d0d540ff2558c39e51149504f6cba7d"
+        "sha256": "f90e6d97d99ac1c093b46637a2dfeaf90d0d540ff2558c39e51149504f6cba7d",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "176f54ad8c2f9d995800f157aee5ab2b8404c48a6122ed8425fd10a6d7478218"
       },
       {
         "path": "services/hosted-agents/src/metered-task.ts",
         "bytes": 15789,
-        "sha256": "5eea80d1e790ed36ed2e99d951be802e2b2d70d3630e070044a6ecf3a7ebe6a4"
+        "sha256": "5eea80d1e790ed36ed2e99d951be802e2b2d70d3630e070044a6ecf3a7ebe6a4",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "cc1e9b8d563c1f4363e821c13597a286654b57f8504851a82cfeccccfdc602da"
       },
       {
         "path": "services/hosted-agents/src/service.ts",
         "bytes": 44980,
-        "sha256": "11ed3f0365baa165ef04782311b3260af875ed07f30647cc43d0a05719bb7f5b"
+        "sha256": "11ed3f0365baa165ef04782311b3260af875ed07f30647cc43d0a05719bb7f5b",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "139b9b2ddc144f654865246ded7187e32eb24faf729f767e935098d7097f3a52"
       },
       {
         "path": "services/hosted-agents/src/types.ts",
         "bytes": 5674,
-        "sha256": "376cf2427611a32ae792d635cd72a1dc0c08fe500d21e95978aa722e3b2a4d9e"
+        "sha256": "376cf2427611a32ae792d635cd72a1dc0c08fe500d21e95978aa722e3b2a4d9e",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "e8b03af2f31a467e06756524277c299b444807417bec36dd6f4222a8a4897750"
       },
       {
         "path": "services/hosted-agents/test/autonomy-executor.test.ts",
         "bytes": 55854,
-        "sha256": "1ffd4d4f3a18539523558dc22fbccf1c37de35692ce536a4c60a47005411090e"
+        "sha256": "1ffd4d4f3a18539523558dc22fbccf1c37de35692ce536a4c60a47005411090e",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "305d9d17680ca4d6b5e82c3f4723deefba8d0859210818454fa7f2b9369c0642"
       },
       {
         "path": "services/hosted-agents/test/autonomy-game-live.test.ts",
         "bytes": 27740,
-        "sha256": "c6a398b2bd19e98fe45c4a34d8c58fd15b8e71d45d291add54fb275e39d4e669"
+        "sha256": "c6a398b2bd19e98fe45c4a34d8c58fd15b8e71d45d291add54fb275e39d4e669",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "services/hosted-agents/test/external-hiring.test.ts",
         "bytes": 20976,
-        "sha256": "3f5b7d790872a37519baedef33b97bc13b070ae6a247b5f2bef2629380f453f7"
+        "sha256": "3f5b7d790872a37519baedef33b97bc13b070ae6a247b5f2bef2629380f453f7",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "services/hosted-agents/test/external-prompt-domain.test.ts",
         "bytes": 1535,
-        "sha256": "0a89f61833431a0b1b3e3207a28ab0d4dda2831395eb61cf2182cb1cdbcfc9d3"
+        "sha256": "0a89f61833431a0b1b3e3207a28ab0d4dda2831395eb61cf2182cb1cdbcfc9d3",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "services/hosted-agents/test/external-service-http.test.ts",
         "bytes": 3829,
-        "sha256": "0faf18200efb430e7e200f62f49faa1f572cb7fec37469f2075e8310070367fe"
+        "sha256": "0faf18200efb430e7e200f62f49faa1f572cb7fec37469f2075e8310070367fe",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "services/hosted-agents/test/goals-model-fallback-paid.test.ts",
         "bytes": 8038,
-        "sha256": "a91b66466e08f1e942dd2b19ae3212ad24344ca5834e419c9160c89b9b27d9d5"
+        "sha256": "a91b66466e08f1e942dd2b19ae3212ad24344ca5834e419c9160c89b9b27d9d5",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "services/hosted-agents/test/goals-paid.test.ts",
         "bytes": 9565,
-        "sha256": "5eb0ffe5daa5261dd5a688ae8beebb7c6d48ccbfe5efe3a82f8c1b59593bf972"
+        "sha256": "5eb0ffe5daa5261dd5a688ae8beebb7c6d48ccbfe5efe3a82f8c1b59593bf972",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "0a190ffe3d1063aef1b37b62714a19f4386c40978f7104d3cda140dc39ff9f27"
       },
       {
         "path": "services/hosted-agents/test/goals-policy-recovery.test.ts",
         "bytes": 19302,
-        "sha256": "4eedab21701e81487088a1f5c86f55bfc42bdd5105106fcb093e1272c3ab9d63"
+        "sha256": "4eedab21701e81487088a1f5c86f55bfc42bdd5105106fcb093e1272c3ab9d63",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "services/hosted-agents/test/goals.test.ts",
         "bytes": 25442,
-        "sha256": "5e5515dd16ed3e4b6f80f2edc380239590f070ca0655ad7a29b73de1e0b3f9f5"
+        "sha256": "5e5515dd16ed3e4b6f80f2edc380239590f070ca0655ad7a29b73de1e0b3f9f5",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "2fa9b479bda59c63a8efb5a1f2d5ce1634b2ff8940eb18f734ad3ddf287d4eca"
       },
       {
         "path": "services/hosted-agents/test/model-fallback.test.ts",
         "bytes": 6192,
-        "sha256": "f4a6f996f14e88a50e7cfccdf203d936a7c92dadbb0171b6bf08a9b8db76bb74"
+        "sha256": "f4a6f996f14e88a50e7cfccdf203d936a7c92dadbb0171b6bf08a9b8db76bb74",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "services/hosted-agents/test/sdk-redirect.test.ts",
         "bytes": 2160,
-        "sha256": "49945ace86c7392ebed184db7bac9c4cf867d614acc73663f2b8932cf56f2c5f"
+        "sha256": "49945ace86c7392ebed184db7bac9c4cf867d614acc73663f2b8932cf56f2c5f",
+        "relativeToMainStatus": "A",
+        "mainBaseSha256": null
       },
       {
         "path": "services/hosted-agents/test/service.test.ts",
         "bytes": 42292,
-        "sha256": "b1db64464e33f9c64ffe5cf885655347638997a3b7b490dcfcc4cc59a44af2e9"
+        "sha256": "b1db64464e33f9c64ffe5cf885655347638997a3b7b490dcfcc4cc59a44af2e9",
+        "relativeToMainStatus": "M",
+        "mainBaseSha256": "b101efae56d93c8b9600ea71a00f52b937438852a200ac329b379bf6451c4b8e"
       }
     ],
     "committedImplementation": "c36111e09768d376209e6e20129bd194c0a7338a",
     "followupOwnedFiles": [
-      "services/arena/test/arena.test.ts",
+      "README.md",
+      "README.zh-CN.md",
       "docs/tempo-upstream-sync-20261015.md",
       "docs/evidence/upstream-sync-20261015/migration-evidence.json"
     ],
@@ -414,9 +561,354 @@
           "docs/evidence/upstream-sync-20261015/migration-evidence.json"
         ],
         "purpose": "restricted ephemeral CI namespace profile and early unprivileged gate"
+      },
+      {
+        "baseCommit": "733e6fb7c065aeb10a882172441501163c97f248",
+        "commit": "cd71942f894421c4c741604e9cf1e6913291dbc0",
+        "ownedFiles": [
+          "services/arena/test/arena.test.ts",
+          "docs/tempo-upstream-sync-20261015.md",
+          "docs/evidence/upstream-sync-20261015/migration-evidence.json"
+        ],
+        "purpose": "deterministic Arena startup fault fixture and dated evidence"
       }
     ],
-    "currentFollowupBaseCommit": "733e6fb7c065aeb10a882172441501163c97f248"
+    "currentFollowupBaseCommit": "cd71942f894421c4c741604e9cf1e6913291dbc0",
+    "originalFrozenBaseCommit": "40647f0dc9f966bbbe98bf3e474cfbe612c0ffa8",
+    "comparisonBaseCommit": "e9325cb5fd25860653bfb93144f0f90971ebfbd0",
+    "committedArenaFixtureFollowup": "cd71942f894421c4c741604e9cf1e6913291dbc0",
+    "relativeToMainDiff": {
+      "baseCommit": "e9325cb5fd25860653bfb93144f0f90971ebfbd0",
+      "files": [
+        {
+          "status": "M",
+          "path": ".github/test/test_workflow_boundary.py"
+        },
+        {
+          "status": "M",
+          "path": ".github/workflows/tempo-ci.yml"
+        },
+        {
+          "status": "M",
+          "path": "README.md"
+        },
+        {
+          "status": "M",
+          "path": "README.zh-CN.md"
+        },
+        {
+          "status": "M",
+          "path": "docs/ARCHITECTURE.md"
+        },
+        {
+          "status": "M",
+          "path": "docs/README.md"
+        },
+        {
+          "status": "M",
+          "path": "docs/VERIFICATION.md"
+        },
+        {
+          "status": "A",
+          "path": "docs/evidence/upstream-sync-20261015/migration-evidence.json"
+        },
+        {
+          "status": "A",
+          "path": "docs/tempo-upstream-sync-20261015.md"
+        },
+        {
+          "status": "A",
+          "path": "frontend/acceptance/tempo-upstream-sync-20261015/README.md"
+        },
+        {
+          "status": "A",
+          "path": "frontend/acceptance/tempo-upstream-sync-20261015/controlled-browser-summary.json"
+        },
+        {
+          "status": "A",
+          "path": "frontend/acceptance/tempo-upstream-sync-20261015/desktop-synthetic-external-identity.png"
+        },
+        {
+          "status": "A",
+          "path": "frontend/acceptance/tempo-upstream-sync-20261015/mobile-synthetic-external-identity.png"
+        },
+        {
+          "status": "M",
+          "path": "frontend/components/hosted/agent-profile.tsx"
+        },
+        {
+          "status": "M",
+          "path": "frontend/components/hosted/expert-mesh.tsx"
+        },
+        {
+          "status": "M",
+          "path": "frontend/components/hosted/finance-app.tsx"
+        },
+        {
+          "status": "M",
+          "path": "frontend/components/hosted/goal-composer.tsx"
+        },
+        {
+          "status": "M",
+          "path": "frontend/components/hosted/hosted-app.tsx"
+        },
+        {
+          "status": "M",
+          "path": "frontend/lib/agent-evidence.ts"
+        },
+        {
+          "status": "M",
+          "path": "frontend/lib/expert-assignments.ts"
+        },
+        {
+          "status": "M",
+          "path": "frontend/lib/hosted-agents-proxy.ts"
+        },
+        {
+          "status": "M",
+          "path": "frontend/lib/hosted-client.ts"
+        },
+        {
+          "status": "M",
+          "path": "frontend/lib/read.ts"
+        },
+        {
+          "status": "A",
+          "path": "frontend/lib/run-funding.ts"
+        },
+        {
+          "status": "M",
+          "path": "frontend/lib/tabby-scenes.ts"
+        },
+        {
+          "status": "M",
+          "path": "frontend/next-env.d.ts"
+        },
+        {
+          "status": "M",
+          "path": "frontend/test/agent-evidence.test.ts"
+        },
+        {
+          "status": "A",
+          "path": "frontend/test/browser/upstream-sync-20261015.spec.ts"
+        },
+        {
+          "status": "M",
+          "path": "frontend/test/expert-assignments.test.ts"
+        },
+        {
+          "status": "M",
+          "path": "frontend/test/hosted-agents-proxy.test.ts"
+        },
+        {
+          "status": "A",
+          "path": "frontend/test/rpc-read-limits.test.ts"
+        },
+        {
+          "status": "A",
+          "path": "frontend/test/run-funding.test.ts"
+        },
+        {
+          "status": "M",
+          "path": "frontend/tsconfig.json"
+        },
+        {
+          "status": "M",
+          "path": "package-lock.json"
+        },
+        {
+          "status": "M",
+          "path": "packages/pi-loop/src/autonomy.ts"
+        },
+        {
+          "status": "M",
+          "path": "packages/pi-loop/src/provider.ts"
+        },
+        {
+          "status": "M",
+          "path": "packages/pi-loop/test/autonomy.test.ts"
+        },
+        {
+          "status": "M",
+          "path": "packages/pi-loop/test/provider.test.ts"
+        },
+        {
+          "status": "M",
+          "path": "packages/sdk/src/index.ts"
+        },
+        {
+          "status": "M",
+          "path": "scripts/check-doc-links.mjs"
+        },
+        {
+          "status": "A",
+          "path": "scripts/external-specialist-stack.ts"
+        },
+        {
+          "status": "M",
+          "path": "scripts/hosted-agents.ts"
+        },
+        {
+          "status": "M",
+          "path": "scripts/local-hosted.ts"
+        },
+        {
+          "status": "M",
+          "path": "scripts/magpie-gateway.ts"
+        },
+        {
+          "status": "A",
+          "path": "scripts/test/external-stack.test.ts"
+        },
+        {
+          "status": "A",
+          "path": "scripts/test/linux-magpie.test.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/arena/src/docker.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/arena/test/arena.test.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/arena/test/docker.test.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/README.md"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/package.json"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/src/autonomy-executor.ts"
+        },
+        {
+          "status": "A",
+          "path": "services/hosted-agents/src/external/hiring.ts"
+        },
+        {
+          "status": "A",
+          "path": "services/hosted-agents/src/external/registry.ts"
+        },
+        {
+          "status": "A",
+          "path": "services/hosted-agents/src/external/service.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/src/game-executor.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/src/goal-types.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/src/goals/executor.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/src/goals/payment.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/src/goals/reconciliation.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/src/metered-task.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/src/service.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/src/types.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/test/autonomy-executor.test.ts"
+        },
+        {
+          "status": "A",
+          "path": "services/hosted-agents/test/autonomy-game-live.test.ts"
+        },
+        {
+          "status": "A",
+          "path": "services/hosted-agents/test/external-hiring.test.ts"
+        },
+        {
+          "status": "A",
+          "path": "services/hosted-agents/test/external-prompt-domain.test.ts"
+        },
+        {
+          "status": "A",
+          "path": "services/hosted-agents/test/external-service-http.test.ts"
+        },
+        {
+          "status": "A",
+          "path": "services/hosted-agents/test/goals-model-fallback-paid.test.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/test/goals-paid.test.ts"
+        },
+        {
+          "status": "A",
+          "path": "services/hosted-agents/test/goals-policy-recovery.test.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/test/goals.test.ts"
+        },
+        {
+          "status": "A",
+          "path": "services/hosted-agents/test/model-fallback.test.ts"
+        },
+        {
+          "status": "A",
+          "path": "services/hosted-agents/test/sdk-redirect.test.ts"
+        },
+        {
+          "status": "M",
+          "path": "services/hosted-agents/test/service.test.ts"
+        }
+      ],
+      "fileCountIncludingSelfManifest": 75,
+      "hashExcludedSelfManifest": "docs/evidence/upstream-sync-20261015/migration-evidence.json",
+      "statusCounts": {
+        "M": 51,
+        "A": 24
+      }
+    },
+    "mainIntegration": {
+      "pullRequest": 3,
+      "url": "https://github.com/Kris77z/tabby-tempo/pull/3",
+      "commit": "e9325cb5fd25860653bfb93144f0f90971ebfbd0",
+      "branchHeadBeforeMerge": "cd71942f894421c4c741604e9cf1e6913291dbc0",
+      "operation": "git merge --no-commit --no-ff origin/main",
+      "conflictsResolved": [
+        "README.md",
+        "README.zh-CN.md"
+      ],
+      "videoLabelsAndUrlsUnchanged": true,
+      "preMergeBranchContentPreserved": true,
+      "mainOwnedAdditions": {
+        "README.md": 6,
+        "README.zh-CN.md": 6
+      },
+      "mainOwnedAdditionsCountedAsUpstreamMigration": false,
+      "productionRelease": false,
+      "mergeCommittedByExecutor": false
+    },
+    "targetBeforeHashMeaning": "Per-change targetBeforeSha256 remains the original40647f0 freeze; mainBaseSha256 in current target files is the e9325cb PR comparison baseline."
   },
   "classificationCounts": {
     "upstream-instructions-excluded": 1,
@@ -522,7 +1014,7 @@
       "classification": "documentation-review",
       "decision": "adapted-documentation",
       "reason": "Product-first/current CI-CD entry and bounded optional capability contract, rewritten for Tempo; no Monad live evidence imported.",
-      "targetFinalSha256": "a9b80d2debc751493c50df68d9bbd29e3c237a85ccb0a7873c715263d2a88c02"
+      "targetFinalSha256": "bf965858b0ab3c964640b175e16c7d49ceb3ab790bc3e8f7bfe9fc16ad3f14f7"
     },
     {
       "path": "README.zh-CN.md",
@@ -536,7 +1028,7 @@
       "classification": "documentation-review",
       "decision": "adapted-documentation",
       "reason": "Product-first/current CI-CD entry and bounded optional capability contract, rewritten for Tempo; no Monad live evidence imported.",
-      "targetFinalSha256": "a6e03f0e7dcd649340076c59f2ce92d83afb02b47f47ef82f0ac499f80b8c6bb"
+      "targetFinalSha256": "a6ff28a5f366c40a3a51a54663ca7b4ee79b9de0594b22887c3e15557465a58b"
     },
     {
       "path": "deploy/monad-vps/README.md",
@@ -2620,6 +3112,24 @@
         "exitCode": 0,
         "log": "review/arena-shim-diff-check.log"
       }
+    },
+    "mainReadmeIntegration": {
+      "mergeParents": [
+        "cd71942f894421c4c741604e9cf1e6913291dbc0",
+        "e9325cb5fd25860653bfb93144f0f90971ebfbd0"
+      ],
+      "docs": {
+        "exitCode": 0,
+        "log": "review/pr3-merge-docs-check.log"
+      },
+      "worktreeAndIndexDiff": {
+        "exitCode": 0,
+        "log": "review/pr3-merge-diff-check.log"
+      },
+      "businessTestsRerun": false,
+      "productionTouched": false,
+      "sourceFreezeAndEffectiveBaselineUnchanged": true,
+      "videoBlockProof": "review/pr3-readme-merge.json"
     }
   },
   "logs": [
@@ -2852,6 +3362,21 @@
       "path": ".data/upstream-sync-20261015/review/arena-shim-manifest-integrity.log",
       "bytes": 151,
       "sha256": "4ca7da8f5b63443a78ebeae40f65e3e868a13b4975e7a4c2d63665d2c68191cf"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/pr3-merge-docs-check.log",
+      "bytes": 145,
+      "sha256": "4d2f1b0ec54bf337f896c105d3620a01dd80e5f382c274237f1e982df8a92812"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/pr3-merge-diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/pr3-merge-integrity.log",
+      "bytes": 287,
+      "sha256": "a1d98026a542d035e75702fd7082946202f20ee4bcf5acd17bfd29c3bdc25eb5"
     }
   ],
   "reports": [
@@ -2894,6 +3419,11 @@
       "path": ".data/upstream-sync-20261015/review/pr-ci-second-metadata.json",
       "bytes": 5038,
       "sha256": "bcd7c027351f714b37175383a396a575c1f7589b4a1444122f904006a4a2d725"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/pr3-readme-merge.json",
+      "bytes": 1285,
+      "sha256": "590a0df00a09fda1a8c1015a922cb62dda9c386ec8f707de66526a209640d3a7"
     }
   ]
 }

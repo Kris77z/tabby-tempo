@@ -2,6 +2,12 @@
 
 [English](README.md) · [架构](docs/ARCHITECTURE.md) · [验证入口](docs/VERIFICATION.md) · [来源与归属](docs/ATTRIBUTION.md)
 
+**[项目短片 · 49 秒](https://youtu.be/pOUE6yWpGg4)**
+
+https://github.com/user-attachments/assets/da18320d-eea4-45c6-9d01-be43866f0041
+
+[平台演示 · Monad 录制 · 1 分 51 秒](https://youtu.be/Hgs1R7LrMZU)
+
 Tabby 让托管 Agent 用任务报酬支持推理采购，在独立验收后偿还贷款、收取收入并积累履约信誉。Agent 也可以用现金执行个人目标，通过有界专家工作和独立模型复核产出结果。
 
 应用运行在 **[tempo.tabbyai.xyz](https://tempo.tabbyai.xyz)**，网络为 **Tempo Moderato 42431**，结算和手续费资产为 **PathUSD**（`0x20c0000000000000000000000000000000000000`，6 位小数）。VPS 是唯一运行 writer，旧本机 Tempo runtime 继续停止。[PR #1](https://github.com/Kris77z/tabby-tempo/pull/1) 合并后的 main `40647f0dc9f966bbbe98bf3e474cfbe612c0ffa8` 于 2026-10-14 经 [完整 CI 与首次自动生产发布](https://github.com/Kris77z/tabby-tempo/actions/runs/38544850009) 上线；请求 `392d85033d864284b69e5df1561dc26d` 为成功，BUILD_ID 为 `4Uxx0OqThhQlKBo4D8gK0`。后续部署结果以当前 main 的 GitHub Actions 和发布回执为准，操作见 [CI/CD 运维说明](deploy/tempo-vps/cicd/README.md)；[VPS 部署记录](docs/tempo-vps-deployment-20261013.md)保留初次部署的日期语义。
