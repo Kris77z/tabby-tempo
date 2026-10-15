@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import stat
 import sys
 import tarfile
 import tempfile
@@ -52,6 +53,7 @@ class EngineTest(unittest.TestCase):
         entries = []
         for name, value in content.items():
             path = source / name
+            path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(value)
             entries.append({'path': name, 'sha256': engine.digest(path), 'mode': 0o644})
         artifact = self.store / (sha + '.tar.gz')
@@ -104,6 +106,122 @@ class EngineTest(unittest.TestCase):
         engine.write_json(self.store / 'current.json', self.new)
         self.adapter.finish_rollback(self.old)
         self.assertEqual(json.loads((self.store / 'current.json').read_text())['sha'], self.old['sha'])
+
+    def test_nested_tracked_parents_are_app_owned_0755_under_worker_umask(self):
+        candidate = self.artifact('3' * 40, {'keep.txt': 'next', 'services/hosted-agents/src/external/registry.ts': 'export const ready = true;'})
+        changes = []
+        # Spy through the original function, avoiding any fake filesystem modes.
+        chown = os.fchown
+        def owned(fd, uid, gid):
+            changes.append((os.fstat(fd).st_ino, uid, gid))
+            chown(fd, uid, gid)
+        previous_mask = os.umask(0o077)
+        try:
+            with patch.object(engine.os, 'fchown', side_effect=owned):
+                self.adapter.activate(candidate)
+        finally: os.umask(previous_mask)
+        parent = self.project / 'services/hosted-agents/src/external'
+        for path in [parent, *parent.parents]:
+            if path == self.project: break
+            meta = path.stat()
+            self.assertEqual(stat.S_IMODE(meta.st_mode), 0o755)
+            self.assertEqual((meta.st_uid, meta.st_gid), (os.getuid(), os.getgid()))
+            self.assertIn((meta.st_ino, os.getuid(), os.getgid()), changes)
+        self.assertEqual((parent / 'registry.ts').read_text(), 'export const ready = true;')
+        self.preserved()
+
+    def root_remnant(self, relative):
+        """Real 0700 directory; fake only its root UID/GID on non-root CI hosts."""
+        path = self.project / relative
+        path.mkdir(parents=True)
+        path.chmod(0o700)
+        inode = (path.stat().st_dev, path.stat().st_ino)
+        lstat, fstat = Path.lstat, os.fstat
+        def root(meta):
+            if (meta.st_dev, meta.st_ino) != inode: return meta
+            values = list(meta); values[4] = 0; values[5] = 0
+            return os.stat_result(values)
+        def observed(value, *args, **kwargs): return root(lstat(value, *args, **kwargs))
+        return path, patch.object(Path, 'lstat', observed), patch.object(engine.os, 'fstat', side_effect=lambda fd: root(fstat(fd)))
+
+    def test_empty_candidate_only_root_0700_remnant_repaired(self):
+        candidate = self.artifact('3' * 40, {'keep.txt': 'next', 'services/hosted-agents/src/external/registry.ts': 'PUBLIC'})
+        path, owner, fd_owner = self.root_remnant('services/hosted-agents/src/external')
+        with owner, fd_owner: self.adapter.activate(candidate)
+        self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o755)
+        self.assertEqual((path / 'registry.ts').read_text(), 'PUBLIC')
+        self.preserved()
+
+    def test_remnant_with_exact_candidate_source_is_repaired(self):
+        candidate = self.artifact('3' * 40, {'keep.txt': 'next', 'services/hosted-agents/src/external/registry.ts': 'PUBLIC'})
+        path, owner, fd_owner = self.root_remnant('services/hosted-agents/src/external')
+        (path / 'registry.ts').write_text('PUBLIC')
+        # This candidate path was installed by the interrupted activation.
+        self.adapter.controlled_paths.add('services/hosted-agents/src/external/registry.ts')
+        with owner, fd_owner: self.adapter.activate(candidate)
+        self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o755)
+        self.preserved()
+
+    def test_root_remnant_with_private_or_changed_contents_refused_before_mutation(self):
+        for filename, content in [('private-token', 'PRIVATE'), ('registry.ts', 'PRIVATE')]:
+            with self.subTest(filename=filename):
+                candidate = self.artifact(('4' if filename == 'private-token' else '5') * 40, {'keep.txt': 'next', 'frontend/acceptance/new/registry.ts': 'PUBLIC'})
+                path, owner, fd_owner = self.root_remnant('frontend/acceptance/new')
+                (path / filename).write_text(content)
+                self.adapter.controlled_paths.add('frontend/acceptance/new/registry.ts')
+                with owner, fd_owner:
+                    with self.assertRaises(DeployError) as error: self.adapter.activate(candidate)
+                self.assertEqual(error.exception.code, 'RELEASE_PARENT_UNOWNED')
+                self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o700)
+                self.assertEqual((path / filename).read_text(), 'PRIVATE')
+                self.assertEqual((self.project / 'keep.txt').read_text(), 'old')
+                shutil.rmtree(self.project / 'frontend')
+                self.preserved()
+
+    def test_previous_parent_and_unrelated_private_directory_are_never_normalized(self):
+        old = self.artifact('6' * 40, {'services/keep.txt': 'old'})
+        candidate = self.artifact('7' * 40, {'services/keep.txt': 'next'})
+        path, owner, fd_owner = self.root_remnant('services')
+        (path / 'keep.txt').write_text('old')
+        self.adapter.current = old; self.adapter.controlled_paths = {'services/keep.txt'}
+        private = self.project / '.data'; private.chmod(0o700)
+        with owner, fd_owner, patch.object(engine.pwd, 'getpwnam', return_value=types.SimpleNamespace(pw_uid=65534, pw_gid=65534)):
+            with self.assertRaises(DeployError) as error: self.adapter.activate(candidate)
+        self.assertEqual(error.exception.code, 'RELEASE_PARENT_INACCESSIBLE')
+        self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o700)
+        self.assertEqual(stat.S_IMODE(private.stat().st_mode), 0o700)
+        self.assertEqual((path / 'keep.txt').read_text(), 'old')
+
+    def test_candidate_parent_symlink_and_unowned_nested_directory_refused(self):
+        candidate = self.artifact('3' * 40, {'keep.txt': 'next', 'services/new/registry.ts': 'PUBLIC'})
+        (self.project / 'services').symlink_to(self.store, target_is_directory=True)
+        with self.assertRaises(DeployError) as error: self.adapter.activate(candidate)
+        self.assertEqual(error.exception.code, 'RELEASE_DESTINATION_SYMLINK')
+        (self.project / 'services').unlink()
+        path, owner, fd_owner = self.root_remnant('services/new')
+        (path / 'private').mkdir()
+        with owner, fd_owner:
+            with self.assertRaises(DeployError) as error: self.adapter.activate(candidate)
+        self.assertEqual(error.exception.code, 'RELEASE_PARENT_UNOWNED')
+        self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o700)
+        self.assertEqual((self.project / 'keep.txt').read_text(), 'old')
+
+    def test_reset_failed_is_one_fixed_three_unit_command(self):
+        with patch.object(engine, 'run', return_value=b'') as command:
+            self.adapter.reset_failed()
+        command.assert_called_once_with(['/usr/bin/systemctl', 'reset-failed', *engine.UNITS], log=self.adapter.log)
+
+    def test_failure_record_and_worker_receipt_keep_only_fixed_error_details(self):
+        details = {'originalCode': 'RUNTIME_CHILD_MISSING', 'originalPhase': 'HEALTH', 'rollbackCode': 'DEPLOY_COMMAND_FAILED', 'rollbackPhase': 'START'}
+        self.adapter.record_failure('ROLLBACK_FAILED_SERVICES_STOPPED', self.new['sha'], **details, exception='PRIVATE RPC', traceback='PRIVATE RAW')
+        failure = json.loads((self.store / 'last-failure.json').read_text())
+        for key, value in details.items(): self.assertEqual(failure[key], value)
+        self.assertNotIn('PRIVATE', json.dumps(failure))
+        request_id = 'a' * 32
+        with patch.object(engine, 'STORE', self.store), patch.object(engine, 'Production', return_value=self.adapter), patch.object(engine, 'execute', side_effect=DeployError('ROLLBACK_FAILED_SERVICES_STOPPED', **details)), patch.object(engine.signal, 'signal'):
+            with self.assertRaises(DeployError): engine.worker('release', self.new['sha'], request_id)
+        receipt = json.loads((self.store / 'requests' / (request_id + '.json')).read_text())
+        for key, value in details.items(): self.assertEqual(receipt[key], value)
 
     def test_stage_removed_after_build_exception(self):
         self.adapter.source = lambda sha: []
