@@ -58,7 +58,7 @@ export class InferCredit {
   }
   private async saved(handle: PaymentHandle) { await this.options.onHandle?.(structuredClone(handle)); }
   private async http(url: string, init?: RequestInit) {
-    try { return await fetch(url, { ...init, signal: AbortSignal.timeout(this.options.timeoutMs || 15_000) }); }
+    try { return await fetch(url, { ...init, redirect: "error", signal: AbortSignal.timeout(this.options.timeoutMs || 15_000) }); }
     catch { throw new PaymentError("RELAY_UNAVAILABLE", "Relay request failed; resume the same payment handle"); }
   }
   private async fetchFor(taskId: string, url: string, init: FetchOptions): Promise<Inference> {

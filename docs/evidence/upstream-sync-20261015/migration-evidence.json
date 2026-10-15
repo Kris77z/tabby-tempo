@@ -1,0 +1,2657 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-15",
+  "scope": "selective upstream migration; offline controlled fixtures; no VPS/model/public-chain business action",
+  "source": {
+    "commit": "ce1409d0db0f210fb3804c9ec52807b499b8f1b9",
+    "cleanAtFreeze": true,
+    "capturedAt": "2026-10-15T12:16:57.262199+00:00",
+    "fileCount": 1248,
+    "contentBytes": 94444181,
+    "archiveSha256": "1b30045796bd0d822d2aa101217204dd6116bf6757cae6ec03548ae4e7df06c1",
+    "snapshotFileSha256": "4e904597f7aad400fffb2fa688ed9eb28b7baa2503998f7538b0bcd390a2cb78",
+    "changedCopiesVerified": 124,
+    "effectiveBaseline": "0526070240fedc48b9ce3587bc7bc284a3abb967 plus the 20261014 main308 snapshot and docs24 addendum, using per-file contents, not just Git HEAD",
+    "priorEvidence": "docs/evidence/upstream-sync-20261014/migration-evidence.json"
+  },
+  "target": {
+    "baseCommit": "40647f0dc9f966bbbe98bf3e474cfbe612c0ffa8",
+    "branch": "codex/tempo-upstream-sync-20261015",
+    "finalCommit": null,
+    "finalCommitMeaning": "Implementation working tree before independent root commit; exact content digest provided instead of inventing a future SHA.",
+    "contentFileCount": 73,
+    "contentSha256": "b24986d611acce2df114d8882ef5e6d3aff8bd4662d39e273060579c5a021c6e",
+    "contentAlgorithm": "SHA256(UTF8(concat sorted path + NUL + file SHA256 + LF)); excludes this self-referential manifest, ignored/private files and independent root artifacts",
+    "files": [
+      {
+        "path": ".github/test/test_workflow_boundary.py",
+        "bytes": 6829,
+        "sha256": "2a4f7c20603c280bbda46f5e36860b0ba20c410411ec3dc4bb35bc8c31b4eb45"
+      },
+      {
+        "path": ".github/workflows/tempo-ci.yml",
+        "bytes": 6923,
+        "sha256": "8ec3a0a6d5a847998e9de9cd9cdbd27e1920c8daef7e57869b162d3089ef0d15"
+      },
+      {
+        "path": "README.md",
+        "bytes": 8167,
+        "sha256": "a9b80d2debc751493c50df68d9bbd29e3c237a85ccb0a7873c715263d2a88c02"
+      },
+      {
+        "path": "README.zh-CN.md",
+        "bytes": 5470,
+        "sha256": "a6e03f0e7dcd649340076c59f2ce92d83afb02b47f47ef82f0ac499f80b8c6bb"
+      },
+      {
+        "path": "docs/ARCHITECTURE.md",
+        "bytes": 9904,
+        "sha256": "e0a479bf84923d838c4b9990f0ebdd05940cdd5e5ef300d0160fa482c6ba48f0"
+      },
+      {
+        "path": "docs/README.md",
+        "bytes": 3570,
+        "sha256": "586cd1102551ee606d3f3645ad3db730cd4532806ac5a92fdc650d4ae00e98b3"
+      },
+      {
+        "path": "docs/VERIFICATION.md",
+        "bytes": 7745,
+        "sha256": "59ad167431fd467c8e8df6fc2ff56c9ee63562c61101a600b01edb04d0633fa1"
+      },
+      {
+        "path": "docs/tempo-upstream-sync-20261015.md",
+        "bytes": 9891,
+        "sha256": "98a004d066ccd79b6a793b1bfcdb0c1b8d3a5ad4bc0b7f9326e91dadf8636976"
+      },
+      {
+        "path": "frontend/acceptance/tempo-upstream-sync-20261015/README.md",
+        "bytes": 821,
+        "sha256": "0994579e399bb57af5361a12720583c3036a507b3d651467ffdd3fba9a83a84c"
+      },
+      {
+        "path": "frontend/acceptance/tempo-upstream-sync-20261015/controlled-browser-summary.json",
+        "bytes": 1917,
+        "sha256": "8305148e83fc4f7a80904596d91562d98d61898ed39fc65387eec4841690a1cf"
+      },
+      {
+        "path": "frontend/acceptance/tempo-upstream-sync-20261015/desktop-synthetic-external-identity.png",
+        "bytes": 125960,
+        "sha256": "600b62bd6a3b31e93d23bdd61c54c0bcc174f2c5bb8e5c8a7866ac3a87899e7d"
+      },
+      {
+        "path": "frontend/acceptance/tempo-upstream-sync-20261015/mobile-synthetic-external-identity.png",
+        "bytes": 173423,
+        "sha256": "01deee0f7f2f37a0b91b0cf266ff168cb22f27e5a0ce4415c3a0f2f3d16cbcf8"
+      },
+      {
+        "path": "frontend/components/hosted/agent-profile.tsx",
+        "bytes": 5724,
+        "sha256": "8c4acfa48dced1f4a3ae76a0d039c2f02527edae55803c05c1c37f3c3af0b327"
+      },
+      {
+        "path": "frontend/components/hosted/expert-mesh.tsx",
+        "bytes": 6809,
+        "sha256": "79dad904470984ec21529b8bb838be301f81b2031a37a96c7e292526c17674a1"
+      },
+      {
+        "path": "frontend/components/hosted/finance-app.tsx",
+        "bytes": 5060,
+        "sha256": "ee37636ef59163aba30a3897a41f673706f683e57412e03571e7d349fcbad210"
+      },
+      {
+        "path": "frontend/components/hosted/goal-composer.tsx",
+        "bytes": 8565,
+        "sha256": "22000d29236ef923c19d7aae3f1324cf445a87b0ebf929702acf24ab47cacfca"
+      },
+      {
+        "path": "frontend/components/hosted/hosted-app.tsx",
+        "bytes": 21601,
+        "sha256": "b9a445773a5d0fba8c02f8ac0d162ecf90f41a543bbce5832b4a2d6f664198dc"
+      },
+      {
+        "path": "frontend/lib/agent-evidence.ts",
+        "bytes": 1994,
+        "sha256": "8028a524b6f1e680f911407f5369c5d5c4632eb73beffe7c9f94c7db4dd810e9"
+      },
+      {
+        "path": "frontend/lib/expert-assignments.ts",
+        "bytes": 2921,
+        "sha256": "631335447d9e806eb0fa8fec72cca4e21dfab67418f8f2bf17ac98416e13c4d0"
+      },
+      {
+        "path": "frontend/lib/hosted-agents-proxy.ts",
+        "bytes": 15694,
+        "sha256": "89e512dfcc8c51db9b10a52f28653b44584653442175116f7d850dfc4a000844"
+      },
+      {
+        "path": "frontend/lib/hosted-client.ts",
+        "bytes": 16610,
+        "sha256": "0a09fc91145b1a6d4399bdae00852beea2c3e6e1b6776e8845169161ee35ac64"
+      },
+      {
+        "path": "frontend/lib/read.ts",
+        "bytes": 17353,
+        "sha256": "30c51014e7f92149d6074be944e7b24f2f688b2826680939390c6574c70df913"
+      },
+      {
+        "path": "frontend/lib/run-funding.ts",
+        "bytes": 705,
+        "sha256": "70c049ac2e35d65b6cff48e1b60a62043ab8a318bdb450782aae4e9b92254400"
+      },
+      {
+        "path": "frontend/lib/tabby-scenes.ts",
+        "bytes": 22524,
+        "sha256": "1865cac73da2085d3b999e26c3e0b082c11b5c534e71d26dafd16ca1f1b4bc0b"
+      },
+      {
+        "path": "frontend/next-env.d.ts",
+        "bytes": 334,
+        "sha256": "80b3cb58e60759018c932eb5772c1467fa12ede51b3aa43333f91b3af21bf271"
+      },
+      {
+        "path": "frontend/test/agent-evidence.test.ts",
+        "bytes": 3116,
+        "sha256": "8f5f6a4b2453527a9992a5af9a4a119092d83277a34f5e82c957ec6c95135d92"
+      },
+      {
+        "path": "frontend/test/browser/upstream-sync-20261015.spec.ts",
+        "bytes": 3527,
+        "sha256": "67ab0ffb279d1b2079bc373ed91b2b1eaab52b8f2598806e1fa7a0bcef680e3f"
+      },
+      {
+        "path": "frontend/test/expert-assignments.test.ts",
+        "bytes": 3271,
+        "sha256": "a54d1004283910b4e549c315ee3b32b839b882e78d9b5c70fdb11ea8cd02c939"
+      },
+      {
+        "path": "frontend/test/hosted-agents-proxy.test.ts",
+        "bytes": 27672,
+        "sha256": "93456755dd147df59379afb443ae360ed41342005a5e146850e9fe0c6e79115d"
+      },
+      {
+        "path": "frontend/test/rpc-read-limits.test.ts",
+        "bytes": 8005,
+        "sha256": "c7d6e5aef7e1eb0d50dbca4440c22cc8aa6f3038488b616136f7e85c31b48437"
+      },
+      {
+        "path": "frontend/test/run-funding.test.ts",
+        "bytes": 1173,
+        "sha256": "9b044d025d6228245f6c816666733ee74b5990aa1e6ad093e884944d2ad2de41"
+      },
+      {
+        "path": "frontend/tsconfig.json",
+        "bytes": 2612,
+        "sha256": "ceea0add3403c682d9e376729e12e3cd982201f819dcdb7f44152d8aab695a28"
+      },
+      {
+        "path": "package-lock.json",
+        "bytes": 99276,
+        "sha256": "76f3d4049ed5b708a2b00f5b9765f248714068d21d22ea112ae7dc5fa920c969"
+      },
+      {
+        "path": "packages/pi-loop/src/autonomy.ts",
+        "bytes": 32839,
+        "sha256": "8716a856784e8cb65ae233bfb289d1d9554c1dacc6fbf931058e9c6cf2397ae1"
+      },
+      {
+        "path": "packages/pi-loop/src/provider.ts",
+        "bytes": 20809,
+        "sha256": "c635bd8e2a34c4f71ee6345144bf01790d6c4310b73e40af6ed495ffb29e4b84"
+      },
+      {
+        "path": "packages/pi-loop/test/autonomy.test.ts",
+        "bytes": 37990,
+        "sha256": "c28ed2864f44b308d04d33d825a86006b20cdc255c9e326a3e02c90de6a790c0"
+      },
+      {
+        "path": "packages/pi-loop/test/provider.test.ts",
+        "bytes": 27818,
+        "sha256": "56f7fd2f1b8f6366281b51142b995dc9f2a385a812677df5abcfbef0b8c37bec"
+      },
+      {
+        "path": "packages/sdk/src/index.ts",
+        "bytes": 16208,
+        "sha256": "a96e3b260efc1b5d7cbb22d46d14f07e184e35b37302ba9392d5504606d695b5"
+      },
+      {
+        "path": "scripts/check-doc-links.mjs",
+        "bytes": 4682,
+        "sha256": "bea87d700ad482cb33b4665564223dc8be7687821a04241727ecae6e88465c77"
+      },
+      {
+        "path": "scripts/external-specialist-stack.ts",
+        "bytes": 4573,
+        "sha256": "54f53b4fe969aa6eff4f6b802f98d0ed8a310e42cc555129a8566dc3ee7a2b93"
+      },
+      {
+        "path": "scripts/hosted-agents.ts",
+        "bytes": 10176,
+        "sha256": "6eb746e01ff87c86b6a8d538e966dbfab39cae5d2179cc7338860947c47b904e"
+      },
+      {
+        "path": "scripts/local-hosted.ts",
+        "bytes": 15554,
+        "sha256": "a5663052ddba5e74e184817b94b4d79486b180f5cf2c0c7b0d06b166a706714a"
+      },
+      {
+        "path": "scripts/magpie-gateway.ts",
+        "bytes": 8123,
+        "sha256": "693c761a5b76c9ad4b7bcfdbb54193495b47ee46016be61999a536501c5d620a"
+      },
+      {
+        "path": "scripts/test/external-stack.test.ts",
+        "bytes": 6293,
+        "sha256": "9cd0318f76e5788de23b03169994afd7e0c3157fdfc746fa104f8241a89ce64c"
+      },
+      {
+        "path": "scripts/test/linux-magpie.test.ts",
+        "bytes": 6064,
+        "sha256": "132f7b601b1e5278b86125ac701767d1be66b79db0f8f981b89f701821ce8a11"
+      },
+      {
+        "path": "services/arena/src/docker.ts",
+        "bytes": 9407,
+        "sha256": "dd915d0fa799bc9ebd24ca396b23e6723ae932c47bea419dc10c7a8a0abed59e"
+      },
+      {
+        "path": "services/arena/test/docker.test.ts",
+        "bytes": 12791,
+        "sha256": "1680c4fec1ed287e8a1c2e8ea3acca6e42b79ec6948cd34251202550af069190"
+      },
+      {
+        "path": "services/hosted-agents/README.md",
+        "bytes": 8880,
+        "sha256": "e865aa4be101b0ca6be71ce3336cbfbdec0a12135f85621bc20d832bcd609a73"
+      },
+      {
+        "path": "services/hosted-agents/package.json",
+        "bytes": 402,
+        "sha256": "799cacd811c6f0d50eae90fc43ece4d49b6a7a14fdccdd6d7648efd2e6be16cd"
+      },
+      {
+        "path": "services/hosted-agents/src/autonomy-executor.ts",
+        "bytes": 47954,
+        "sha256": "4e88c56ccc2307d6c427f05abbf8bf3396a0ec4420d200b4cf5e202a78d0b44c"
+      },
+      {
+        "path": "services/hosted-agents/src/external/hiring.ts",
+        "bytes": 8873,
+        "sha256": "43efbcbf34b11635a7bee499e49804ae049268f09b3b88515b91c5dec76fa669"
+      },
+      {
+        "path": "services/hosted-agents/src/external/registry.ts",
+        "bytes": 14485,
+        "sha256": "80a26225c1d5b0337b17270f8da78ecdc8aa140291aa7253bc6fefb76c020db7"
+      },
+      {
+        "path": "services/hosted-agents/src/external/service.ts",
+        "bytes": 4183,
+        "sha256": "a9ca6c3f28e85e9a547626cc7083ac48f1c99ca514278601d3342fb1122e6cba"
+      },
+      {
+        "path": "services/hosted-agents/src/game-executor.ts",
+        "bytes": 34434,
+        "sha256": "f257954b5f6d12b727e86883b9fe9a944caf80a21e5f56947960683974df6f85"
+      },
+      {
+        "path": "services/hosted-agents/src/goal-types.ts",
+        "bytes": 6875,
+        "sha256": "495f727f8d9811e91e30325c66a253e8f0652d21d9978d86c35c7f2a08b1d913"
+      },
+      {
+        "path": "services/hosted-agents/src/goals/executor.ts",
+        "bytes": 27635,
+        "sha256": "245936c55c2d7d4dd7a005786e7ef71212204ba62058abe0e82a4fe995e1933d"
+      },
+      {
+        "path": "services/hosted-agents/src/goals/payment.ts",
+        "bytes": 15275,
+        "sha256": "47d1004f1398d14926f978558f1717cf164c6df2302b6bc67164c2ba16260602"
+      },
+      {
+        "path": "services/hosted-agents/src/goals/reconciliation.ts",
+        "bytes": 8760,
+        "sha256": "f90e6d97d99ac1c093b46637a2dfeaf90d0d540ff2558c39e51149504f6cba7d"
+      },
+      {
+        "path": "services/hosted-agents/src/metered-task.ts",
+        "bytes": 15789,
+        "sha256": "5eea80d1e790ed36ed2e99d951be802e2b2d70d3630e070044a6ecf3a7ebe6a4"
+      },
+      {
+        "path": "services/hosted-agents/src/service.ts",
+        "bytes": 44980,
+        "sha256": "11ed3f0365baa165ef04782311b3260af875ed07f30647cc43d0a05719bb7f5b"
+      },
+      {
+        "path": "services/hosted-agents/src/types.ts",
+        "bytes": 5674,
+        "sha256": "376cf2427611a32ae792d635cd72a1dc0c08fe500d21e95978aa722e3b2a4d9e"
+      },
+      {
+        "path": "services/hosted-agents/test/autonomy-executor.test.ts",
+        "bytes": 55854,
+        "sha256": "1ffd4d4f3a18539523558dc22fbccf1c37de35692ce536a4c60a47005411090e"
+      },
+      {
+        "path": "services/hosted-agents/test/autonomy-game-live.test.ts",
+        "bytes": 27740,
+        "sha256": "c6a398b2bd19e98fe45c4a34d8c58fd15b8e71d45d291add54fb275e39d4e669"
+      },
+      {
+        "path": "services/hosted-agents/test/external-hiring.test.ts",
+        "bytes": 20976,
+        "sha256": "3f5b7d790872a37519baedef33b97bc13b070ae6a247b5f2bef2629380f453f7"
+      },
+      {
+        "path": "services/hosted-agents/test/external-prompt-domain.test.ts",
+        "bytes": 1535,
+        "sha256": "0a89f61833431a0b1b3e3207a28ab0d4dda2831395eb61cf2182cb1cdbcfc9d3"
+      },
+      {
+        "path": "services/hosted-agents/test/external-service-http.test.ts",
+        "bytes": 3829,
+        "sha256": "0faf18200efb430e7e200f62f49faa1f572cb7fec37469f2075e8310070367fe"
+      },
+      {
+        "path": "services/hosted-agents/test/goals-model-fallback-paid.test.ts",
+        "bytes": 8038,
+        "sha256": "a91b66466e08f1e942dd2b19ae3212ad24344ca5834e419c9160c89b9b27d9d5"
+      },
+      {
+        "path": "services/hosted-agents/test/goals-paid.test.ts",
+        "bytes": 9565,
+        "sha256": "5eb0ffe5daa5261dd5a688ae8beebb7c6d48ccbfe5efe3a82f8c1b59593bf972"
+      },
+      {
+        "path": "services/hosted-agents/test/goals-policy-recovery.test.ts",
+        "bytes": 19302,
+        "sha256": "4eedab21701e81487088a1f5c86f55bfc42bdd5105106fcb093e1272c3ab9d63"
+      },
+      {
+        "path": "services/hosted-agents/test/goals.test.ts",
+        "bytes": 25442,
+        "sha256": "5e5515dd16ed3e4b6f80f2edc380239590f070ca0655ad7a29b73de1e0b3f9f5"
+      },
+      {
+        "path": "services/hosted-agents/test/model-fallback.test.ts",
+        "bytes": 6192,
+        "sha256": "f4a6f996f14e88a50e7cfccdf203d936a7c92dadbb0171b6bf08a9b8db76bb74"
+      },
+      {
+        "path": "services/hosted-agents/test/sdk-redirect.test.ts",
+        "bytes": 2160,
+        "sha256": "49945ace86c7392ebed184db7bac9c4cf867d614acc73663f2b8932cf56f2c5f"
+      },
+      {
+        "path": "services/hosted-agents/test/service.test.ts",
+        "bytes": 42292,
+        "sha256": "b1db64464e33f9c64ffe5cf885655347638997a3b7b490dcfcc4cc59a44af2e9"
+      }
+    ]
+  },
+  "classificationCounts": {
+    "upstream-instructions-excluded": 1,
+    "documentation-review": 20,
+    "monad-ops-evidence-excluded": 22,
+    "evidence-design-reference-excluded": 21,
+    "functional-candidate-review": 59,
+    "already-in-tempo": 1
+  },
+  "decisionCounts": {
+    "excluded": 46,
+    "preserved-history": 14,
+    "adapted-documentation": 6,
+    "adapted": 50,
+    "already-covered": 3,
+    "deferred": 5
+  },
+  "functionalDecisionCounts": {
+    "adapted": 50,
+    "already-covered": 2,
+    "excluded": 2,
+    "deferred": 5
+  },
+  "changes": [
+    {
+      "path": "AGENTS.md",
+      "baselineSourceSha256": null,
+      "sourceSha256": "55d85885fec7a8ba4e36bb47d217c6839058fe4cc30d9e742bd0933c475a7376",
+      "targetBeforeSha256": "9a3685335e5488e1a2da6182dd4fcd2d53ba2c6e2057b6806a44392c487da1b2",
+      "baselineOrigin": null,
+      "sourceBytes": 2317,
+      "change": "added",
+      "classification": "upstream-instructions-excluded",
+      "decision": "excluded",
+      "reason": "Source project instructions do not override independent Tempo instructions.",
+      "targetFinalSha256": "9a3685335e5488e1a2da6182dd4fcd2d53ba2c6e2057b6806a44392c487da1b2"
+    },
+    {
+      "path": "AGENT_CREDIT_ARCHITECTURE.md",
+      "baselineSourceSha256": "7beadcf126e89aee0a8d682553d80e9e5733434c383a32b26977c8fbca9fd80a",
+      "sourceSha256": "40c7bda401b324cf3e89f464e6b31063ca412852c36a7cc625084233de2f3eb8",
+      "targetBeforeSha256": "22df0f5030c0b839f1db98cb880b3be33b5819969e9e2434a722515a6e4c2ea7",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 66010,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": "22df0f5030c0b839f1db98cb880b3be33b5819969e9e2434a722515a6e4c2ea7"
+    },
+    {
+      "path": "AGENT_CREDIT_ENGINEERING.md",
+      "baselineSourceSha256": "57838652605a4768e9353ace02c57f89a29e5861fb50cf92e1ebf5d4f4375009",
+      "sourceSha256": "2469fd986c0ea48d92001f48660e1e6265d7816359bd7416205d55a52b01192f",
+      "targetBeforeSha256": "57838652605a4768e9353ace02c57f89a29e5861fb50cf92e1ebf5d4f4375009",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 95344,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": "57838652605a4768e9353ace02c57f89a29e5861fb50cf92e1ebf5d4f4375009"
+    },
+    {
+      "path": "AGENT_CREDIT_RISK_AND_MVP.md",
+      "baselineSourceSha256": "dd76fb16ca069c07ee892a3a2d95521fa45e6c8d09ad6495c67aa375eeb0d5d0",
+      "sourceSha256": "49b9901eb25fc841c5740ff46588fbc3ce45493bea550561caeefbde3901dfd6",
+      "targetBeforeSha256": "dd76fb16ca069c07ee892a3a2d95521fa45e6c8d09ad6495c67aa375eeb0d5d0",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 29784,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": "dd76fb16ca069c07ee892a3a2d95521fa45e6c8d09ad6495c67aa375eeb0d5d0"
+    },
+    {
+      "path": "AGENT_CREDIT_TRACK_NARRATIVE.md",
+      "baselineSourceSha256": "48c08625a480f5bd4ad1abb7e22cee036a860975cfe41681d15a48591b01c16d",
+      "sourceSha256": "b08eaae6e167adab833f4c8350a2db845c3b17718fa3c72778e3cb2a5a577f7e",
+      "targetBeforeSha256": "48c08625a480f5bd4ad1abb7e22cee036a860975cfe41681d15a48591b01c16d",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 16897,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": "48c08625a480f5bd4ad1abb7e22cee036a860975cfe41681d15a48591b01c16d"
+    },
+    {
+      "path": "README.md",
+      "baselineSourceSha256": "7d8250cff01181c37639cc83fe7fc9482f60811f4f707c21c3a82d820829099a",
+      "sourceSha256": "bf595cea0421a17516d79b37d4c0972ce7ceea10401b8c6745d162d409bbc7d9",
+      "targetBeforeSha256": "9354e0bc0b254c886c403e78c74f4a920fc2acdaef73b71b51357833c09d0176",
+      "baselineOrigin": "docs-addendum/snapshot.json",
+      "sourceBytes": 24231,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "adapted-documentation",
+      "reason": "Product-first/current CI-CD entry and bounded optional capability contract, rewritten for Tempo; no Monad live evidence imported.",
+      "targetFinalSha256": "a9b80d2debc751493c50df68d9bbd29e3c237a85ccb0a7873c715263d2a88c02"
+    },
+    {
+      "path": "README.zh-CN.md",
+      "baselineSourceSha256": "85a1fa943f32ca1f6b87a38e62905e1284df5f6da306a21a2e9cf73d23b445a7",
+      "sourceSha256": "8a9c6a39d0d7bdf1d16fd110d7745c0d221fcaf36f67bea3a6f690e98101fa5c",
+      "targetBeforeSha256": "89299cbb97e2e30dd0539201f80eab484eb9d6c1f36923372ed1c95e797cead6",
+      "baselineOrigin": "docs-addendum/snapshot.json",
+      "sourceBytes": 16892,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "adapted-documentation",
+      "reason": "Product-first/current CI-CD entry and bounded optional capability contract, rewritten for Tempo; no Monad live evidence imported.",
+      "targetFinalSha256": "a6e03f0e7dcd649340076c59f2ce92d83afb02b47f47ef82f0ac499f80b8c6bb"
+    },
+    {
+      "path": "deploy/monad-vps/README.md",
+      "baselineSourceSha256": null,
+      "sourceSha256": "9a96353009daaef8b050e79e1a8b76980c8012c74eca324b2443e55dab4f327c",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 10108,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/frontend.env.example",
+      "baselineSourceSha256": null,
+      "sourceSha256": "643e65cbd283001378bdb6f5dec5b5de5d9e9ef25393042dc2ef69d1cfc18f58",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 757,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/gateway.env.example",
+      "baselineSourceSha256": null,
+      "sourceSha256": "7de857d5aba69b443a5a845224af16adea5218f32faa04df354ccf9e2f3020d1",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 112,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/install-dependencies.sh",
+      "baselineSourceSha256": null,
+      "sourceSha256": "20e4e7492313fabbaa709645aee28c9b6f4ef17f2e22228ae36bebb13b67067a",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 4315,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/nginx-http-bootstrap.conf",
+      "baselineSourceSha256": null,
+      "sourceSha256": "360d35a79f6127ec798e9b6fde95abc15a349878cb72314f66ed63f6fa4dbe5a",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 282,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/nginx-monad.conf",
+      "baselineSourceSha256": null,
+      "sourceSha256": "ab48d1b4c7b04450f68f8c07db2e099ecd73cd898d366052c31bb2c45158dd66",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 1378,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/preflight.sh",
+      "baselineSourceSha256": null,
+      "sourceSha256": "c6e2f87ba4bcaaa58e808c7c4d7db96d0cdad47ba796f58c2aede9640956aa7a",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 2680,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/prepare-operator.mjs",
+      "baselineSourceSha256": null,
+      "sourceSha256": "25cea1fe670b4cbaeb216cf1161403d5600d526e21a2e0d5c70ece0240aea03d",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 2205,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/renew-nginx.sh",
+      "baselineSourceSha256": null,
+      "sourceSha256": "9f963dba6e490cdf3d65fc81d72027d23ec97fd865edd546c94ada4ffcd424ec",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 85,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/runtime.env.example",
+      "baselineSourceSha256": null,
+      "sourceSha256": "4ce31c6aa4ef43fa157ce8e9cc1a4a1ab4cb7fb717f597fd6014d382e6b50273",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 256,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/tabby-monad-frontend.service",
+      "baselineSourceSha256": null,
+      "sourceSha256": "7f5177d4a570f232b142682550ee8dd8b0fa54d229d07c384d4f601e38a83aa6",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 755,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/tabby-monad-gateway.service",
+      "baselineSourceSha256": null,
+      "sourceSha256": "37f64dea17ad2f72cbfb11308de3d8dd262493f4a298a7a7293a4e88a21eb354",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 1163,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/tabby-monad-runtime.service",
+      "baselineSourceSha256": null,
+      "sourceSha256": "9757ee41791fc4f0c922b1532e94859f7a7509318eb6619234e6d0b53190d2f9",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 1110,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "deploy/monad-vps/wait-ready.sh",
+      "baselineSourceSha256": null,
+      "sourceSha256": "27c6e063b64e72ec3b6d40310ad7f880bdaa68a2617f541d90a363e24b7a17db",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 1481,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "baselineSourceSha256": "66ef3c0f65beae8b2cb1ed3b8b75fb6144a974f7f905ed68eb9010b72339fd6e",
+      "sourceSha256": "006e1e4f21d14df87924627a7aba89ef6048f735f59843f41013459f9a269930",
+      "targetBeforeSha256": "4344306ed60deaaff4d92019d086f4f1a81687eba5c197aebf1d41e764fc4e34",
+      "baselineOrigin": "docs-addendum/snapshot.json",
+      "sourceBytes": 14718,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "adapted-documentation",
+      "reason": "Product-first/current CI-CD entry and bounded optional capability contract, rewritten for Tempo; no Monad live evidence imported.",
+      "targetFinalSha256": "e0a479bf84923d838c4b9990f0ebdd05940cdd5e5ef300d0160fa482c6ba48f0"
+    },
+    {
+      "path": "docs/ATTRIBUTION.md",
+      "baselineSourceSha256": "e334f095e9d680068468b2875d844168d10fd341ab57049457f330f5cf6165d1",
+      "sourceSha256": "f94e44cdba7af43078390039a5085386757ad4b80b3a72ac24adcc88a4bf603e",
+      "targetBeforeSha256": "5aedb46cbd67fc308c75b0e400c6f85335969b40cf6d3e1b907c286652b3b6b6",
+      "baselineOrigin": "docs-addendum/snapshot.json",
+      "sourceBytes": 3378,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": "5aedb46cbd67fc308c75b0e400c6f85335969b40cf6d3e1b907c286652b3b6b6"
+    },
+    {
+      "path": "docs/README.md",
+      "baselineSourceSha256": "f4bd641e3725021c911526a76e1c6c7550b256700942828022af6ac70e23303d",
+      "sourceSha256": "bfa9a38f2f1e07ec02cedd4bc53d65d4445af6e98b54b2d11b9c59511d27720e",
+      "targetBeforeSha256": "700e33267869f2357163056770a0a8130120201607b94c1138c0005ee247374e",
+      "baselineOrigin": "docs-addendum/snapshot.json",
+      "sourceBytes": 4706,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "adapted-documentation",
+      "reason": "Product-first/current CI-CD entry and bounded optional capability contract, rewritten for Tempo; no Monad live evidence imported.",
+      "targetFinalSha256": "586cd1102551ee606d3f3645ad3db730cd4532806ac5a92fdc650d4ae00e98b3"
+    },
+    {
+      "path": "docs/VERIFICATION.md",
+      "baselineSourceSha256": "425d9e09e81a29cc2aed18c6ad97f404ef97b354ef8e442cc40bf94b7af06d95",
+      "sourceSha256": "00419192e394853026e519d16a1ae80ab54555171cc84a1187b0f39715df922f",
+      "targetBeforeSha256": "a602511d174ddf89996247df3761895fc83ae91fff5f1e6fee160b24f978a705",
+      "baselineOrigin": "docs-addendum/snapshot.json",
+      "sourceBytes": 32161,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "adapted-documentation",
+      "reason": "Product-first/current CI-CD entry and bounded optional capability contract, rewritten for Tempo; no Monad live evidence imported.",
+      "targetFinalSha256": "59ad167431fd467c8e8df6fc2ff56c9ee63562c61101a600b01edb04d0633fa1"
+    },
+    {
+      "path": "docs/autonomous-collaboration-20261014.md",
+      "baselineSourceSha256": null,
+      "sourceSha256": "e8394bee54b7771ac4bde7106f9ab43d8cbd2833ed3aebee7c042c3050489a56",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 14262,
+      "change": "added",
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "docs/core-runtime.md",
+      "baselineSourceSha256": "67a582caf8822629c8d9916cbfcb5c57d64c9301f23654bb9a49074c1a9f21ea",
+      "sourceSha256": "b25c89414fdb006eb9e4d29ce4b244fcd86d007d748696c0d07e3505b39ca3be",
+      "targetBeforeSha256": "ecf97d57f59250652005e807ee0358b0b9d7167e9fe2e6d9964eaf6c536903d9",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 14273,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": "ecf97d57f59250652005e807ee0358b0b9d7167e9fe2e6d9964eaf6c536903d9"
+    },
+    {
+      "path": "docs/hosted-agents.md",
+      "baselineSourceSha256": "3725b51033033e87e276b8ff899a35e78a5f24169a20433a855c6bb3b01eace4",
+      "sourceSha256": "cd4ac7c51cdde212772c121b6285cab40bc3945780969e207c98af12359dfdae",
+      "targetBeforeSha256": "b67a9ad4f678f05c23dd86c697639904bea9a581de8815d8876828d1850417c5",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 17766,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": "b67a9ad4f678f05c23dd86c697639904bea9a581de8815d8876828d1850417c5"
+    },
+    {
+      "path": "docs/implementation-status.md",
+      "baselineSourceSha256": "554099850fd15eff3e5943aae5e501a5335feec659ab0234d82f147f6ed11757",
+      "sourceSha256": "c3d6f27f9c49ca27fc1d2cc0eb96e56e6f273cbd9701e46d2db7b61efcba50e9",
+      "targetBeforeSha256": "1d32726f6e98fc70bc60cfc8a3f2a98a43139a695f02568466f75ee36e790101",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 64485,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": "1d32726f6e98fc70bc60cfc8a3f2a98a43139a695f02568466f75ee36e790101"
+    },
+    {
+      "path": "docs/local-hosted-testing.md",
+      "baselineSourceSha256": "233560b91a79fbf8807a7318215135bf389086a50c48bd5b7c428a49ae94b4ee",
+      "sourceSha256": "90fe0c6d74dffac62c77f8c382126a37f0d820a59b189b570eeb9d56e039a0c8",
+      "targetBeforeSha256": "233560b91a79fbf8807a7318215135bf389086a50c48bd5b7c428a49ae94b4ee",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 5118,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": "233560b91a79fbf8807a7318215135bf389086a50c48bd5b7c428a49ae94b4ee"
+    },
+    {
+      "path": "docs/magpie-gateway.md",
+      "baselineSourceSha256": "f8bad4e215809b8a475281a35a9bdb45126262aca52759840614d7e5a1724456",
+      "sourceSha256": "ab37f1ff005949b10bd353b888aaa68bc90b7c098d0a0f64ec6e30ee4ccbe57a",
+      "targetBeforeSha256": "f8bad4e215809b8a475281a35a9bdb45126262aca52759840614d7e5a1724456",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 11718,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": "f8bad4e215809b8a475281a35a9bdb45126262aca52759840614d7e5a1724456"
+    },
+    {
+      "path": "docs/monad-collaboration-live-20261015.md",
+      "baselineSourceSha256": null,
+      "sourceSha256": "07a2d1e4132ad8eb41ba20619a84d13858b9f5306ae4a0f9cc4450e6f433ff1a",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 25220,
+      "change": "added",
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "docs/monad-vps-20261014.md",
+      "baselineSourceSha256": null,
+      "sourceSha256": "45f9030b1d31f94da986748e70043a0b9c8c3b6da46c4cdab1a425c75748beb6",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 5040,
+      "change": "added",
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/README.md",
+      "baselineSourceSha256": "5a6108045b580de320280e280bfa599e9483412955c5662c074309d6f556b347",
+      "sourceSha256": "08cf84904c29845285429c16c151e8b08740bfa116479ccad44b8a06b410e7a8",
+      "targetBeforeSha256": "2146a862bf7d1f79bb6860f01a097df093e9ccae7ed6067afaad0deba4678af7",
+      "baselineOrigin": "docs-addendum/snapshot.json",
+      "sourceBytes": 24214,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "preserved-history",
+      "reason": "Keep dated engineering/source history unchanged; current Tempo feature facts documented in maintained guides and this migration report.",
+      "targetFinalSha256": "2146a862bf7d1f79bb6860f01a097df093e9ccae7ed6067afaad0deba4678af7"
+    },
+    {
+      "path": "frontend/acceptance/autonomous-collaboration-20261014/README.md",
+      "baselineSourceSha256": null,
+      "sourceSha256": "39ef43642ec21d6b019c3b37f42592fd9aa63d1c13afe7c32fc1dbdf75945ff2",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 4470,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/autonomous-collaboration-20261014/automatic-game.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "9aefbc044439994d0b781499185808e4799985505396589324952d4446e63c78",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 8552,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": "a0b9f9c8e321c00d640d16c1af64087f63271916cf48420b7009b30af24a96a5"
+    },
+    {
+      "path": "frontend/acceptance/autonomous-collaboration-20261014/external-dashboard.png",
+      "baselineSourceSha256": null,
+      "sourceSha256": "de5e5d00719b9edb82046810e6bfa0768f5658a02e44ed950bde1ff459c5a980",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 57457,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/autonomous-collaboration-20261014/external-hire.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "753be3b410637498890cf77763109f8f89df28395bfac7422004e05d153ae13b",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 5913,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/autonomous-collaboration-20261014/external-profile.png",
+      "baselineSourceSha256": null,
+      "sourceSha256": "87bcfc7f8b9a7497eb3aee155dc59142d13ff6f85413735e930c0a4ba96a6f2f",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 59977,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/autonomous-collaboration-20261014/external-provider-monad.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "dfc29b37e5f82540ae04f0cf7a72dd3f5f0e5774ddd96cb50806bd0a9c30fdee",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 860,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/autonomous-collaboration-20261014/model-fallback.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "4473aa7ef93ae5c16d6359c5a43dba79f0349ccba32a7c0333fa817bd1006cfd",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 3334,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/autonomous-collaboration-20261014/runtime-ready.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "c4e2961724706d0b93d006afaacb5ce25751819332cf4927a513e2c54a7e5e1c",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 1459,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/monad-collaboration-20261015/README.md",
+      "baselineSourceSha256": null,
+      "sourceSha256": "99bffd4e401b57d130696adaf82ec3e7553fd4047f5c61281c3226747fe2b6f7",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 6337,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/monad-collaboration-20261015/automatic-failed-public-summary.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "83214939634b5e72e08d1209a1bf7508aa12b5092c47b13ee5188cd804762f6f",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 8129,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/monad-collaboration-20261015/automatic-recheck-public-summary.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "bc4cb49e5ccec18c21780ae1e338c8e04eb88c485cca9b3575dbcfabe4552e10",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 14667,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/monad-collaboration-20261015/deployment-public-summary.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "c94f6376d3fa2eb1cd01fa6a2d9e4bb590c195f288b76bc6f92dbb8a81bf81d4",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 1703,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/monad-collaboration-20261015/external-public-summary.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "b9945f10a8795a3d517423f947db49dc47be98709a2af5cf16003cfef5970429",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 6152,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/monad-collaboration-20261015/fallback-failed-public-summary.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "06fc29d6a8c91fe656a00a0b96b6c196c864e603a5d9bda1e114b131a4d08c81",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 8913,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/monad-collaboration-20261015/fallback-recheck-public-summary.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "dff0db9ca77a27026f04b75a43f7be17747c1dc5960035f22f091c1ee65c0f1f",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 9532,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/monad-collaboration-20261015/task-18-creation.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "8b525047d50d48ffc4fe20184165c3b4bcf87e0dddcce528dbad4d9e88320a17",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 509,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/monad-collaboration-20261015/task-19-creation.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "5f39d212b7baa6e77f1073592467be92e743036ebceb4a5432be8651f0c28617",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 509,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/monad-vps-20261014/acceptance.json",
+      "baselineSourceSha256": null,
+      "sourceSha256": "1fca0257b8b111948bc1e4ae336f295a0c94fffc82dcb4a75c8a75c49e49c554",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 2888,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/acceptance/monad-vps-20261014/public-homepage.jpg",
+      "baselineSourceSha256": null,
+      "sourceSha256": "15a26ece8f3022f844d5945e436f7e86e22f32be8ede72dac29c5aeee1de226c",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 81079,
+      "change": "added",
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "frontend/components/hosted/agent-profile.tsx",
+      "baselineSourceSha256": "fa00b7b7c43523ecbb8f887c8e5e76dd3b39458098accf10ae169f0e84b9d7a8",
+      "sourceSha256": "2c3c8603fb51e1e8b0608b7edbd792cc1a7e1e6cf47ed6a8e97dac4c59802a3e",
+      "targetBeforeSha256": "88213ec70990762788475fb11b8203117ce4fdf5415c3a0a312ac709c0f72b95",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 5637,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "8c4acfa48dced1f4a3ae76a0d039c2f02527edae55803c05c1c37f3c3af0b327"
+    },
+    {
+      "path": "frontend/components/hosted/expert-mesh.tsx",
+      "baselineSourceSha256": "2a24276d5212065f2755a515fd3d0cddcdcc68f648eb1d8bc8adf9fd0d9c6241",
+      "sourceSha256": "2641034df271b313b7fc211ad69a8a74109f161183c4a0fce84b437da0c8ca41",
+      "targetBeforeSha256": "8824ce2ceee05eb1099b7205b1c03006fa70c3df758c3561649490a82e0f50e5",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 6634,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "79dad904470984ec21529b8bb838be301f81b2031a37a96c7e292526c17674a1"
+    },
+    {
+      "path": "frontend/components/hosted/finance-app.tsx",
+      "baselineSourceSha256": "c0e8ef7c60a331f874ad9984c2cc8e7265eeb41e3ece2786f0c8e3e0842e6862",
+      "sourceSha256": "e9fb058f0d2e08e486afaad56df427764730de2b0563abc19275ef4854fcbe8e",
+      "targetBeforeSha256": "ce666114b5c8b517455dec04b7b49454ba1d1da4e6e59f521c8eb24291c535cf",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 4859,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Use shared legacy-aware paused funding projection; old cash autonomous remains depositable and explicit reward tokens never become cash.",
+      "targetFinalSha256": "ee37636ef59163aba30a3897a41f673706f683e57412e03571e7d349fcbad210"
+    },
+    {
+      "path": "frontend/components/hosted/goal-composer.tsx",
+      "baselineSourceSha256": "aee2fef8be6216eebba4ba8fa3fc36f400528a530ce89fb8eb05930430458b41",
+      "sourceSha256": "716451bc1a7474ecdb4450444f0d48476fcfd832f90316d0d382ae665ec5c202",
+      "targetBeforeSha256": "3ebf6b90e6af4e032f8cda6fa96f88e60430cee41fa94fc0f66f9e717fc774e8",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 7628,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "22000d29236ef923c19d7aae3f1324cf445a87b0ebf929702acf24ab47cacfca"
+    },
+    {
+      "path": "frontend/components/hosted/hosted-app.tsx",
+      "baselineSourceSha256": "93b67b4246bf85236d128010f8f91f5eb8606f494ea42c034d957a1dd0fc8f20",
+      "sourceSha256": "591338856a907913789eac419c6bb1d54006e2bb0b8be5d61e3c100f52baf4ad",
+      "targetBeforeSha256": "e7f5287491e49620a6ce6494d91a0f4c3d4360e483079576aff607f68fb7648f",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 21244,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Same legacy funding projection, optional external identity profile and game counts; preserve Tempo PathUSD/explorer/Origin layout.",
+      "targetFinalSha256": "b9a445773a5d0fba8c02f8ac0d162ecf90f41a543bbce5832b4a2d6f664198dc"
+    },
+    {
+      "path": "frontend/lib/agent-evidence.ts",
+      "baselineSourceSha256": "a435784174b2925524dc0ef73d1dfb553975627438d38419d5a1d6e7667b7b0b",
+      "sourceSha256": "8028a524b6f1e680f911407f5369c5d5c4632eb73beffe7c9f94c7db4dd810e9",
+      "targetBeforeSha256": "a435784174b2925524dc0ef73d1dfb553975627438d38419d5a1d6e7667b7b0b",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 1994,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "8028a524b6f1e680f911407f5369c5d5c4632eb73beffe7c9f94c7db4dd810e9"
+    },
+    {
+      "path": "frontend/lib/expert-assignments.ts",
+      "baselineSourceSha256": "c9d73ed0c8567ea768597a41435f5a2bc1f0e1048a2494776aab033a3dabe7cc",
+      "sourceSha256": "631335447d9e806eb0fa8fec72cca4e21dfab67418f8f2bf17ac98416e13c4d0",
+      "targetBeforeSha256": "c9d73ed0c8567ea768597a41435f5a2bc1f0e1048a2494776aab033a3dabe7cc",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 2921,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "631335447d9e806eb0fa8fec72cca4e21dfab67418f8f2bf17ac98416e13c4d0"
+    },
+    {
+      "path": "frontend/lib/hosted-agents-proxy.ts",
+      "baselineSourceSha256": "f5b8325d6a008a9fc75ca6d434592f8d81ec2f0bdca677a84f7b1e0c1d7c9d98",
+      "sourceSha256": "5b8f6aaf480d841bf182d4dc1ad1607cc4f2155312e60ebe021344b08d52fd16",
+      "targetBeforeSha256": "b9e637a54d98c10704e250649f818f09efaf2a460b997967ebb3c5597cd76f34",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 14937,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "89e512dfcc8c51db9b10a52f28653b44584653442175116f7d850dfc4a000844"
+    },
+    {
+      "path": "frontend/lib/hosted-client.ts",
+      "baselineSourceSha256": "d06e71e62431eb324be7e812819fb8ea0e53d021f29495f298157e31b762bb16",
+      "sourceSha256": "9e78257c903260cf5b3f395819cf12bc4335b4bb6bc47440c12178e23731a251",
+      "targetBeforeSha256": "c2eebde2aa2004f437f2dece9fd71ef711a06507265b41344e583e4679d4d5ad",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 16287,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "0a09fc91145b1a6d4399bdae00852beea2c3e6e1b6776e8845169161ee35ac64"
+    },
+    {
+      "path": "frontend/lib/read.ts",
+      "baselineSourceSha256": "f4c9eb1f462a7545b8043e2c2b27f9788917898f0d9b760394b882367db685f5",
+      "sourceSha256": "3456403d3156fee2e4030e2a23536f2c24d44d776a9a31b15b6930c054f55ea5",
+      "targetBeforeSha256": "3952d8253d952168732b52bd682571f2228c8efe759cbe54da66aaefdf3a0bdd",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 17031,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Adapt configurable 1..100 sequential log pages while keeping full window/order and existing Tempo RPC transport.",
+      "targetFinalSha256": "30c51014e7f92149d6074be944e7b24f2f688b2826680939390c6574c70df913"
+    },
+    {
+      "path": "frontend/lib/server-transport.ts",
+      "baselineSourceSha256": "2e0deb122a69c57cf3e8a3e086b1180a8157df0cbda92a42bb8beb2df333388c",
+      "sourceSha256": "5a748cc99aae760168febeb543cbd9f8935fec00f1382e7a73d4574bc66a9025",
+      "targetBeforeSha256": "c1fa05361ccf8e9539d4710d2dbc3f8e8b235c236bc2a1388965088436ed5e27",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 3202,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "already-covered",
+      "reason": "Already covered: existing Tempo request queue/static chain transport and 1m frontend read gas cap preserved; no new source behavior to import.",
+      "targetFinalSha256": "c1fa05361ccf8e9539d4710d2dbc3f8e8b235c236bc2a1388965088436ed5e27"
+    },
+    {
+      "path": "frontend/lib/tabby-scenes.ts",
+      "baselineSourceSha256": "b77ac4182107d8389c57ea1444c4ea205b0e888782e92411c1559db80e52cd54",
+      "sourceSha256": "82d86bd3718c7794a3ad7a24a7c56887c972fb28408d83897a1f44184847dcfc",
+      "targetBeforeSha256": "a405e41a1ab209d152bb48462b2899a201122fc1c2ee18e8d95bf1f443f8f923",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 22321,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "1865cac73da2085d3b999e26c3e0b082c11b5c534e71d26dafd16ca1f1b4bc0b"
+    },
+    {
+      "path": "frontend/preview/dashboard/index.html",
+      "baselineSourceSha256": "50bff85e8c84b50ccce970a343a16bf4998b72cfebb2011a9bca5149aef5c45c",
+      "sourceSha256": "e6bcfa064ca0966426689a125c86f492c2f31155e69d363cae30c7406d2891ed",
+      "targetBeforeSha256": "50bff85e8c84b50ccce970a343a16bf4998b72cfebb2011a9bca5149aef5c45c",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 2689,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": "50bff85e8c84b50ccce970a343a16bf4998b72cfebb2011a9bca5149aef5c45c"
+    },
+    {
+      "path": "frontend/preview/dashboard/state.tsx",
+      "baselineSourceSha256": "9da72edcb90a063f18dac80017e46cbe9deed6b87929f6bed47210a468501165",
+      "sourceSha256": "70172631bd56da4321f340342f9bfac2db149f2f805833bffee8d9e84511d542",
+      "targetBeforeSha256": "3ab68fa7b3ab9d4d8df7b30ef18d5a4c72d68feaa5667b5f70d76fb75e15f25d",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 5333,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "evidence-design-reference-excluded",
+      "decision": "excluded",
+      "reason": "Source historical report/screenshot/design preview is not Tempo evidence.",
+      "targetFinalSha256": "3ab68fa7b3ab9d4d8df7b30ef18d5a4c72d68feaa5667b5f70d76fb75e15f25d"
+    },
+    {
+      "path": "frontend/test/agent-evidence.test.ts",
+      "baselineSourceSha256": "7f3d24a31e278bd87662483cb4c8bdd486db8edc059dbb4fcaf256ccebebe82f",
+      "sourceSha256": "8f5f6a4b2453527a9992a5af9a4a119092d83277a34f5e82c957ec6c95135d92",
+      "targetBeforeSha256": "7f3d24a31e278bd87662483cb4c8bdd486db8edc059dbb4fcaf256ccebebe82f",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 3116,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "8f5f6a4b2453527a9992a5af9a4a119092d83277a34f5e82c957ec6c95135d92"
+    },
+    {
+      "path": "frontend/test/expert-assignments.test.ts",
+      "baselineSourceSha256": "4a78cd557f9be8416f4af3837fb244769345ee3776eeb06e9d7061a121595944",
+      "sourceSha256": "a54d1004283910b4e549c315ee3b32b839b882e78d9b5c70fdb11ea8cd02c939",
+      "targetBeforeSha256": "4a78cd557f9be8416f4af3837fb244769345ee3776eeb06e9d7061a121595944",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 3271,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "a54d1004283910b4e549c315ee3b32b839b882e78d9b5c70fdb11ea8cd02c939"
+    },
+    {
+      "path": "frontend/test/hosted-agents-proxy.test.ts",
+      "baselineSourceSha256": "62cec1d4d7f5c8625881bc1d249384fb28341668da8760b070c28a1224488b10",
+      "sourceSha256": "be1618a8a26d9a416a3a5309bdc731d6adfabd2dc3b5bad686182ee5b0e09181",
+      "targetBeforeSha256": "f8f4617ed263ca7637fd08b79bf2e23e98b9c7f34fb29cdf34b717dbcdfa803a",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 23797,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Existing Tempo TLS proxy cases already covered source addition; add native public external/funding/game projection leak regression instead.",
+      "targetFinalSha256": "93456755dd147df59379afb443ae360ed41342005a5e146850e9fe0c6e79115d"
+    },
+    {
+      "path": "frontend/test/rpc-read-limits.test.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "c7d6e5aef7e1eb0d50dbca4440c22cc8aa6f3038488b616136f7e85c31b48437",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 8005,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "c7d6e5aef7e1eb0d50dbca4440c22cc8aa6f3038488b616136f7e85c31b48437"
+    },
+    {
+      "path": "package-lock.json",
+      "baselineSourceSha256": "56d887eeba831c74196eca685f0bcfd63daf9291c9d8076b3635a34fe5760015",
+      "sourceSha256": "3a6e5d756af512641d9f03135063fa2df5da41b7336172fa4e4164518d4d7e36",
+      "targetBeforeSha256": "1d3c5e438a1243697d2dd6c167b0554e5ab5b96af24693efff64b46193ffc00b",
+      "baselineOrigin": "docs-addendum/snapshot.json",
+      "sourceBytes": 99276,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "76f3d4049ed5b708a2b00f5b9765f248714068d21d22ea112ae7dc5fa920c969"
+    },
+    {
+      "path": "package.json",
+      "baselineSourceSha256": "6c60c370c6789a42388264da63efed4d36ec6b1224c8c8f792c7901427f04761",
+      "sourceSha256": "b9501bd73f2cc8a879717ebe716f0ba16c616bf412e37e7d8ecbd154b748b69f",
+      "targetBeforeSha256": "73a331124fc7dd2abb13178d961d3eeead91b89ef6d9111f81c3ffaf61e2d43f",
+      "baselineOrigin": "docs-addendum/snapshot.json",
+      "sourceBytes": 2128,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "excluded",
+      "reason": "Excluded: source only adds source-dated acceptance evidence check; preserve Tempo scripts.",
+      "targetFinalSha256": "73a331124fc7dd2abb13178d961d3eeead91b89ef6d9111f81c3ffaf61e2d43f"
+    },
+    {
+      "path": "packages/pi-loop/src/autonomy.ts",
+      "baselineSourceSha256": "3b024b028c0d0393bd7c2786644c0c876a4ea7f0ee4446e80f3e07e929da6cef",
+      "sourceSha256": "8716a856784e8cb65ae233bfb289d1d9554c1dacc6fbf931058e9c6cf2397ae1",
+      "targetBeforeSha256": "3b024b028c0d0393bd7c2786644c0c876a4ea7f0ee4446e80f3e07e929da6cef",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 32839,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "8716a856784e8cb65ae233bfb289d1d9554c1dacc6fbf931058e9c6cf2397ae1"
+    },
+    {
+      "path": "packages/pi-loop/src/provider.ts",
+      "baselineSourceSha256": "4b8e22b29e6527bba3c565571a4270afb06c0b8c3450f70294822450380fa08c",
+      "sourceSha256": "c635bd8e2a34c4f71ee6345144bf01790d6c4310b73e40af6ed495ffb29e4b84",
+      "targetBeforeSha256": "4b8e22b29e6527bba3c565571a4270afb06c0b8c3450f70294822450380fa08c",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 20809,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "c635bd8e2a34c4f71ee6345144bf01790d6c4310b73e40af6ed495ffb29e4b84"
+    },
+    {
+      "path": "packages/pi-loop/test/autonomy.test.ts",
+      "baselineSourceSha256": "3d4c16b62b5ad9b76844a2824da1f30dd089ecb64ca59bc92c32d10a4ba9e4a7",
+      "sourceSha256": "c28ed2864f44b308d04d33d825a86006b20cdc255c9e326a3e02c90de6a790c0",
+      "targetBeforeSha256": "3d4c16b62b5ad9b76844a2824da1f30dd089ecb64ca59bc92c32d10a4ba9e4a7",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 37990,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "c28ed2864f44b308d04d33d825a86006b20cdc255c9e326a3e02c90de6a790c0"
+    },
+    {
+      "path": "packages/pi-loop/test/provider.test.ts",
+      "baselineSourceSha256": "0c666ab514b3e89879bd77c674079a7168ed1e120ffb847e25505c6e5026fb84",
+      "sourceSha256": "56f7fd2f1b8f6366281b51142b995dc9f2a385a812677df5abcfbef0b8c37bec",
+      "targetBeforeSha256": "0c666ab514b3e89879bd77c674079a7168ed1e120ffb847e25505c6e5026fb84",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 27818,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "56f7fd2f1b8f6366281b51142b995dc9f2a385a812677df5abcfbef0b8c37bec"
+    },
+    {
+      "path": "packages/sdk/src/index.ts",
+      "baselineSourceSha256": "058a9c5809ff96def53983113404e7740d86992d20be0d7dd5966e99ec75c837",
+      "sourceSha256": "5f1daa4c7e55003c556ba04ba1d0d5c9fd8481ba4f4e835a7a3634853bb6b6f9",
+      "targetBeforeSha256": "f51c07db6e5015808557b3a9e6bb2f84f63254d5fddf8203fd1689d0b0a58b9a",
+      "baselineOrigin": "docs-addendum/snapshot.json",
+      "sourceBytes": 16534,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Migrated redirect:error for every relay HTTP request; preserve Tempo chain/payment/recovery behavior.",
+      "targetFinalSha256": "a96e3b260efc1b5d7cbb22d46d14f07e184e35b37302ba9392d5504606d695b5"
+    },
+    {
+      "path": "scripts/check-acceptance-evidence.mjs",
+      "baselineSourceSha256": null,
+      "sourceSha256": "0e7a21dd7e6acce57a0aef5a1fd0a4937f5371226cb739c056946ba31d00e76a",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 8761,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "excluded",
+      "reason": "Excluded: validates Monad acceptance matrix rather than Tempo evidence.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "scripts/check-doc-links.mjs",
+      "baselineSourceSha256": "e8ef99693aa09252e13dcf6bd95d199ff5118a9db1020f06d88dbbf526c8d980",
+      "sourceSha256": "5ab6713916c15da66855071b8973d6c2ee92340ed23eb0334b34cc098c91f3b1",
+      "targetBeforeSha256": "e8ef99693aa09252e13dcf6bd95d199ff5118a9db1020f06d88dbbf526c8d980",
+      "baselineOrigin": "docs-addendum/snapshot.json",
+      "sourceBytes": 4972,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Preserve maintained Tempo guides; add current migration report instead of copying source Monad evidence matrix.",
+      "targetFinalSha256": "bea87d700ad482cb33b4665564223dc8be7687821a04241727ecae6e88465c77"
+    },
+    {
+      "path": "scripts/external-specialist-stack.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "8fd51670d30d8c52a1e9655c9fcdacaebe3270e536f2b187c6121899ed634471",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 4236,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Retain only explicit/fixture service pool, never wired into production Tempo runtime. Chain42431 requires fee cap/10m refund gas/shared serialization.",
+      "targetFinalSha256": "54f53b4fe969aa6eff4f6b802f98d0ed8a310e42cc555129a8566dc3ee7a2b93"
+    },
+    {
+      "path": "scripts/external-specialist.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "918b48f70b92529d6948d200a2fd9659d41806729c7713d7aa351ccdab89ccd7",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 4692,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "deferred",
+      "reason": "Deferred: Monad chain launcher also automatically recovers payments/refunds; no approved Tempo provider or trusted lifecycle migration.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "scripts/hosted-agents.ts",
+      "baselineSourceSha256": "2b19e56f580122675709c624ab22dfaaba1be8133994ed3dc071e7b5e287761f",
+      "sourceSha256": "e74b20ec1b5524704d967f04a2f5da194cb951b854d449db6b8395688292d644",
+      "targetBeforeSha256": "c9aacb3a573da3ba03121a2510d4b9a2868de786d6ad002399633ee69fd1b473",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 9863,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Optional capabilities only; keep Tempo gameDeadline/test sponsorship. Inject autonomy funding resolver only for explicit games config so legacy cash recovery remains.",
+      "targetFinalSha256": "6eb746e01ff87c86b6a8d538e966dbfab39cae5d2179cc7338860947c47b904e"
+    },
+    {
+      "path": "scripts/linux-magpie.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "f8b3366f5f1473bfe9902a6cf0e15967edf732f086cd8464b56585356ff6bd41",
+      "targetBeforeSha256": "f8b3366f5f1473bfe9902a6cf0e15967edf732f086cd8464b56585356ff6bd41",
+      "baselineOrigin": null,
+      "sourceBytes": 4284,
+      "change": "added",
+      "classification": "already-in-tempo",
+      "decision": "already-covered",
+      "reason": "Already byte-identical in Tempo; retain current Linux helper.",
+      "targetFinalSha256": "f8b3366f5f1473bfe9902a6cf0e15967edf732f086cd8464b56585356ff6bd41"
+    },
+    {
+      "path": "scripts/local-hosted.ts",
+      "baselineSourceSha256": "086e77cfd996fa18933d9836aed9eda15e82bda618c327c6bd2d57ddd6da389a",
+      "sourceSha256": "a5663052ddba5e74e184817b94b4d79486b180f5cf2c0c7b0d06b166a706714a",
+      "targetBeforeSha256": "086e77cfd996fa18933d9836aed9eda15e82bda618c327c6bd2d57ddd6da389a",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 15554,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Owned Anvil-only provider registration and optional example game/external config; not production bootstrap and not executed as a health probe.",
+      "targetFinalSha256": "a5663052ddba5e74e184817b94b4d79486b180f5cf2c0c7b0d06b166a706714a"
+    },
+    {
+      "path": "scripts/magpie-gateway.ts",
+      "baselineSourceSha256": "4b43a032f8218ec819efeb03b1ee6bfcbdcc14f497d64db9c9d2100c3fb4f4b6",
+      "sourceSha256": "693c761a5b76c9ad4b7bcfdbb54193495b47ee46016be61999a536501c5d620a",
+      "targetBeforeSha256": "48c867ffe79754a68184f0f89cceca89dc769bacf0e044c1ab88c33a32b19259",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 8123,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "693c761a5b76c9ad4b7bcfdbb54193495b47ee46016be61999a536501c5d620a"
+    },
+    {
+      "path": "scripts/monad-collaboration-autonomy-acceptance.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "e48c97a6098a0281090be7b1e45b59f67a5d1eb64c69685df9f68be5beff6187",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 52612,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "scripts/monad-collaboration-fund-goals.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "16eeb69163a06c4b59d8a3613a406997f06ed712fe30721fd17316d3bb776786",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 16595,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "scripts/monad-collaboration-goal-acceptance.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "2a3b2ce268fa72aa861e3c7fcc94c4f83abc162d56f1b919c17bbef2b2935e84",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 40773,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "scripts/monad-hosted-runtime.ts",
+      "baselineSourceSha256": "47d16a7a0303253bca58bdf53fe04c61b6eb8c79dca1c688ea996027af162350",
+      "sourceSha256": "f701905ceec363af6698ad96edb93d210ce9bf60c0afb9b8ab6a0dae1d5dfaab",
+      "targetBeforeSha256": "47d16a7a0303253bca58bdf53fe04c61b6eb8c79dca1c688ea996027af162350",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 46995,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "deferred",
+      "reason": "Deferred: source external/games defaults and extra ports change protected runtime config; template deadline calculation changes retained historical config. Existing Tempo runtime byte-preserved.",
+      "targetFinalSha256": "47d16a7a0303253bca58bdf53fe04c61b6eb8c79dca1c688ea996027af162350"
+    },
+    {
+      "path": "scripts/monad-vps-migrate.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "59147ae1ed838198fcc07f33a3c57d23fcec7225cc47764f3cbdcbe2487b3bc4",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 19375,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "scripts/prepare-external-provider.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "a5306933de1f78a41773e0badbe1fc71f487bb060c08db08e8ec47ed4ff29923",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 17716,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "deferred",
+      "reason": "Deferred: chain-specific identity/whitelist writer requires separate explicit Tempo provider and financial migration.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "scripts/test/external-stack.test.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "9cd0318f76e5788de23b03169994afd7e0c3157fdfc746fa104f8241a89ce64c",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 6293,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "9cd0318f76e5788de23b03169994afd7e0c3157fdfc746fa104f8241a89ce64c"
+    },
+    {
+      "path": "scripts/test/linux-magpie.test.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "132f7b601b1e5278b86125ac701767d1be66b79db0f8f981b89f701821ce8a11",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 6064,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "132f7b601b1e5278b86125ac701767d1be66b79db0f8f981b89f701821ce8a11"
+    },
+    {
+      "path": "scripts/test/monad-collaboration-autonomy-acceptance.test.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "b9e32c7c36a8a06cb05f1271e68247bd40a6589565c1fb474466fd121675cad3",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 12920,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "scripts/test/monad-collaboration-fund-goals.test.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "c27e80f1a25fa1713342ba9b628bac7c9365fc6a18971e6e3c03e3d435992c07",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 11804,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "scripts/test/monad-collaboration-goal-acceptance.test.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "2d2f2a7013ae821db5e0d00cae74595def4e71d817588b5b303f64428b2546e6",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 12579,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "scripts/test/monad-hosted-runtime.test.ts",
+      "baselineSourceSha256": "bd5190208de93074898bf82d038d6d68fa58f3843bd7a1b49a3ab92584faab2f",
+      "sourceSha256": "25e45e575946cd51b31837c573d70510e28ee5df2852da10a7a59740d4cd5554",
+      "targetBeforeSha256": "bd5190208de93074898bf82d038d6d68fa58f3843bd7a1b49a3ab92584faab2f",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 17565,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "deferred",
+      "reason": "Deferred with source runtime operations; current stricter Tempo history/catalog tests retained and run.",
+      "targetFinalSha256": "bd5190208de93074898bf82d038d6d68fa58f3843bd7a1b49a3ab92584faab2f"
+    },
+    {
+      "path": "scripts/test/monad-vps-migrate.test.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "eec509a6fb589760eae840c10681829d6eb668df9e98031f56122a182fad194d",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 20810,
+      "change": "added",
+      "classification": "monad-ops-evidence-excluded",
+      "decision": "excluded",
+      "reason": "Monad operational deployment or financial/live acceptance does not apply to Tempo production.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "scripts/test/prepare-external-provider.test.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "e5c4fed470c7a12d642e61d7749317e7aee46713b585bb6bf0c89da0d5d413f4",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 12049,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "deferred",
+      "reason": "Deferred together with the excluded provider admission writer; no test-only import of an unavailable CLI.",
+      "targetFinalSha256": null
+    },
+    {
+      "path": "scripts/verify-fixed-price-credit.ts",
+      "baselineSourceSha256": "1a8e98c2228dcda016d57f841276aa4fa0e11ac1401de67cd879b152ac17fdde",
+      "sourceSha256": "a2804cc4eadfd5de53d9fed03f0f22a0b21c5ef14be7a4d5212bb852f4b0bfd0",
+      "targetBeforeSha256": "b4a6910b83c93417b0299861e2838495be2733694ac795a2baea9076ec152203",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 25258,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "already-covered",
+      "reason": "Already covered: Tempo already asserts stable REFUND_NOT_ALLOWED code plus no side effects since prior CI repair.",
+      "targetFinalSha256": "b4a6910b83c93417b0299861e2838495be2733694ac795a2baea9076ec152203"
+    },
+    {
+      "path": "services/arena/src/docker.ts",
+      "baselineSourceSha256": "ab7484b381ca89932573072fde2659ae8ebff41e85fe9e9908ad7b918e1c2ef1",
+      "sourceSha256": "dd915d0fa799bc9ebd24ca396b23e6723ae932c47bea419dc10c7a8a0abed59e",
+      "targetBeforeSha256": "ab7484b381ca89932573072fde2659ae8ebff41e85fe9e9908ad7b918e1c2ef1",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 9407,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Adapted umask0077-readable staging (0444) and read-before-trusted-marker classification; no sandbox privilege or execution time relaxation.",
+      "targetFinalSha256": "dd915d0fa799bc9ebd24ca396b23e6723ae932c47bea419dc10c7a8a0abed59e"
+    },
+    {
+      "path": "services/arena/test/docker.test.ts",
+      "baselineSourceSha256": "262e3e747e3559dc19934d885aa2fc782da332b80950e0686261c66d182b5775",
+      "sourceSha256": "1680c4fec1ed287e8a1c2e8ea3acca6e42b79ec6948cd34251202550af069190",
+      "targetBeforeSha256": "262e3e747e3559dc19934d885aa2fc782da332b80950e0686261c66d182b5775",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 12791,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Migrated real Docker umask/staging regressions; existing 600ms timing test isolated without changing limit after one full-group timeout.",
+      "targetFinalSha256": "1680c4fec1ed287e8a1c2e8ea3acca6e42b79ec6948cd34251202550af069190"
+    },
+    {
+      "path": "services/hosted-agents/README.md",
+      "baselineSourceSha256": "f4e1f975a17a91bde2eb0d2976ef4aa8764b457bc76aff1338e07e0cc22eac81",
+      "sourceSha256": "ee2cf09a95663f1fb808ded5fb0cae9aea2c98f9dcc82f2fef49af169263a818",
+      "targetBeforeSha256": "f885920b4fd06a0e78ef0a0a64e5b2edb4b9d735f8cef63b9e8659bab57c8409",
+      "baselineOrigin": "docs-addendum/snapshot.json",
+      "sourceBytes": 9732,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "documentation-review",
+      "decision": "adapted-documentation",
+      "reason": "Product-first/current CI-CD entry and bounded optional capability contract, rewritten for Tempo; no Monad live evidence imported.",
+      "targetFinalSha256": "e865aa4be101b0ca6be71ce3336cbfbdec0a12135f85621bc20d832bcd609a73"
+    },
+    {
+      "path": "services/hosted-agents/package.json",
+      "baselineSourceSha256": "ead82d5cf498b6eec89edb32ba7fec89d10db96abdd5346d667db90b28b6cb7d",
+      "sourceSha256": "799cacd811c6f0d50eae90fc43ece4d49b6a7a14fdccdd6d7648efd2e6be16cd",
+      "targetBeforeSha256": "ead82d5cf498b6eec89edb32ba7fec89d10db96abdd5346d667db90b28b6cb7d",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 402,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "799cacd811c6f0d50eae90fc43ece4d49b6a7a14fdccdd6d7648efd2e6be16cd"
+    },
+    {
+      "path": "services/hosted-agents/src/autonomy-executor.ts",
+      "baselineSourceSha256": "256bc7d1ffb11b560f1a7c5d5b06611ebb3e35981d14b986a2d760955d6acb2f",
+      "sourceSha256": "11b083e942f442e11fea4794602a0822c04191daf3949b7b4afc673972ee1926",
+      "targetBeforeSha256": "ee5ad43319927cad58b72fa8ca972e6a5fe74e15bf27ba1196ff4f809fb5fd60",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 47913,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "4e88c56ccc2307d6c427f05abbf8bf3396a0ec4420d200b4cf5e202a78d0b44c"
+    },
+    {
+      "path": "services/hosted-agents/src/external/hiring.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "6846188216c2c65b4cacf34334917e2296f10d9b5b4a29b18e6113577ab5c2dd",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 8783,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Optional allowlisted specialist, original paid handle and assignment/provider/model/provenance binding; propagate current chain in both prompt checks.",
+      "targetFinalSha256": "43efbcbf34b11635a7bee499e49804ae049268f09b3b88515b91c5dec76fa669"
+    },
+    {
+      "path": "services/hosted-agents/src/external/registry.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "80a26225c1d5b0337b17270f8da78ecdc8aa140291aa7253bc6fefb76c020db7",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 14485,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "80a26225c1d5b0337b17270f8da78ecdc8aa140291aa7253bc6fefb76c020db7"
+    },
+    {
+      "path": "services/hosted-agents/src/external/service.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "7cad7832666312695dfd659350c85f7d283a3327880eb63c6d07107d8f40855c",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 3900,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Optional paid specialist with original request provenance; malformed metadata URL returns400 instead of process crash; host/provider chain prompts match.",
+      "targetFinalSha256": "a9ca6c3f28e85e9a547626cc7083ac48f1c99ca514278601d3342fb1122e6cba"
+    },
+    {
+      "path": "services/hosted-agents/src/game-executor.ts",
+      "baselineSourceSha256": "0c82ee1a59bbc1a643780d0f769cc9f29f002ad1d203baf9c853a5995ecc974d",
+      "sourceSha256": "f3bed444540874ba1fb9193881c5fac68fe970f9df58578c951d6e76a39b8a65",
+      "targetBeforeSha256": "a7a95e123bfa515dc40a6e20d3bd6ab6ae07d15016df341d54c747558e7cab6a",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 34055,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Add bounded inherited deadline and reward balance read; retain Tempo grant-expiry handling, gas/fee and chain award validation.",
+      "targetFinalSha256": "f257954b5f6d12b727e86883b9fe9a944caf80a21e5f56947960683974df6f85"
+    },
+    {
+      "path": "services/hosted-agents/src/goal-types.ts",
+      "baselineSourceSha256": "428b0e891b0c9e6dec6c3289c466197d0c92834c4e340d8dd824660eb51e6749",
+      "sourceSha256": "495f727f8d9811e91e30325c66a253e8f0652d21d9978d86c35c7f2a08b1d913",
+      "targetBeforeSha256": "428b0e891b0c9e6dec6c3289c466197d0c92834c4e340d8dd824660eb51e6749",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 6875,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "495f727f8d9811e91e30325c66a253e8f0652d21d9978d86c35c7f2a08b1d913"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/executor.ts",
+      "baselineSourceSha256": "b2cb2f9b9af584df8f4e5b857356e7e0a53a315ddfe45a00c19bfa221e6f8389",
+      "sourceSha256": "c5a79095b02439139034e751b86902d46504c980d0c66489e83b30f4c6f1a981",
+      "targetBeforeSha256": "5e077dab2f4141490d73566c580c19aeb73c2c6086f965c25ba89282145793d9",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 27535,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Adapted frozen routes, external optional hiring and legacy goals; preserve Tempo specialist chain prompts, charge accounting and unresolved nonterminal semantics.",
+      "targetFinalSha256": "245936c55c2d7d4dd7a005786e7ef71212204ba62058abe0e82a4fe995e1933d"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/payment.ts",
+      "baselineSourceSha256": "585407208e9c78e13a95c5cb304b3da236c71e9f8600289aa7aad77b5a0157b9",
+      "sourceSha256": "3ba6481fe15b62ea4057cc0f915e69402e281425ac152e247244d4803ee10bed",
+      "targetBeforeSha256": "42d617ff6716402f67b263f103ff5dae46a435f11642cefccc3a8b240948f8e4",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 12258,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Adapted per-call route and cash reserve fallback; added original-hash canonical policy reconciliation for new/legacy signed policy. Pending policy cannot become terminal or fall through into void.",
+      "targetFinalSha256": "47d1004f1398d14926f978558f1717cf164c6df2302b6bc67164c2ba16260602"
+    },
+    {
+      "path": "services/hosted-agents/src/goals/reconciliation.ts",
+      "baselineSourceSha256": "176f54ad8c2f9d995800f157aee5ab2b8404c48a6122ed8425fd10a6d7478218",
+      "sourceSha256": "f90e6d97d99ac1c093b46637a2dfeaf90d0d540ff2558c39e51149504f6cba7d",
+      "targetBeforeSha256": "176f54ad8c2f9d995800f157aee5ab2b8404c48a6122ed8425fd10a6d7478218",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 8760,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Use original call.route or legacy state.route; reject redirects and preserve confirmed cash/refund proofs.",
+      "targetFinalSha256": "f90e6d97d99ac1c093b46637a2dfeaf90d0d540ff2558c39e51149504f6cba7d"
+    },
+    {
+      "path": "services/hosted-agents/src/metered-task.ts",
+      "baselineSourceSha256": "cc1e9b8d563c1f4363e821c13597a286654b57f8504851a82cfeccccfdc602da",
+      "sourceSha256": "5eea80d1e790ed36ed2e99d951be802e2b2d70d3630e070044a6ecf3a7ebe6a4",
+      "targetBeforeSha256": "cc1e9b8d563c1f4363e821c13597a286654b57f8504851a82cfeccccfdc602da",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 15789,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "5eea80d1e790ed36ed2e99d951be802e2b2d70d3630e070044a6ecf3a7ebe6a4"
+    },
+    {
+      "path": "services/hosted-agents/src/service.ts",
+      "baselineSourceSha256": "dc6b6fde39d98fef2152f1a04d880162db9cb8413bb58ca31bfc531f30985213",
+      "sourceSha256": "38540bf578ad2a9bd7cfd0cb59004bf106009d49402ada7b23594942ad831172",
+      "targetBeforeSha256": "139b9b2ddc144f654865246ded7187e32eb24faf729f767e935098d7097f3a52",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 39963,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Merge optional child funding/admission fields without eager migration; retain Tempo 42431, exact Origin, signed sponsorship audit and expired grant limits.",
+      "targetFinalSha256": "11ed3f0365baa165ef04782311b3260af875ed07f30647cc43d0a05719bb7f5b"
+    },
+    {
+      "path": "services/hosted-agents/src/types.ts",
+      "baselineSourceSha256": "66e1a815baa6a3d547abcc08a58d45fee7634fe47e88badf0487fc241bb019fc",
+      "sourceSha256": "466202fa7d9915a189be47751dbc4a520b4a7eede6573bbebfcb286e3a7c6e29",
+      "targetBeforeSha256": "e8b03af2f31a467e06756524277c299b444807417bec36dd6f4222a8a4897750",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 5250,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "376cf2427611a32ae792d635cd72a1dc0c08fe500d21e95978aa722e3b2a4d9e"
+    },
+    {
+      "path": "services/hosted-agents/test/autonomy-executor.test.ts",
+      "baselineSourceSha256": "305d9d17680ca4d6b5e82c3f4723deefba8d0859210818454fa7f2b9369c0642",
+      "sourceSha256": "1ffd4d4f3a18539523558dc22fbccf1c37de35692ce536a4c60a47005411090e",
+      "targetBeforeSha256": "305d9d17680ca4d6b5e82c3f4723deefba8d0859210818454fa7f2b9369c0642",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 55854,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "1ffd4d4f3a18539523558dc22fbccf1c37de35692ce536a4c60a47005411090e"
+    },
+    {
+      "path": "services/hosted-agents/test/autonomy-game-live.test.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "c6a398b2bd19e98fe45c4a34d8c58fd15b8e71d45d291add54fb275e39d4e669",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 27740,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "c6a398b2bd19e98fe45c4a34d8c58fd15b8e71d45d291add54fb275e39d4e669"
+    },
+    {
+      "path": "services/hosted-agents/test/external-hiring.test.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "3f5b7d790872a37519baedef33b97bc13b070ae6a247b5f2bef2629380f453f7",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 20976,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "3f5b7d790872a37519baedef33b97bc13b070ae6a247b5f2bef2629380f453f7"
+    },
+    {
+      "path": "services/hosted-agents/test/goals-model-fallback-paid.test.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "65c75c0e0f74cb373ac3f32e85eb08400c5ecd416df7c0d08ddb07e0251df3a4",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 8111,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Controlled Anvil cash/model fallback and canonical receipts; output isolated to temporary path (explicit audit directory opt-in), never overwrite source historical evidence.",
+      "targetFinalSha256": "a91b66466e08f1e942dd2b19ae3212ad24344ca5834e419c9160c89b9b27d9d5"
+    },
+    {
+      "path": "services/hosted-agents/test/goals.test.ts",
+      "baselineSourceSha256": "2fa9b479bda59c63a8efb5a1f2d5ce1634b2ff8940eb18f734ad3ddf287d4eca",
+      "sourceSha256": "5e5515dd16ed3e4b6f80f2edc380239590f070ca0655ad7a29b73de1e0b3f9f5",
+      "targetBeforeSha256": "2fa9b479bda59c63a8efb5a1f2d5ce1634b2ff8940eb18f734ad3ddf287d4eca",
+      "baselineOrigin": "snapshot.json",
+      "sourceBytes": 25442,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "5e5515dd16ed3e4b6f80f2edc380239590f070ca0655ad7a29b73de1e0b3f9f5"
+    },
+    {
+      "path": "services/hosted-agents/test/model-fallback.test.ts",
+      "baselineSourceSha256": null,
+      "sourceSha256": "f4a6f996f14e88a50e7cfccdf203d936a7c92dadbb0171b6bf08a9b8db76bb74",
+      "targetBeforeSha256": null,
+      "baselineOrigin": null,
+      "sourceBytes": 6192,
+      "change": "added",
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "f4a6f996f14e88a50e7cfccdf203d936a7c92dadbb0171b6bf08a9b8db76bb74"
+    },
+    {
+      "path": "services/hosted-agents/test/service.test.ts",
+      "baselineSourceSha256": "b101efae56d93c8b9600ea71a00f52b937438852a200ac329b379bf6451c4b8e",
+      "sourceSha256": "b1db64464e33f9c64ffe5cf885655347638997a3b7b490dcfcc4cc59a44af2e9",
+      "targetBeforeSha256": "b101efae56d93c8b9600ea71a00f52b937438852a200ac329b379bf6451c4b8e",
+      "baselineOrigin": "git:0526070",
+      "sourceBytes": 42292,
+      "change": "modified",
+      "baselineCopyAvailable": true,
+      "classification": "functional-candidate-review",
+      "decision": "adapted",
+      "reason": "Selectively migrated with Tempo chain/asset/Origin/payment/recovery constraints; offline regression or optional capability only.",
+      "targetFinalSha256": "b1db64464e33f9c64ffe5cf885655347638997a3b7b490dcfcc4cc59a44af2e9"
+    }
+  ],
+  "nativeChanges": [
+    {
+      "path": ".github/test/test_workflow_boundary.py",
+      "reason": "Verify serial retained script set and namespace dependencies; existing credential/event/SSH boundaries retained."
+    },
+    {
+      "path": ".github/workflows/tempo-ci.yml",
+      "reason": "Include retained offline launcher tests and Linux fixture packages in CI; production job unchanged."
+    },
+    {
+      "path": "docs/tempo-upstream-sync-20261015.md",
+      "reason": "Dated scope, decisions, controlled evidence and failure history."
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261015/README.md",
+      "reason": "New synthetic browser evidence only; generated by this round, never copied as source live evidence."
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261015/controlled-browser-summary.json",
+      "reason": "New synthetic browser evidence only; generated by this round, never copied as source live evidence."
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261015/desktop-synthetic-external-identity.png",
+      "reason": "New synthetic browser evidence only; generated by this round, never copied as source live evidence."
+    },
+    {
+      "path": "frontend/acceptance/tempo-upstream-sync-20261015/mobile-synthetic-external-identity.png",
+      "reason": "New synthetic browser evidence only; generated by this round, never copied as source live evidence."
+    },
+    {
+      "path": "frontend/lib/run-funding.ts",
+      "reason": "Shared legacy cash versus explicit reward funding UI compatibility."
+    },
+    {
+      "path": "frontend/next-env.d.ts",
+      "reason": "Next generated declarations for isolated fixture production build."
+    },
+    {
+      "path": "frontend/test/browser/upstream-sync-20261015.spec.ts",
+      "reason": "Fully intercepted desktop/mobile funding and external identity UI regression."
+    },
+    {
+      "path": "frontend/test/run-funding.test.ts",
+      "reason": "Old snapshot and reward child regression."
+    },
+    {
+      "path": "frontend/tsconfig.json",
+      "reason": "Next added isolated build declaration include."
+    },
+    {
+      "path": "services/hosted-agents/test/external-prompt-domain.test.ts",
+      "reason": "Host/provider Tempo prompt agreement and different configured chain rejection."
+    },
+    {
+      "path": "services/hosted-agents/test/external-service-http.test.ts",
+      "reason": "Malformed real HTTP request returns400 and service remains alive."
+    },
+    {
+      "path": "services/hosted-agents/test/goals-paid.test.ts",
+      "reason": "Seed adequate cash for two independent missions under reserve admission; preserve original Unknown/refund/replay/nonce assertions."
+    },
+    {
+      "path": "services/hosted-agents/test/goals-policy-recovery.test.ts",
+      "reason": "Original signed policy and original installed deployment guard regression, including expired handle combination."
+    },
+    {
+      "path": "services/hosted-agents/test/sdk-redirect.test.ts",
+      "reason": "Real loopback307 rejection without forwarding prompt or payment."
+    }
+  ],
+  "preservedFiles": [
+    {
+      "path": "scripts/tempo-hosted-runtime.ts",
+      "sha256": "96dce225760b7edfdc936d24bb684760942f1902c55d6034d498274b9c355833",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "scripts/test/tempo-hosted-runtime.test.ts",
+      "sha256": "e79a106885b58d154fd59426304580e87677f828b491b2acf9d46f14f0174ceb",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "frontend/lib/server-transport.ts",
+      "sha256": "c1fa05361ccf8e9539d4710d2dbc3f8e8b235c236bc2a1388965088436ed5e27",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "scripts/demo-rpc.ts",
+      "sha256": "c9d44b74122d8f83ede08c3dc8fa9d8ddfa3cc6297d45301ad31cede1bade4b7",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "scripts/demo-journal.ts",
+      "sha256": "7c1cdcbf055e02c08acac751d93098e6f71399f7e78e29a466bb7a1db34d1d59",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/AgentAccount.sol",
+      "sha256": "5fe48965ee79740626a51d7d2d7b9a005b87d670a84f5cae2296f1dd65ef8c57",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/ERC8004Adapter.sol",
+      "sha256": "c856d08a00510d84d1b566c4d80cb2ce7f301b96eea45c35307a32054b8bde4b",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/CreditManager.sol",
+      "sha256": "3dc65dd6dc18f291ac2e64406bad3059f7b39c9c0bc8d378a03ce1d719d56742",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/TaskEscrow.sol",
+      "sha256": "de6e3a2474b75a505e90a71ad8a850b782f9173641219f700a85d4a9ec906f82",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/utils/ReentrancyGuard.sol",
+      "sha256": "f7e1b078b8d3386d25decafe506cbd1b7743976f28b8f8fbb652c71395cc8e2d",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/utils/SafeTransferLib.sol",
+      "sha256": "849e980e95ea74a81fa6c6152a3483935cde05be42cb02be74d2e0e66181e361",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/interfaces/IERC20.sol",
+      "sha256": "8e105abdf2a1a173a6db79c298408ba759d2397bf526c54bffb76d8893472c3d",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/interfaces/IAgentAccount.sol",
+      "sha256": "64bd70ecae7ef9e0e530966954f903707ca4a6c32077a19df35a517b4b717da0",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/interfaces/ITaskEscrow.sol",
+      "sha256": "f7f4f3216e632c49f342bcf8c757e2aba2027c3d8f54dc8071faa415e18ba953",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/interfaces/IReputationRegistry.sol",
+      "sha256": "d7b196ecebc6c2f3a40c972c8fe02cb1a83a42f1b9676ca06b8f73513b0c16ce",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/interfaces/ICreditManager.sol",
+      "sha256": "9ed38c84cf6d44d059c9145b9b67323e771c35bef433e46d54b4280d20d6b5c5",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/interfaces/IERC8004Adapter.sol",
+      "sha256": "637302dba43de5d1e7fb6330f34b81ed6ac9c88587e81de5d2cac34454f2d45e",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "contracts/src/interfaces/IIdentityRegistry.sol",
+      "sha256": "f11419195ad2a7ce5595b8d82b05751e90b019c56e85568a452d65d4fde56713",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "deploy/tempo-vps/cicd/engine.py",
+      "sha256": "61ea676b5a980654928f39226d943505a9948e393017d743c3eb15579a272a93",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "deploy/tempo-vps/cicd/state_guard.py",
+      "sha256": "8ec48fa991a97d67359b23336844a02007b52fc058339249578b3eae89ac7efe",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "deploy/tempo-vps/cicd/transaction.py",
+      "sha256": "a85d84eae3a16bed71c0c4b9c6c4779a5bb6e89d71f1a4bc0c4d0d2c83de08f6",
+      "unchangedFromTargetBaseline": true
+    },
+    {
+      "path": "deploy/tempo-vps/cicd/ssh-entry",
+      "sha256": "88f2a1817e314b4d8aae2e801d75da942f74475b5da79a2c8e2206dc59d25b94",
+      "unchangedFromTargetBaseline": true
+    }
+  ],
+  "deploymentCompatibility": {
+    "trustedEngineUpdated": false,
+    "contractsSourceChanged": false,
+    "productionRuntimeConfigChanged": false,
+    "productionExtraPortsAdded": false,
+    "externalProductionEnabled": false,
+    "autonomousGamesProductionEnabled": false,
+    "expiredGrantReactivated": false,
+    "oldMacWriterStarted": false,
+    "knownGuardLimits": [
+      "New external-service journal directory is outside installed relay matcher; production enablement deferred pending separate trusted migration.",
+      "Adding external runtime ports is rejected by installed schema; this round preserves existing seven ports.",
+      "New policy unknown states remain nonterminal, making original STATE_MISSION_INFLIGHT guard reject; no trusted bypass.",
+      "Source template deadline change is deferred because retained snapshot numeric derivation changes protected config."
+    ],
+    "localCompatibilityReport": "review/deploy-compatibility-results.json"
+  },
+  "verification": {
+    "nodeVersion": "22.23.2",
+    "modelScope": "Controlled local HTTP responses only",
+    "chainScope": "Fresh owned Anvil fixtures and mocked RPC only; zero public-chain business writes",
+    "aggregateWarning": "Groups overlap; counts must not be summed as unique tests.",
+    "groups": [
+      {
+        "id": "frontend",
+        "pass": 86,
+        "fail": 0,
+        "skipped": 0,
+        "log": "tests/frontend.log",
+        "scope": "Complete frontend suite before the final added proxy regression; final proxy file retested below."
+      },
+      {
+        "id": "proxy-final",
+        "pass": 15,
+        "fail": 0,
+        "skipped": 0,
+        "log": "proxy-final.log"
+      },
+      {
+        "id": "pi-autonomy-provider",
+        "pass": 73,
+        "fail": 0,
+        "skipped": 0,
+        "log": "tests/pi-targeted.log"
+      },
+      {
+        "id": "arena-full",
+        "tests": 107,
+        "pass": 105,
+        "fail": 1,
+        "skipped": 1,
+        "log": "arena.log",
+        "failure": "Existing Docker startup delay 600ms case timed out; isolated unchanged recheck passed.",
+        "skipReason": "Existing opt-in Free Arena HTTP URL is absent."
+      },
+      {
+        "id": "arena-startup-isolated",
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0,
+        "log": "arena-startup-isolated.log",
+        "scope": "Same original 600ms test, no timeout or code relaxation."
+      },
+      {
+        "id": "hosted-full",
+        "tests": 234,
+        "pass": 233,
+        "fail": 1,
+        "skipped": 0,
+        "log": "hosted.log",
+        "failure": "Old two-mission fixture had only40000 initial cash; second mission needs remaining work/review reserve. Fixed fixture and original failing case passed below."
+      },
+      {
+        "id": "hosted-goals-paid-recheck",
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0,
+        "log": "goals-paid-isolated-final.log",
+        "scope": "Initial cash60000 via freshly configured executor, explicit initialCash assertion; original Unknown/refund/nonce/replay assertions retained."
+      },
+      {
+        "id": "policy-recovery-final",
+        "pass": 22,
+        "fail": 0,
+        "skipped": 0,
+        "log": "review/policy-combined-final.log",
+        "scope": "New and legacy policy, canonical/reorg/bad signer, cash reserve, pending policy + expired signed payment void combination; original guard enforcement."
+      },
+      {
+        "id": "external-prompt-domain",
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0,
+        "log": "external-prompt-final.log"
+      },
+      {
+        "id": "sdk-redirect",
+        "pass": 1,
+        "fail": 0,
+        "skipped": 0,
+        "log": "sdk-redirect-final.log"
+      },
+      {
+        "id": "scripts-offline",
+        "tests": 26,
+        "pass": 25,
+        "fail": 0,
+        "skipped": 1,
+        "log": "scripts-offline.log",
+        "skipReason": "Real bubblewrap network namespace case is Linux-only; current host macOS. Ubuntu CI installs bubblewrap+socat and must execute it."
+      },
+      {
+        "id": "workflow-final",
+        "pass": 17,
+        "fail": 0,
+        "skipped": 0,
+        "log": "workflow-final.log"
+      },
+      {
+        "id": "browser-final",
+        "pass": 6,
+        "fail": 0,
+        "skipped": 0,
+        "log": "browser-final.log",
+        "scope": "Desktop/mobile; all APIs intercepted; zero wallet RPC and write commands; no production health probes."
+      }
+    ],
+    "build": {
+      "success": true,
+      "mode": "fixture",
+      "buildId": "O-Ma7nFcMEsRbP_mDRH6_",
+      "dist": ".next-upstream-sync-20261015",
+      "log": "build-fixture.log",
+      "hostedUpstream": "http://127.0.0.1:1"
+    },
+    "checks": {
+      "typecheckAll": {
+        "exitCode": 0,
+        "log": "typecheck-complete.log"
+      },
+      "docs": {
+        "exitCode": 0,
+        "log": "docs-final.log"
+      },
+      "diff": {
+        "exitCode": 0,
+        "log": "diff-check.log"
+      }
+    },
+    "failureHistory": [
+      {
+        "log": "typecheck-first.log",
+        "finding": "Syntax error from concatenating overlapping three-way test closing block; preserved existing Tempo TLS cases and added distinct native projection regression."
+      },
+      {
+        "log": "sdk-redirect.log",
+        "finding": "New HTTP fixture did not handle ethers JSON-RPC batches; mock failed/hung, owned processes stopped, batch handling corrected; no product guard changed."
+      },
+      {
+        "log": "browser.log",
+        "finding": "All6 product assertions passed up to invalid harness.errors access; replaced with actual pageerror collection and final6 passed."
+      },
+      {
+        "log": "external-prompt.log",
+        "finding": "Test used writer without a historical imported chain prompt; changed test to gas specialist to check actual Tempo chain clause and cross-chain rejection."
+      },
+      {
+        "log": "arena.log",
+        "finding": "One existing600ms Docker timing failure during concurrent build; resource-load explanation remains inference. Same test isolated passed without changed threshold."
+      },
+      {
+        "log": "hosted.log",
+        "finding": "Old cash fixture insufficient for new required review reserve; adjusted explicit fixture funds, not product protection."
+      },
+      {
+        "log": "goals-paid-final.log",
+        "finding": "Changing fixture config alone did not update already-cloned executor; constructed new executor and asserted initialCash60000 before final green replay."
+      }
+    ],
+    "productionActions": {
+      "vpsTouched": false,
+      "manualRelease": false,
+      "sshCredentialsCreated": false,
+      "realModelCalls": 0,
+      "publicChainBusinessWrites": 0,
+      "grantRenewals": 0,
+      "oldMacWriterStarted": false
+    },
+    "localCleanup": {
+      "fixtureFrontend3039Stopped": true,
+      "temporaryHelpersRemoved": true,
+      "frozenArchiveCopiesLogsAndReusableBrowserConfigRetained": true
+    }
+  },
+  "logs": [
+    {
+      "path": ".data/upstream-sync-20261015/arena-startup-isolated.log",
+      "bytes": 346,
+      "sha256": "1dca57ea329868c7ae0956c0fcd5bc98f84af131d1f2462464d287e086436375"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/arena.log",
+      "bytes": 26978,
+      "sha256": "952089e2bd3032bd03f32bae23fd11f45f1dad87c47e94f4ea7f409e4a0d282a"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/browser-final.log",
+      "bytes": 1472,
+      "sha256": "15f1eab4da3ebbcbfdada38da69738b93eaeb411a36d698aa5867cb3c0fe6e1a"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/browser-server.log",
+      "bytes": 154,
+      "sha256": "15a909cd4581128c6a50e9762d260bb894b7c865eea7bd75f53d68081921b4ce"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/browser.log",
+      "bytes": 17271,
+      "sha256": "ac52f942de1b4e83ef01c1f7af81fc169ddb7d8c85165ef2c571aeda7f83b3cb"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/build-fixture.log",
+      "bytes": 1452,
+      "sha256": "a782642ccbaff6a0ad5347d51fe11f7cb21d957f67de42442892dce96f90d1c7"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/diff-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/docs-final.log",
+      "bytes": 145,
+      "sha256": "4d2f1b0ec54bf337f896c105d3620a01dd80e5f382c274237f1e982df8a92812"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/docs.log",
+      "bytes": 145,
+      "sha256": "4d2f1b0ec54bf337f896c105d3620a01dd80e5f382c274237f1e982df8a92812"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/external-prompt-final.log",
+      "bytes": 369,
+      "sha256": "5310df817e1a73b8f89dd4d4fd2c0565828c9c8fce82ae66eb9437aa770a86d4"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/external-prompt.log",
+      "bytes": 4350,
+      "sha256": "68937399274b3d717a8579d4f50a87d3e5f92c6e447ec8833f038cde79c2750c"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/goals-paid-final.log",
+      "bytes": 1307,
+      "sha256": "5d2b1b9272268de38ac05215af4e5a1eab37c4a8661fc954b48aed33474403b6"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/goals-paid-isolated-final.log",
+      "bytes": 413,
+      "sha256": "12e909a432bf5cfb538b1b4d9455034decca0d9e27a09813cb0facc29f5c5b16"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/hosted.log",
+      "bytes": 61868,
+      "sha256": "4f063244b383aa7ab82232da8571d1a766b9746a74f909b63c4a3b0a56eebb69"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/manifest-integrity.log",
+      "bytes": 198,
+      "sha256": "5d85a6356ce4c7243da22a6b63ff64f4369f18862b35fac2af30fe42c802453a"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/proxy-final.log",
+      "bytes": 3903,
+      "sha256": "0dfb746b3bda981adf752758339cb1fc6c4aec6c4da3793da019c16f460ab622"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/policy-combined-final.log",
+      "bytes": 5569,
+      "sha256": "d6b6c2f37894a5739922c638034fd8f6140e61db405438afd86d53e4e82e8148"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/policy-combined-only.log",
+      "bytes": 665,
+      "sha256": "dff0a603279b1b95ac13e57311117a65751b573b7f4888fd246f2506a8c6ee48"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/policy-recovery.log",
+      "bytes": 12387,
+      "sha256": "5d9c165fd621dc9a2912e2192ab2e4eedcbfa513b46f2aae847e26e22fb5f40a"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/policy-targeted-final.log",
+      "bytes": 5302,
+      "sha256": "195bb445e70a7551435895b371e50d91bcde443b77dbd7dd9ec85bf4f8a5ef7b"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/policy-typecheck.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/scripts-offline.log",
+      "bytes": 7128,
+      "sha256": "150bbfbc36fba716cc8915a5dd3e33f6a2abf139575a26620e0e9ff4b1c932e1"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/sdk-redirect-final.log",
+      "bytes": 375,
+      "sha256": "a733e7aa81e3c091f157b9eb866b9d464dddee8692e284149accc37a41a6229e"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/sdk-redirect.log",
+      "bytes": 868,
+      "sha256": "fdb03fc67494ffd619ccfd14389e148b547b5ed6e54b66977ba4cc5bea6b3107"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/tests/frontend.log",
+      "bytes": 21394,
+      "sha256": "de0fa95ac97ae00bca138910df7a80f9761f57d46a0e7b1427739d9aebc3c2a5"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/tests/pi-targeted.log",
+      "bytes": 15481,
+      "sha256": "917af04c5d538a16f22a7b9cd48c05c1e936bf67374a4f07e2dbb52bb828aed1"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/typecheck-complete.log",
+      "bytes": 149,
+      "sha256": "8a4aff97ec239231a3f5eca9611a33859bdfdaf14cc8030454682e79e3e0c0b2"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/typecheck-final.log",
+      "bytes": 149,
+      "sha256": "8a4aff97ec239231a3f5eca9611a33859bdfdaf14cc8030454682e79e3e0c0b2"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/typecheck-first.log",
+      "bytes": 531,
+      "sha256": "44bc4c719af382c5a17bfe39243567747f785687e56f72efa3fe542cd80fe18e"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/typecheck-second.log",
+      "bytes": 149,
+      "sha256": "8a4aff97ec239231a3f5eca9611a33859bdfdaf14cc8030454682e79e3e0c0b2"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/workflow-final.log",
+      "bytes": 116,
+      "sha256": "ffe8aa43d302b974b0754c60efdae40fb7cba4464a8f52fbd7b9772c6085033a"
+    },
+    {
+      "path": ".data/upstream-sync-20261015/workflow.log",
+      "bytes": 116,
+      "sha256": "1bbe318a758f30d734e96c7db2ef0ab0c820f767dce8cd6cb6e73dda771f6200"
+    }
+  ],
+  "reports": [
+    {
+      "path": ".data/upstream-sync-20261015/browser-report-first.json",
+      "sha256": "c56d11fbfcf5351fa89c0c914aeeed3fabd097e33792a88370809d70baeb7e1d",
+      "bytes": 39222
+    },
+    {
+      "path": ".data/upstream-sync-20261015/browser-report.json",
+      "sha256": "f87e2f9f692e96ccd98652bd89fdc692a5557af0ab0fa0c26eaf7f629896f624",
+      "bytes": 9207
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/deploy-compatibility-results.json",
+      "sha256": "98fef83af1f0b965dc50b7b4315173977aa2a26909bd6c4df7bfdfd5a9922dc3",
+      "bytes": 4921
+    },
+    {
+      "path": ".data/upstream-sync-20261015/review/deadline-compatibility.json",
+      "sha256": "220eba504344906c527eac84eb7175f1f9aeec8b1a7194501decc10df1bc68ef",
+      "bytes": 499
+    },
+    {
+      "path": ".data/upstream-sync-20261015/reviews/external-sdk-fallback-review.md",
+      "sha256": "98862da0c855b38daea3ab9b36c59469ee4cb4d35acfea87391c2b94a48e11ac",
+      "bytes": 10620
+    }
+  ]
+}

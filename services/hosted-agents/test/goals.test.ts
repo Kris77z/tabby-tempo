@@ -10,6 +10,7 @@ import { inspectGoalArtifact } from "../src/goals/acceptance.js";
 import { validateGoalView, validGoal } from "../src/goal-types.js";
 import type { HostedExecution } from "../src/types.js";
 import type { HostedTaskExecutorConfig } from "../src/task-executor.js";
+import { externalServiceView, type ExternalHiringConfig, type ExternalServiceTrust } from "../src/external/registry.js";
 const route={id:"cheap",relayUrl:"http://127.0.0.1:1234/v1/chat/completions",provider:"0x0000000000000000000000000000000000000001",priceRaw:"10000",service:"tabby/mission",model:"cheap",physicalModel:"physical"};
 const plan=JSON.stringify({phases:[{name:"Analyze",taskType:"analyst",goal:"Find the key facts"},{name:"Write",taskType:"writer",goal:"Produce complete artifact"}]});
 const review=JSON.stringify({passed:true,summary:"Covers the requested facts",checks:["Includes the two required facts"]});
@@ -44,9 +45,93 @@ test("different free-form goals reach the commander unchanged; mismatched recove
  await assert.rejects(e.execute({...f.input,run:{...f.input.run,goal:"another goal"},recover:true}),/HOSTED_GOAL_BINDING_CHANGED/);
 });
 test("budget bounds every additional purchase; completed phases remain available",async t=>{
- const f=await fixture(t);f.input.run.reservedRaw="20000";let count=0;
+ const f=await fixture(t);f.input.run.reservedRaw="30000";let count=0;
  const result=await f.executor({call:async(_s,c)=>{count++;return normal(c);}}).execute(f.input);
- assert.equal(result.terminal,true);assert.equal(result.success,false);assert.equal(result.reason,"HOSTED_GOAL_BUDGET_REQUIRED");assert.equal(result.chargedRaw,"20000");assert.equal(count,2);assert.equal(result.mission?.phases[0].output,"Artifact for phase-0");
+ assert.equal(result.terminal,false);assert.equal(result.success,false);assert.equal(result.reason,"HOSTED_GOAL_BUDGET_REQUIRED");assert.equal(result.chargedRaw,"10000");assert.equal(count,1);assert.equal(result.mission?.phases.length,2);
+});
+
+test("one mission downgrades approved per-call routes and reserves independent review without losing prior outputs",async t=>{
+ const f=await fixture(t);f.input.agent.modelId="strong";f.input.run.reservedRaw="70000";
+ const strong={...route,id:"strong",model:"strong",physicalModel:"physical-strong",priceRaw:"30000"};
+ const activities:HostedActivityInput[]=[];f.input.activity=async e=>{activities.push(validateHostedActivity(e));};
+ const calls:GoalCall[]=[];
+ const e=new HostedGoalExecutor({models:[route,strong],durationMs:60000},{} as HostedTaskExecutorConfig,{call:async(_s,c)=>{
+  calls.push(structuredClone(c));return {...normal(c),chargedRaw:c.route!.priceRaw};
+ }});
+ const result=await e.execute(f.input);assert.equal(result.success,true);assert.equal(result.chargedRaw,"60000");
+ assert.deepEqual(result.mission?.calls.map(c=>[c.stage,c.model,c.chargedRaw]),[["plan","strong","30000"],["phase-0","cheap","10000"],["phase-1","cheap","10000"],["review","cheap","10000"]]);
+ assert.equal(JSON.parse(calls[2].messages[1].content).previous[0].output,"Artifact for phase-0");
+ assert.equal(JSON.parse(calls[3].messages[1].content).artifact,"Artifact for phase-1");
+ assert.ok(activities.some(c=>c.reason==="HOSTED_GOAL_MODEL_DOWNGRADED"&&c.evidence?.candidateIds?.join(",")==="strong,cheap"));
+ const saved=await f.journal();assert.equal(saved.calls[3].route?.id,"cheap");assert.equal(saved.binding,(await f.journal()).binding);
+ assert.deepEqual(await e.execute({...f.input,recover:true}),result);assert.equal(calls.length,4);
+});
+
+test("unaffordable approved routes pause before dispatch, keep the UUID budget and may be stopped",async t=>{
+ const f=await fixture(t);f.input.run.reservedRaw="29999";let calls=0,cancelled=false;
+ const e=f.executor({control:async()=>({paused:false,cancelled}),call:async(_s,c)=>{calls++;return normal(c);}});
+ const first=await e.execute(f.input);assert.equal(first.terminal,false);assert.equal(first.reason,"HOSTED_GOAL_BUDGET_REQUIRED");assert.equal(calls,0);
+ assert.equal((await e.execute({...f.input,recover:true})).reason,"HOSTED_GOAL_BUDGET_REQUIRED");assert.equal(calls,0);
+ await assert.rejects(e.execute({...f.input,recover:true,run:{...f.input.run,reservedRaw:"30000"}}),/HOSTED_GOAL_BINDING_CHANGED/);
+ cancelled=true;assert.equal((await e.execute({...f.input,recover:true})).phase,"Cancelled");assert.equal(calls,0);
+});
+
+test("unknown strong call and its reviewer keep saved routes across recovery rather than taking a cheaper retry",async t=>{
+ const f=await fixture(t);f.input.agent.modelId="strong";f.input.run.reservedRaw="50000";
+ const strong={...route,id:"strong",model:"strong",physicalModel:"physical-strong",priceRaw:"30000"};
+ let uncertain=true;const attempts:{stage:string;model:string}[]=[];
+ const e=new HostedGoalExecutor({models:[route,strong],durationMs:60000},{} as HostedTaskExecutorConfig,{call:async(_s,c)=>{
+  attempts.push({stage:c.stage,model:c.route!.id});
+  if(c.stage==="plan"&&uncertain)throw Error("unknown dispatch");
+  const text=c.stage==="plan"?JSON.stringify({phases:[{name:"Write",taskType:"writer",goal:"Write"}]}):c.stage==="review"?review:"A and B";
+  return {...response(text),chargedRaw:c.route!.priceRaw};
+ }});
+ const paused=await e.execute(f.input);assert.equal(paused.terminal,false);assert.equal((await f.journal()).calls[0].route?.id,"strong");
+ uncertain=false;const result=await e.execute({...f.input,recover:true});assert.equal(result.success,true);assert.equal(result.chargedRaw,"50000");
+ assert.deepEqual(attempts,[{stage:"plan",model:"strong"},{stage:"plan",model:"strong"},{stage:"phase-0",model:"cheap"},{stage:"review",model:"cheap"}]);
+ assert.deepEqual((await f.journal()).calls.map(c=>c.route?.id),["strong","cheap","cheap"]);
+});
+
+test("unknown independent review keeps its quoted cheap route and full original artifact after catalog prices change",async t=>{
+ const f=await fixture(t);f.input.agent.modelId="strong";f.input.run.reservedRaw="70000";
+ const strong={...route,id:"strong",model:"strong",physicalModel:"physical-strong",priceRaw:"30000"};let uncertain=true,reviewMessages="";const counts:Record<string,number>={};
+ const deps:GoalDependencies={call:async(_s,c)=>{counts[c.stage]=(counts[c.stage]??0)+1;if(c.stage==="review"){if(uncertain){reviewMessages=JSON.stringify(c.messages);throw Error("unknown reviewer");}assert.equal(JSON.stringify(c.messages),reviewMessages);assert.equal(c.route?.priceRaw,"10000");}return{...normal(c),chargedRaw:c.route!.priceRaw};}};
+ const first=await new HostedGoalExecutor({models:[route,strong],durationMs:60000},{} as HostedTaskExecutorConfig,deps).execute(f.input);
+ assert.equal(first.terminal,false);assert.equal(first.chargedRaw,"50000");assert.deepEqual(first.mission?.phases.map(p=>p.output),["Artifact for phase-0","Artifact for phase-1"]);
+ uncertain=false;const next=new HostedGoalExecutor({models:[{...route,priceRaw:"1"},strong],durationMs:60000},{} as HostedTaskExecutorConfig,deps);
+ const final=await next.execute({...f.input,recover:true});assert.equal(final.success,true);assert.equal(final.chargedRaw,"60000");assert.deepEqual(counts,{plan:1,"phase-0":1,"phase-1":1,review:2});
+ assert.equal(final.mission?.calls.at(-1)?.model,"cheap");assert.equal(final.mission?.calls.at(-1)?.chargedRaw,"10000");
+});
+
+const externalTrust:ExternalServiceTrust={id:"external-writer",name:"External Writer",taskType:"writer",endpoint:"http://127.0.0.1:1235/v1/chat",serviceId:"tabby/external-writer",modelId:"external-writer-model",physicalModel:"physical-external",priceRaw:"10000",provider:route.provider};
+const externalConfig:ExternalHiringConfig={version:1,registryUrl:"http://127.0.0.1:1235/registry",services:[externalTrust]};
+const singlePlan=JSON.stringify({phases:[{name:"Write",taskType:"writer",goal:"Produce supplied facts A and B"}]});
+test("external candidate fits the original budget but cash shortage pauses before hiring and preserves the original plan",async t=>{
+ const f=await fixture(t);let paid=0;
+ const snapshot={trust:externalTrust,service:externalServiceView(externalTrust,{score:4.5,samples:5,source:"registry"}),registryDigest:"a".repeat(64)};
+ const goals=new HostedGoalExecutor({models:[route],durationMs:60000,external:externalConfig},{} as HostedTaskExecutorConfig,{cash:async()=>"0",discover:async()=>[snapshot],call:async()=>{paid++;return response(singlePlan);}});
+ const result=await goals.execute(f.input);assert.equal(result.terminal,false);assert.equal(result.reason,"INFERENCE_FUNDING_REQUIRED");assert.equal(result.chargedRaw,"10000");
+ assert.equal(paid,1);assert.equal(result.mission?.phases[0].goal,"Produce supplied facts A and B");assert.equal((await f.journal()).calls.length,1);
+ const repeated=await goals.execute({...f.input,recover:true});assert.equal(repeated.reason,"INFERENCE_FUNDING_REQUIRED");assert.equal(paid,1);
+ const cancelled=await goals.execute({...f.input,recover:true,run:{...f.input.run,stopRequested:true}});assert.equal(cancelled.terminal,true);assert.equal(cancelled.phase,"Cancelled");assert.equal(cancelled.chargedRaw,"10000");assert.equal(paid,1);
+});
+
+test("external enabled mission never substitutes internal cards when discovery has no matching service",async t=>{
+ const f=await fixture(t);let paid=0,discoveries=0;
+ const goals=new HostedGoalExecutor({models:[route],durationMs:60000,external:externalConfig},{} as HostedTaskExecutorConfig,{cash:async()=>"100000",discover:async()=>{discoveries++;return[];},call:async()=>{paid++;return response(singlePlan);}});
+ const result=await goals.execute(f.input);assert.equal(result.terminal,false);assert.equal(result.reason,"HOSTED_EXTERNAL_SERVICE_UNAVAILABLE");assert.equal(paid,1);assert.equal(discoveries,1);
+ assert.equal(result.mission?.phases[0].output,undefined);
+ const changed=new HostedGoalExecutor({models:[route],durationMs:60000,external:{...externalConfig,registryUrl:"http://127.0.0.1:9999/new-registry"}},{} as HostedTaskExecutorConfig,{cash:async()=>"100000",discover:async()=>{throw Error("new config cannot alter this mission");},call:async()=>{throw Error("must not buy internal substitute");}});
+ assert.equal((await changed.execute({...f.input,recover:true})).reason,"HOSTED_EXTERNAL_SERVICE_UNAVAILABLE");assert.deepEqual((await f.journal()).externalConfig,externalConfig);
+ const cancelled=await changed.execute({...f.input,recover:true,run:{...f.input.run,stopRequested:true}});assert.equal(cancelled.phase,"Cancelled");assert.equal(cancelled.chargedRaw,"10000");assert.equal(paid,1);
+});
+
+test("enabling external registry after a local mission started does not retrofit its original execution policy",async t=>{
+ const f=await fixture(t);let uncertain=true,lookups=0;
+ const deps:GoalDependencies={call:async(_s,c)=>{if(uncertain)throw Error("unknown planner");return normal(c);}};
+ assert.equal((await f.executor(deps).execute(f.input)).terminal,false);uncertain=false;
+ const withExternal=new HostedGoalExecutor({models:[route],durationMs:60000,external:externalConfig},{} as HostedTaskExecutorConfig,{...deps,discover:async()=>{lookups++;return[];},cash:async()=>{throw Error("old local mission must not use external admission");}});
+ const result=await withExternal.execute({...f.input,recover:true});assert.equal(result.success,true);assert.equal(lookups,0);assert.equal((await f.journal()).externalConfig,undefined);assert.ok(result.mission?.phases.every(p=>!p.external));
 });
 test("unknown call keeps reservation and resumes exact messages without repurchasing completed stages",async t=>{
  const f=await fixture(t),attempts:string[]=[];let uncertain=true,savedMessages="";

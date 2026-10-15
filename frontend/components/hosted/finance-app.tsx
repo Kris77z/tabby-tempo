@@ -1,4 +1,5 @@
 "use client";
+import { pausedRunFunding } from "../../lib/run-funding";
 import { settlementSymbol, networkFeeSymbol } from "../../lib/networks";
 import Link from 'next/link';
 import {useEffect,useState,type FormEvent} from 'react';
@@ -14,7 +15,7 @@ export default function FinanceApp({onTask}:{onTask:()=>void}){
  const [amount,setAmount]=useState(''),[error,setError]=useState(''),[settings,setSettings]=useState(false);
  useEffect(()=>{setSettings(false);setError('');setAmount('');},[agent?.id]);
  const active=state.snapshot?.runs.find(r=>r.requestId===agent?.activeRequestId);
- const funding=active?.status==='Paused'&&active.reason==='INFERENCE_FUNDING_REQUIRED'&&['goal','metered-task','autonomous'].includes(active.action);
+ const funding=pausedRunFunding(active,state.snapshot?.capabilities)==="cash";
  const locked=state.busy||!!state.pending||!agent||agent.status!=='Ready'||!agent.binding||!!agent.activeRequestId&&!funding;
  const deposits=state.snapshot?.runs.filter(r=>r.agentId===agent?.id&&r.action==='deposit')??[];
  const latestDeposit=deposits[0];

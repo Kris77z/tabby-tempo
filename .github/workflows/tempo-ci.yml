@@ -84,6 +84,11 @@ jobs:
       - name: Install locked dependencies without production secrets
         run: npm ci
 
+      - name: Install Linux namespace fixture dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y bubblewrap socat
+
       - name: Prepare the pinned Python sandbox image
         run: docker pull python:3.12-alpine@sha256:4c47124a8391cb7a9f571164147d154777cf012a4ece5f86097130d7a4478111
 
@@ -112,7 +117,9 @@ jobs:
             scripts/test/tempo-vps-migrate.test.ts \
             scripts/test/tempo-rpc.test.ts \
             scripts/test/tempo-rpc-pacing.test.ts \
-            scripts/test/journal-chain.test.ts
+            scripts/test/journal-chain.test.ts \
+            scripts/test/external-stack.test.ts \
+            scripts/test/linux-magpie.test.ts
 
       - name: Check candidate documentation links when the historical version provides the command
         run: npm run docs:check --if-present

@@ -10,7 +10,10 @@ export interface Execution { stdout: string; stderr?: string; exitCode: number |
 
 // Arguments are fixed by trusted host code; submissions cannot add mounts/flags.
 export function containerArguments(name: string, directory: string, image = DEFAULT_IMAGE, startMarker?: string): string[] {
-  const program = startMarker ? ["-c", `import os,runpy;os.write(2,${JSON.stringify(startMarker + "\n")}.encode());runpy.run_path('/submission/main.py',run_name='__main__')`] : ["/submission/main.py"];
+  // Read staging bytes before the trusted marker. A missing/unreadable mount is
+  // infrastructure failure, while syntax/runtime errors after this read belong
+  // to submitted code. Keep compilation inside runpy, after the marker.
+  const program = startMarker ? ["-c", `import os,runpy;open('/submission/main.py','rb').read();os.write(2,${JSON.stringify(startMarker + "\n")}.encode());runpy.run_path('/submission/main.py',run_name='__main__')`] : ["/submission/main.py"];
   return ["create", "--name", name, "--interactive", "--network", "none", "--read-only",
     "--user", "65532:65532", "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
     "--pids-limit", "32", "--cpus", "0.5", "--memory", "64m", "--memory-swap", "64m",
@@ -104,6 +107,9 @@ export class DockerExecutor {
       // The bind mount contains exactly one submission file; no tests/config/key.
       await chmod(directory, 0o755);
       await writeFile(join(directory, "main.py"), code, { mode: 0o444, flag: "wx" });
+      // Service umask 0077 protects keys/journals, but must not turn this sole,
+      // read-only submission into 0400: the sandbox runs as a different UID.
+      await chmod(join(directory, "main.py"), 0o444);
       created = true; // A timed-out create can still have reached the daemon.
       const marker = `AF_EXECUTION_STARTED_${randomUUID()}`;
       const setup = await command(this.binary, containerArguments(name, directory, this.image, marker), "", 10000, 4096, signal);

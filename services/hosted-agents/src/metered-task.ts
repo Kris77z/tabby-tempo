@@ -6,7 +6,7 @@ import { Contract, type JsonRpcProvider, type Wallet } from "ethers";
 import { ACCOUNT_ABI, InferCredit, PaymentError, canonical, type Inference, type Json, type PaymentHandle } from "@agentfuel/sdk";
 import { SessionStore } from "@agentfuel/pi-loop/session";
 import { confirmPaidDelivery, type FixedTaskConfig } from "@agentfuel/pi-loop/fixed-task";
-import { InferenceFundingRequired, type JsonObject } from "@agentfuel/pi-loop/provider";
+import { InferenceFundingRequired, providerRequestForTier, type JsonObject } from "@agentfuel/pi-loop/provider";
 import type { WorkflowOptions } from "@agentfuel/pi-loop/workflow";
 import { InferenceGateway, createMagpieDispatch, type GatewayModel, type GatewayDispatch } from "./inference-gateway.js";
 import { prepareRewardChat } from "../../arena/src/inference-rewards/index.js";
@@ -17,6 +17,21 @@ export interface MeteredTaskConfig {
   catalog: [GatewayModel, GatewayModel]; keyFile: string;
 }
 export const modelCatalogDigest = (catalog: GatewayModel[]) => `0x${createHash("sha256").update(canonical(catalog as unknown as Json)).digest("hex")}`;
+/** Select only before a new invocation. Full tokenizer-independent reserve,
+ * rather than a model label or one token rate, decides whether a downgrade helps. */
+export function selectMeteredModel(ledger:InferenceGateway, body:JsonObject, catalog:[GatewayModel,GatewayModel], capacityRaw:string) {
+  if(ledger.balance().frozen)throw new InferenceFundingRequired("GATEWAY_OUTCOME_UNKNOWN");
+  const capacity=BigInt(capacityRaw),required=ledger.quote(body).reservedCredits;
+  if(BigInt(required)<=capacity||body.model!==catalog[1].id)return {body:structuredClone(body),required,downgraded:false};
+  const candidate=providerRequestForTier(body,"cheap",catalog[0].id);
+  let cheaperRequired:string;
+  try{cheaperRequired=ledger.quote(candidate).reservedCredits;}catch(error){
+    if(error instanceof Error&&error.message==="GATEWAY_INVALID_COMPLETION_LIMIT")return{body:structuredClone(body),required,downgraded:false};
+    throw error;
+  }
+  return BigInt(cheaperRequired)<BigInt(required)&&BigInt(cheaperRequired)<=capacity
+    ?{body:candidate,required:cheaperRequired,downgraded:true}:{body:structuredClone(body),required,downgraded:false};
+}
 /** Recompute the remaining task deadline at dispatch, including after a slow earlier round. */
 export function createTaskMagpieDispatch(config: { baseUrl: string; apiKey: string; deadlineMs: number; timeoutMs?: number }): GatewayDispatch {
   const configuredTimeout = config.timeoutMs ?? 30000;
@@ -96,7 +111,11 @@ export async function openMeteredTask(directory: string, config: MeteredTaskConf
       if (ledger.readResult(`round:${index}`, body)) return;
       await assigned();
       if (ledger.balance().frozen) throw new InferenceFundingRequired("GATEWAY_OUTCOME_UNKNOWN");
-      const model = config.catalog.find(model => model.id === body.model)!;
+      // A prior allowance purchase must be reconciled on its original handle before
+      // considering a model route. A funding timeout cannot authorize a replacement.
+      if (snapshot.handle && !snapshot.inference) await purchase();
+      let model = config.catalog.find(model => model.id === body.model);
+      if (!model) throw new InferenceFundingRequired("GATEWAY_MODEL_UNAVAILABLE");
       if (options.reward && (model.responseModel ?? model.model) === "kimi-k2.6") {
         // Reward grants have a smaller request policy than the paid gateway. An ineligible
         // request must retain its original model budget and continue to paid admission.
@@ -112,7 +131,15 @@ export async function openMeteredTask(directory: string, config: MeteredTaskConf
           catch (error) { if (!(error instanceof InferenceFundingRequired) || error.message !== "INFERENCE_FUNDING_REQUIRED") throw error; }
         }
       }
-      const required = ledger.quote(body).reservedCredits;
+      const balance = BigInt(ledger.balance().availableCredits);
+      const capacity = balance + (snapshot.inference ? 0n : BigInt(config.creditsRaw));
+      const selection=selectMeteredModel(ledger,body,config.catalog,capacity.toString());
+      const {required,downgraded}=selection;
+      if(downgraded){
+        const cheaper=config.catalog[0];
+        await options.activity?.({scene:"model",state:"selected",phaseId:`round-${index}`,reason:"HOSTED_GOAL_MODEL_DOWNGRADED",subject:{id:cheaper.id,name:cheaper.id,kind:"model"},evidence:{taskId:task.taskId,candidateIds:[model.id,cheaper.id],reservedCreditsRaw:required}});
+        body=selection.body;model=cheaper;
+      }
       await options.activity?.({scene:"model",state:"selected",phaseId:`round-${index}`,subject:{id:model.id,name:model.id,kind:"model"},evidence:{taskId:task.taskId,inputMicroCreditsPerToken:model.inputMicroCreditsPerToken,outputMicroCreditsPerToken:model.outputMicroCreditsPerToken,reservedCreditsRaw:required}});
       if (BigInt(ledger.balance().availableCredits) < BigInt(required)) {
         if (snapshot.inference) throw new InferenceFundingRequired("ALLOWANCE_EXHAUSTED");
@@ -123,6 +150,7 @@ export async function openMeteredTask(directory: string, config: MeteredTaskConf
         }
       }
       if (BigInt(ledger.balance().availableCredits) < BigInt(required)) throw new InferenceFundingRequired();
+      if (downgraded) return { tier: "cheap" as const };
     }, invoke: async (_tier: string, body: JsonObject) => {
       if (useReward) return { ...await options.reward!.solver.invoke("cheap", { ...body, model: "kimi-k2.6" }, AbortSignal.timeout(Math.max(1, task.deadlineMs - Date.now()))), model: body.model };
       await options.activity?.({scene:"model",state:"waiting",phaseId:`round-${round}`,subject:{id:String(body.model),name:String(body.model),kind:"model"},evidence:{taskId:task.taskId}});

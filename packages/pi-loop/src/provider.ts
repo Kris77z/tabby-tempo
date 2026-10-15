@@ -18,14 +18,16 @@ export interface SolveSpec {
 export interface ProviderSolveState {
   version: 1; binding: string; spec: SolveSpec; phase: "Running" | "Delivered" | "Undelivered" | "Unknown" | "AwaitingFunds";
   reason?: string; messages: AgentMessage[];
-  rounds: { tier: RoutingTier; model: string; body: JsonObject; state: "Dispatching" | "Responded"; response?: Record<string, Json>; appended: boolean }[];
+  rounds: { tier: RoutingTier; model: string; budgetFallbackFrom?: "strong"; body: JsonObject; state: "Dispatching" | "Responded"; response?: Record<string, Json>; appended: boolean }[];
   tools: { id: string; code: string; result?: SampleResult }[];
   candidate?: string; codeHash?: string;
 }
 export interface ProviderSolveOptions {
   routes: Record<RoutingTier, { name: string; model: string; baseUrl: string }>;
   invoke: (tier: RoutingTier, body: JsonObject, signal: AbortSignal) => Promise<Record<string, Json>>;
-  beforeDispatch?: (body: JsonObject, round: number) => Promise<void>;
+  /** A trusted admission policy may downgrade a NEW strong round before dispatch.
+   * Existing rounds, including unknown calls, retain their exact persisted route. */
+  beforeDispatch?: (body: JsonObject, round: number) => Promise<void | { tier: "cheap" }>;
   /** Read a durably recorded response only; this callback must never dispatch a model call. */
   recoverResponse?: (body: JsonObject, round: number) => Promise<Record<string, Json> | undefined>;
   runner?: DockerExecutor; recoverLock?: boolean;
@@ -59,6 +61,12 @@ function jsonValue(value: unknown): value is Json {
   return object(value) && Object.values(value).every(jsonValue);
 }
 export class InferenceFundingRequired extends Error { constructor(reason = "INFERENCE_FUNDING_REQUIRED") { super(reason); } }
+/** Keep model-specific request options identical at admission, dispatch and recovery. */
+export function providerRequestForTier(body: JsonObject, tier: RoutingTier, model: string): JsonObject {
+  const request = structuredClone(body);
+  delete request.thinking; delete request.reasoning_effort;
+  return { ...request, model, ...(tier === "cheap" ? { thinking: { type: "disabled" } } : { reasoning_effort: "low" }) };
+}
 class SolveStop extends Error { constructor(readonly code: string) { super(code); } }
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const codeHash = (code: string) => createHash("sha256").update(code).digest("hex");
@@ -86,7 +94,8 @@ export async function runProviderSolver(directory: string, input: SolveSpec, opt
       !/^[1-3]:.+$/.test(tool.id) || typeof tool.code !== "string" || !tool.code.length || Buffer.byteLength(tool.code) > 65536 ||
       (tool.result && (typeof tool.result.passed !== "boolean" || typeof tool.result.stdout !== "string")))) throw new Error("INVALID_SOLVE_STATE");
     for (const [index, round] of state.rounds.entries()) {
-      if (round.tier !== spec.tiers[index] || round.model !== routes[round.tier].model || round.body.model !== round.model || round.body.max_completion_tokens !== spec.maxCompletionTokens ||
+      const fallback = spec.tiers[index] === "strong" && round.tier === "cheap" && round.budgetFallbackFrom === "strong";
+      if ((!fallback && (round.tier !== spec.tiers[index] || round.budgetFallbackFrom !== undefined)) || round.model !== routes[round.tier].model || round.body.model !== round.model || round.body.max_completion_tokens !== spec.maxCompletionTokens ||
         !["Dispatching", "Responded"].includes(round.state) || typeof round.appended !== "boolean" ||
         (round.appended && (round.state !== "Responded" || !round.response)) || (round.state === "Responded" && !round.response) ||
         (!round.appended && index !== state.rounds.length - 1)) throw new Error("INVALID_SOLVE_STATE");
@@ -138,10 +147,16 @@ export async function runProviderSolver(directory: string, input: SolveSpec, opt
       if (round && (!isDeepStrictEqual(round.body.messages, body.messages) || !isDeepStrictEqual(round.body.tools, body.tools))) throw new SolveStop("SOLVE_REQUEST_MISMATCH");
       if (round?.state === "Responded" && round.response) return { result: structuredClone(round.response) };
       time(); if (state.rounds.length >= spec.maxRounds) throw new SolveStop("ROUND_LIMIT");
-      const tier = spec.tiers[state.rounds.length];
-      round = { tier, model: routes[tier].model, body: { ...body, model: routes[tier].model, max_completion_tokens: spec.maxCompletionTokens,
-        ...(tier === "cheap" ? { thinking: { type: "disabled" } } : { reasoning_effort: "low" }) }, state: "Dispatching", appended: false };
-      try { await options.beforeDispatch?.(structuredClone(round.body), state.rounds.length); }
+      let tier = spec.tiers[state.rounds.length];
+      round = { tier, model: routes[tier].model, body: providerRequestForTier({ ...body, max_completion_tokens: spec.maxCompletionTokens }, tier, routes[tier].model), state: "Dispatching", appended: false };
+      try {
+        const admission = await options.beforeDispatch?.(structuredClone(round.body), state.rounds.length);
+        if (admission !== undefined) {
+          if (!object(admission) || !exact(admission, ["tier"]) || admission.tier !== "cheap" || tier !== "strong") throw new Error("INVALID_SOLVE_ADMISSION_ROUTE");
+          tier = "cheap"; round.tier = tier; round.model = routes[tier].model; round.budgetFallbackFrom = "strong";
+          round.body = providerRequestForTier(round.body, tier, round.model);
+        }
+      }
       catch (error) {
         // Admission happens before the dispatch marker. Preserve it as a resumable pause,
         // including host/configuration failures, instead of Pi reporting a model response error.

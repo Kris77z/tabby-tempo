@@ -29,6 +29,7 @@ function runOutcomeActivity(run: HostedRun, result: HostedResult): HostedActivit
   if (reason === "AUTONOMY_PLANNER_CASH_REQUIRED") return {scene:"funding",state:"blocked",reason,requiredAction:"deposit",evidence};
   if (reason === "AUTONOMY_TASK_BUDGET_REQUIRED"||reason === "HOSTED_GOAL_BUDGET_REQUIRED") return {scene:"funding",state:"blocked",reason,requiredAction:"configure",evidence};
   if (reason === "HOSTED_GOAL_NEEDS_INPUT") return {scene:"decision",state:"blocked",reason,requiredAction:"provide-input",evidence};
+  if (reason === "AUTONOMY_GAME_LIMIT" && !result.terminal) return {scene:"funding",state:"blocked",reason,requiredAction:"play-game",evidence};
   if (reason === "INFERENCE_FUNDING_REQUIRED") return {scene:"funding",state:"blocked",reason,requiredAction:run.action === "reward-task"?"play-game":"deposit",evidence};
   if (["CASH_REQUIRED","HOSTED_AGENT_FUNDS_REQUIRED"].includes(reason??"")) return {scene:"funding",state:"blocked",reason,requiredAction:"deposit",evidence};
   if (["UNDERWRITER_REQUIRED","AUTHORIZATION_REJECTED","AUTHORIZATION_MISMATCH"].includes(reason??"")) return {scene:"credit",state:"blocked",reason,evidence};
@@ -57,7 +58,15 @@ function owner(v: string) { try { return getAddress(v); } catch { return fail("H
 interface Challenge { id: string; wallet: string; message: string; expiresAt: number }
 interface Session { digest: string; owner: string; expiresAt: number }
 interface Creation { owner: string; requestId: string; agentId: string; digest: string }
-interface State { version: 1; configBinding: string; challenges: Challenge[]; sessions: Session[]; agents: HostedAgent[]; runs: HostedRun[]; creations: Creation[]; sponsoredOwners: Record<string, number>; sponsoredTotal: number; testSponsorship?: TestSponsorshipState }
+interface State { version: 1; configBinding: string; challenges: Challenge[]; sessions: Session[]; agents: HostedAgent[]; runs: HostedRun[]; creations: Creation[]; sponsoredOwners: Record<string, number>; sponsoredTotal: number;
+  testSponsorship?: TestSponsorshipState;
+  fundingRoutes?: Record<string, { parentRequestId: string; childId: string; modelId: string }>;
+  autonomousGameAdmissions?: Record<string, { parentRequestId: string; agentId: string }> }
+export interface HostedServiceOptions {
+  recover?: boolean;
+  /** Host-only read-only resolution of an original paused autonomous child. Browser input cannot select it. */
+  autonomyFunding?(input: HostedExecution): Promise<{ childId: string; modelId: string; funding: "cash" | "reward-tokens" } | undefined>;
+}
 export interface HostedCommand { action: "provision" | "deposit" | "task" | "game" | "credits" | "reward-task" | "metered-task" | "autonomous" | "goal"; goal?: string; requestId: string; rewardKind?: "usdc" | "llm-credits"; amountRaw?: string }
 
 export function validateHostedConfig(value: unknown): HostedConfig {
@@ -82,8 +91,8 @@ export class HostedService {
   private jobs = new Set<Promise<void>>();
   private financeReads = new Map<string, Promise<HostedFinance>>();
   private closed = false;
-  private constructor(readonly config: HostedConfig, private executor: HostedExecutor, private store: SessionStore<State>, private state: State, private sponsorshipStore?: SessionStore<TestSponsorshipState>) {}
-  static async open(config: HostedConfig, executor: HostedExecutor, options: { recover?: boolean } = {}) {
+  private constructor(readonly config: HostedConfig, private executor: HostedExecutor, private store: SessionStore<State>, private state: State, private sponsorshipStore?: SessionStore<TestSponsorshipState>, private options: HostedServiceOptions = {}) {}
+  static async open(config: HostedConfig, executor: HostedExecutor, options: HostedServiceOptions = {}) {
     config = validateHostedConfig(config);
     await taskPrivateDirectory(config.directory);
     const store = new SessionStore<State>(join(config.directory, "database")); await store.start(options.recover); let sponsorshipStore: SessionStore<TestSponsorshipState> | undefined;
@@ -104,7 +113,7 @@ export class HostedService {
       }
       for (const run of state.runs) if (["Queued", "Running"].includes(run.status)) { run.status = "Paused"; run.recoverable = true; run.reason = "HOSTED_PROCESS_INTERRUPTED"; run.updatedAt = now(); appendActivity(run, { scene: "interruption", state: "reconciling", reason: "HOSTED_PROCESS_INTERRUPTED", requiredAction: "reconcile" }); }
       await store.write(state);
-      const service = new HostedService(structuredClone(config), executor, store, state, sponsorshipStore); await service.syncSponsorship(); return service;
+      const service = new HostedService(structuredClone(config), executor, store, state, sponsorshipStore, options); await service.syncSponsorship(); return service;
     } catch (e) { await sponsorshipStore?.close(); await store.close(); throw e; }
   }
   private serial<T>(fn: () => Promise<T>): Promise<T> {
@@ -179,6 +188,27 @@ export class HostedService {
     try { return structuredClone(await operation); } finally { this.financeReads.delete(key); }
   }
   mayContinue(agentId: string) { return this.serial(async () => this.state.agents.some(agent => agent.id === agentId && agent.status === "Ready")); }
+  /** Daemon-only durable admission. There is deliberately no HTTP command for selecting a child ID. */
+  admitAutonomyGame(parentRequestId: string, childRequestId: string, agentId: string) { return this.serial(async () => {
+    id(parentRequestId); id(childRequestId); id(agentId);
+    const agent = this.state.agents.find(agent => agent.id === agentId), parent = this.state.runs.find(run => run.requestId === parentRequestId);
+    if (!agent || !parent || parent.action !== "autonomous" || parent.agentId !== agentId || agent.activeRequestId !== parentRequestId
+      || !["Queued", "Running"].includes(parent.status) || childRequestId === parentRequestId || this.state.runs.some(run => run.requestId === childRequestId)
+      || this.state.creations.some(creation => creation.requestId === childRequestId)) fail("HOSTED_AUTONOMY_GAME_ADMISSION_INVALID", 409);
+    const prior = this.state.autonomousGameAdmissions?.[childRequestId];
+    if (prior) {
+      if (prior.parentRequestId !== parentRequestId || prior.agentId !== agentId) fail("HOSTED_AUTONOMY_GAME_ADMISSION_INVALID", 409);
+      return;
+    }
+    if (agent.status === "Paused") fail("HOSTED_AGENT_PAUSED", 409);
+    if ((this.state.sponsoredOwners[agent.owner] ?? 0) >= 3 || this.state.sponsoredTotal >= 100) fail("HOSTED_SPONSOR_LIMIT", 409);
+    const ownerBefore = this.state.sponsoredOwners[agent.owner] ?? 0, totalBefore = this.state.sponsoredTotal;
+    this.state.sponsoredOwners[agent.owner] = ownerBefore + 1; this.state.sponsoredTotal++;
+    (this.state.autonomousGameAdmissions ??= {})[childRequestId] = { parentRequestId, agentId };
+    try { await this.save(); } catch (error) {
+      this.state.sponsoredOwners[agent.owner] = ownerBefore; this.state.sponsoredTotal = totalBefore; delete this.state.autonomousGameAdmissions[childRequestId]; throw error;
+    }
+  }); }
   snapshot(who: string) { return this.serial(async () => {
     const address = owner(who), agents = this.state.agents.filter(a => a.owner === address), ids = new Set(agents.map(a => a.id));
     const activeRequestIds = new Set(agents.map(a => a.activeRequestId));
@@ -205,7 +235,7 @@ export class HostedService {
       const address = owner(who), digest = hash(JSON.stringify(deferred ? { name: settings.name } : settings));
       const previous = this.state.creations.find(c => c.owner === address && c.requestId === requestId);
       if (previous) { if (previous.digest !== digest) fail("HOSTED_REQUEST_CONFLICT", 409); return structuredClone(this.agent(address, previous.agentId)); }
-      if (this.state.creations.some(c => c.requestId === requestId) || this.state.runs.some(r => r.requestId === requestId)) fail("HOSTED_REQUEST_CONFLICT", 409);
+      if (this.state.creations.some(c => c.requestId === requestId) || this.state.runs.some(r => r.requestId === requestId) || this.state.autonomousGameAdmissions?.[requestId]) fail("HOSTED_REQUEST_CONFLICT", 409);
       if (this.state.agents.filter(a => a.owner === address).length >= this.config.maxAgentsPerOwner || this.state.agents.length >= 1000) fail("HOSTED_AGENT_LIMIT", 409);
       const agentId = randomUUID(), directory = join(this.config.directory, "agents", agentId); await taskPrivateDirectory(directory);
       const wallet = Wallet.createRandom(); const file = await open(join(directory, "wallet.key"), "wx", 0o600);
@@ -237,6 +267,7 @@ export class HostedService {
     if (input.action === "goal" ? !validGoal(input.goal) : input.goal !== undefined) fail("HOSTED_GOAL_INVALID");
     const a = this.agent(who, agentId), creation = this.state.creations.find(c => c.requestId === input.requestId);
     if (creation && (creation.agentId !== a.id || input.action !== "provision")) fail("HOSTED_REQUEST_CONFLICT", 409);
+    if (this.state.autonomousGameAdmissions?.[input.requestId]) fail("HOSTED_REQUEST_CONFLICT", 409);
     const previous = this.state.runs.find(r => r.requestId === input.requestId);
     if (previous) {
       if (previous.agentId !== a.id || previous.action !== input.action || previous.rewardKind !== input.rewardKind || previous.amountRaw !== input.amountRaw || previous.goal !== input.goal) fail("HOSTED_REQUEST_CONFLICT", 409);
@@ -264,14 +295,26 @@ export class HostedService {
       if (previous.status !== "Paused") return structuredClone(previous);
       if (a.activeRequestId !== previous.requestId) fail("HOSTED_RECOVER_ORIGINAL_REQUIRED", 409);
       if (previous.testSponsorship) await this.syncSponsorship();
-            previous.status = "Queued"; previous.recoverable = false; delete previous.reason; previous.updatedAt = now(); appendActivity(previous, { scene: "idle", state: "queued", reason: "HOSTED_RECOVERY_QUEUED" }); await this.save();
+            previous.status = "Queued"; previous.recoverable = false; delete previous.reason; delete previous.fundingNeed; previous.updatedAt = now(); appendActivity(previous, { scene: "idle", state: "queued", reason: "HOSTED_RECOVERY_QUEUED" }); await this.save();
       this.launch(a, previous, true); return structuredClone(previous);
     }
     if (a.configurationRequired && !["provision", "deposit"].includes(input.action)) fail("HOSTED_CONFIGURATION_REQUIRED", 409);
     const awaiting = this.state.runs.find(r => r.requestId === a.activeRequestId);
-    const fundingFor = awaiting?.status === "Paused" && awaiting.reason === "INFERENCE_FUNDING_REQUIRED"
+    let fundingFor = awaiting?.status === "Paused" && awaiting.reason === "INFERENCE_FUNDING_REQUIRED"
       && (input.action === "game" && input.rewardKind === "llm-credits" && awaiting.action === "reward-task"
-        || input.action === "deposit" && ["metered-task", "autonomous", "goal"].includes(awaiting.action)) ? awaiting.requestId : undefined;
+        || input.action === "deposit" && (["metered-task", "goal"].includes(awaiting.action)
+          || awaiting.action === "autonomous" && !this.options.autonomyFunding && !this.executor.capabilities?.autonomy?.games)) ? awaiting.requestId : undefined;
+    let fundingRoute: NonNullable<State["fundingRoutes"]>[string] | undefined;
+    if (awaiting?.status === "Paused" && awaiting.action === "autonomous" && ["INFERENCE_FUNDING_REQUIRED", "AUTONOMY_GAME_LIMIT"].includes(awaiting.reason ?? "")
+      && (input.action === "game" && input.rewardKind === "llm-credits" || input.action === "deposit") && this.options.autonomyFunding) {
+      const directory = join(this.config.directory, "agents", a.id, "runs", awaiting.requestId);
+      const target = await this.options.autonomyFunding({ agent: structuredClone(a), run: structuredClone(awaiting), directory,
+        keyFile: join(this.config.directory, "agents", a.id, "wallet.key"), recover: true });
+      if (target && uuid.test(target.childId) && this.config.models.some(model => model.id === target.modelId)
+        && (input.action === "game" ? target.funding === "reward-tokens" : target.funding === "cash")) {
+        fundingFor = awaiting.requestId; fundingRoute = { parentRequestId: awaiting.requestId, childId: target.childId, modelId: target.modelId };
+      }
+    }
     if (a.activeRequestId && !fundingFor) fail("HOSTED_RECOVER_ORIGINAL_REQUIRED", 409);
     if (input.action === "reward-task" && a.modelId !== "kimi-k2.6") fail("HOSTED_REWARD_MODEL_UNSUPPORTED", 409);
     if (a.status === "Paused") fail("HOSTED_AGENT_PAUSED", 409);
@@ -297,12 +340,13 @@ export class HostedService {
     const run: HostedRun = { ...input, ...(testSponsorship ? { testSponsorship } : {}), ...(fundingFor ? { fundingFor } : {}), agentId: a.id, status: "Queued", createdAt: now(), updatedAt: now(), reservedRaw: reserve, chargedRaw: "0", recoverable: false };
     appendActivity(run, { scene: "idle", state: "queued" });
     if (testSponsorship) this.state.testSponsorship!.admissions.push({ requestId: run.requestId, agentId: a.id, ordinal: testSponsorship.ordinal, admittedAt: run.createdAt, rewardKind: input.rewardKind! });
+    if (fundingRoute) (this.state.fundingRoutes ??= {})[run.requestId] = fundingRoute;
     a.reservedRaw = fundingFor ? awaiting!.reservedRaw : reserve; a.activeRequestId = run.requestId; a.updatedAt = now(); this.state.runs.push(run);
     try { await this.save(); } catch (error) { this.state = (await this.store.read())!; throw error; }
     if (testSponsorship) await this.syncSponsorship(); this.launch(a, run, false); return structuredClone(run);
   }); }
   private result(value: HostedResult, a: HostedAgent, run: HostedRun) {
-    object(value, ["phase", "terminal", "success", "chargedRaw", "reason", "binding", "taskId", "paymentId", "txHash", "matchId", "cashRaw", "principalRaw", "feeRaw", "rewardRaw", "creditsGranted", "creditsUsed", "chainId", "acceptTxHash", "paymentTxHash", "fromCashRaw", "fromCreditRaw", "refundedRaw", "settlement", "autonomousTasks", "mission"]);
+    object(value, ["phase", "terminal", "success", "chargedRaw", "reason", "binding", "taskId", "paymentId", "txHash", "matchId", "cashRaw", "principalRaw", "feeRaw", "rewardRaw", "creditsGranted", "creditsUsed", "chainId", "acceptTxHash", "paymentTxHash", "fromCashRaw", "fromCreditRaw", "refundedRaw", "settlement", "autonomousTasks", "autonomousGames", "mission"]);
     if (typeof value.phase !== "string" || !/^[A-Za-z][A-Za-z0-9_]{0,80}$/.test(value.phase) || typeof value.terminal !== "boolean" || typeof value.success !== "boolean" ||
       !amount(value.chargedRaw) || BigInt(value.chargedRaw) > BigInt(run.reservedRaw) || (value.success && !value.terminal)) fail("HOSTED_RESULT_INVALID", 503);
     if (value.reason !== undefined && !/^[A-Z][A-Z0-9_]{0,100}$/.test(value.reason)) fail("HOSTED_RESULT_INVALID", 503);
@@ -317,7 +361,7 @@ export class HostedService {
     }
     if (value.mission) { if (run.action !== "goal") fail("HOSTED_RESULT_INVALID", 503); value.mission = validateGoalView(value.mission); }
     if (value.matchId !== undefined && !/^[a-zA-Z0-9_-]{1,100}$/.test(value.matchId)) fail("HOSTED_RESULT_INVALID", 503);
-    for (const f of ["creditsGranted", "creditsUsed", "autonomousTasks"] as const) if (value[f] !== undefined && (!Number.isSafeInteger(value[f]) || value[f]! < 0)) fail("HOSTED_RESULT_INVALID", 503);
+    for (const f of ["creditsGranted", "creditsUsed", "autonomousTasks", "autonomousGames"] as const) if (value[f] !== undefined && (!Number.isSafeInteger(value[f]) || value[f]! < 0)) fail("HOSTED_RESULT_INVALID", 503);
     if (value.binding) {
       object(value.binding, ["wallet", "agentId", "chainId"]);
       if (run.action !== "provision" || value.binding.wallet !== a.wallet || value.binding.chainId !== this.config.chainId || !amount(value.binding.agentId) || value.binding.agentId === "0" || this.state.agents.some(other => other.id !== a.id && other.binding?.agentId === value.binding!.agentId)) fail("HOSTED_RESULT_BINDING_INVALID", 503);
@@ -331,7 +375,14 @@ export class HostedService {
       await this.serial(async () => { run.status = "Running"; run.updatedAt = now(); appendActivity(run, { scene: run.action === "provision" ? "onboarding" : run.action === "deposit" ? "funding" : run.action === "game" ? "game" : run.action === "credits" ? "model" : run.action === "autonomous" ? "decision" : run.action === "goal" ? "decision" : "task", state: "started" }); await this.save(); });
       try {
         const directory = join(this.config.directory, "agents", a.id, "runs", run.requestId); await taskPrivateDirectory(directory);
-        const execution:HostedExecution={ agent: snapshot, run: original, directory, keyFile: join(this.config.directory, "agents", a.id, "wallet.key"), recover,
+        const route = this.state.fundingRoutes?.[run.requestId];
+        if (route && (route.parentRequestId !== run.fundingFor || !uuid.test(route.parentRequestId) || !uuid.test(route.childId)
+          || !this.state.runs.some(parent => parent.requestId === route.parentRequestId && parent.agentId === a.id && parent.action === "autonomous")
+          || !this.config.models.some(model => model.id === route.modelId) || !["game", "deposit"].includes(run.action))) fail("HOSTED_FUNDING_ROUTE_INVALID", 503);
+        const execution:HostedExecution={ agent: route ? { ...snapshot, modelId: route.modelId, ...(run.action === "game" ? { allowCredit: false } : {}) } : snapshot,
+          run: route ? { ...original, fundingFor: route.childId } : original,
+          directory: route ? join(this.config.directory, "agents", a.id, "runs", route.parentRequestId, "children", run.requestId) : directory,
+          keyFile: join(this.config.directory, "agents", a.id, "wallet.key"), recover,
           ...(run.action === "goal" ? { progress: (view: import("./goal-types.js").GoalView) => this.serial(async () => { run.mission = validateGoalView(view); run.updatedAt = now(); await this.save(); }) } : {}) };
         // Keep legacy whole-input snapshots cloneable; callbacks never belong in durable custody state.
         Object.defineProperty(execution,"activity",{value:(event:HostedActivityInput)=>this.serial(async()=>{if(["Succeeded","Failed"].includes(run.status))return;appendActivity(run,event);run.updatedAt=now();await this.save();}),enumerable:false});
@@ -349,6 +400,14 @@ export class HostedService {
             if (safe.binding) { a.binding = safe.binding; if (a.status !== "Paused") a.status = "Ready"; }
           } else { run.status = "Paused"; run.recoverable = true; }
           if (safe.reason) run.reason = safe.reason; else delete run.reason;
+          delete run.fundingNeed;
+          if (!safe.terminal && run.action === "autonomous" && this.options.autonomyFunding) {
+            try {
+              const target = await this.options.autonomyFunding({ agent: structuredClone(a), run: structuredClone(run), directory,
+                keyFile: join(this.config.directory, "agents", a.id, "wallet.key"), recover: true });
+              if (target && ["cash", "reward-tokens"].includes(target.funding)) run.fundingNeed = target.funding;
+            } catch { /* A failed read cannot grant a refuel route or alter the original paused outcome. */ }
+          }
           appendActivity(run, runOutcomeActivity(run, safe)); await this.save();
         });
       } catch (e) { await this.serial(async () => { run.status = "Paused"; run.reason = safeCode(e); run.recoverable = true; run.updatedAt = now(); appendActivity(run, { scene: "interruption", state: "reconciling", reason: run.reason, requiredAction: "reconcile" }); await this.save(); }); }

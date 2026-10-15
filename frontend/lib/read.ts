@@ -5,7 +5,7 @@ import { createServerRpc, frontendTransport } from "./server-transport";
 import type { CreditSnapshot, Dashboard, Deployment, EvidenceRow, EventDetail, Profile, TaskRow } from "./types";
 
 const accountInterface = new Interface(ACCOUNT_ABI), escrowInterface = new Interface(ESCROW_ABI), managerInterface = new Interface(MANAGER_ABI);
-const LOG_PAGE_BLOCKS = 100, RECENT_LOG_BLOCKS = 2_000;
+const RECENT_LOG_BLOCKS = 2_000;
 const RPC_CONCURRENCY = 8;
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 const decimal = (v: unknown) => typeof v === "string" && /^(0|[1-9]\d*)$/.test(v);
@@ -56,12 +56,19 @@ async function credit(config: Deployment, agentId: string, timeoutMs: number): P
   return validateCredit(await response.json(), config, agentId);
 }
 
-async function logs(provider: JsonRpcProvider, addresses: string[], from: number, to: number, chainId: string): Promise<Log[]> {
+export function frontendLogPageBlocks(value = process.env.FRONTEND_LOG_PAGE_BLOCKS ?? "100") {
+  if (!/^[1-9][0-9]{0,2}$/.test(value) || Number(value) > 100) throw new Error("FRONTEND_LOG_PAGE_BLOCKS_INVALID");
+  return Number(value);
+}
+
+export async function readLogPages(provider: Pick<JsonRpcProvider, "getLogs">, addresses: string[], from: number, to: number, pageBlocks = frontendLogPageBlocks()): Promise<Log[]> {
+  if (!Number.isInteger(pageBlocks) || pageBlocks < 1 || pageBlocks > 100) throw new Error("FRONTEND_LOG_PAGE_BLOCKS_INVALID");
   if (from > to) throw new Error("deploymentBlock 晚于读取区块。");
-  const starts = Array.from({ length: Math.ceil((to - from + 1) / LOG_PAGE_BLOCKS) }, (_, index) => from + index * LOG_PAGE_BLOCKS);
-  // Tempo's public endpoint rate-limits concurrent historical log scans.
-  // Keep every 100-block page in the complete recent window, but scan serially.
-  const result = (await mapBounded(starts, start => provider.getLogs({ address: addresses, fromBlock: start, toBlock: Math.min(start + LOG_PAGE_BLOCKS - 1, to) }), chainId === "42431" ? 1 : 4)).flat();
+  const result: Log[] = [];
+  // Requests are bounded and sequential so a public demo RPC is not flooded.
+  for (let start = from; start <= to; start += pageBlocks) {
+    result.push(...await provider.getLogs({ address: addresses, fromBlock: start, toBlock: Math.min(start + pageBlocks - 1, to) }));
+  }
   return result.sort((a, b) => a.blockNumber - b.blockNumber || a.index - b.index);
 }
 
@@ -105,7 +112,7 @@ export async function readDashboard(config: Deployment, createRpc = createServer
     const chainBlocks = await mapBounded(snapshots, c => provider.getBlock(c.block.number));
     if (chainBlocks.some((b, i) => b?.hash !== snapshots[i].block.hash)) throw new Error("Underwriter 快照区块已变化，请刷新重试。");
     stage = "logs";
-    const eventLogs = await logs(provider, [config.contracts.account, config.contracts.manager, config.contracts.escrow], fromBlock, toBlock, config.chainId);
+    const eventLogs = await readLogPages(provider, [config.contracts.account, config.contracts.manager, config.contracts.escrow], fromBlock, toBlock);
     const account = new Contract(config.contracts.account, ACCOUNT_ABI, provider);
     const escrow = new Contract(config.contracts.escrow, ESCROW_ABI, provider);
     const manager = new Contract(config.contracts.manager, MANAGER_ABI, provider);

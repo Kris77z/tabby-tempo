@@ -30,6 +30,16 @@ export async function hostedRequest<T>(path: string, method = "GET", body?: unkn
 }
 
 const messages: Record<string, string> = {
+  HOSTED_GOAL_MODEL_DOWNGRADED: "剩余预算不足，后续调用已切换到批准的低价模型。",
+  GATEWAY_MODEL_DOWNGRADED: "本轮改用低价模型，原任务与已有结果已保留。",
+  AUTONOMY_GAME_LIMIT: "已达到自动参赛次数上限，原任务和奖励记录已保留。",
+  AUTONOMY_REWARD_RESOURCE_UNAVAILABLE: "没有符合当前预算与模型的可用奖励资源。",
+  HOSTED_AUTONOMY_GAMES_NOT_READY: "自动参赛服务尚未配置完成。",
+  HOSTED_EXTERNAL_SERVICE_UNAVAILABLE: "注册表中没有匹配能力的外部 Agent。",
+  HOSTED_EXTERNAL_REPUTATION_REQUIRED: "当前候选 Agent 未达到信誉要求。",
+  HOSTED_EXTERNAL_REGISTRY_UNAVAILABLE: "外部服务目录暂时不可用，可恢复原任务。",
+  HOSTED_EXTERNAL_PROVENANCE_INVALID: "外部交付的服务或任务凭证不匹配，已保留付款记录并停止。",
+  HOSTED_EXTERNAL_IDENTITY_INVALID: "外部 Agent 的注册身份与配置不匹配。",
   HOSTED_WALLET_GAS_REQUIRED: "Agent 钱包手续费余额不足；Tempo 使用测试 PathUSD，补足后恢复原开户请求。",
   HOSTED_GOAL_LOOKUP_NETWORK: "当前只查询 Agent 所在网络，请使用当前链的地址或交易哈希。",
   HOSTED_GOAL_LOOKUP_LIMIT: "单次最多查询两个地址或交易；资料过多时请缩小分析范围。",

@@ -14,3 +14,10 @@ test('imported expert payment and revision receipts stay scoped to the matching 
  for(const otherId of ids.filter(x=>x!==id))assert.equal(roleCalls(current,otherId).length,0);
  }
 });
+
+test('autonomous child payments and settlement remain visible through the parent activity stream',()=>{
+ const hash='0x'+'a'.repeat(64);
+ const parent={...run,action:'autonomous' as const,result:undefined,mission:undefined,activities:[{seq:1,at:'2026-10-14T00:00:00Z',scene:'settlement' as const,state:'confirmed' as const,evidence:{txHash:hash,chainId:'31337'}}]};
+ assert.deepEqual(agentEvidence([parent],parent.agentId,'10143').map(p=>({hash:p.hash,chainId:p.chainId,label:p.label})),[{hash,chainId:'31337',label:'结算'}]);
+ assert.equal(agentEvidence([parent],parent.agentId,'31337','reviewer').length,0);
+});

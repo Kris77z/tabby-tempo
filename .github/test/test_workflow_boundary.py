@@ -59,6 +59,15 @@ class WorkflowBoundaryTests(unittest.TestCase):
             self.assertEqual(revision, expected[action])
             self.assertRegex(revision, r"^[0-9a-f]{40}$")
 
+    def test_offline_script_group_is_serial_and_covers_retained_new_launchers(self):
+        group = self.ci.split("- name: Run offline Tempo runtime, migration, RPC and journal checks", 1)[1].split("      - name:", 1)[0]
+        expected = {"tempo-hosted-runtime", "tempo-runtime-upgrade", "tempo-vps-migrate", "tempo-rpc", "tempo-rpc-pacing", "journal-chain", "external-stack", "linux-magpie"}
+        self.assertEqual(set(re.findall(r"scripts/test/([a-z0-9-]+)\.test\.ts", group)), expected)
+        self.assertIn("--test-concurrency=1", group)
+        self.assertNotIn("prepare-external-provider", group)
+        self.assertIn("sudo apt-get install --no-install-recommends -y bubblewrap socat", self.ci)
+        self.assertLess(self.ci.index("Install Linux namespace fixture dependencies"), self.ci.index("Run offline Tempo runtime, migration, RPC and journal checks"))
+
     def run_ssh(self, sha="a" * 40, operation="release", known_hosts="154.12.34.51 ssh-ed25519 synthetic"):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

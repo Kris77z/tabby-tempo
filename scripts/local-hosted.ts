@@ -1,3 +1,4 @@
+import { startExternalSpecialistStack } from "./external-specialist-stack.js";
 import { once } from "node:events";
 import { spawn, type ChildProcess } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -33,6 +34,18 @@ async function stopDaemon(child?: ChildProcess) {
   const exited = once(child, "exit"); child.kill("SIGTERM"); await exited;
 }
 
+/** Owned Anvil's mock registry allocates nextAgentId at registration. Read it
+ * before sending, then prove that the allocated identity belongs to key 8. */
+export async function registerLocalExternalProvider(identity:Contract,account:Contract,guardian:NonceManager) {
+  const wallet=new Wallet(key(8)).address;
+  const agentId=String(await identity.getFunction("nextAgentId").staticCall());
+  guardian.reset();await tx(identity,guardian,"registerFor",[wallet,wallet]);
+  const [owner,boundWallet]=await Promise.all([identity.getFunction("ownerOf").staticCall(agentId),identity.getFunction("getAgentWallet").staticCall(agentId)]);
+  if(String(owner).toLowerCase()!==wallet.toLowerCase()||String(boundWallet).toLowerCase()!==wallet.toLowerCase())throw Error("LOCAL_EXTERNAL_IDENTITY_INVALID");
+  await tx(account,guardian,"setProviderWhitelist",[wallet,true]);
+  return{chainId:"31337",registry:await identity.getAddress(),agentId,wallet};
+}
+
 /** Development-only live stack. Real production adapters/models; mock registries and USDC on owned Anvil. */
 export async function startLocalHosted(directory: string, gatewayFile: string, vendorKeyFile: string) {
   await new DockerExecutor().ready();
@@ -50,11 +63,13 @@ export async function startLocalHosted(directory: string, gatewayFile: string, v
     upstreamTimeoutMs: 120000, modelFetch: fetch,
   });
   const relays: Relay[] = [], servers: ReturnType<typeof createHttpServer>[] = [];
+  let external: Awaited<ReturnType<typeof startExternalSpecialistStack>>|undefined;
   let hosted: ChildProcess | undefined;
   let reload: (() => void) | undefined;
   const close = async () => {
     if (reload) process.off("SIGUSR2", reload);
     await stopDaemon(hosted);
+    await external?.close();
     for (const server of servers) await new Promise<void>(done => { server.close(() => done()); server.closeIdleConnections(); });
     for (const relay of relays) relay.close();
     await fx.close();
@@ -108,12 +123,14 @@ export async function startLocalHosted(directory: string, gatewayFile: string, v
       publicRpcUrl: fx.local.rpc, rpcTransport: "direct", upstreamTransport: "system-https-proxy", walletDirectory, sponsorKeyFile,
       opponent: { binding: { chainId: "31337", agentId: "1", wallet: new Wallet(key(2)).address }, keyFile: opponentKeyFile, modelId: "kimi-k2.6", strategy: "balanced" },
       models: models.map(id => ({ id, baseUrl: "https://api.moonshot.cn/v1", keyFile: vendorKeyFile })), creditsDirectory: join(directory, "credits") });
+    const externalProvider=await registerLocalExternalProvider(fx.f.identity,fx.f.account,fx.f.admin);
+    external=await startExternalSpecialistStack({base:fx.relayConfig,provider:fx.f.provider,providerIdentity:externalProvider,directory:join(directory,"external-services"),models:catalog.map((model,index)=>({id:models[index],model:model.model,responseModel:model.responseModel,baseUrl:gateway.url,key:gatewayKey,priceRaw:index?"20000":"10000"}))});
     const hostedConfigFile = await put("hosted.json", { version: 1, port: 8791,
       hosted: { directory: join(directory, "hosted"), origin: "http://127.0.0.1:3024", chainId: "31337", models: models.map(id => ({ id, label: id === "kimi-k2.6" ? "Kimi K2.6" : "Kimi K3" })),
         maxAgentsPerOwner: 6, maxTotalBudgetRaw: "1000000", maxPerRunBudgetRaw: "120000" }, executor: { taskConfigFile, gameConfigFile },
-      goals: { chainLookup: true, durationMs: 600000, models: catalog.map((model, index) => ({ id: models[index], relayUrl: relayUrl(index + 2), provider: fx.f.payee,
+      goals: { external: external.config, chainLookup: true, durationMs: 600000, models: catalog.map((model, index) => ({ id: models[index], relayUrl: relayUrl(index + 2), provider: fx.f.payee,
         priceRaw: goalRelays[index].config.service.price.toString(), service: "tabby/mission", model: model.id, physicalModel: model.model, responseModel: model.responseModel })) },
-      autonomy: { maxTasks: 2, maxDecisions: 3, durationMs: 600000, plannerRelayUrl: relayUrl(1), plannerProvider: fx.f.payee, plannerPriceRaw: "10000",
+      autonomy: { maxTasks: 2, maxDecisions: 6, games: {maxGames: 2, maxSpendPerGameRaw: "0", rewardKinds: ["usdc", "llm-credits"], rewardTaskMinTokens: 2048}, durationMs: 600000, plannerRelayUrl: relayUrl(1), plannerProvider: fx.f.payee, plannerPriceRaw: "10000",
         plannerService: "infercredit/plan", plannerModel: "logical-planner", plannerPhysicalModel: "cheap/kimi-k2.6", plannerResponseModel: "kimi-k2.6" } });
     await loadHostedDaemonConfig(hostedConfigFile);
     hosted = await launchDaemon(hostedConfigFile, false);

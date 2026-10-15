@@ -5,6 +5,7 @@ import { mkdtemp, realpath, rm, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createHostedTaskFixture } from "./task-fixture.js";
+import { HostedTaskExecutor } from "../src/task-executor.js";
 import { HostedGoalExecutor } from "../src/goals/executor.js";
 import { Relay } from "../../provider-relay/src/relay.js";
 import { createHttpServer } from "../../provider-relay/src/http.js";
@@ -35,6 +36,8 @@ test("activity failure after canonical payment preserves cash charge and origina
 test("goal pays canonical cash receipts for commander, specialist and independent reviewer; replay never pays twice",{timeout:180000},async()=>{
  const directory=await realpath(await mkdtemp(join(tmpdir(),"af-goal-paid-")));
  const f=await createHostedTaskFixture(join(directory,"chain"));
+ // Two independent missions must each retain cash for execution and review.
+ f.config.initialCashRaw="60000";
  let dispatches=0,unknown=false,cancelled=false;
  const relay=new Relay({...f.fx.relayConfig,dataDir:join(directory,"goals"),service:{id:"tabby/mission",model:"goal-model",price:10000n,upstreams:[{name:"cheap",model:"physical-goal",baseUrl:"http://127.0.0.1:9999/v1",key:"controlled"}]}},{provider:f.fx.f.provider,upstreamFetch:async(_url,init)=>{
    dispatches++;if(unknown)throw new Error("vendor outcome unknown");const body=JSON.parse(String(init?.body));assert.equal(body.model,"physical-goal");
@@ -44,11 +47,12 @@ test("goal pays canonical cash receipts for commander, specialist and independen
  await relay.initialize();const refunder=new Refunder(relay);await refunder.initialize();
  const server=createHttpServer(relay,refunder);server.listen(0,"127.0.0.1");await once(server,"listening");
  try{
-  const actor=await f.actor(5,"cheap",40000n);
-  const provision=await f.executor.execute(actor.input("provision"));assert.equal(provision.success,true,JSON.stringify(provision));actor.agent.binding=provision.binding;actor.agent.status="Ready";
+  const actor=await f.actor(5,"cheap",60000n);
+  const provision=await new HostedTaskExecutor(f.config,{provider:f.fx.f.provider}).execute(actor.input("provision"));assert.equal(provision.success,true,JSON.stringify(provision));actor.agent.binding=provision.binding;actor.agent.status="Ready";
   const input=actor.input("task");input.run.action="goal";input.run.goal="Write a launch note containing A and B.";
   const goals=new HostedGoalExecutor({durationMs:120000,models:[{id:"cheap",relayUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1/chat`,provider:f.fx.f.payee,priceRaw:"10000",service:"tabby/mission",model:"goal-model",physicalModel:"physical-goal"}]},f.config,{control:async()=>({paused:false,cancelled})});
   const initialCash=await f.fx.f.account.getFunction("cash").staticCall(actor.agent.binding!.agentId);
+  assert.equal(initialCash,60000n);
   const result=await goals.execute(input);assert.equal(result.success,true,JSON.stringify(result));assert.equal(result.chargedRaw,"30000");assert.equal(dispatches,3);
   assert.equal(await f.fx.f.account.getFunction("cash").staticCall(actor.agent.binding!.agentId),initialCash-30000n);
   for(const call of result.mission!.calls){

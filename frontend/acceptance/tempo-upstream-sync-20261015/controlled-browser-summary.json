@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "scope": "synthetic browser fixture only; no model, public-chain or production actions",
+  "chainLabel": "42431",
+  "hostedUpstream": "unavailable loopback",
+  "allApisIntercepted": true,
+  "writeCommands": 0,
+  "walletRpcCalls": 0,
+  "stats": {
+    "startTime": "2026-10-15T12:38:23.265Z",
+    "duration": 10694.682,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "old paused autonomous cash journal retains its funding action without sending a command",
+      "project": "desktop",
+      "status": "passed",
+      "retry": 0
+    },
+    {
+      "title": "old paused autonomous explicit reward child retains its funding action without sending a command",
+      "project": "desktop",
+      "status": "passed",
+      "retry": 0
+    },
+    {
+      "title": "external identity card shows bound provider and actual price without invented rating",
+      "project": "desktop",
+      "status": "passed",
+      "retry": 0
+    },
+    {
+      "title": "old paused autonomous cash journal retains its funding action without sending a command",
+      "project": "mobile",
+      "status": "passed",
+      "retry": 0
+    },
+    {
+      "title": "old paused autonomous explicit reward child retains its funding action without sending a command",
+      "project": "mobile",
+      "status": "passed",
+      "retry": 0
+    },
+    {
+      "title": "external identity card shows bound provider and actual price without invented rating",
+      "project": "mobile",
+      "status": "passed",
+      "retry": 0
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "desktop-synthetic-external-identity.png",
+      "sha256": "600b62bd6a3b31e93d23bdd61c54c0bcc174f2c5bb8e5c8a7866ac3a87899e7d"
+    },
+    {
+      "path": "mobile-synthetic-external-identity.png",
+      "sha256": "01deee0f7f2f37a0b91b0cf266ff168cb22f27e5a0ce4415c3a0f2f3d16cbcf8"
+    }
+  ]
+}

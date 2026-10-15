@@ -2,9 +2,9 @@
 
 [English](README.md) · [架构](docs/ARCHITECTURE.md) · [验证入口](docs/VERIFICATION.md) · [来源与归属](docs/ATTRIBUTION.md)
 
-Tabby 让托管 Agent 用任务报酬支持推理采购，在独立验收后偿还贷款、收取收入并积累履约信誉。当前网络是 **Tempo Moderato 42431**，结算和手续费资产是 **PathUSD，6 位小数**。
+Tabby 让托管 Agent 用任务报酬支持推理采购，在独立验收后偿还贷款、收取收入并积累履约信誉。Agent 也可以用现金执行个人目标，通过有界专家工作和独立模型复核产出结果。
 
-应用已部署在 **[tempo.tabbyai.xyz](https://tempo.tabbyai.xyz)**。VPS 是唯一运行 writer；旧本机 Tempo runtime 已停止并归档。事实和操作入口见 [VPS 部署记录](docs/tempo-vps-deployment-20261013.md)、[运维说明](deploy/tempo-vps/README.md)。**2026-10-14 这批新代码尚未部署**，本地构建、合成预览或 Git 更新不会更新 VPS。
+应用运行在 **[tempo.tabbyai.xyz](https://tempo.tabbyai.xyz)**，网络为 **Tempo Moderato 42431**，结算和手续费资产为 **PathUSD**（`0x20c0000000000000000000000000000000000000`，6 位小数）。VPS 是唯一运行 writer，旧本机 Tempo runtime 继续停止。[PR #1](https://github.com/Kris77z/tabby-tempo/pull/1) 合并后的 main `40647f0dc9f966bbbe98bf3e474cfbe612c0ffa8` 于 2026-10-14 经 [完整 CI 与首次自动生产发布](https://github.com/Kris77z/tabby-tempo/actions/runs/38544850009) 上线；请求 `392d85033d864284b69e5df1561dc26d` 为成功，BUILD_ID 为 `4Uxx0OqThhQlKBo4D8gK0`。后续部署结果以当前 main 的 GitHub Actions 和发布回执为准，操作见 [CI/CD 运维说明](deploy/tempo-vps/cicd/README.md)；[VPS 部署记录](docs/tempo-vps-deployment-20261013.md)保留初次部署的日期语义。
 
 ## 已验证与新代码范围
 
@@ -12,7 +12,9 @@ Tempo 独立实跑验收记录了 5 个信用任务和 2 个奖励任务，经�
 
 [GameFi 两条奖励消费路径](docs/tempo-gamefi-extra-root-acceptance-20261013.md)中，Task 7 使用真实 0.10 PathUSD 奖金加已记录的 0.02 自有预存；Task 8 消费奖励额度 295/4096 tokens。两个任务无贷款，各结算 0.15 PathUSD。批准追加游戏只用了 4/6 局，授权已到期，不能再使用剩余额度。原三局失败和输局也保留。
 
-[本轮迁移](docs/tempo-upstream-sync-20261014.md)新增事实驱动的猫场景、对话/凭证布局和双语首页，并修复已付款后事件回调失败时的费用记账。只用了受控模型、新 Anvil 和合成浏览器，没有新付费模型或 Tempo 交易；这些新路径不能套用旧实跑结论。[上一轮查链与恢复适配](docs/tempo-upstream-sync-round2-20261013.md)同样区分只读 Tempo 探针与受控付款测试。
+[2026-10-15 代码更新](docs/tempo-upstream-sync-20261015.md)包含模型降档、外部专家绑定和可配置自主游戏，并修复 Docker 在 `umask 0077` 下的提交文件权限及 SDK 重定向边界；仅用自有受控 fixture、模型响应和新 Anvil 验证。生产没有获批的外部 provider/registry 绑定，外部招聘未配置、默认禁用，没有新增付费 Tempo 验收。
+
+[10/14 场景与聊天迁移](docs/tempo-upstream-sync-20261014.md)保留当日受控模型、Anvil 和合成浏览器证据；其代码已随上述首次自动发布上线，这不增加新的模型调用或链上业务证据。[上一轮查链与恢复适配](docs/tempo-upstream-sync-round2-20261013.md)同样区分只读 Tempo 探针与受控付款测试。
 
 ## 产品路径
 
@@ -21,12 +23,14 @@ Tempo 独立实跑验收记录了 5 个信用任务和 2 个奖励任务，经�
 | 路径 | 当前边界 |
 | --- | --- |
 | 托管报酬任务 | 显式授权的短缺资金可借任务信用；Pi 仅使用有界工具，独立 Docker Arena 与 settler 负责验收结算。 |
-| 连续自主任务 | 模型在固定任务数、决策数、预算和时间内选单或停止，不能修改权限、预算和工具。 |
-| 个人目标 | planner、内置专家和 reviewer 分次调用模型，全部 cash-only / taskId 0；不产生任务收入、贷款或还款信誉。 |
+| 连续自主任务 | 模型在固定任务数、决策数、预算和时间内选单或停止；自主游戏须显式配置并准入，默认未启用，不能修改权限、预算和工具。 |
+| 个人目标 | planner、专家和 reviewer 分次调用模型，全部 cash-only / taskId 0；不产生任务收入、贷款或还款信誉。外部专家路径须有运营方批准的固定绑定，当前生产未启用。 |
 | 游戏 | 托管德州向真实赢家发现金或绑定 Agent 的推理额度；四种练习没有链上奖励。 |
 | 活动和聊天 | 只展示已记录的白名单事实；历史、断线、暂停和 Unknown 不用动画冒充完成。 |
 
-内置专家是资料分析角色，不是独立注册的外部 Agent；有限查链不等于任意 Web/RPC 工具。模型复核不证明事实正确或执行成功。金额均用原始整数，`120000` 是 `0.12` PathUSD，报价、微额度、tokens 与供应商账单分开。
+新调用付款前可选择更便宜的获批模型，同时保留后续工作和 reviewer 所需现金；已有 paid handle、路由及 Unknown 按原绑定恢复，不能借降档重买。外部服务绑定 provider、模型、价格、身份与任务来源，目录评分与链上信誉分开标明；它不开放任意外部招聘，也不导入 Monad 身份。内置专家仍是资料分析角色，有限查链不等于任意 Web/RPC 工具。
+
+模型复核不证明事实正确或执行成功。金额均用原始整数，`120000` 是 `0.12` PathUSD，报价、微额度、tokens 与供应商账单分开。旧过期游戏 grant 不会因更新复活；本轮不修改 root 持有的可信部署入口。
 
 ## 本地开发
 
