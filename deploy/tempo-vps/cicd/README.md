@@ -1,6 +1,6 @@
 # Tempo CI/CD 运维说明
 
-本目录实现 GitHub CI 与 VPS 的受限应用发布入口。GitHub `production` 环境和 main 保护已配置；VPS 的 root 固定入口、本站 nginx 维护 include、专用账户和受限 SSH 认证已安装并验收。安装回执确认三个应用服务未停止、没有发布新应用、没有恢复私密数据；生产应用仍沿用成功基线与既有合约，尚待首次 PR 合并后的发布验收。实施进度见[本轮记录](../../../docs/tempo-cicd-20261014.md)，原服务器配置见[Tempo VPS 部署](../README.md)。
+本目录实现 GitHub CI 与 VPS 的受限应用发布入口。GitHub `production` 环境和 main 保护已配置；VPS 的 root 固定入口、本站 nginx 维护 include、专用账户和受限 SSH 认证已安装并验收。10 月 14 日的 [Actions 38544850009](https://github.com/Kris77z/tabby-tempo/actions/runs/38544850009) 已完成首次自动生产发布。当前应用版本以 main 的 Actions 和 VPS 持久回执为准；10 月 15 日的中断、恢复及部署器修复边界见[故障恢复记录](../../../docs/tempo-cicd-recovery-20261015.md)。原安装记录见[本轮记录](../../../docs/tempo-cicd-20261014.md)，服务器配置见[Tempo VPS 部署](../README.md)。
 
 ## 固定边界
 
@@ -38,7 +38,7 @@ main 已要求最新分支上的 `Offline checks`（GitHub Actions app `15368`�
 
 ## 一次性安装
 
-固定入口已按基线 `a59d0230c3d6a33058998da40566f04fe3261cb4` 安装，BUILD_ID 为 `o0pAbXOA3yOoMP7KaivVM`。回执记录 `appServicesStopped=false`、`applicationDeployed=false`、`privateDataRestored=false`，并保留本站 nginx 与 SSH 配置修改前后摘要。本站维护开关已验证 503 后恢复 200，保护状态没有变化；首次生产应用发布尚未执行。
+固定入口于 10 月 14 日按基线 `a59d0230c3d6a33058998da40566f04fe3261cb4` 安装，当时 BUILD_ID 为 `o0pAbXOA3yOoMP7KaivVM`。安装回执记录 `appServicesStopped=false`、`applicationDeployed=false`、`privateDataRestored=false`，并保留本站 nginx 与 SSH 配置修改前后摘要。本站维护开关已验证 503 后恢复 200，保护状态没有变化。这些字段描述一次性安装过程；之后的应用发布使用独立请求回执。
 
 安装只由运维人员通过既有管理通道执行。服务器要求 Linux、root、`/usr/bin/python3 >=3.12`，既有三个服务健康，私密状态静止，源文件与已成功的基线一致。安装器不会停应用、部署应用或恢复私密数据；它登记基线、安装固定入口和专用账户，给本站 nginx 配置加入维护 include，并为 deploy 用户配置公钥认证。已有入口、账户、维护标记或冲突配置会使安装失败，不会被覆盖。
 
@@ -80,7 +80,11 @@ gh workflow run tempo-ci.yml --repo Kris77z/tabby-tempo --ref main \
 
 维护 include 只影响 `tempo.tabbyai.xyz` 的 HTTPS vhost，不停止 nginx 或其他站点。入口确认本站 503、连接已排空、状态仍静止后，一起停止 `tabby-tempo-frontend.service`、`tabby-tempo-runtime.service`、`tabby-tempo-gateway.service`，并核对 cgroup 内没有遗留 writer。停机后保存旧代码/构建包及 `.data/tempo-20261012/` 冷备，记录摘要，再切换应用代码。按 gateway → runtime → frontend 启动并检查子进程、端口、BUILD_ID 和只读 HTTP 边界。
 
+公开 tracked 源码的新父目录逐级设置为应用用户所有、`0755`，不依赖 worker 的 umask。既有源码目录只验证应用用户的遍历权限；不会递归修改 `.data`、依赖或无关目录。对旧部署器遗留的 `root:root 0700`，仅在该目录属于候选新增的源码祖先、完整子树只包含已知摘要的公开 tracked 文件及其祖先时才允许修复；未知内容、链接或既有目录不可访问会使发布拒绝。
+
 正常发布、手动回滚和失败恢复都**绝不自动恢复私密数据**。冷备中的密钥、数据库、交易与模型 journal 是人工核对依据。若发现数据漂移、业务未静止或新运行状态不确定，保留维护与停机状态，返回 `MANUAL_RECONCILIATION_REQUIRED`；不要解包私密冷备、删 journal 或重放交易来消除差异。回滚失败会保持三个服务停止并返回 `ROLLBACK_FAILED_SERVICES_STOPPED`。
+
+自动回滚在再次确认三服务停止、状态可恢复并还原代码/构建之后，对这三个固定 unit 执行一次 `reset-failed`，再进行一次恢复启动；不循环重试。失败回执和 `last-failure.json` 保留安全的 `originalCode`、`rollbackCode` 及阶段，避免汇总码掩盖发布与恢复各自的原因；不会通过 SSH 输出异常正文或私密日志。
 
 发布探针仅检查健康、匿名访问、Origin 拒绝、运行进程和既有状态。不创建/注册 Agent，不充值，不跑 paid 任务或推理，不执行 bootstrap `init`/`deploy`、授权/额度 `renew` 或证书 `renew`。不要用登录 challenge、`/api/arena/play` 或浏览器 hydration 当作发布健康探针。
 

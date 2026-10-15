@@ -24,7 +24,7 @@ import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from state_guard import capture, compare, require_quiescent, StateError
-from transaction import execute, DeployError
+from transaction import execute, DeployError, error_code, error_details
 
 PROJECT = Path('/Users/jungle/Desktop/dev/agentfuel-tempo')
 STORE = Path('/var/lib/tabby-tempo-cicd')
@@ -375,6 +375,12 @@ class Production:
         for unit in reversed(UNITS):
             run(['/usr/bin/systemctl', 'start', unit], timeout=660, log=self.log)
 
+    def reset_failed(self):
+        # Reset only these stopped, guarded units before the one rollback start.
+        # Upholds links all three; clearing only the gateway can leave its
+        # runtime/frontend dependants blocked by the same start-limit window.
+        run(['/usr/bin/systemctl', 'reset-failed', *UNITS], log=self.log)
+
     def artifact_current(self):
         artifact = self.store / 'artifacts' / (self.current['sha'] + '-backup-' + uuid.uuid4().hex + '.tar.gz')
         artifact.parent.mkdir(mode=0o700, exist_ok=True)
@@ -440,6 +446,8 @@ class Production:
         for entry in candidate['files']:
             if entry['path'] not in self.controlled_paths and destination(self.project, entry['path']).exists():
                 raise DeployError('TRACKED_UNOWNED_COLLISION')
+        account = pwd.getpwnam(APP_USER)
+        self.source_parents(candidate['files'], previous_files, account)
         # Record all controlled candidate paths before the first write, so a
         # partial copy can remove only newly introduced files during rollback.
         self.current = candidate
@@ -447,10 +455,8 @@ class Production:
         for entry in previous_files:
             if entry['path'] not in new_paths:
                 destination(self.project, entry['path']).unlink(missing_ok=True)
-        account = pwd.getpwnam(APP_USER)
         for entry in candidate['files']:
             target = destination(self.project, entry['path'])
-            target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(unpack / entry['path'], target)
             os.chmod(target, entry['mode'])
             os.chown(target, account.pw_uid, account.pw_gid)
@@ -468,6 +474,103 @@ class Production:
                 for path in [live, *live.rglob('*')]:
                     os.chown(path, account.pw_uid, account.pw_gid, follow_symlinks=False)
         self.verify_source(candidate['files'], self.project)
+
+    def source_parents(self, candidate, previous, account):
+        """Prepare only public tracked ancestors; never repair private trees.
+
+        The sole existing-directory repair is an old deployer's root:root 0700
+        remnant introduced by this candidate. Its complete subtree must still
+        consist of known public source files/directories, with exact hashes.
+        """
+        def parents(entries):
+            return {str(parent) for entry in entries for parent in safe_path(entry['path']).parents if str(parent) != '.'}
+
+        wanted, old = parents(candidate), parents(previous)
+        known = {}
+        for entry in [*previous, *candidate]:
+            known.setdefault(str(safe_path(entry['path'])), set()).add(entry['sha256'])
+        flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+
+        def open_chain(root_fd, parts):
+            current = os.dup(root_fd)
+            try:
+                for part in parts:
+                    child = os.open(part, flags, dir_fd=current)
+                    os.close(current)
+                    current = child
+                return current
+            except Exception:
+                os.close(current)
+                raise DeployError('RELEASE_DESTINATION_SYMLINK') from None
+
+        def public_tree(fd, relative):
+            for name in os.listdir(fd):
+                child = str(PurePosixPath(relative) / name)
+                meta = os.stat(name, dir_fd=fd, follow_symlinks=False)
+                if stat.S_ISLNK(meta.st_mode):
+                    raise DeployError('RELEASE_DESTINATION_SYMLINK')
+                if stat.S_ISDIR(meta.st_mode) and child in wanted | old:
+                    nested = os.open(name, flags, dir_fd=fd)
+                    try: public_tree(nested, child)
+                    finally: os.close(nested)
+                elif stat.S_ISREG(meta.st_mode) and child in known:
+                    stream_fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=fd)
+                    with os.fdopen(stream_fd, 'rb') as stream:
+                        content_hash = hashlib.sha256(stream.read()).hexdigest()
+                    if content_hash not in known[child]:
+                        raise DeployError('RELEASE_PARENT_UNOWNED')
+                else:
+                    raise DeployError('RELEASE_PARENT_UNOWNED')
+
+        def identity(meta):
+            return (meta.st_dev, meta.st_ino, meta.st_uid, meta.st_gid, stat.S_IMODE(meta.st_mode))
+
+        def traversable(meta):
+            bit = 0o100 if meta.st_uid == account.pw_uid else 0o010 if meta.st_gid == account.pw_gid else 0o001
+            return bool(meta.st_mode & bit)
+
+        plan = []
+        root_fd = os.open(self.project, flags)
+        try:
+            if not traversable(os.fstat(root_fd)):
+                raise DeployError('RELEASE_PARENT_INACCESSIBLE')
+            # Validate every existing ancestor before creating or changing any.
+            for name in sorted(wanted, key=lambda value: (len(PurePosixPath(value).parts), value)):
+                path = self.project / name
+                try: meta = path.lstat()
+                except FileNotFoundError:
+                    plan.append((name, 'new', None)); continue
+                if not stat.S_ISDIR(meta.st_mode):
+                    raise DeployError('RELEASE_DESTINATION_SYMLINK' if stat.S_ISLNK(meta.st_mode) else 'RELEASE_PARENT_INVALID')
+                repair = name not in old and meta.st_uid == 0 and meta.st_gid == 0 and stat.S_IMODE(meta.st_mode) == 0o700
+                if repair:
+                    fd = open_chain(root_fd, PurePosixPath(name).parts)
+                    try: public_tree(fd, name)
+                    finally: os.close(fd)
+                else:
+                    if not traversable(meta):
+                        raise DeployError('RELEASE_PARENT_INACCESSIBLE')
+                plan.append((name, 'repair' if repair else 'keep', identity(meta)))
+            for name, action, expected in plan:
+                parts = PurePosixPath(name).parts
+                parent_fd = open_chain(root_fd, parts[:-1])
+                try:
+                    if action == 'new':
+                        try: os.mkdir(parts[-1], 0o700, dir_fd=parent_fd)
+                        except FileExistsError: raise DeployError('RELEASE_PARENT_CHANGED') from None
+                    fd = os.open(parts[-1], flags, dir_fd=parent_fd)
+                    try:
+                        if expected is not None and identity(os.fstat(fd)) != expected:
+                            raise DeployError('RELEASE_PARENT_CHANGED')
+                        if action != 'keep':
+                            os.fchown(fd, account.pw_uid, account.pw_gid)
+                            # mkdir(mode=0755) alone is insufficient under the
+                            # worker's UMask=0077. Apply to this verified FD only.
+                            os.fchmod(fd, 0o755)
+                    finally: os.close(fd)
+                finally: os.close(parent_fd)
+        finally:
+            os.close(root_fd)
 
     def restore_code_and_build(self, backup):
         self.activate(backup)
@@ -544,10 +647,11 @@ class Production:
         write_json(self.store / 'last-state.json', after)
         return {'released': candidate['sha'], 'buildId': candidate['buildId'], 'operation': self.operation, 'privateDataRestored': False}
 
-    def record_failure(self, code, sha):
-        write_json(self.store / 'last-failure.json', {'code': code, 'requestedSha': sha,
+    def record_failure(self, code, sha, **details):
+        failure = DeployError(code, **details)
+        write_json(self.store / 'last-failure.json', {'code': error_code(failure), 'requestedSha': sha,
                    'log': str(self.log), 'maintenance': MAINTENANCE.exists(),
-                   'privateDataRestored': False})
+                   'privateDataRestored': False, **error_details(failure)})
 
 
 def trusted_entry():
@@ -571,7 +675,7 @@ def worker(operation, sha, request_id):
         write_json(receipt, {'status': 'Succeeded', **result})
     except BaseException as error:
         write_json(receipt, {'status': 'Failed', 'requestedSha': sha,
-                            'code': getattr(error, 'code', 'DEPLOYMENT_FAILED')})
+                            'code': error_code(error), **error_details(error)})
         raise
 
 
@@ -617,5 +721,5 @@ if __name__ == '__main__':
     try:
         cli()
     except Exception as error:
-        print(getattr(error, 'code', 'DEPLOYMENT_FAILED'), file=sys.stderr)
+        print(error_code(error), file=sys.stderr)
         sys.exit(1)
