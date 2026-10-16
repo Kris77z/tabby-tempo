@@ -185,7 +185,7 @@ esac
   } finally { controller?.close(); await settler?.close(); f?.provider.destroy(); await stop(local.child); await rm(directory, { recursive: true, force: true }); }
 });
 
-test("Arena borrowed RPC survives controller/HTTP/settler close and rejected startup", { timeout: 40_000 }, async () => {
+test("Arena borrowed RPC survives controller/HTTP/settler close and rejected startup", { timeout: 40_000 }, async t => {
   const directory = await mkdtemp(join(tmpdir(), "af-provider-"));
   let anvil: ChildProcess | undefined;
   let f: Awaited<ReturnType<typeof fixture>> | undefined;
@@ -213,6 +213,11 @@ test("Arena borrowed RPC survives controller/HTTP/settler close and rejected sta
     await ownedSettler.close();
     await assert.rejects(ownedSettler.start(), { code: "UNSUPPORTED_OPERATION" });
 
+    const submit = ArenaController.prototype.submit;
+    t.mock.method(ArenaController.prototype, "submit", async function (this: ArenaController, input: Parameters<ArenaController["submit"]>[0]) {
+      try { return await submit.call(this, input); }
+      catch (error) { t.diagnostic(error instanceof Error ? error.stack ?? error.message : String(error)); throw error; }
+    });
     service = createArenaHttpServer(config, [], f.provider);
     service.server.listen(0, "127.0.0.1"); await once(service.server, "listening");
     const url = `http://127.0.0.1:${(service.server.address() as { port: number }).port}`;
