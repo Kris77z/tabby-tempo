@@ -610,6 +610,17 @@ process.stdout.write(JSON.stringify({...result,runtimeBinding:tempoRuntimeBindin
         current = self.capture(); self.external_relay()
         self.rejects(lambda: guard.compare(current, self.capture(), "restart"), "STATE_PROTECTED_CHANGED")
 
+    def test_transaction_budget_accepts_checksummed_pathusd_target_from_lowercase_bootstrap(self):
+        self.enable_features()
+        path = "operator/acceptance-20261016/transaction-budget.json"
+        budget = self.get(path)
+        pathusd = "0x20C0000000000000000000000000000000000000"
+        self.assertEqual(self.get("operator/bootstrap.json")["asset"]["address"], pathusd.lower())
+        budget["targets"].append(pathusd); self.put(path, budget)
+        guard.require_quiescent(self.capture())
+        budget["targets"].append("0x" + "9" * 40); self.put(path, budget)
+        self.rejects(self.capture, "STATE_TRANSACTION_BUDGET_INVALID")
+
     def test_transaction_budget_domain_allowlist_rounding_and_lock_are_enforced(self):
         self.enable_features(); path = "operator/acceptance-20261016/transaction-budget.json"; budget = self.get(path)
         ledger = {"version": 1, "budgetId": budget["id"], "digest": hashlib.sha256((self.root / path).read_bytes()).hexdigest(), "reservations": [{"hash": HASH,

@@ -495,7 +495,7 @@ def _transaction_budget(config, b, root, files, dirs, links, docs, issues):
         values = _array(budget[key])
         _check(1 <= len(values) <= 16 and len(set(values)) == len(values), "STATE_TRANSACTION_BUDGET_INVALID")
         for value in values: _checksum_address(value)
-    _check(set(budget["targets"]) <= {b["contracts"][key] for key in ("account", "escrow", "manager")} | {b["asset"]["address"]}, "STATE_TRANSACTION_BUDGET_INVALID")
+    _check({a.lower() for a in budget["targets"]} <= {b["contracts"][key].lower() for key in ("account", "escrow", "manager")} | {b["asset"]["address"].lower()}, "STATE_TRANSACTION_BUDGET_INVALID")
     ledger_path = parent + "/transaction-budget-ledger.json"
     # Reservations survive RPC uncertainty and consume the ceiling forever.
     # Their presence alone is not proof of an unfinished transaction; the
