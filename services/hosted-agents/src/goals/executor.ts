@@ -6,7 +6,7 @@ import type { Inference, PaymentHandle } from "@agentfuel/sdk";
 import { HostedError, type HostedExecution, type HostedExecutor, type HostedResult } from "../types.js";
 import { validGoal, validateGoalView, type GoalView } from "../goal-types.js";
 import { missionSystem, specialistSystem, reviewSystem, parseMissionPlan, parseMissionReview } from "./commander.js";
-import { paidGoalCall, readGoalCash } from "./payment.js";
+import { paidGoalCall, readGoalCash, type GoalPaymentErrorCode } from "./payment.js";
 import type { HostedTaskExecutorConfig } from "../task-executor.js";
 import { taskLoopbackUrl } from "../../../../packages/pi-loop/src/task-runner/config.js";
 import { getAddress } from "ethers";
@@ -20,7 +20,7 @@ import { openHostedPlannerConnection } from "../autonomy-executor.js";
 import { taskPrivateFile } from "../../../../packages/pi-loop/src/task-runner/config.js";
 export interface GoalModelRoute { id:string; relayUrl:string; provider:string; priceRaw:string; service:string; model:string; physicalModel:string; responseModel?:string }
 export interface HostedGoalConfig { models:GoalModelRoute[]; durationMs:number; chainLookup?:boolean; external?:ExternalHiringConfig }
-export interface GoalCall { stage:string; route?:GoalModelRoute; futureReserveRaw?:string; policy?:{raw:string;hash:string;receipt?:{txHash:string;status:0|1;blockNumber:number;blockHash:string}}; serviceId?:string; promptDigest?:string; messages:{role:string;content:string}[]; max_completion_tokens:number; handle?:PaymentHandle; inference?:Inference; started?:boolean; unpaid?:boolean; voidSubmission?:{raw:string;hash:string}; recovery?:GoalPaymentRecovery; response?:{text:string;chargedRaw:string;promptTokens:number;completionTokens:number;paymentId?:string;txHash?:string;deliveryError?:string} }
+export interface GoalCall { stage:string; route?:GoalModelRoute; futureReserveRaw?:string; firstPaymentErrorCode?:GoalPaymentErrorCode; policy?:{raw:string;hash:string;receipt?:{txHash:string;status:0|1;blockNumber:number;blockHash:string}}; serviceId?:string; promptDigest?:string; messages:{role:string;content:string}[]; max_completion_tokens:number; handle?:PaymentHandle; inference?:Inference; started?:boolean; unpaid?:boolean; voidSubmission?:{raw:string;hash:string}; recovery?:GoalPaymentRecovery; response?:{text:string;chargedRaw:string;promptTokens:number;completionTokens:number;paymentId?:string;txHash?:string;deliveryError?:string} }
 export interface GoalState { version:1; lookupEnabled?:boolean; research?:ChainResearch; externalConfig?:ExternalHiringConfig; externalServices?:ExternalServiceSnapshot[]; externalHires?:Record<string,ExternalHireState>; binding:string; deadlineMs:number; route:GoalModelRoute; routes?:GoalModelRoute[]; input:{goal:string;owner:string;wallet:string;agentId:string;chainAgentId:string;chainId:string;strategy:string;reservedRaw:string}; view:GoalView; calls:GoalCall[]; result?:HostedResult; policy?:GoalCall['policy'] }
 export interface GoalDependencies {
   lookup?:typeof collectChainResearch;

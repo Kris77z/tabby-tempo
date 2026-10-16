@@ -307,6 +307,40 @@ def _valid_resolution(record):
             and _confirmed_refund(record))
 
 
+def _valid_undispatched_refund(record):
+    # A never-dispatched cash payment needs no fabricated Unknown resolution.
+    # Absence of the attempts field is not evidence that dispatch never began.
+    proof = record.get("proof", {})
+    return (record["state"] == "Refunded" and record["quote"]["taskId"] == "0"
+            and isinstance(record.get("upstreamAttempts"), list) and record["upstreamAttempts"] == []
+            and not any(k in record for k in ("result", "receipt", "operatorResolution", "operatorCompensation"))
+            and proof.get("fromCash") == record["quote"]["price"] and proof.get("fromCredit") == "0"
+            and len(record["refunds"]) == 1 and _confirmed_refund(record))
+
+
+def _mission_undispatched_refund(mission, call, record):
+    if not _valid_undispatched_refund(record):
+        return False
+    quote, request = record["quote"], record["request"]
+    handle, identity = call.get("handle", {}), mission.get("input", {})
+    route = call.get("route", mission.get("route", {}))
+    submission = handle.get("submission", {})
+    return (call.get("recovery") == {"chargedRaw": "0", "refundedRaw": quote["price"], "resolved": True}
+            and "inference" not in call and "response" not in call
+            and handle.get("version") == 1 and handle.get("quote") == quote and handle.get("input") == request
+            and handle.get("relayUrl") == route.get("relayUrl")
+            and all(route.get(key) == quote[field] for key, field in (("provider", "payTo"), ("priceRaw", "price"), ("service", "service"), ("model", "model")))
+            and identity.get("chainId") == quote["chainId"] and identity.get("chainAgentId") == quote["agentId"]
+            and isinstance(identity.get("wallet"), str) and isinstance(submission.get("from"), str)
+            and submission["from"].lower() == identity["wallet"].lower()
+            and type(submission.get("nonce")) is int and 0 <= submission["nonce"] < 2 ** 53
+            and submission.get("txHash") == record["proof"]["txHash"]
+            and ("rawTransaction" not in submission or _keccak(bytes.fromhex(submission["rawTransaction"][2:])) == submission["txHash"])
+            and request == {"service": route["service"], "model": route["model"], "messages": call.get("messages"),
+                "max_completion_tokens": call.get("max_completion_tokens"), "thinking": {"type": "disabled"},
+                "agentId": identity["chainAgentId"], "taskId": "0"})
+
+
 def _valid_closure(ledger):
     closure = ledger.get("closure")
     if not isinstance(closure, dict):
@@ -528,7 +562,7 @@ def _transaction_budget(config, b, root, files, dirs, links, docs, issues):
     _check(lock not in files, "STATE_TRANSACTION_BUDGET_INVALID")
 
 
-def _bounded_games(config, db, root, files, dirs, links, docs, issues, autonomy, sealed=False):
+def _bounded_games(config, db, root, files, dirs, links, docs, issues, autonomy, sealed=False, aborted=False):
     path, mirror = "operator/bounded-games.json", "operator/bounded-admissions/session.json"
     grant = _closed(docs.get(path), ("version", "id", "parentRequestId", "chainId", "origin", "asset", "owner", "issuedAtMs", "expiresAtMs",
         "baselineOwnerGames", "baselineTotalGames", "maxAdditionalGames", "maxGameCalls", "maxGameCompletionTokens", "maxCashRewardsRaw", "actor"), "STATE_BOUNDED_GAMES_INVALID")
@@ -557,7 +591,7 @@ def _bounded_games(config, db, root, files, dirs, links, docs, issues, autonomy,
     _check(bound_identity(agent) and actor["wallet"] != config["externalProvider"]["wallet"]
            and actor["registryId"] != config["externalProvider"]["agentId"], "STATE_BOUNDED_GAMES_INVALID")
     settings = agent
-    if sealed:
+    if sealed and not aborted:
         # The grant can no longer admit a game. Preserve its original execution
         # settings without pinning the owner's later, ordinary Agent settings.
         parent_base = f"runtime/hosted/agents/{actor['hostedAgentId']}/runs/{grant['parentRequestId']}"
@@ -567,8 +601,9 @@ def _bounded_games(config, db, root, files, dirs, links, docs, issues, autonomy,
                and original["run"].get("requestId") == grant["parentRequestId"]
                and original["run"].get("agentId") == actor["hostedAgentId"] and original["run"].get("action") == "autonomous", "STATE_BOUNDED_GAMES_INVALID")
         settings = original["agent"]
-    _check(settings.get("modelId") == "kimi-k2.6" and settings.get("strategy") == "balanced" and settings.get("allowCredit") is False
-           and not settings.get("configurationRequired"), "STATE_BOUNDED_GAMES_INVALID")
+    if not aborted:
+        _check(settings.get("modelId") == "kimi-k2.6" and settings.get("strategy") == "balanced" and settings.get("allowCredit") is False
+               and not settings.get("configurationRequired"), "STATE_BOUNDED_GAMES_INVALID")
     state = _closed(db.get("boundedGames"), ("grant", "digest", "admissions"), "STATE_BOUNDED_GAMES_INVALID")
     _check(state["grant"] == grant and state["digest"] == files[path]["sha256"] and docs.get(mirror) == state
            and mirror in files and files[mirror]["mode"] == 0o600
@@ -667,20 +702,24 @@ def _external_record(value, trust, gateway):
             "assignmentDigest": _digest(messages[1]["content"])}, "STATE_EXTERNAL_JOURNAL_INVALID")
 
 
-def _feature_seal(journal, hosted, db, root, files, docs):
+def _feature_seal(journal, hosted, db, root, files, dirs, links, docs):
     marker = journal["features"].get("seal")
     path = "operator/acceptance-20261016/closure.json"
     if marker is None:
         _check("seal" not in journal["features"] and "boundedGamesSealed" not in hosted and path not in files, "STATE_FEATURES_SEAL_INVALID")
-        return
+        return False
     _closed(marker, ("version", "file", "digest"), "STATE_FEATURES_SEAL_INVALID")
     _check(marker["version"] == 1 and marker["file"] == str(root / path) and hosted.get("boundedGamesSealed") is True
            and _private_reference(marker["file"], root, files) == path
            and files[path]["mode"] == 0o600 and files[path]["sha256"] == marker["digest"]
            and all(files[path][k] == files["runtime/runtime-journal/session.json"][k] for k in ("uid", "gid")), "STATE_FEATURES_SEAL_INVALID")
-    closure = _closed(docs.get(path), ("version", "id", "closedAt", "goalRequestId", "parentRequestId", "budgetId", "budgetDigest", "ledgerSha256", "boundedAdmissionsSha256"), "STATE_FEATURES_SEAL_INVALID")
+    closure = _obj(docs.get(path))
+    fields = ("version", "id", "closedAt", "goalRequestId", "parentRequestId", "budgetId", "budgetDigest", "ledgerSha256", "boundedAdmissionsSha256")
+    aborted = "outcome" in closure
+    _closed(closure, fields + (("outcome",) if aborted else ()), "STATE_FEATURES_SEAL_INVALID")
+    _check(not aborted or closure["outcome"] == "aborted-before-parent", "STATE_FEATURES_SEAL_INVALID")
     budget_path, ledger_path = ("operator/acceptance-20261016/" + name for name in ("transaction-budget.json", "transaction-budget-ledger.json"))
-    state, config = db["boundedGames"], journal["features"]["config"]
+    state, config = _obj(db.get("boundedGames"), ("grant", "admissions")), journal["features"]["config"]
     _check(closure["version"] == 1 and closure["id"] == config["id"] and closure["parentRequestId"] == state["grant"]["parentRequestId"]
            and closure["goalRequestId"] != closure["parentRequestId"] and closure["budgetId"] == docs[budget_path]["id"]
            and closure["budgetDigest"] == files[budget_path]["sha256"] and ledger_path in files
@@ -690,13 +729,61 @@ def _feature_seal(journal, hosted, db, root, files, docs):
     _check(closed_at <= int(datetime.now().timestamp() * 1000), "STATE_FEATURES_SEAL_INVALID")
     for key, action in (("goalRequestId", "goal"), ("parentRequestId", "autonomous")):
         _check(isinstance(closure[key], str) and _UUID.fullmatch(closure[key]) is not None, "STATE_FEATURES_SEAL_INVALID")
+        if aborted and key == "parentRequestId":
+            continue
         matches = [r for r in db["runs"] if r["requestId"] == closure[key]]
         _check(len(matches) == 1 and matches[0]["action"] == action and matches[0]["agentId"] == state["grant"]["actor"]["hostedAgentId"]
                and matches[0]["status"] in {"Succeeded", "Failed"} and matches[0].get("result", {}).get("terminal") is True
                and matches[0]["recoverable"] is False
                and _iso_millis(matches[0].get("updatedAt")) <= closed_at, "STATE_FEATURES_SEAL_INVALID")
+        if aborted:
+            _check(matches[0]["status"] == "Failed" and matches[0]["result"].get("success") is False, "STATE_FEATURES_SEAL_INVALID")
+    if aborted:
+        grant = state["grant"]
+        actor, parent = grant["actor"], closure["parentRequestId"]
+        # First sealing checks exact baseline counters and absent credits in the
+        # stopped runtime. This immutable empty-admission digest and parent ID
+        # preserve that boundary while later ordinary games can advance counters.
+        _check(actor["registryId"] == "73" and state["admissions"] == [], "STATE_FEATURES_SEAL_INVALID")
+        _check(not any(row.get("requestId") == parent for row in db["runs"] + db["creations"]), "STATE_FEATURES_SEAL_INVALID")
+        auto = _obj(db.get("autonomousGameAdmissions", {}))
+        _check(parent not in auto and not any(row.get("parentRequestId") == parent for row in auto.values()), "STATE_FEATURES_SEAL_INVALID")
+        inventory = set(files) | set(dirs) | set(links)
+        credits = f"runtime/credits/{actor['hostedAgentId']}"
+        _check(not any(name.startswith("runtime/") and parent in name.split("/") for name in inventory), "STATE_FEATURES_SEAL_INVALID")
+        def parent_reference(value):
+            if isinstance(value, list):
+                return any(parent_reference(row) for row in value)
+            if isinstance(value, dict):
+                return any((key in {"requestId", "parentRequestId", "childId"} and item == parent)
+                           or key == "children" and isinstance(item, dict) and parent in item
+                           or parent_reference(item) for key, item in value.items())
+            return False
+        _check(not any(parent_reference(value) for name, value in docs.items()
+                       if name.startswith("runtime/") and name != "runtime/hosted/database/session.json")
+               and not parent_reference(db["runs"] + db["creations"]), "STATE_FEATURES_SEAL_INVALID")
+        if any(name == credits or name.startswith(credits + "/") for name in inventory):
+            reward = _obj(docs.get(credits + "/session.json"), ("version", "accounts", "grants", "redemptions"))
+            _check(reward["version"] == 1 and not any(name == credits or name.startswith(credits + "/") for name in links), "STATE_FEATURES_SEAL_INVALID")
+            opponent = docs["operator/bootstrap.json"]["opponentBinding"]
+            expected_accounts = [{"agentId": binding["registryId"], "wallet": binding["wallet"].lower()} for binding in
+                                 (actor, {"registryId": opponent["agentId"], "wallet": opponent["wallet"]})]
+            _check(sorted(_array(reward["accounts"]), key=lambda a: a["agentId"]) == sorted(expected_accounts, key=lambda a: a["agentId"]), "STATE_FEATURES_SEAL_INVALID")
+            for row in _array(reward["grants"]) + _array(reward["redemptions"]):
+                _check(closed_at < _iso_millis(row.get("createdAt")) <= int(datetime.now().timestamp() * 1000)
+                       and not parent_reference(row)
+                       and not any(parent in str(row.get(key, "")) for key in ("grantId", "matchId", "redemptionId")), "STATE_FEATURES_SEAL_INVALID")
+        mission_path = f"runtime/hosted/agents/{actor['hostedAgentId']}/runs/{closure['goalRequestId']}/mission/session.json"
+        mission = _obj(docs.get(mission_path), ("version", "input", "view", "calls", "result"))
+        identity = _obj(mission["input"], ("goal", "owner", "wallet", "agentId", "chainAgentId", "chainId"))
+        goal = next(row for row in db["runs"] if row["requestId"] == closure["goalRequestId"])
+        _check(mission["version"] == 1 and mission["result"].get("terminal") is True and mission["result"].get("success") is False
+               and identity["chainId"] == "42431" and identity["chainAgentId"] == "73"
+               and identity["agentId"] == actor["hostedAgentId"] and identity["owner"] == grant["owner"]
+               and identity["wallet"] == actor["wallet"] and identity["goal"] == goal.get("goal"), "STATE_FEATURES_SEAL_INVALID")
     _check(all(_iso_millis(r["admittedAt"]) <= closed_at for r in state["admissions"])
            and all(_iso_millis(r["admittedAt"]) <= closed_at for r in docs[ledger_path]["reservations"]), "STATE_FEATURES_SEAL_INVALID")
+    return aborted
 
 
 def _capture(project: Path) -> dict:
@@ -861,9 +948,9 @@ def _capture(project: Path) -> dict:
         elif not isinstance(run.get("result"), dict) or run["result"].get("terminal") is not True or run["recoverable"]:
             issues.add("STATE_HOSTED_INFLIGHT")
     if features:
-        _bounded_games(features, db, root, files, dirs, links, docs, issues, autonomy, "seal" in journal["features"])
         _transaction_budget(features, b, root, files, dirs, links, docs, issues)
-        _feature_seal(journal, hosted, db, root, files, docs)
+        aborted = _feature_seal(journal, hosted, db, root, files, dirs, links, docs)
+        _bounded_games(features, db, root, files, dirs, links, docs, issues, autonomy, "seal" in journal["features"], aborted)
     else:
         _check("boundedGames" not in db and "boundedGamesSealed" not in hosted and not any(p == "operator/bounded-admissions" or p.startswith("operator/bounded-admissions/")
             for p in set(files) | set(dirs) | set(links)), "STATE_FEATURES_REQUIRED")
@@ -1053,7 +1140,8 @@ def _capture(project: Path) -> dict:
                         matches = [r for p, r in docs.items() if (re.fullmatch(r"runtime/goal-(?:cheap|strong)/0x[0-9a-f]{64}\.json", p)
                             or re.fullmatch(r"runtime/external-services/[^/]+/0x[0-9a-f]{64}\.json", p))
                             and r.get("quote", {}).get("paymentId") == payment and verified_relays.get(payment) is r]
-                        if not (recovery.get("resolved") is True and len(matches) == 1 and _valid_resolution(matches[0])):
+                        if not (recovery.get("resolved") is True and len(matches) == 1
+                                and (_valid_resolution(matches[0]) or _mission_undispatched_refund(value, call, matches[0]))):
                             issues.add("STATE_MISSION_INFLIGHT")
                 if value.get("result", {}).get("terminal") is not True: issues.add("STATE_MISSION_INFLIGHT")
             elif name.endswith("/game/session.json") and "turns" in value:

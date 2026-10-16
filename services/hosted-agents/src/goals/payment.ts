@@ -1,5 +1,5 @@
 import { Contract, Wallet, Interface, Transaction, keccak256 } from "ethers";
-import { InferCredit, ACCOUNT_ABI, type Json } from "@agentfuel/sdk";
+import { InferCredit, PaymentError, ACCOUNT_ABI, type Json } from "@agentfuel/sdk";
 import { confirmPaidDelivery } from "@agentfuel/pi-loop/fixed-task";
 import { taskPrivateFile } from "../../../../packages/pi-loop/src/task-runner/config.js";
 import { openHostedPlannerConnection } from "../autonomy-executor.js";
@@ -10,6 +10,8 @@ import { isDeepStrictEqual } from "node:util";
 import { voidExpiredGoalPayment } from "./void-payment.js";
 const policyABI=new Interface(["function setPolicy(uint256,tuple(uint256 maxCashPerTx,uint256 maxDebtPerTx,uint256 maxDebtPerDay,bool ownerFrozen))"]);
 const goalAccountABI=[...ACCOUNT_ABI,"function getPolicy(uint256) view returns(tuple(uint256 maxCashPerTx,uint256 maxDebtPerTx,uint256 maxDebtPerDay,bool ownerFrozen))","function protocolFrozen(uint256) view returns(bool)"];
+export const GOAL_PAYMENT_ERROR_CODES=["NETWORK_MISMATCH","SIGNER_NETWORK_MISMATCH","ASSET_MISMATCH","UNTRUSTED_QUOTE","RELAY_UNAVAILABLE","QUOTE_REQUIRED","HANDLE_MISMATCH","PAYMENT_UNCERTAIN","PAYMENT_REVERTED","PAYMENT_REJECTED","PAYMENT_PENDING","REFUNDED","DELIVERY_PENDING","QUOTE_EXPIRED","CASH_REQUIRED","WALLET_REJECTED","SpendRejected","NotAgentWallet","UPSTREAM_UNCERTAIN","UPSTREAM_FAILED","ROUTE_SNAPSHOT_REQUIRED","ROUTE_BINDING_MISMATCH","ROUTE_UNAVAILABLE","REFUND_IN_PROGRESS","PAYMENT_AFTER_EXPIRY","PAYMENT_REORG","PAYMENT_UNCONFIRMED","PAYMENT_MISMATCH","INVALID_PAYMENT","REQUEST_MISMATCH"] as const;
+export type GoalPaymentErrorCode=typeof GOAL_PAYMENT_ERROR_CODES[number];
 /** Read-only admission snapshot. Cash can fund personal goals; task credit is
  * deliberately excluded because these purchases have taskId=0. */
 export async function readGoalCash(config:HostedTaskExecutorConfig,state:GoalState):Promise<string>{
@@ -150,6 +152,11 @@ export async function paidGoalCall(config:HostedTaskExecutorConfig,state:GoalSta
     const deliveryError=result?.model!==(route.responseModel??route.physicalModel)?"HOSTED_GOAL_MODEL_CHANGED":!validUsage?"HOSTED_GOAL_OUTPUT_INVALID":undefined;
     return{text:result?.choices?.[0]?.message?.content??"",chargedRaw:receipt.fromCash,promptTokens:validUsage?result.usage!.prompt_tokens!:0,completionTokens:validUsage?result.usage!.completion_tokens!:0,paymentId:receipt.paymentId,txHash:receipt.txHash,...(deliveryError?{deliveryError}:{})};
   }catch(error){
+    // Persist only the first recognized SDK code before any observer can throw.
+    // Messages, stack traces and arbitrary relay-provided codes are never saved.
+    if(error instanceof PaymentError&&call.firstPaymentErrorCode===undefined&&GOAL_PAYMENT_ERROR_CODES.includes(error.code as GoalPaymentErrorCode)){
+      call.firstPaymentErrorCode=error.code as GoalPaymentErrorCode;await save();
+    }
     // Record canonical cash movement even when the vendor/relay response is lost.
     // Recovery never invents a new quote and never redispatches a refunded call.
     if(call.handle&&!call.inference&&!policyPending){

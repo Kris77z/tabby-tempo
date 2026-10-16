@@ -345,6 +345,59 @@ class GuardTest(unittest.TestCase):
         journal["features"]["seal"] = {"version": 1, "file": str(self.root / path), "digest": hashlib.sha256((self.root / path).read_bytes()).hexdigest()}
         self.put("runtime/runtime-journal/session.json", journal)
 
+    def abort_features(self):
+        self.enable_features()
+        db = self.get("runtime/hosted/database/session.json")
+        grant = db["boundedGames"]["grant"]
+        grant["actor"]["registryId"] = "73"
+        self.put("operator/bounded-games.json", grant)
+        db["boundedGames"]["digest"] = hashlib.sha256((self.root / "operator/bounded-games.json").read_bytes()).hexdigest()
+        db["agents"][0]["binding"]["agentId"] = "73"
+        self.put("operator/bounded-admissions/session.json", db["boundedGames"])
+        iso = lambda ms: guard.datetime.fromtimestamp(ms / 1000, guard.timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        route = self.get("runtime/hosted.json")["goals"]["models"][0]
+        request = {"service": route["service"], "model": route["model"], "messages": [{"role": "system", "content": "offline review"},
+            {"role": "user", "content": "offline artifact"}], "max_completion_tokens": 1536, "thinking": {"type": "disabled"}, "agentId": "73", "taskId": "0"}
+        b = self.get("operator/bootstrap.json")
+        digest = guard._keccak(guard._canonical(request))
+        payment = guard._keccak(bytes(32) + bytes.fromhex(digest[2:]) + bytes.fromhex(HASH[2:]))
+        quote = {"paymentId": payment, "agentId": "73", "taskId": "0", "requestDigest": digest, "serverNonce": HASH,
+            "chainId": "42431", "account": b["contracts"]["account"], "asset": b["asset"]["address"], "payTo": route["provider"],
+            "service": route["service"], "model": route["model"], "price": "10000", "quoteExpiry": "2000000000", "createdBlock": 1}
+        refund = {"id": HASH, "amount": "10000", "state": "Confirmed",
+            "transaction": {"rawTransaction": "0x01", "txHash": guard._keccak(b"\x01"), "nonce": 1}}
+        record = {"quote": quote, "request": request, "proof": self.proof(), "state": "Refunded", "upstreamAttempts": [], "refunds": [refund]}
+        self.relay_path = f"runtime/goal-cheap/{payment}.json"
+        self.put(self.relay_path, record)
+        handle = {"version": 1, "relayUrl": route["relayUrl"], "input": request, "quote": quote, "creditNonce": "1",
+            "submission": {"from": grant["actor"]["wallet"], "nonce": 1, "txHash": HASH}}
+        calls = [{"stage": stage, "started": True, "unpaid": False, "route": route,
+            "response": {"text": "cached offline result", "chargedRaw": "10000", "promptTokens": 1, "completionTokens": 1}}
+            for stage in ("plan", "phase-0", "review", "revision")]
+        calls.append({"stage": "revision-review", "route": route, "messages": request["messages"], "max_completion_tokens": 1536,
+            "started": True, "unpaid": False, "handle": handle, "recovery": {"chargedRaw": "0", "refundedRaw": "10000", "resolved": True}})
+        result = {"phase": "Stopped", "terminal": True, "success": False, "chargedRaw": "40000", "refundedRaw": "10000", "reason": "HOSTED_GOAL_UNDELIVERED_REFUNDED"}
+        identity = {"goal": "offline original goal", "owner": grant["owner"], "wallet": grant["actor"]["wallet"], "agentId": ACTOR,
+            "chainAgentId": "73", "chainId": "42431", "strategy": "balanced", "reservedRaw": "120000"}
+        self.mission_path = f"runtime/hosted/agents/{ACTOR}/runs/{GOAL}/mission/session.json"
+        self.put(self.mission_path, {"version": 1, "input": identity, "route": route, "calls": calls,
+            "view": {"stage": "paused", "phases": [], "calls": []}, "result": result})
+        db["runs"] = [{"requestId": GOAL, "agentId": ACTOR, "action": "goal", "goal": identity["goal"], "status": "Failed", "reservedRaw": "120000",
+            "chargedRaw": "40000", "recoverable": False, "result": result, "updatedAt": iso(grant["issuedAtMs"] + 650000)}]
+        self.put("runtime/hosted/database/session.json", db)
+        budget_path = "operator/acceptance-20261016/transaction-budget.json"
+        budget = self.get(budget_path)
+        ledger_path = "operator/acceptance-20261016/transaction-budget-ledger.json"
+        self.put(ledger_path, {"version": 1, "budgetId": budget["id"], "digest": hashlib.sha256((self.root / budget_path).read_bytes()).hexdigest(), "reservations": []})
+        closure = {"version": 1, "id": self.get("operator/features.json")["id"], "closedAt": iso(grant["issuedAtMs"] + 700000),
+            "goalRequestId": GOAL, "parentRequestId": PARENT, "budgetId": budget["id"],
+            "budgetDigest": hashlib.sha256((self.root / budget_path).read_bytes()).hexdigest(),
+            "ledgerSha256": hashlib.sha256((self.root / ledger_path).read_bytes()).hexdigest(),
+            "boundedAdmissionsSha256": hashlib.sha256((self.root / "operator/bounded-admissions/session.json").read_bytes()).hexdigest(), "outcome": "aborted-before-parent"}
+        self.reseal(closure)
+        hosted = self.get("runtime/hosted.json"); hosted["hosted"]["boundedGamesSealed"] = True; self.put("runtime/hosted.json", hosted)
+        return closure
+
     def public_origin_append_chain(self):
         journal = self.get("runtime/runtime-journal/session.json"); gateway = self.get("gateway/ready.json")
         migration = journal["migrations"][0]
@@ -436,6 +489,135 @@ class GuardTest(unittest.TestCase):
         self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID"); mirror.write_bytes(original)
         game = self.get(base + "/game/session.json"); game["phase"] = "Stopped"; game["turns"][0]["outcome"] = "OutcomeUnknown"; self.put(base + "/game/session.json", game)
         self.rejects(lambda: guard.require_quiescent(self.capture()), "STATE_GAME_INFLIGHT")
+
+    def test_aborted_before_parent_accepts_real_failed_goal_and_full_undispatched_refund(self):
+        self.abort_features()
+        snapshot = self.capture(); guard.require_quiescent(snapshot)
+        self.assertEqual(snapshot["hosted"]["runs"], 1)
+        self.assertFalse((self.root / f"runtime/hosted/agents/{ACTOR}/runs/{PARENT}").exists())
+        mission = self.get(self.mission_path)
+        self.assertEqual([c["stage"] for c in mission["calls"]], ["plan", "phase-0", "review", "revision", "revision-review"])
+        self.assertEqual(mission["result"]["chargedRaw"], "40000")
+        self.assertEqual(mission["result"]["refundedRaw"], "10000")
+
+    def test_aborted_seal_allows_later_settings_games_and_reward_history_without_reopening_admissions(self):
+        closure = self.abort_features()
+        db = self.get("runtime/hosted/database/session.json")
+        db["agents"][0].update(modelId="kimi-k3", strategy="aggressive", allowCredit=True)
+        db["sponsoredOwners"][db["boundedGames"]["grant"]["owner"]] += 1; db["sponsoredTotal"] += 1
+        db["runs"].append({"requestId": CHILD, "agentId": ACTOR, "action": "game", "rewardKind": "llm-credits", "status": "Succeeded",
+            "reservedRaw": "0", "chargedRaw": "0", "recoverable": False, "result": {"terminal": True, "success": True}, "updatedAt": "2026-10-15T00:00:00.000Z"})
+        self.put("runtime/hosted/database/session.json", db)
+        base = f"runtime/hosted/agents/{ACTOR}/runs/{CHILD}"
+        self.put(base + "/session.json", {"version": 1, "phase": "Succeeded", "result": {"terminal": True, "rewardRaw": "0"}})
+        self.put(base + "/game/session.json", {"version": 1, "phase": "Complete", "turns": []})
+        guard.require_quiescent(self.capture())
+        b = self.get("operator/bootstrap.json")
+        players = [{"agentId": "73", "wallet": db["agents"][0]["wallet"].lower()},
+            {"agentId": b["opponentBinding"]["agentId"], "wallet": b["opponentBinding"]["wallet"].lower()}]
+        reward = {"version": 1, "policy": {"version": 1, "model": "kimi-k2.6", "rewardTokens": 4096,
+            "maxPromptBytes": 8192, "promptFramingReserveTokens": 256, "maxCompletionTokens": 512, "upstreamTimeoutMs": 55000,
+            "maxResponseBytes": 1048576, "inferenceRetries": 0}, "accounts": sorted(players, key=lambda a: a["agentId"]),
+            "grants": [{"grantId": CHILD, "matchId": "hosted-" + CHILD, "replayDigest": "a" * 64, "players": players, "winners": [0],
+                "model": "kimi-k2.6", "allocations": [4096, 0], "createdAt": "2026-10-15T00:00:00.000Z"}], "redemptions": []}
+        reward_path = f"runtime/credits/{ACTOR}/session.json"
+        self.put(reward_path, reward); guard.require_quiescent(self.capture())
+        original_db = copy.deepcopy(db)
+        for mutate in (lambda a: a.update(owner="0x" + "9" * 40), lambda a: a.update(wallet="0x" + "9" * 40), lambda a: a["binding"].update(agentId="74")):
+            changed = copy.deepcopy(db); mutate(changed["agents"][0]); self.put("runtime/hosted/database/session.json", changed)
+            self.rejects(self.capture, "STATE_BOUNDED_GAMES_INVALID")
+        self.put("runtime/hosted/database/session.json", original_db)
+        for mutate in (lambda r: r["grants"][0].update(createdAt=closure["closedAt"]),
+                       lambda r: r["grants"][0].update(grantId=PARENT), lambda r: r["grants"][0].update(matchId="hosted-" + PARENT),
+                       lambda r: r["grants"][0].update(parentRequestId=PARENT), lambda r: r["accounts"][0].update(agentId="99")):
+            changed = copy.deepcopy(reward); mutate(changed); self.put(reward_path, changed); self.rejects(self.capture)
+        self.put(reward_path, reward)
+        redemption = {"redemptionId": CHILD + ":round:0", "identity": players[0], "model": "kimi-k2.6", "requestDigest": "a" * 64,
+            "reservedTokens": 100, "status": "Completed", "createdAt": "2026-10-15T00:00:01.000Z", "updatedAt": "2026-10-15T00:00:02.000Z"}
+        reward["redemptions"] = [redemption]; self.put(reward_path, reward); guard.require_quiescent(self.capture())
+        for values in ({"createdAt": closure["closedAt"]}, {"redemptionId": PARENT + ":round:0"}, {"status": "OutcomeUnknown"}):
+            changed = copy.deepcopy(reward); changed["redemptions"][0].update(values); self.put(reward_path, changed)
+            self.rejects(lambda: guard.require_quiescent(self.capture()))
+
+    def test_aborted_seal_requires_exact_outcome_and_failed_terminal_goal_identity(self):
+        closure = self.abort_features()
+        for outcome in (None, "completed", "aborted", True):
+            changed = copy.deepcopy(closure); changed["outcome"] = outcome; self.reseal(changed)
+            self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID")
+        changed = copy.deepcopy(closure); changed.pop("outcome"); self.reseal(changed)
+        self.rejects(self.capture); self.reseal(closure)
+        db = self.get("runtime/hosted/database/session.json")
+        for mutate in (lambda r: r.update(status="Succeeded"), lambda r: r.update(status="Paused"), lambda r: r.update(recoverable=True),
+                       lambda r: r["result"].update(terminal=False), lambda r: r["result"].update(success=True),
+                       lambda r: r.update(action="autonomous"), lambda r: r.update(agentId=CHILD)):
+            changed = copy.deepcopy(db); mutate(changed["runs"][0]); self.put("runtime/hosted/database/session.json", changed)
+            self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID")
+        self.put("runtime/hosted/database/session.json", db)
+        original = self.get(self.mission_path)
+        for key, value in (("chainAgentId", "9"), ("chainId", "31337"), ("owner", ADDRESS), ("wallet", ADDRESS), ("agentId", CHILD), ("goal", "another goal")):
+            changed = copy.deepcopy(original); changed["input"][key] = value; self.put(self.mission_path, changed)
+            self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID")
+
+    def test_aborted_seal_rejects_parent_creation_paths_children_and_any_admission(self):
+        closure = self.abort_features()
+        db = self.get("runtime/hosted/database/session.json")
+        parent_run = {"requestId": PARENT, "agentId": ACTOR, "action": "autonomous", "status": "Failed", "reservedRaw": "120000",
+            "chargedRaw": "0", "recoverable": False, "result": {"terminal": True, "success": False}}
+        for mutate in (lambda d: d["runs"].append(parent_run), lambda d: d["creations"].append({"owner": ADDRESS, "agentId": ACTOR, "requestId": PARENT, "digest": "a" * 64}),
+                       lambda d: d.update(autonomousGameAdmissions={CHILD: {"parentRequestId": PARENT, "agentId": ACTOR, "rewardKind": "llm-credits"}}),
+                       lambda d: d.update(autonomousGameAdmissions={PARENT: {"parentRequestId": CHILD, "agentId": ACTOR, "rewardKind": "llm-credits"}})):
+            changed = copy.deepcopy(db); mutate(changed); self.put("runtime/hosted/database/session.json", changed)
+            self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID")
+        self.put("runtime/hosted/database/session.json", db)
+        parent_path = self.root / f"runtime/hosted/agents/{ACTOR}/runs/{PARENT}"
+        parent_path.mkdir(); self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID"); parent_path.rmdir()
+        self.put(f"runtime/orphan/children/{CHILD}/session.json", {"parentRequestId": PARENT, "result": {"terminal": True}})
+        self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID"); shutil.rmtree(self.root / "runtime/orphan")
+        changed = copy.deepcopy(db)
+        changed["boundedGames"]["admissions"] = [{"parentRequestId": PARENT, "childRequestId": CHILD, "agentId": ACTOR, "ordinal": 1,
+            "admittedAt": closure["closedAt"], "rewardKind": "llm-credits"}]
+        self.put("runtime/hosted/database/session.json", changed); self.put("operator/bounded-admissions/session.json", changed["boundedGames"])
+        closure["boundedAdmissionsSha256"] = hashlib.sha256((self.root / "operator/bounded-admissions/session.json").read_bytes()).hexdigest(); self.reseal(closure)
+        self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID")
+
+    def test_aborted_seal_keeps_budget_mirror_and_all_unknown_or_pending_gateways_protected(self):
+        self.abort_features()
+        for name in ("operator/acceptance-20261016/transaction-budget-ledger.json", "operator/bounded-admissions/session.json"):
+            path = self.root / name; raw = path.read_bytes(); path.write_bytes(raw + b"\n")
+            self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID"); path.write_bytes(raw)
+        self.write("gateway/attempts.jsonl", json.dumps({"attempt": 1, "phase": "DispatchIntent", "at": "2026-10-16T00:00:00.000Z",
+            "model": "kimi-k2.6", "requestDigest": "a" * 64, "maxCompletionTokens": 1536}) + "\n")
+        self.rejects(lambda: guard.require_quiescent(self.capture()), "STATE_GATEWAY_INFLIGHT")
+        self.write("gateway/attempts.jsonl", "")
+        db = self.get("runtime/hosted/database/session.json")
+        original = copy.deepcopy(db)
+        db["runs"].append({"requestId": CHILD, "agentId": ACTOR, "action": "goal", "status": "Paused", "reservedRaw": "120000",
+            "chargedRaw": "10000", "recoverable": True, "result": {"terminal": False}})
+        self.put("runtime/hosted/database/session.json", db)
+        self.rejects(lambda: guard.require_quiescent(self.capture()), "STATE_HOSTED_INFLIGHT")
+        self.put("runtime/hosted/database/session.json", original)
+        self.external_relay("Processing", "Unknown")
+        self.rejects(lambda: guard.require_quiescent(self.capture()))
+
+    def test_undispatched_refund_mission_requires_full_original_handle_and_explicit_no_dispatch(self):
+        self.abort_features()
+        original_record, original_mission = self.get(self.relay_path), self.get(self.mission_path)
+        for mutate in (lambda r: r.pop("upstreamAttempts"), lambda r: r.update(upstreamAttempts=[{"upstream": "cheap", "model": "cheap/kimi-k2.6", "startedAt": 1, "state": "Unknown"}]),
+                       lambda r: r.update(upstreamAttempts=[{"upstream": "cheap", "model": "cheap/kimi-k2.6", "startedAt": 1, "state": "Rejected"}]),
+                       lambda r: r.update(result={}), lambda r: r["refunds"][0].update(state="Prepared"),
+                       lambda r: r["refunds"][0].update(amount="9999"), lambda r: r["refunds"][0]["transaction"].update(rawTransaction="0x02"),
+                       lambda r: r.update(state="Paid")):
+            changed = copy.deepcopy(original_record); mutate(changed); self.put(self.relay_path, changed)
+            self.rejects(lambda: guard.require_quiescent(self.capture()))
+        self.put(self.relay_path, original_record)
+        for mutate in (lambda c: c["recovery"].update(chargedRaw="10000"), lambda c: c["recovery"].update(refundedRaw="9999"),
+                       lambda c: c["recovery"].update(resolved=False), lambda c: c["handle"]["submission"].update(txHash="0x" + "9" * 64),
+                       lambda c: c["handle"]["submission"].update(nonce=-1), lambda c: c["handle"]["submission"].update(rawTransaction="0x02"),
+                       lambda c: c["handle"]["submission"].update(**{"from": ADDRESS}), lambda c: c["handle"].update(relayUrl="http://127.0.0.1:9999/v1/chat"),
+                       lambda c: c["route"].update(provider="0x" + "9" * 40), lambda c: c["handle"]["quote"].update(price="9999"),
+                       lambda c: c.update(max_completion_tokens=1024), lambda c: c.update(inference={})):
+            changed = copy.deepcopy(original_mission); mutate(changed["calls"][-1]); self.put(self.mission_path, changed)
+            self.rejects(lambda: guard.require_quiescent(self.capture()), "STATE_MISSION_INFLIGHT")
 
     def test_explicit_features_accept_exact_catalog_without_changing_legacy_terminal_state(self):
         self.enable_features()

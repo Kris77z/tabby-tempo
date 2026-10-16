@@ -3,7 +3,6 @@ import test from "node:test";
 import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { setTimeout as delay } from "node:timers/promises";
 import { SessionStore } from "../../../packages/pi-loop/src/session.js";
 import { createHand, replayHand, type PlayerView } from "../src/holdem/index.js";
 import { decisionRequest, HOLDEM_LIVE_LIMITS, parseLegalDecision, publicLiveHand, runLiveHand, type LiveHandSession } from "../src/holdem/live.js";
@@ -78,7 +77,7 @@ test("HTTP error, unknown delivery and invalid model response stop with no fold,
   }
 });
 
-test("twenty requests are a hard cap and deadline expiration applies no late response", async () => {
+test("twenty requests are a hard cap and deadline expiration applies no late response", async t => {
   const directory = await mkdtemp(join(tmpdir(), "agentfuel-holdem-live-cap-")); let calls = 0;
   try {
     const session = await runLiveHand(directory, config(), { dispatch: async request => {
@@ -89,12 +88,27 @@ test("twenty requests are a hard cap and deadline expiration applies no late res
     assert.equal(session.phase, "Stopped"); assert.equal(session.reason, "HOLDEM_CALL_LIMIT_REACHED"); assert.equal(calls, 20);
     assert.equal(session.replay.actions.length, 20); assert.equal(publicLiveHand(session).result, null);
   } finally { await rm(directory, { recursive: true, force: true }); }
-  const lateDirectory = await mkdtemp(join(tmpdir(), "agentfuel-holdem-live-late-"));
+  let logicalNow = Date.now(); t.mock.method(Date, "now", () => logicalNow);
+  const lateDirectory = await mkdtemp(join(tmpdir(), "agentfuel-holdem-live-late-")), lateConfig = config(80); let lateCalls = 0;
   try {
-    const session = await runLiveHand(lateDirectory, config(80), { dispatch: async () => { await delay(100); return response('{"type":"call"}'); } });
-    assert.equal(session.phase, "Stopped"); assert.equal(session.reason, "HOLDEM_DEADLINE_REACHED"); assert.equal(session.turns[0].outcome, "DeadlineExpired");
+    const session = await runLiveHand(lateDirectory, lateConfig, { dispatch: async (_request, signal) => {
+      lateCalls++; assert.equal(signal.aborted, false); assert.equal(logicalNow, lateConfig.startedAtMs);
+      // Advance only after durable intent has reached the dispatch boundary.
+      logicalNow = lateConfig.deadlineMs + 1; return response('{"type":"call"}');
+    } });
+    assert.equal(session.phase, "Stopped"); assert.equal(session.reason, "HOLDEM_DEADLINE_REACHED"); assert.equal(lateCalls, 1); assert.equal(session.turns.length, 1);
+    assert.equal(session.turns[0].outcome, "DeadlineExpired"); assert.equal(session.turns[0].response?.httpStatus, 200);
     assert.deepEqual(session.replay.actions, []); assert.equal(publicLiveHand(session).result, null);
+    const replayed = await runLiveHand(lateDirectory, lateConfig, { dispatch: async () => { lateCalls++; throw Error("NO_LATE_REDISPATCH"); } });
+    assert.deepEqual(replayed, session); assert.equal(lateCalls, 1);
   } finally { await rm(lateDirectory, { recursive: true, force: true }); }
+  const expiredDirectory = await mkdtemp(join(tmpdir(), "agentfuel-holdem-live-expired-")), expiredConfig = config(80); let expiredCalls = 0;
+  logicalNow = expiredConfig.deadlineMs + 1;
+  try {
+    const session = await runLiveHand(expiredDirectory, expiredConfig, { dispatch: async () => { expiredCalls++; throw Error("NO_EXPIRED_DISPATCH"); } });
+    assert.equal(session.phase, "Stopped"); assert.equal(session.reason, "HOLDEM_DEADLINE_REACHED"); assert.equal(expiredCalls, 0); assert.deepEqual(session.turns, []);
+    assert.deepEqual(session.replay.actions, []); assert.equal(publicLiveHand(session).result, null);
+  } finally { await rm(expiredDirectory, { recursive: true, force: true }); }
 });
 
 test("persisted unknown dispatch stops offline before any new inference", async () => {

@@ -176,3 +176,96 @@ test("seal and sealed verification reject missing recovery flags or a status-onl
   }
   await f.put(f.database, c.state); assert.equal((await sealTempoHostedFeatures(f.directory, f.bootstrapFile)).sealed, true);
 });
+
+async function abortedClosureFixture(f: Awaited<ReturnType<typeof fixture>>) {
+  const c = await closureFixture(f), state = structuredClone(c.state), grant = state.boundedGames.grant;
+  state.runs = [{ ...state.runs[0], goal: "synthetic interrupted goal", updatedAt: new Date(Date.now() - 1000).toISOString(), result: { terminal: true, success: false, chargedRaw: "0" } }];
+  state.autonomousGameAdmissions = {};
+  await f.put(f.database, state);
+  const missionFile = join(f.directory, "hosted/agents", grant.actor.hostedAgentId, "runs", state.runs[0].requestId, "mission/session.json");
+  const mission = { version: 1, input: { goal: state.runs[0].goal, owner: grant.owner, wallet: grant.actor.wallet, agentId: grant.actor.hostedAgentId, chainAgentId: "73", chainId: "42431" },
+    view: { stage: "paused", phases: [], calls: [] }, calls: [], result: state.runs[0].result };
+  await f.put(missionFile, mission);
+  const closure = { ...c.closure, closedAt: new Date(Date.now() - 100).toISOString(), outcome: "aborted-before-parent" as const };
+  await f.put(f.paths.closureFile, closure);
+  return { ...c, state, closure, mission, missionFile, grant };
+}
+
+test("abort-before-parent seals a genuinely failed original goal without fabricating its parent and releases only this window", async t => {
+  const f = await fixture(t), c = await abortedClosureFixture(f);
+  const historical = await readFile(f.snapshot), taskCatalog = await readFile(f.bootstrapFile), budget = await readFile(f.paths.transactionBudgetFile), grant = await readFile(f.paths.boundedGamesFile);
+  assert.equal((await sealTempoHostedFeatures(f.directory, f.bootstrapFile)).sealed, true);
+  const record = JSON.parse(await readFile(f.journalFile, "utf8")).features;
+  assert.equal(tempoFeatureBudgetFile(record, undefined), undefined);
+  assert.equal((await verifyTempoHostedFeatures(record, f.directory, f.bootstrap))!.seal!.file, f.paths.closureFile);
+  assert.deepEqual(await readFile(f.snapshot), historical); assert.deepEqual(await readFile(f.bootstrapFile), taskCatalog);
+  assert.deepEqual(await readFile(f.paths.transactionBudgetFile), budget); assert.deepEqual(await readFile(f.paths.boundedGamesFile), grant);
+  assert.equal(JSON.parse(await readFile(f.database, "utf8")).runs.length, 1);
+  await assert.rejects(lstat(join(f.directory, "hosted/agents", c.grant.actor.hostedAgentId, "runs", c.closure.parentRequestId)), { code: "ENOENT" });
+});
+
+test("abort rejects a parent, admission, creation or nested child trace even when the visible runs claim terminal", async t => {
+  const f = await fixture(t), c = await abortedClosureFixture(f);
+  const parent = { requestId: c.closure.parentRequestId, agentId: c.grant.actor.hostedAgentId, action: "autonomous", status: "Failed", recoverable: false, result: { terminal: true, success: false }, updatedAt: c.state.runs[0].updatedAt };
+  for (const change of [{ runs: [...c.state.runs, parent] }, { creations: [{ requestId: parent.requestId }] },
+    { autonomousGameAdmissions: { [randomUUID()]: { parentRequestId: parent.requestId } } },
+    { runs: [{ ...c.state.runs[0], result: { ...c.state.runs[0].result, nested: { childId: parent.requestId } } }] }]) {
+    await f.put(f.database, { ...c.state, ...change });
+    await assert.rejects(sealTempoHostedFeatures(f.directory, f.bootstrapFile), /TEMPO_FEATURES_BINDING_INVALID/);
+  }
+  await f.put(f.database, c.state);
+  const nested = join(f.directory, "hosted/agents/unrelated/runs/other/autonomy-host/session.json");
+  await f.put(nested, { children: { [parent.requestId]: {} } });
+  await assert.rejects(sealTempoHostedFeatures(f.directory, f.bootstrapFile), /TEMPO_FEATURES_BINDING_INVALID/);
+  await rm(nested);
+  const path = join(f.directory, "unrelated", parent.requestId); await mkdir(path, { recursive: true });
+  await assert.rejects(sealTempoHostedFeatures(f.directory, f.bootstrapFile), /TEMPO_FEATURES_BINDING_INVALID/); await rm(path, { recursive: true });
+  const changed = structuredClone(c.state); changed.boundedGames.admissions.push({ parentRequestId: parent.requestId, childRequestId: randomUUID(), agentId: c.grant.actor.hostedAgentId, ordinal: 1, admittedAt: c.closure.closedAt, rewardKind: "llm-credits" });
+  await f.put(f.database, changed); await f.put(c.mirror, changed.boundedGames);
+  await f.put(f.paths.closureFile, { ...c.closure, boundedAdmissionsSha256: createHash("sha256").update(await readFile(c.mirror)).digest("hex") });
+  await assert.rejects(sealTempoHostedFeatures(f.directory, f.bootstrapFile), /TEMPO_FEATURES_BINDING_INVALID/);
+});
+
+test("abort requires one failed nonrecoverable goal and its original terminal mission with no outstanding call", async t => {
+  const f = await fixture(t), c = await abortedClosureFixture(f);
+  for (const change of [{ status: "Succeeded" }, { result: { terminal: true, success: true } }, { agentId: randomUUID() }]) {
+    await f.put(f.database, { ...c.state, runs: [{ ...c.state.runs[0], ...change }] });
+    await assert.rejects(sealTempoHostedFeatures(f.directory, f.bootstrapFile), /TEMPO_FEATURES_BINDING_INVALID/);
+  }
+  await f.put(f.database, { ...c.state, runs: [...c.state.runs, c.state.runs[0]] });
+  await assert.rejects(sealTempoHostedFeatures(f.directory, f.bootstrapFile), /TEMPO_FEATURES_BINDING_INVALID/);
+  await f.put(f.database, c.state);
+  for (const mission of [{ ...c.mission, result: { terminal: false, success: false } }, { ...c.mission, input: { ...c.mission.input, owner: Wallet.createRandom().address } },
+    { ...c.mission, calls: [{ started: true, recovery: { resolved: false } }] }]) {
+    await f.put(c.missionFile, mission); await assert.rejects(sealTempoHostedFeatures(f.directory, f.bootstrapFile), /TEMPO_FEATURES_BINDING_INVALID/);
+  }
+});
+
+test("initial abort seal rejects moved sponsor counters or any reward directory rather than erasing them", async t => {
+  const f = await fixture(t), c = await abortedClosureFixture(f);
+  for (const change of [{ sponsoredTotal: 8 }, { sponsoredOwners: { [c.grant.owner]: 8 } }]) {
+    await f.put(f.database, { ...c.state, ...change }); await assert.rejects(sealTempoHostedFeatures(f.directory, f.bootstrapFile), /TEMPO_FEATURES_BINDING_INVALID/);
+  }
+  await f.put(f.database, c.state);
+  const credits = join(f.directory, "credits", c.grant.actor.hostedAgentId); await mkdir(credits, { recursive: true });
+  await assert.rejects(sealTempoHostedFeatures(f.directory, f.bootstrapFile), /TEMPO_FEATURES_BINDING_INVALID/);
+  assert.equal((await lstat(credits)).isDirectory(), true);
+});
+
+test("sealed abort allows later ordinary settings and rewards, but rejects missing, old, foreign or parent-linked credit evidence", async t => {
+  const f = await fixture(t), c = await abortedClosureFixture(f); await sealTempoHostedFeatures(f.directory, f.bootstrapFile);
+  const record = JSON.parse(await readFile(f.journalFile, "utf8")).features;
+  const changed = structuredClone(c.state); Object.assign(changed.agents[0], { modelId: "kimi-k3", strategy: "aggressive", allowCredit: true }); changed.sponsoredTotal++; changed.sponsoredOwners[c.grant.owner]++;
+  await f.put(f.database, changed); assert.ok(await verifyTempoHostedFeatures(record, f.directory, f.bootstrap));
+  const credits = join(f.directory, "credits", c.grant.actor.hostedAgentId); await mkdir(credits, { recursive: true });
+  await assert.rejects(verifyTempoHostedFeatures(record, f.directory, f.bootstrap), /TEMPO_FEATURES_BINDING_INVALID/);
+  const createdAt = new Date().toISOString();
+  const later = { version: 1, accounts: [{ agentId: "73", wallet: c.grant.actor.wallet.toLowerCase() }, { agentId: "43", wallet: f.bootstrap.opponentBinding.wallet.toLowerCase() }],
+    grants: [{ grantId: randomUUID(), createdAt }], redemptions: [{ redemptionId: "later-task:round:0", createdAt }] };
+  await f.put(join(credits, "session.json"), later); assert.ok(await verifyTempoHostedFeatures(record, f.directory, f.bootstrap));
+  for (const bad of [{ ...later, accounts: [] }, { ...later, grants: [{ ...later.grants[0], createdAt: c.closure.closedAt }] },
+    { ...later, grants: [{ ...later.grants[0], createdAt: new Date(Date.now() + 60000).toISOString() }] },
+    { ...later, redemptions: [{ redemptionId: `later:${c.closure.parentRequestId}:round:0`, createdAt }] }]) {
+    await f.put(join(credits, "session.json"), bad); await assert.rejects(verifyTempoHostedFeatures(record, f.directory, f.bootstrap), /TEMPO_FEATURES_BINDING_INVALID/);
+  }
+});
