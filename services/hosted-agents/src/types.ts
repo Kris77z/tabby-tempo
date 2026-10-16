@@ -70,6 +70,8 @@ export interface HostedExecutor {
 export interface HostedCatalogModel { id: string; label: string }
 export interface HostedConfig {
   testSponsorshipFile?: string;
+  boundedGamesFile?: string;
+  boundedGamesSealed?: true;
   directory: string; origin: string; chainId: "31337" | "10143" | "42431"; models: HostedCatalogModel[];
   maxAgentsPerOwner: number; maxTotalBudgetRaw: string; maxPerRunBudgetRaw: string;
 }

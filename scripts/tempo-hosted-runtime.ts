@@ -1,10 +1,12 @@
 import { loadTestSponsorship, type TestSponsorshipState } from "../services/hosted-agents/src/test-sponsorship.js";
+import { assertBoundedGameActor, loadBoundedGameAuthorization } from "../services/hosted-agents/src/bounded-game-authorization.js";
 import type { HostedGoalConfig } from "../services/hosted-agents/src/goals/executor.js";
 import { once } from "node:events";
 import { createHash, randomBytes } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
 import { createConnection } from "node:net";
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, lstat } from "node:fs/promises";
+import { isDeepStrictEqual } from "node:util";
 import { isAbsolute, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { Contract, Wallet, getAddress, ZeroAddress } from "ethers";
@@ -31,6 +33,10 @@ import { TEMPO_IDENTITY, TEMPO_REPUTATION, TEMPO_PATH_USD, tempoPreflight } from
 import { checkVerifierKey } from "./demo-monad.js";
 import { chainRpcProvider, defaultUpstreamTransport, readRpcUrlFile, type RpcTransport } from "./demo-rpc.js";
 import { prepareArenaIpc, backupAndRemoveArenaIpc } from "./demo-arena-state.js";
+import { startExternalSpecialistStack } from "./external-specialist-stack.js";
+import { taskPrivateFile } from "../packages/pi-loop/src/task-runner/config.js";
+import { readTempoHostedFeatures, tempoFeaturePaths, tempoFeatureTaskDomain, tempoFeatureAutonomy, tempoFeatureBudgetFile, verifyTempoHostedFeatures, verifyTempoFeatureSeal, type TempoHostedFeaturesJournal } from "./tempo-hosted-features.js";
+import { validateTempoTransactionBudget } from "./tempo-transaction-budget.js";
 
 /** Operator-prepared, existing deployment and task catalog. This script never bootstraps chain state. */
 export interface TempoHostedBootstrap {
@@ -44,7 +50,7 @@ export interface TempoHostedBootstrap {
   gatewayReadyFile: string; vendorKeyFile: string; tasks: WorkflowConfig["tasks"];
   maxFeePerGas: string; frontendOrigin: string; hostedPort: number;
 }
-type PortName = "underwriter" | "arena" | "fixed" | "allowance" | "planner" | "goalCheap" | "goalStrong";
+type PortName = "underwriter" | "arena" | "fixed" | "allowance" | "planner" | "goalCheap" | "goalStrong" | `external-${string}`;
 interface CatalogMigration {
   id: string; status: "Intent" | "Applied"; createdAt: string; appliedAt?: string;
   beforeBinding: string; afterBinding: string; before: TempoHostedBootstrap; after: TempoHostedBootstrap;
@@ -55,6 +61,7 @@ interface RuntimeJournal {
   originalBootstrap?: TempoHostedBootstrap; originalCatalog?: WorkflowConfig["tasks"];
   testSponsorship?: RuntimeSponsorship;
   effectiveBinding?: string; migrations?: CatalogMigration[];
+  features?: TempoHostedFeaturesJournal;
   publicOriginMigration?: { version: 1; id: string; fromOrigin: string; toOrigin: string; previousBinding: string; publicBinding: string; auditFile: string };
 }
 interface GatewayReady { url: string; endpoint: string; keyFile: string; models: GatewayModel[] }
@@ -228,6 +235,83 @@ async function portListening(port: number) {
   });
 }
 
+async function assertRuntimeStopped(state: RuntimeJournal, hostedPort: number) {
+  for (const port of [hostedPort, ...Object.values(state.ports).filter((port): port is number => typeof port === "number")]) if (await portListening(port)) fail("TEMPO_RUNTIME_STOP_REQUIRED");
+  try {
+    const pid = Number((await readFile(join(state.ipcDirectory, "settler.owner"), "utf8")).trim());
+    if (!Number.isSafeInteger(pid) || pid < 1) fail("TEMPO_SETTLER_OWNER_INVALID");
+    try { process.kill(pid, 0); fail("TEMPO_RUNTIME_STOP_REQUIRED"); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error; }
+  } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+}
+
+/** Explicit stopped migration only. No service launch, RPC, model dispatch or
+ * chain writes. The existing append-tasks migration must already be applied. */
+export async function enableTempoHostedFeatures(directory: string, bootstrapFile: string, featuresFile: string) {
+  directory = absolute(directory); bootstrapFile = absolute(bootstrapFile); featuresFile = absolute(featuresFile);
+  const { bootstrap: b, gateway, catalog } = await loadTempoHostedBootstrap(bootstrapFile);
+  const desired = await readTempoHostedFeatures(featuresFile, directory, b), paths = tempoFeaturePaths(directory);
+  const store = new SessionStore<RuntimeJournal>(join(directory, "runtime-journal")); await store.start(true);
+  const hostedLock = new SessionStore<any>(join(directory, "hosted/database")); let hostedHeld = false;
+  try {
+    const journal = await store.read() ?? fail("TEMPO_RUNTIME_JOURNAL_REQUIRED");
+    if ((journal.effectiveBinding ?? journal.binding) !== runtimeBinding(b, gateway, catalog) || journal.migrations?.some(m => m.status !== "Applied")) fail("TEMPO_RUNTIME_BINDING_CHANGED");
+    await assertRuntimeStopped(journal, b.hostedPort);
+    await hostedLock.start(true); hostedHeld = true;
+    const hosted = await hostedLock.read();
+    if (!hosted || !Array.isArray(hosted.runs) || hosted.runs.some((run: any) => !["Succeeded", "Failed"].includes(run.status) || run.recoverable !== false || run.result?.terminal !== true)
+      || !Array.isArray(hosted.agents) || hosted.agents.some((agent: any) => agent.activeRequestId || agent.reservedRaw !== "0")) fail("TEMPO_TERMINAL_RUNS_REQUIRED");
+    if (journal.features) {
+      const existing = await verifyTempoHostedFeatures(journal.features, directory, b);
+      if (!isDeepStrictEqual(existing!.config, desired.config)) fail("TEMPO_FEATURES_BINDING_INVALID");
+      return { enabled: true, cached: true, featureId: existing!.config.id, taskIds: existing!.config.taskIds, chainWrites: 0 };
+    }
+    tempoFeatureTaskDomain(desired.config, b, journal);
+    if (desired.config.taskTemplateDeadlineMs <= Date.now() + 60000) fail("TEMPO_FEATURES_TASK_DEADLINE_REQUIRED");
+    const authorization = await loadBoundedGameAuthorization(desired.config.boundedGamesFile, { chainId: b.chainId, origin: b.frontendOrigin });
+    const grant = authorization.grant, actor = hosted.agents.find((agent: any) => agent.id === grant.actor.hostedAgentId);
+    if (!actor || hosted.boundedGames || grant.expiresAtMs <= Date.now() || grant.id === hosted.testSponsorship?.grant.id
+      || (hosted.sponsoredOwners[grant.owner] ?? 0) !== grant.baselineOwnerGames || hosted.sponsoredTotal !== grant.baselineTotalGames
+      || hosted.runs.some((run: any) => run.requestId === grant.parentRequestId) || hosted.creations.some((creation: any) => creation.requestId === grant.parentRequestId)) fail("TEMPO_FEATURES_GAME_AUTHORIZATION_INVALID");
+    assertBoundedGameActor(grant, actor);
+    validateTempoTransactionBudget(JSON.parse(await taskPrivateFile(desired.config.transactionBudgetFile)));
+    const budgetDirectory = await lstat(resolve(desired.config.transactionBudgetFile, ".."));
+    if (!budgetDirectory.isDirectory() || budgetDirectory.isSymbolicLink() || budgetDirectory.mode & 0o077 || budgetDirectory.uid !== process.getuid?.()) fail("TEMPO_FEATURES_BUDGET_DIRECTORY_INVALID");
+    try { await lstat(paths.externalDirectory); fail("TEMPO_FEATURES_EXTERNAL_JOURNAL_EXISTS"); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+    await atomicJson(paths.file, desired.config);
+    const frozen = await readTempoHostedFeatures(paths.file, directory, b);
+    journal.features = { version: 1, file: paths.file, ...frozen };
+    await store.write(journal);
+    return { enabled: true, cached: false, featureId: frozen.config.id, taskIds: frozen.config.taskIds, chainWrites: 0 };
+  } finally { if (hostedHeld) await hostedLock.close(); await store.close(); }
+}
+
+/** Explicit stopped exit from the acceptance budget. The operator supplies the
+ * closure file; this operation only verifies it and freezes its raw digest. */
+export async function sealTempoHostedFeatures(directory: string, bootstrapFile: string, closureFile = tempoFeaturePaths(directory).closureFile) {
+  directory = absolute(directory); bootstrapFile = absolute(bootstrapFile); closureFile = absolute(closureFile);
+  if (closureFile !== tempoFeaturePaths(directory).closureFile) fail("TEMPO_FEATURES_BINDING_INVALID");
+  const { bootstrap: b, gateway, catalog } = await loadTempoHostedBootstrap(bootstrapFile);
+  const store = new SessionStore<RuntimeJournal>(join(directory, "runtime-journal")); await store.start(true);
+  const hostedLock = new SessionStore<any>(join(directory, "hosted/database")); let hostedHeld = false;
+  try {
+    const journal = await store.read() ?? fail("TEMPO_RUNTIME_JOURNAL_REQUIRED");
+    if ((journal.effectiveBinding ?? journal.binding) !== runtimeBinding(b, gateway, catalog) || journal.migrations?.some(m => m.status !== "Applied")) fail("TEMPO_RUNTIME_BINDING_CHANGED");
+    await assertRuntimeStopped(journal, b.hostedPort); await hostedLock.start(true); hostedHeld = true;
+    const hosted = await hostedLock.read();
+    if (!hosted || !Array.isArray(hosted.runs) || hosted.runs.some((run: any) => !["Succeeded", "Failed"].includes(run.status) || run.recoverable !== false || run.result?.terminal !== true)
+      || hosted.agents.some((agent: any) => agent.activeRequestId || agent.reservedRaw !== "0")) fail("TEMPO_TERMINAL_RUNS_REQUIRED");
+    const record = await verifyTempoHostedFeatures(journal.features, directory, b) ?? fail("TEMPO_FEATURES_REQUIRED");
+    if (record.seal) return { sealed: true, cached: true, featureId: record.config.id, chainWrites: 0 };
+    const raw = await taskPrivateFile(closureFile);
+    record.seal = { version: 1, file: closureFile, digest: createHash("sha256").update(raw).digest("hex") };
+    await verifyTempoFeatureSeal(record, directory, true);
+    journal.features = record; await store.write(journal);
+    return { sealed: true, cached: false, featureId: record.config.id, chainWrites: 0 };
+  } finally { if (hostedHeld) await hostedLock.close(); await store.close(); }
+}
+
 /** Explicit offline configuration migration. No chain writes, HTTP business commands or model calls. */
 export async function appendTempoHostedTasks(directory: string, bootstrapFile: string, additionalFile: string) {
   directory = absolute(directory); bootstrapFile = absolute(bootstrapFile); additionalFile = absolute(additionalFile);
@@ -237,7 +321,7 @@ export async function appendTempoHostedTasks(directory: string, bootstrapFile: s
   let connection: Awaited<ReturnType<typeof tempoProvider>> | undefined;
   try {
     const state = await store.read() ?? fail("TEMPO_RUNTIME_JOURNAL_REQUIRED");
-    for (const port of [state.originalBootstrap?.hostedPort ?? 8794, ...Object.values(state.ports)]) if (await portListening(port)) fail("TEMPO_RUNTIME_STOP_REQUIRED");
+    for (const port of [state.originalBootstrap?.hostedPort ?? 8794, ...Object.values(state.ports).filter((port): port is number => typeof port === "number")]) if (await portListening(port)) fail("TEMPO_RUNTIME_STOP_REQUIRED");
     try {
       const pid = Number((await readFile(join(state.ipcDirectory, "settler.owner"), "utf8")).trim());
       if (!Number.isSafeInteger(pid) || pid < 1) fail("TEMPO_SETTLER_OWNER_INVALID");
@@ -297,15 +381,19 @@ export async function startTempoHostedRuntime(directory: string, bootstrapFile: 
   const store = new SessionStore<RuntimeJournal>(join(directory, "runtime-journal")); await store.start(recover);
   let connection: Awaited<ReturnType<typeof tempoProvider>> | undefined, hosted: ChildProcess | undefined, settler: ChildProcess | undefined;
   let arena: ReturnType<typeof createArenaHttpServer> | undefined, underwriter: Underwriter | undefined;
+  let external: Awaited<ReturnType<typeof startExternalSpecialistStack>> | undefined;
+  const previousBudget = process.env.TEMPO_TRANSACTION_BUDGET_FILE;
   const servers: ReturnType<typeof relayHttp>[] = [], relays: Relay[] = [];
   let state: RuntimeJournal | undefined, reload: (() => void) | undefined, closing: Promise<void> | undefined, ownsIpc = false;
   const close = () => closing ??= (async () => {
     if (reload) process.off("SIGUSR2", reload);
     await stopChild(hosted);
+    await external?.close();
     for (const server of servers) if (server.listening) await new Promise<void>(done => { server.close(() => done()); server.closeIdleConnections(); });
     await arena?.close(); await stopChild(settler);
     if (ownsIpc && state) await backupAndRemoveArenaIpc(state.ipcDirectory, join(directory, "settlement-journal.json"));
     for (const relay of relays) relay.close(); underwriter?.close(); connection?.close(); await store.close();
+    if (previousBudget === undefined) delete process.env.TEMPO_TRANSACTION_BUDGET_FILE; else process.env.TEMPO_TRANSACTION_BUDGET_FILE = previousBudget;
   })();
   try {
     // Public dashboard selection may change after enrolling hosted Agents; it does
@@ -328,6 +416,12 @@ export async function startTempoHostedRuntime(directory: string, bootstrapFile: 
       await store.write(state);
     }
     const journal = state;
+    const features = await verifyTempoHostedFeatures(journal.features, directory, b);
+    const taskDomain = tempoFeatureTaskDomain(features?.config, b, journal);
+    if (features) {
+      const budgetFile = tempoFeatureBudgetFile(features, process.env.TEMPO_TRANSACTION_BUDGET_FILE);
+      if (budgetFile !== undefined) process.env.TEMPO_TRANSACTION_BUDGET_FILE = budgetFile;
+    }
     journal.testSponsorship = await preserveTempoRuntimeSponsorship(directory,b.frontendOrigin,journal.testSponsorship);
     await store.write(journal);
     const runner = new DockerExecutor(); await runner.ready();
@@ -340,6 +434,7 @@ export async function startTempoHostedRuntime(directory: string, bootstrapFile: 
       tasks: Object.fromEntries(b.tasks.map(task => [task.taskId, { problemId: task.problemId }])), settlementTimeoutMs: 240000 };
     const arenaFile = await put("arena.json", arenaConfig);
     settler = await childReady("scripts/demo-settler.ts", [], { PATH: process.env.PATH, ARENA_CONFIG: arenaFile, ARENA_VERIFIER_KEY_FILE: b.roleKeyFiles.verifier,
+      ...(features && !features.seal ? { TEMPO_TRANSACTION_BUDGET_FILE: features.config.transactionBudgetFile } : {}),
       AGENTFUEL_RPC_RETRY_READ_503: process.env.AGENTFUEL_RPC_RETRY_READ_503, ARENA_MAX_FEE_PER_GAS: b.maxFeePerGas, ARENA_RPC_TRANSPORT: b.rpcTransport, ARENA_RPC_URL_FILE: b.rpcUrlFile });
     arena = createArenaHttpServer(arenaConfig, [], rpc, { initial: await optionalJson<ArenaHttpJournal>(join(directory, "arena-http-journal.json")), save: value => put("arena-http-journal.json", value).then(() => undefined) });
     journal.ports.arena = await listen(arena.server, journal.ports.arena); await store.write(journal);
@@ -373,10 +468,18 @@ export async function startTempoHostedRuntime(directory: string, bootstrapFile: 
     for (const [name, relay] of [["allowance", allowance], ["planner", planner], ...goalRelays.map((relay,index)=>[TEMPO_GOAL_PORTS[index],relay] as const)] as const) {
       relays.push(relay); await relay.initialize(); const refunder = new Refunder(relay, { maxFeePerGas: BigInt(b.maxFeePerGas), gasLimit: 10_000_000n, serialize: serializeRefund }); await refunder.initialize(); await listening(name, relayHttp(relay, refunder));
     }
+    if (features) {
+      external = await startExternalSpecialistStack({ base, provider: rpc, directory: tempoFeaturePaths(directory).externalDirectory,
+        providerIdentity: features.config.externalProvider,
+        models: catalog.map((model, index) => ({ id: index ? "strong" : "cheap", model: model.model, responseModel: model.responseModel, baseUrl: gateway.url, key: gatewayKey, priceRaw: index ? "20000" : "10000" })),
+        ports: Object.fromEntries(Object.entries(journal.ports).flatMap(([name, port]) => name.startsWith("external-") && typeof port === "number" ? [[name, port]] : [])),
+        savePort: async (name, port) => { journal.ports[name as PortName] = port; await store.write(journal); },
+        refundLimits: { maxFeePerGas: BigInt(b.maxFeePerGas), gasLimit: 10_000_000n, serialize: serializeRefund } });
+    }
     const walletDirectory = join(directory, "wallets"), models = ["kimi-k2.6", "kimi-k3"];
     const taskModels = models.map((id, index) => {
       const workflow: WorkflowConfig = { agentId: "1", chainId: "42431", account: b.contracts.account, asset: b.asset.address, escrowAddress: b.contracts.escrow,
-        tasks: b.tasks, allowCredit: true, maxPrice: "120000", deadlineMs: journal.templateDeadlineMs, minRemainingMs: 60000, maxCompletionTokens: 1024,
+        tasks: taskDomain.tasks, allowCredit: true, maxPrice: "120000", deadlineMs: taskDomain.deadlineMs, minRemainingMs: 60000, maxCompletionTokens: 1024,
         providers: [{ id: "trusted-fixed", payTo: b.payTo, relayUrl: `${url("fixed")}/v1/chat`, service: FIXED_SOLVE_SERVICE, model: FIXED_SOLVE_MODEL,
           routes: [{ tier: index ? "strong" : "cheap", price: "120000", capabilities: ["python3-json-stdio", "sum-integers", "unique-sorted", "balanced-brackets", "word-frequency"],
             solve: { version: 1, tiers: index ? ["strong", "strong"] : ["cheap", "strong"], maxRounds: 2, maxToolCalls: 4, maxCompletionTokens: 1024 } }] }] };
@@ -390,11 +493,11 @@ export async function startTempoHostedRuntime(directory: string, bootstrapFile: 
       opponent: { binding: b.opponentBinding, keyFile: b.roleKeyFiles.opponent, modelId: "kimi-k2.6", strategy: "balanced" },
       models: models.map(id => ({ id, baseUrl: "https://api.moonshot.cn/v1", keyFile: b.vendorKeyFile })), creditsDirectory: join(directory, "credits") });
     const hostedConfigFile = await put("hosted.json", { version: 1, port: b.hostedPort,
-      hosted: { ...(journal.testSponsorship?{testSponsorshipFile:journal.testSponsorship.file}:{}), directory: join(directory, "hosted"), origin: b.frontendOrigin, chainId: "42431", models: models.map(id => ({ id, label: id === "kimi-k2.6" ? "Kimi K2.6" : "Kimi K3" })),
+      hosted: { ...(journal.testSponsorship?{testSponsorshipFile:journal.testSponsorship.file}:{}), ...(features ? { boundedGamesFile: features.config.boundedGamesFile, ...(features.seal ? { boundedGamesSealed: true } : {}) } : {}), directory: join(directory, "hosted"), origin: b.frontendOrigin, chainId: "42431", models: models.map(id => ({ id, label: id === "kimi-k2.6" ? "Kimi K2.6" : "Kimi K3" })),
         maxAgentsPerOwner: 6, maxTotalBudgetRaw: "1000000", maxPerRunBudgetRaw: "120000" }, executor: { taskConfigFile, gameConfigFile },
-      goals: tempoGoalConfig(catalog,journal.ports,b.payTo),
-      autonomy: { maxTasks: 2, maxDecisions: 3, durationMs: 1200000, plannerRelayUrl: `${url("planner")}/v1/chat`, plannerProvider: b.payTo, plannerPriceRaw: "10000",
-        plannerService: "infercredit/plan", plannerModel: "logical-planner", plannerPhysicalModel: catalog[0].model, plannerResponseModel: catalog[0].responseModel } });
+      goals: { ...tempoGoalConfig(catalog,journal.ports,b.payTo), ...(external ? { external: external.config } : {}) },
+      autonomy: tempoFeatureAutonomy({ maxTasks: 2, maxDecisions: 3, durationMs: 1200000, plannerRelayUrl: `${url("planner")}/v1/chat`, plannerProvider: b.payTo, plannerPriceRaw: "10000",
+        plannerService: "infercredit/plan", plannerModel: "logical-planner", plannerPhysicalModel: catalog[0].model, plannerResponseModel: catalog[0].responseModel }, !!features) });
     await loadHostedDaemonConfig(hostedConfigFile);
     const launch = () => childReady("scripts/hosted-agents.ts", ["--start", "--recover"], { ...process.env, HOSTED_AGENTS_CONFIG: hostedConfigFile });
     hosted = await launch();
@@ -419,10 +522,16 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   else if (mode === "append-tasks" && first && second && rest.length === 1)
     appendTempoHostedTasks(resolve(first), resolve(second), resolve(rest[0])).then(result => console.log(JSON.stringify(result)))
       .catch(error => { console.error(safe(error)); process.exitCode = 1; });
+  else if (mode === "enable-features" && first && second && rest.length === 1)
+    enableTempoHostedFeatures(resolve(first), resolve(second), resolve(rest[0])).then(result => console.log(JSON.stringify(result)))
+      .catch(error => { console.error(safe(error)); process.exitCode = 1; });
+  else if (mode === "seal-features" && first && second && rest.length <= 1)
+    sealTempoHostedFeatures(resolve(first), resolve(second), rest[0] ? resolve(rest[0]) : undefined).then(result => console.log(JSON.stringify(result)))
+      .catch(error => { console.error(safe(error)); process.exitCode = 1; });
   else if (mode === "start" && first && second && (rest.length === 0 || rest.length === 1 && rest[0] === "--recover"))
     startTempoHostedRuntime(resolve(first), resolve(second), rest.includes("--recover")).then(runtime => {
       console.log(JSON.stringify(runtime.ready)); const stop = () => { void runtime.close().then(() => process.exit(0)).catch(() => process.exit(1)); };
       process.once("SIGINT", stop); process.once("SIGTERM", stop);
     }).catch(error => { reportRuntimeError(error); process.exitCode = 1; });
-  else { console.error("Usage: tempo-hosted-runtime.ts --check BOOTSTRAP | start DIRECTORY BOOTSTRAP [--recover] | append-tasks DIRECTORY BOOTSTRAP ADDITIONAL_TASKS_JSON"); process.exitCode = 1; }
+  else { console.error("Usage: tempo-hosted-runtime.ts --check BOOTSTRAP | start DIRECTORY BOOTSTRAP [--recover] | append-tasks DIRECTORY BOOTSTRAP ADDITIONAL_TASKS_JSON | enable-features DIRECTORY BOOTSTRAP FEATURES_JSON | seal-features DIRECTORY BOOTSTRAP [CLOSURE_JSON]"); process.exitCode = 1; }
 }

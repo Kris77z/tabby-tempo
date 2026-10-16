@@ -149,6 +149,16 @@ jobs:
           if [[ -f scripts/test/external-stack.test.ts ]]; then
             node --import tsx --test --test-concurrency=1 scripts/test/external-stack.test.ts
           fi
+          if [[ -f scripts/test/tempo-transaction-budget.test.ts ]]; then
+            node --import tsx --test --test-concurrency=1 scripts/test/tempo-transaction-budget.test.ts
+          fi
+          # Historical releases can predate these feature and daemon regressions.
+          if [[ -f scripts/test/tempo-hosted-features.test.ts ]]; then
+            node --import tsx --test --test-concurrency=1 scripts/test/tempo-hosted-features.test.ts
+          fi
+          if [[ -f scripts/test/hosted-agents.test.ts ]]; then
+            node --import tsx --test --test-concurrency=1 scripts/test/hosted-agents.test.ts
+          fi
 
       - name: Check candidate documentation links when the historical version provides the command
         run: npm run docs:check --if-present

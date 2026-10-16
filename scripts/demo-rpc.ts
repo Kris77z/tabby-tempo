@@ -3,7 +3,9 @@ import { promisify } from "node:util";
 import { setTimeout as delay } from "node:timers/promises";
 import { readFile, stat } from "node:fs/promises";
 import { isAbsolute } from "node:path";
-import { FetchRequest, JsonRpcProvider, Network, type GetUrlResponse } from "ethers";
+import { FetchRequest, Interface, JsonRpcProvider, Network, ZeroAddress, getAddress, type GetUrlResponse } from "ethers";
+import { reserveTempoTransaction } from "./tempo-transaction-budget.js";
+import { TEMPO_FEE_MANAGER, TEMPO_PATH_USD } from "./tempo-config.js";
 import { Agent as HttpAgent, request as httpRequest } from "node:http";
 import { Agent as HttpsAgent, request as httpsRequest } from "node:https";
 import { gunzipSync } from "node:zlib";
@@ -264,7 +266,31 @@ export async function chainRpcProvider(url: string, chainId: string | number | b
   const provider = new JsonRpcProvider(connection.request, Network.from(BigInt(chainId)), { staticNetwork: true, cacheTimeout: -1, pollingInterval: 1000, batchMaxCount: 1 });
   let closed = false, nextAt = 0, queue = Promise.resolve();
   const originalSend = provider.send.bind(provider);
+  const budgetFile = process.env.TEMPO_TRANSACTION_BUDGET_FILE;
+  if (budgetFile && !tempo) throw new Error("TEMPO_TRANSACTION_BUDGET_CHAIN_REQUIRED");
+  const feeABI = new Interface(["function userTokens(address) view returns(address)"]);
+  const tokenABI = new Interface(["function decimals() view returns(uint8)", "function symbol() view returns(string)"]);
+  const feeToken = async (sender: string) => {
+    if (BigInt(await originalSend("eth_chainId", [])) !== 42431n) throw new Error("TEMPO_TRANSACTION_BUDGET_CHAIN_REQUIRED");
+    const head = await originalSend("eth_getBlockByNumber", ["latest", false]);
+    if (!head?.hash || !head.number) throw new Error("TEMPO_TRANSACTION_BUDGET_CANONICAL_BLOCK_REQUIRED");
+    const call = (to: string, data: string) => originalSend("eth_call", [{ to, data, ...(callGas ? { gas: callGas } : {}) }, head.number]);
+    const preference = getAddress(feeABI.decodeFunctionResult("userTokens", await call(TEMPO_FEE_MANAGER, feeABI.encodeFunctionData("userTokens", [sender])))[0]);
+    // Legacy type-2 uses the sender preference, then the protocol's PathUSD fallback.
+    // Targets are separately restricted to the existing PathUSD/Account/Escrow/Manager domain.
+    if (![ZeroAddress, getAddress(TEMPO_PATH_USD)].includes(preference)
+      || tokenABI.decodeFunctionResult("decimals", await call(TEMPO_PATH_USD, tokenABI.encodeFunctionData("decimals")))[0] !== 6n
+      || tokenABI.decodeFunctionResult("symbol", await call(TEMPO_PATH_USD, tokenABI.encodeFunctionData("symbol")))[0] !== "PathUSD"
+      || (await originalSend("eth_getBlockByNumber", [head.number, false]))?.hash !== head.hash)
+      throw new Error("TEMPO_TRANSACTION_BUDGET_FEE_TOKEN_MISMATCH");
+    return TEMPO_PATH_USD;
+  };
   const send: typeof provider.send = (method, params) => {
+    if (budgetFile && !READ_RPC_METHODS.has(method)) {
+      if (method !== "eth_sendRawTransaction" || !Array.isArray(params) || params.length !== 1 || typeof params[0] !== "string")
+        return Promise.reject(new Error("TEMPO_TRANSACTION_BUDGET_WRITE_REJECTED"));
+      return reserveTempoTransaction(budgetFile, params[0], feeToken).then(() => originalSend(method, params));
+    }
     // Some RPCs default an omitted eth_call gas to more than their provider cap.
     // This operator opt-in never changes explicit gas, estimates or broadcasts.
     if (callGas !== undefined && method === "eth_call" && Array.isArray(params) && params[0] !== null
@@ -273,7 +299,7 @@ export async function chainRpcProvider(url: string, chainId: string | number | b
     }
     return originalSend(method, params);
   };
-  if (callGas !== undefined) provider.send = send;
+  if (callGas !== undefined || budgetFile) provider.send = send;
   if (!tempo && interval > 0) provider.send = (method, params) => {
     const result = queue.then(async () => {
       if (closed) throw new Error("RPC_CONNECTION_CLOSED");

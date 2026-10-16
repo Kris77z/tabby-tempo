@@ -9,6 +9,7 @@ import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { promisify } from "node:util";
 import { Wallet } from "ethers";
+import { randomUUID } from "node:crypto";
 import test from "node:test";
 import { loadHostedDaemonConfig } from "../hosted-agents.js";
 
@@ -76,6 +77,26 @@ test("runtime goal routes preserve both model prices and reject invalid relay co
     }
     assert.equal(f.calls(), 0);
     await assert.rejects(lstat(f.config.hosted.directory), { code: "ENOENT" });
+  } finally { await f.close(); }
+});
+test("daemon check validates the independent bounded-game file without opening a service or sending RPC", async () => {
+  const f = await fixture();
+  try {
+    const asset = "0x20c0000000000000000000000000000000000000", origin = "http://127.0.0.1:3000";
+    await f.put("rpc.txt", "https://rpc.example.invalid");
+    const models = f.task.models.map(model => ({ ...model, templates: Object.fromEntries(Object.entries(model.templates).map(([strategy, plan]) => [strategy, { ...plan, chainId: "42431", asset }])) }));
+    await f.put("task.json", { ...f.task, models, publicRpcUrl: "https://rpc.example.invalid" });
+    const { publicRpcUrl: _unused, ...game } = f.game;
+    await f.put("game.json", { ...game, chainId: "42431", token: asset, rpcUrlFile: f.task.rpcUrlFile, opponent: { ...game.opponent, binding: { ...game.opponent.binding, chainId: "42431" } } });
+    const grant = { version: 1, id: randomUUID(), parentRequestId: randomUUID(), chainId: "42431", origin, asset, owner: new Wallet(key(5)).address,
+      issuedAtMs: Date.now() - 1000, expiresAtMs: Date.now() + 60000, baselineOwnerGames: 7, baselineTotalGames: 7, maxAdditionalGames: 2, maxGameCalls: 40, maxGameCompletionTokens: 20480, maxCashRewardsRaw: "0",
+      actor: { hostedAgentId: randomUUID(), registryId: "73", wallet: new Wallet(key(6)).address } };
+    const boundedGamesFile = await f.put("bounded-games.json", grant);
+    await f.put("hosted.json", { ...f.config, hosted: { ...f.config.hosted, chainId: "42431", boundedGamesFile } });
+    assert.equal((await loadHostedDaemonConfig(f.path)).config.hosted.boundedGamesFile, boundedGamesFile);
+    await f.run(["--check"]); assert.equal(f.calls(), 0); await assert.rejects(lstat(f.config.hosted.directory), { code: "ENOENT" });
+    await f.put("bounded-games.json", { ...grant, maxCashRewardsRaw: "100000" }); await assert.rejects(loadHostedDaemonConfig(f.path), /HOSTED_BOUNDED_GAMES_INVALID/);
+    assert.equal(f.calls(), 0);
   } finally { await f.close(); }
 });
 test("check rejects mismatched model/domain/RPC and insecure files without side effects", async () => {
