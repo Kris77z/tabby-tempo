@@ -61,12 +61,44 @@ class WorkflowBoundaryTests(unittest.TestCase):
 
     def test_offline_script_group_is_serial_and_covers_retained_new_launchers(self):
         group = self.ci.split("- name: Run offline Tempo runtime, migration, RPC and journal checks", 1)[1].split("      - name:", 1)[0]
-        expected = {"tempo-hosted-runtime", "tempo-runtime-upgrade", "tempo-vps-migrate", "tempo-rpc", "tempo-rpc-pacing", "journal-chain", "external-stack"}
+        expected = {"tempo-hosted-runtime", "tempo-runtime-upgrade", "tempo-vps-migrate", "tempo-rpc", "tempo-rpc-pacing", "journal-chain", "external-stack", "tempo-transaction-budget", "tempo-hosted-features", "hosted-agents"}
         self.assertEqual(set(re.findall(r"scripts/test/([a-z0-9-]+)\.test\.ts", group)), expected)
         self.assertIn("--test-concurrency=1", group)
         self.assertNotIn("prepare-external-provider", group)
         self.assertIn("sudo apt-get install --no-install-recommends -y bubblewrap socat apparmor apparmor-profiles", self.ci)
         self.assertIn("if [[ -f scripts/test/external-stack.test.ts ]]; then", group)
+        self.assertIn("if [[ -f scripts/test/tempo-transaction-budget.test.ts ]]; then", group)
+        for suite in ("tempo-hosted-features", "hosted-agents"):
+            self.assertIn(f"if [[ -f scripts/test/{suite}.test.ts ]]; then\n"
+                          f"            node --import tsx --test --test-concurrency=1 scripts/test/{suite}.test.ts\n"
+                          "          fi", group)
+
+    def test_feature_and_daemon_suites_run_when_present_and_allow_older_release_source(self):
+        group = self.ci.split("- name: Run offline Tempo runtime, migration, RPC and journal checks", 1)[1].split("      - name:", 1)[0]
+        script = textwrap.dedent(group.split("        run: |\n", 1)[1])
+        for present in (False, True):
+            with self.subTest(present=present), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                mock_bin = root / "bin"
+                mock_bin.mkdir()
+                log = root / "calls.log"
+                node = mock_bin / "node"
+                node.write_text('#!/bin/sh\nprintf \'%s\\n\' "$*" >> "$MOCK_LOG"\n')
+                node.chmod(0o755)
+                if present:
+                    (root / "scripts/test").mkdir(parents=True)
+                    for suite in ("tempo-hosted-features", "hosted-agents"):
+                        (root / f"scripts/test/{suite}.test.ts").touch()
+                environment = {**os.environ, "PATH": str(mock_bin) + os.pathsep + os.environ["PATH"],
+                               "MOCK_LOG": str(log)}
+                result = subprocess.run(["bash", "-eu", "-c", script], cwd=root, env=environment,
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                calls = log.read_text().splitlines()
+                self.assertEqual(len(calls), 3 if present else 1)
+                for suite in ("tempo-hosted-features", "hosted-agents"):
+                    command = f"--import tsx --test --test-concurrency=1 scripts/test/{suite}.test.ts"
+                    self.assertEqual(calls.count(command), 1 if present else 0)
 
     def test_unprivileged_namespace_gate_precedes_historical_checkout_and_long_suites(self):
         prepare = self.ci.index("Prepare the hosted runner's restricted Linux namespace fixture")

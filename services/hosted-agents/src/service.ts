@@ -8,6 +8,7 @@ import { taskPrivateDirectory } from "../../../packages/pi-loop/src/task-runner/
 import { HostedError, type AgentCreation, type AgentSettings, type HostedAgent, type HostedConfig, type HostedExecution, type HostedExecutor, type HostedFinance, type HostedResult, type HostedRun } from "./types.js";
 import { validateHostedFinance } from "./finance-projection.js";
 import { assertTestSponsorshipActor, loadTestSponsorship, type TestSponsorshipState } from "./test-sponsorship.js";
+import { assertBoundedGameActor, assertBoundedGameAdmissions, boundedGameOrigin, loadBoundedGameAuthorization, type BoundedGameAuthorizationState } from "./bounded-game-authorization.js";
 import { HOSTED_ACTIVITY_LIMIT, validateHostedActivity, type HostedActivityInput } from "./scene-types.js";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -60,8 +61,9 @@ interface Session { digest: string; owner: string; expiresAt: number }
 interface Creation { owner: string; requestId: string; agentId: string; digest: string }
 interface State { version: 1; configBinding: string; challenges: Challenge[]; sessions: Session[]; agents: HostedAgent[]; runs: HostedRun[]; creations: Creation[]; sponsoredOwners: Record<string, number>; sponsoredTotal: number;
   testSponsorship?: TestSponsorshipState;
+  boundedGames?: BoundedGameAuthorizationState;
   fundingRoutes?: Record<string, { parentRequestId: string; childId: string; modelId: string }>;
-  autonomousGameAdmissions?: Record<string, { parentRequestId: string; agentId: string }> }
+  autonomousGameAdmissions?: Record<string, { parentRequestId: string; agentId: string; rewardKind?: "usdc" | "llm-credits" }> }
 export interface HostedServiceOptions {
   recover?: boolean;
   /** Host-only read-only resolution of an original paused autonomous child. Browser input cannot select it. */
@@ -70,7 +72,7 @@ export interface HostedServiceOptions {
 export interface HostedCommand { action: "provision" | "deposit" | "task" | "game" | "credits" | "reward-task" | "metered-task" | "autonomous" | "goal"; goal?: string; requestId: string; rewardKind?: "usdc" | "llm-credits"; amountRaw?: string }
 
 export function validateHostedConfig(value: unknown): HostedConfig {
-  object(value, ["directory", "origin", "chainId", "models", "maxAgentsPerOwner", "maxTotalBudgetRaw", "maxPerRunBudgetRaw", "testSponsorshipFile"]);
+  object(value, ["directory", "origin", "chainId", "models", "maxAgentsPerOwner", "maxTotalBudgetRaw", "maxPerRunBudgetRaw", "testSponsorshipFile", "boundedGamesFile", "boundedGamesSealed"]);
   const config = value as HostedConfig;
   if (!Array.isArray(config.models)) fail("HOSTED_CONFIG_INVALID", 503);
   for (const model of config.models) object(model, ["id", "label"]);
@@ -82,6 +84,9 @@ export function validateHostedConfig(value: unknown): HostedConfig {
       config.models.some(m => !/^[a-zA-Z0-9._-]{1,64}$/.test(m.id) || typeof m.label !== "string" || !m.label || m.label.length > 80) || resolve(config.directory) !== config.directory) fail("HOSTED_CONFIG_INVALID", 503);
   if (config.testSponsorshipFile !== undefined && (typeof config.testSponsorshipFile !== "string" || resolve(config.testSponsorshipFile) !== config.testSponsorshipFile
     || config.chainId !== "42431" || origin.protocol !== "http:" || !["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname))) fail("HOSTED_TEST_SPONSOR_INVALID", 503);
+  if (config.boundedGamesFile !== undefined && (typeof config.boundedGamesFile !== "string" || resolve(config.boundedGamesFile) !== config.boundedGamesFile
+    || config.chainId !== "42431" || !boundedGameOrigin(config.origin))) fail("HOSTED_BOUNDED_GAMES_INVALID", 503);
+  if (config.boundedGamesSealed !== undefined && (config.boundedGamesSealed !== true || !config.boundedGamesFile)) fail("HOSTED_BOUNDED_GAMES_INVALID", 503);
   return structuredClone(config);
 }
 
@@ -91,11 +96,11 @@ export class HostedService {
   private jobs = new Set<Promise<void>>();
   private financeReads = new Map<string, Promise<HostedFinance>>();
   private closed = false;
-  private constructor(readonly config: HostedConfig, private executor: HostedExecutor, private store: SessionStore<State>, private state: State, private sponsorshipStore?: SessionStore<TestSponsorshipState>, private options: HostedServiceOptions = {}) {}
+  private constructor(readonly config: HostedConfig, private executor: HostedExecutor, private store: SessionStore<State>, private state: State, private sponsorshipStore?: SessionStore<TestSponsorshipState>, private boundedGameStore?: SessionStore<BoundedGameAuthorizationState>, private options: HostedServiceOptions = {}) {}
   static async open(config: HostedConfig, executor: HostedExecutor, options: HostedServiceOptions = {}) {
     config = validateHostedConfig(config);
     await taskPrivateDirectory(config.directory);
-    const store = new SessionStore<State>(join(config.directory, "database")); await store.start(options.recover); let sponsorshipStore: SessionStore<TestSponsorshipState> | undefined;
+    const store = new SessionStore<State>(join(config.directory, "database")); await store.start(options.recover); let sponsorshipStore: SessionStore<TestSponsorshipState> | undefined, boundedGameStore: SessionStore<BoundedGameAuthorizationState> | undefined;
     try {
       const binding = hash(JSON.stringify({ origin: config.origin, chainId: config.chainId }));
       const state = await store.read() ?? { version: 1, configBinding: binding, challenges: [], sessions: [], agents: [], runs: [], creations: [], sponsoredOwners: {}, sponsoredTotal: 0 };
@@ -111,10 +116,35 @@ export class HostedService {
         }
         sponsorshipStore = new SessionStore(join(dirname(config.testSponsorshipFile), "admissions")); await sponsorshipStore.start(options.recover);
       }
+      if (config.boundedGamesFile) {
+        const authorization = await loadBoundedGameAuthorization(config.boundedGamesFile, config);
+        if (state.boundedGames) {
+          if (state.boundedGames.digest !== authorization.digest || JSON.stringify(state.boundedGames.grant) !== JSON.stringify(authorization.grant)) fail("HOSTED_BOUNDED_GAMES_BINDING_CHANGED", 503);
+        } else {
+          if (authorization.grant.expiresAtMs <= Date.now() || (state.sponsoredOwners[authorization.grant.owner] ?? 0) !== authorization.grant.baselineOwnerGames
+            || state.sponsoredTotal !== authorization.grant.baselineTotalGames) fail("HOSTED_BOUNDED_GAMES_BASELINE_CHANGED", 503);
+          if (authorization.grant.id === state.testSponsorship?.grant.id || state.runs.some(run => run.requestId === authorization.grant.parentRequestId)
+            || state.creations.some(creation => creation.requestId === authorization.grant.parentRequestId) || state.autonomousGameAdmissions?.[authorization.grant.parentRequestId]) fail("HOSTED_BOUNDED_GAMES_BINDING_CHANGED", 503);
+          const actor = state.agents.find(agent => agent.id === authorization.grant.actor.hostedAgentId);
+          if (!actor) fail("HOSTED_BOUNDED_GAMES_INVALID", 503);
+          assertBoundedGameActor(authorization.grant, actor);
+          state.boundedGames = { ...authorization, admissions: [] };
+        }
+        assertBoundedGameAdmissions(state.boundedGames);
+        const bounded = state.boundedGames;
+        if ((state.sponsoredOwners[bounded.grant.owner] ?? 0) < bounded.grant.baselineOwnerGames + bounded.admissions.length
+          || state.sponsoredTotal < bounded.grant.baselineTotalGames + bounded.admissions.length || state.sponsoredTotal > 100) fail("HOSTED_BOUNDED_GAMES_BASELINE_CHANGED", 503);
+        for (const row of bounded.admissions) {
+          const admission = state.autonomousGameAdmissions?.[row.childRequestId], parent = state.runs.find(run => run.requestId === row.parentRequestId);
+          if (!admission || admission.parentRequestId !== row.parentRequestId || admission.agentId !== row.agentId || admission.rewardKind !== row.rewardKind
+            || !parent || parent.action !== "autonomous" || parent.agentId !== row.agentId) fail("HOSTED_BOUNDED_GAMES_BINDING_CHANGED", 503);
+        }
+        boundedGameStore = new SessionStore(join(dirname(config.boundedGamesFile), "bounded-admissions")); await boundedGameStore.start(options.recover);
+      }
       for (const run of state.runs) if (["Queued", "Running"].includes(run.status)) { run.status = "Paused"; run.recoverable = true; run.reason = "HOSTED_PROCESS_INTERRUPTED"; run.updatedAt = now(); appendActivity(run, { scene: "interruption", state: "reconciling", reason: "HOSTED_PROCESS_INTERRUPTED", requiredAction: "reconcile" }); }
       await store.write(state);
-      const service = new HostedService(structuredClone(config), executor, store, state, sponsorshipStore, options); await service.syncSponsorship(); return service;
-    } catch (e) { await sponsorshipStore?.close(); await store.close(); throw e; }
+      const service = new HostedService(structuredClone(config), executor, store, state, sponsorshipStore, boundedGameStore, options); await service.syncSponsorship(); await service.syncBoundedGames(); return service;
+    } catch (e) { await boundedGameStore?.close(); await sponsorshipStore?.close(); await store.close(); throw e; }
   }
   private serial<T>(fn: () => Promise<T>): Promise<T> {
     if (this.closed) return Promise.reject(new HostedError("HOSTED_SERVICE_CLOSED", 503));
@@ -130,7 +160,24 @@ export class HostedService {
     // Its independent audit mirror must fsync before any executor can start.
     await this.sponsorshipStore.write(primary);
   }
+  private async syncBoundedGames() {
+    if (!this.boundedGameStore) return;
+    const primary = this.state.boundedGames!, audit = await this.boundedGameStore.read();
+    if (audit && (audit.digest !== primary.digest || JSON.stringify(audit.grant) !== JSON.stringify(primary.grant) || !Array.isArray(audit.admissions)
+      || audit.admissions.length > primary.admissions.length || audit.admissions.some((row, index) => JSON.stringify(row) !== JSON.stringify(primary.admissions[index])))) fail("HOSTED_BOUNDED_GAMES_AUDIT_CONFLICT", 503);
+    // The main database is authoritative. Mirror fsync precedes every dispatch,
+    // including retries after an interrupted database-before-mirror admission.
+    await this.boundedGameStore.write(primary);
+  }
   gameDeadline(input: HostedExecution) {
+    const bounded = this.state.boundedGames, row = bounded?.admissions.find(row => row.childRequestId === input.run.requestId);
+    if (row) {
+      const admission = this.state.autonomousGameAdmissions?.[row.childRequestId];
+      if (!this.boundedGameStore || input.run.action !== "game" || input.run.rewardKind !== "llm-credits" || input.run.agentId !== row.agentId
+        || !admission || admission.parentRequestId !== row.parentRequestId || admission.agentId !== row.agentId || admission.rewardKind !== row.rewardKind) fail("HOSTED_BOUNDED_GAMES_BINDING_CHANGED", 503);
+      assertBoundedGameActor(bounded!.grant, input.agent);
+      return Math.min(bounded!.grant.expiresAtMs, input.deadlineMs ?? Infinity);
+    }
     const tag = input.run.testSponsorship; if (!tag) return undefined;
     const state = this.state.testSponsorship, admission = state?.admissions.find(row => row.requestId === input.run.requestId);
     if (!state || !admission || !this.sponsorshipStore || tag.grantId !== state.grant.id || tag.digest !== state.digest || admission.ordinal !== tag.ordinal || admission.agentId !== input.agent.id) fail("HOSTED_TEST_SPONSOR_BINDING_CHANGED", 503);
@@ -189,7 +236,7 @@ export class HostedService {
   }
   mayContinue(agentId: string) { return this.serial(async () => this.state.agents.some(agent => agent.id === agentId && agent.status === "Ready")); }
   /** Daemon-only durable admission. There is deliberately no HTTP command for selecting a child ID. */
-  admitAutonomyGame(parentRequestId: string, childRequestId: string, agentId: string) { return this.serial(async () => {
+  admitAutonomyGame(parentRequestId: string, childRequestId: string, agentId: string, rewardKind?: "usdc" | "llm-credits") { return this.serial(async () => {
     id(parentRequestId); id(childRequestId); id(agentId);
     const agent = this.state.agents.find(agent => agent.id === agentId), parent = this.state.runs.find(run => run.requestId === parentRequestId);
     if (!agent || !parent || parent.action !== "autonomous" || parent.agentId !== agentId || agent.activeRequestId !== parentRequestId
@@ -197,17 +244,34 @@ export class HostedService {
       || this.state.creations.some(creation => creation.requestId === childRequestId)) fail("HOSTED_AUTONOMY_GAME_ADMISSION_INVALID", 409);
     const prior = this.state.autonomousGameAdmissions?.[childRequestId];
     if (prior) {
-      if (prior.parentRequestId !== parentRequestId || prior.agentId !== agentId) fail("HOSTED_AUTONOMY_GAME_ADMISSION_INVALID", 409);
+      if (prior.parentRequestId !== parentRequestId || prior.agentId !== agentId || prior.rewardKind !== undefined && prior.rewardKind !== rewardKind) fail("HOSTED_AUTONOMY_GAME_ADMISSION_INVALID", 409);
+      const row = this.state.boundedGames?.admissions.find(row => row.childRequestId === childRequestId);
+      if (row) {
+        if (!this.boundedGameStore || row.parentRequestId !== parentRequestId || row.agentId !== agentId || rewardKind !== "llm-credits") fail("HOSTED_AUTONOMY_GAME_ADMISSION_INVALID", 409);
+        try { assertBoundedGameActor(this.state.boundedGames!.grant, agent); } catch { fail("HOSTED_AUTONOMY_GAME_ADMISSION_INVALID", 409); }
+        await this.syncBoundedGames();
+      }
       return;
     }
     if (agent.status === "Paused") fail("HOSTED_AGENT_PAUSED", 409);
-    if ((this.state.sponsoredOwners[agent.owner] ?? 0) >= 3 || this.state.sponsoredTotal >= 100) fail("HOSTED_SPONSOR_LIMIT", 409);
+    const bounded = this.state.boundedGames?.grant.owner === agent.owner ? this.state.boundedGames : undefined;
+    if (bounded) {
+      if (!this.boundedGameStore || rewardKind !== "llm-credits" || parentRequestId !== bounded.grant.parentRequestId) fail("HOSTED_AUTONOMY_GAME_ADMISSION_INVALID", 409);
+      try { assertBoundedGameActor(bounded.grant, agent); } catch { fail("HOSTED_AUTONOMY_GAME_ADMISSION_INVALID", 409); }
+      if (this.config.boundedGamesSealed || Date.now() >= bounded.grant.expiresAtMs || bounded.admissions.length >= bounded.grant.maxAdditionalGames) fail("HOSTED_SPONSOR_LIMIT", 409);
+    } else if ((this.state.sponsoredOwners[agent.owner] ?? 0) >= 3) fail("HOSTED_SPONSOR_LIMIT", 409);
+    if (this.state.sponsoredTotal >= 100) fail("HOSTED_SPONSOR_LIMIT", 409);
     const ownerBefore = this.state.sponsoredOwners[agent.owner] ?? 0, totalBefore = this.state.sponsoredTotal;
     this.state.sponsoredOwners[agent.owner] = ownerBefore + 1; this.state.sponsoredTotal++;
-    (this.state.autonomousGameAdmissions ??= {})[childRequestId] = { parentRequestId, agentId };
+    (this.state.autonomousGameAdmissions ??= {})[childRequestId] = { parentRequestId, agentId, ...(rewardKind ? { rewardKind } : {}) };
+    if (bounded) bounded.admissions.push({ parentRequestId, childRequestId, agentId, ordinal: bounded.admissions.length + 1, admittedAt: now(), rewardKind: "llm-credits" });
     try { await this.save(); } catch (error) {
-      this.state.sponsoredOwners[agent.owner] = ownerBefore; this.state.sponsoredTotal = totalBefore; delete this.state.autonomousGameAdmissions[childRequestId]; throw error;
+      this.state.sponsoredOwners[agent.owner] = ownerBefore; this.state.sponsoredTotal = totalBefore; delete this.state.autonomousGameAdmissions[childRequestId];
+      if (bounded) bounded.admissions.pop();
+      this.state = await this.store.read() ?? this.state;
+      throw error;
     }
+    if (bounded) await this.syncBoundedGames();
   }); }
   snapshot(who: string) { return this.serial(async () => {
     const address = owner(who), agents = this.state.agents.filter(a => a.owner === address), ids = new Set(agents.map(a => a.id));
@@ -434,5 +498,5 @@ export class HostedService {
       if (observed === this.queue) return;
     }
   }
-  async close() { await this.waitUntilIdle(); this.closed = true; await Promise.all(this.financeReads.values()); await this.sponsorshipStore?.close(); await this.store.close(); }
+  async close() { await this.waitUntilIdle(); this.closed = true; await Promise.all(this.financeReads.values()); await this.boundedGameStore?.close(); await this.sponsorshipStore?.close(); await this.store.close(); }
 }

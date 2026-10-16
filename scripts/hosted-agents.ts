@@ -13,6 +13,7 @@ import { createHostedTaskExecutor, loadHostedTaskExecutorConfig, type HostedTask
 import { createHostedGameExecutor, loadHostedGameExecutorConfig, type HostedGameExecutorConfig } from "../services/hosted-agents/src/game-executor.js";
 import { HostedError, type HostedConfig, type HostedExecutor } from "../services/hosted-agents/src/types.js";
 import { loadTestSponsorship } from "../services/hosted-agents/src/test-sponsorship.js";
+import { loadBoundedGameAuthorization } from "../services/hosted-agents/src/bounded-game-authorization.js";
 
 export interface HostedDaemonConfig { version: 1; port: number; goals?: HostedGoalConfig; autonomy?: HostedAutonomyConfig; hosted: HostedConfig; executor: { taskConfigFile: string; gameConfigFile: string } }
 export interface LoadedHostedDaemon { config: HostedDaemonConfig; task: HostedTaskExecutorConfig; game: HostedGameExecutorConfig }
@@ -32,6 +33,7 @@ export async function loadHostedDaemonConfig(path: string): Promise<LoadedHosted
     const autonomy = value.autonomy === undefined ? undefined : validateHostedAutonomyConfig(value.autonomy);
     const hosted = validateHostedConfig(value.hosted), taskConfigFile = absolute(value.executor.taskConfigFile), gameConfigFile = absolute(value.executor.gameConfigFile);
     if (hosted.testSponsorshipFile) await loadTestSponsorship(hosted.testSponsorshipFile, hosted);
+    if (hosted.boundedGamesFile) await loadBoundedGameAuthorization(hosted.boundedGamesFile, hosted);
     const task = await loadHostedTaskExecutorConfig(taskConfigFile), game = await loadHostedGameExecutorConfig(gameConfigFile);
     if (autonomy && !task.metered) fail("HOSTED_AUTONOMY_NOT_CONFIGURED");
     const workflow = task.models[0].templates.conservative;
@@ -49,7 +51,7 @@ export async function loadHostedDaemonConfig(path: string): Promise<LoadedHosted
 }
 export async function startHostedDaemon(loaded: LoadedHostedDaemon, options: { recover?: boolean } = {}) {
   const game = createHostedGameExecutor(loaded.game, { gameDeadline: input => service.gameDeadline(input) }), task = createHostedTaskExecutor(loaded.task, { reward: input => game.rewardTask(input) });
-  const autonomous = loaded.config.autonomy ? new HostedAutonomyExecutor(task, loaded.config.autonomy, { shouldContinue: agentId => service.mayContinue(agentId), games: game, admitGame: (parent,child) => service.admitAutonomyGame(parent.run.requestId,child.run.requestId,parent.agent.id) }) : undefined;
+  const autonomous = loaded.config.autonomy ? new HostedAutonomyExecutor(task, loaded.config.autonomy, { shouldContinue: agentId => service.mayContinue(agentId), games: game, admitGame: (parent,child) => service.admitAutonomyGame(parent.run.requestId,child.run.requestId,parent.agent.id,child.run.rewardKind) }) : undefined;
   const goals = loaded.config.goals ? new HostedGoalExecutor(loaded.config.goals, loaded.task, { control: (agentId,requestId) => service.goalControl(agentId,requestId) }) : undefined;
   const executor: HostedExecutor = { capabilities: {
     ...(goals ? { goals: { maxPhases: 3, ...(goals.config.external?{external:{services:goals.config.external.services.map(s=>externalServiceView(s))}}:{}), ...(goals.config.chainLookup?{chainLookup:{chainId:loaded.config.hosted.chainId,maxTargets:2}}:{}), specialists:missionSpecialists.map(({id,serviceId,name,output})=>({id,serviceId,name,output})), models: goals.config.models.map(m=>({id:m.id,pricePerCallRaw:m.priceRaw})) } } : {}),

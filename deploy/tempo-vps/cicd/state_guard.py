@@ -6,7 +6,7 @@ prompts, or model responses. Only an already quiescent state may be deployed.
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -27,6 +27,18 @@ _ADDRESS = re.compile(r"0x[0-9a-fA-F]{40}\Z")
 _UUID = re.compile(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\Z")
 _TERMINAL = {"Succeeded", "Failed", "Refunded", "Stopped"}
 _ORIGIN = "https://tempo.tabbyai.xyz"
+_PORTS = {"underwriter", "arena", "fixed", "allowance", "planner", "goalCheap", "goalStrong"}
+# This is an approved deployment catalog, not discovery from application code or
+# from a registry response. Adding a specialist requires another trusted migration.
+_SPECIALISTS = (("writer", "Writing Specialist"), ("analyst", "Analysis Specialist"),
+    ("coder", "Code Specialist"), ("abi-interact", "ABI Reader & Explainer"),
+    ("gas-optimization", "Gas Optimizer"), ("token-scan", "Token Risk Scanner"),
+    ("tx-decode", "Transaction Decoder"), ("yield-search", "Yield Strategy Finder"))
+_EXTERNAL_MODELS = (("cheap", "cheap/kimi-k2.6", "kimi-k2.6", "10000"),
+                    ("strong", "strong/kimi-k3", "kimi-k3", "20000"))
+_GAMES = {"maxGames": 2, "maxSpendPerGameRaw": "0", "rewardKinds": ["llm-credits"], "rewardTaskMinTokens": 2048}
+_GAME_LIMITS = {"model": "kimi-k2.6", "maxCalls": 20, "maxCompletionTokens": 512,
+    "deadlineDurationMs": 600000, "upstreamTimeoutMs": 55000, "inferenceRetries": 0}
 _ISSUE_CODES = frozenset({"STATE_AGENT_INFLIGHT", "STATE_ARENA_INFLIGHT", "STATE_AUTONOMY_INFLIGHT",
     "STATE_EXECUTOR_INFLIGHT", "STATE_GAME_INFLIGHT", "STATE_GATEWAY_INFLIGHT", "STATE_GATEWAY_UNKNOWN",
     "STATE_HOSTED_INFLIGHT", "STATE_INFERENCE_INFLIGHT", "STATE_MIGRATION_INFLIGHT", "STATE_MISSION_INFLIGHT",
@@ -84,6 +96,45 @@ def _digest(value) -> str:
     return hashlib.sha256(_canonical(value)).hexdigest()
 
 
+def _js_digest(value):
+    return hashlib.sha256(json.dumps(value, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode()).hexdigest()
+
+
+def _runtime_binding(bootstrap, gateway):
+    catalog = [{"id": model["id"], "model": model["model"], **({"responseModel": model["responseModel"]} if "responseModel" in model else {}),
+        "route": gateway["endpoint"], "inputMicroCreditsPerToken": "3" if i else "1",
+        "outputMicroCreditsPerToken": "6" if i else "2", "maxCompletionTokens": 1024} for i, model in enumerate(gateway["models"])]
+    return _js_digest({"bootstrap": {k: v for k, v in bootstrap.items() if k != "dashboardAgents"},
+        "gateway": {k: gateway[k] for k in ("url", "endpoint", "keyFile")}, "catalog": catalog})
+
+
+def _origin_binding_chain(journal, migration, audit, bootstrap, gateway):
+    anchor, target = migration["publicBinding"], journal.get("effectiveBinding")
+    _check(isinstance(anchor, str) and _SHA.fullmatch(anchor) is not None, "STATE_MIGRATION_INVALID")
+    if target == anchor:
+        return  # Preserve the original, already installed origin-only contract.
+    _check(isinstance(target, str) and _SHA.fullmatch(target) is not None
+           and migration.get("version") == 1 and isinstance(migration.get("previousBinding"), str)
+           and _SHA.fullmatch(migration["previousBinding"]) is not None
+           and audit.get("publicBinding") == anchor and audit.get("previousBinding") == migration.get("previousBinding"), "STATE_MIGRATION_INVALID")
+    current, seen = anchor, set()
+    while current != target:
+        _check(current not in seen, "STATE_MIGRATION_INVALID"); seen.add(current)
+        matches = [m for m in _array(journal.get("migrations", [])) if m.get("beforeBinding") == current]
+        _check(len(matches) == 1, "STATE_MIGRATION_INVALID")
+        entry = _obj(matches[0], ("id", "status", "before", "after", "appended", "beforeBinding", "afterBinding"))
+        before, after, appended = _obj(entry["before"]), _obj(entry["after"]), _array(entry["appended"])
+        _check(entry["status"] == "Applied" and bool(appended) and entry["id"] == _js_digest(appended)
+               and before.get("frontendOrigin") == after.get("frontendOrigin") == _ORIGIN
+               and {k: v for k, v in before.items() if k != "tasks"} == {k: v for k, v in after.items() if k != "tasks"}
+               and _array(before.get("tasks")) + appended == after.get("tasks")
+               and len({t["taskId"] for t in after["tasks"]}) == len(after["tasks"])
+               and _runtime_binding(before, gateway) == current
+               and _runtime_binding(after, gateway) == entry["afterBinding"], "STATE_MIGRATION_INVALID")
+        current = entry["afterBinding"]
+    _check(_runtime_binding(bootstrap, gateway) == target, "STATE_MIGRATION_INVALID")
+
+
 def _bridge_request_digest(request):
     """Reconstruct the pinned Magpie plain OpenAI bridge body, byte for byte.
 
@@ -112,6 +163,11 @@ def _check(condition: bool, code="STATE_SCHEMA_INVALID"):
 
 def _obj(value, required=()):
     _check(isinstance(value, dict) and all(k in value for k in required))
+    return value
+
+
+def _closed(value, keys, code="STATE_SCHEMA_INVALID"):
+    _check(isinstance(value, dict) and set(value) == set(keys), code)
     return value
 
 
@@ -331,6 +387,318 @@ def _settlement_summary(value, issues):
     return _digest(value)
 
 
+def _feature_config(journal, b, root, files, docs):
+    if "features" not in journal:
+        return None
+    marker = journal["features"]
+    _check(isinstance(marker, dict), "STATE_FEATURES_INVALID")
+    _closed(marker, ("version", "file", "digest", "config", "seal") if "seal" in marker else ("version", "file", "digest", "config"), "STATE_FEATURES_INVALID")
+    _check(marker["version"] == 1 and marker["file"] == str(root / "operator/features.json"), "STATE_FEATURES_INVALID")
+    path = _private_reference(marker["file"], root, files)
+    _check(files[path]["mode"] == 0o600 and marker["digest"] == files[path]["sha256"]
+           and marker["config"] == docs.get(path), "STATE_FEATURES_INVALID")
+    config = _closed(marker["config"], ("version", "id", "chainId", "origin", "externalProvider",
+        "boundedGamesFile", "transactionBudgetFile", "taskTemplateDeadlineMs", "taskIds"), "STATE_FEATURES_INVALID")
+    _check(config["version"] == 1 and isinstance(config["id"], str) and _UUID.fullmatch(config["id"]) is not None
+           and config["chainId"] == "42431" and config["origin"] == _ORIGIN, "STATE_FEATURES_INVALID")
+    _check(config["externalProvider"] == {"chainId": "42431", "registry": b["identity"],
+        "agentId": b["opponentBinding"]["agentId"], "wallet": b["opponentBinding"]["wallet"]}, "STATE_FEATURES_INVALID")
+    _check(config["boundedGamesFile"] == str(root / "operator/bounded-games.json")
+           and config["transactionBudgetFile"] == str(root / "operator/acceptance-20261016/transaction-budget.json"), "STATE_FEATURES_INVALID")
+    for key in ("boundedGamesFile", "transactionBudgetFile"):
+        relative = _private_reference(config[key], root, files)
+        _check(files[relative]["mode"] == 0o600, "STATE_FEATURES_INVALID")
+    owner = files["runtime/runtime-journal/session.json"]
+    for relative in (path, "operator/bounded-games.json", "operator/acceptance-20261016/transaction-budget.json"):
+        _check(all(files[relative][k] == owner[k] for k in ("uid", "gid")), "STATE_FEATURES_INVALID")
+    _integer(config["taskTemplateDeadlineMs"], True)
+    _check(isinstance(config["taskIds"], list) and len(config["taskIds"]) == 1, "STATE_FEATURES_INVALID")
+    _uint(config["taskIds"][0], True)
+    selected = [t for t in b["tasks"] if t["taskId"] in config["taskIds"]]
+    _check(len(selected) == 1 and selected[0]["deadlineMs"] == config["taskTemplateDeadlineMs"], "STATE_FEATURES_INVALID")
+    # The public catalog is append-only. A feature marker cannot stand in for
+    # the explicit stopped-runtime catalog migration or rewrite old tasks.
+    original = _array(journal.get("originalCatalog"))
+    _check(b["tasks"][:len(original)] == original and len(original) >= 4
+           and config["taskIds"][0] not in {t["taskId"] for t in original}, "STATE_FEATURES_INVALID")
+    _check(any(m.get("status") == "Applied" and m.get("appended") == selected
+        and isinstance(m.get("before"), dict) and isinstance(m.get("after"), dict)
+        and m["before"].get("tasks", []) + selected == m["after"].get("tasks") == b["tasks"]
+        for m in journal.get("migrations", [])), "STATE_FEATURES_INVALID")
+    return config
+
+
+def _external_catalog(config, ports):
+    services = []
+    for task_type, name in _SPECIALISTS:
+        for index, (model, physical, response, price) in enumerate(_EXTERNAL_MODELS):
+            services.append({"id": f"external-{task_type}-{model}", "name": f"{name} · {model}", "taskType": task_type,
+                "endpoint": f"http://127.0.0.1:{ports[f'external-{task_type}-{index}']}/v1/chat",
+                "serviceId": f"tabby/external/{task_type}", "modelId": model, "physicalModel": physical,
+                "responseModel": response, "priceRaw": price, "provider": config["externalProvider"]["wallet"],
+                "identity": config["externalProvider"]})
+    return {"version": 1, "registryUrl": f"http://127.0.0.1:{ports['external-registry']}/services",
+            "services": services, "minReputation": 0, "timeoutMs": 10000}
+
+
+def _external_paths(features, files, dirs, links):
+    prefix = "runtime/external-services"
+    names = {f"external-{task_type}-{model}" for task_type, _ in _SPECIALISTS for model, *_ in _EXTERNAL_MODELS}
+    for section, records in (("files", files), ("dirs", dirs), ("links", links)):
+        for name in records:
+            _check(not re.match(r"runtime/external[^/]*(?:/|$)", name) or name == prefix or name.startswith(prefix + "/"), "STATE_EXTERNAL_JOURNAL_INVALID")
+            if name != prefix and not name.startswith(prefix + "/"):
+                continue
+            _check(features is not None and section != "links", "STATE_EXTERNAL_JOURNAL_INVALID")
+            parts = name.split("/")
+            _check((section == "dirs" and (name == prefix or len(parts) == 3 and parts[2] in names))
+                   or (section == "files" and len(parts) == 4 and parts[2] in names
+                       and re.fullmatch(r"0x[0-9a-f]{64}\.json", parts[3]) is not None
+                       and records[name]["mode"] == 0o600), "STATE_EXTERNAL_JOURNAL_INVALID")
+
+
+def _checksum_address(value):
+    _address(value)
+    lower = value[2:].lower()
+    hashed = _keccak(lower.encode())[2:]
+    _check(value == "0x" + "".join(c.upper() if int(hashed[i], 16) >= 8 else c for i, c in enumerate(lower)))
+
+
+def _iso_millis(value):
+    _timestamp(value)
+    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    _check(value == dt.astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"))
+    return int(dt.timestamp() * 1000)
+
+
+def _transaction_budget(config, b, root, files, dirs, links, docs, issues):
+    path = "operator/acceptance-20261016/transaction-budget.json"
+    parent = str(Path(path).parent)
+    _check(parent in dirs and dirs[parent]["mode"] == 0o700 and all(dirs[parent][k] == files[path][k] for k in ("uid", "gid")), "STATE_TRANSACTION_BUDGET_INVALID")
+    budget = _closed(docs.get(path), ("version", "id", "chainId", "asset", "bootstrapSnapshotFile", "bootstrapSnapshotSha256", "issuedAtMs", "expiresAtMs", "maxTransactions",
+        "maxGasPerTransaction", "maxFeePerGas", "maxFeeRaw", "signers", "targets"), "STATE_TRANSACTION_BUDGET_INVALID")
+    _check(budget["version"] == 1 and isinstance(budget["id"], str) and _UUID.fullmatch(budget["id"]) is not None
+           and budget["chainId"] == "42431" and budget["asset"] == "0x20c0000000000000000000000000000000000000", "STATE_TRANSACTION_BUDGET_INVALID")
+    domain_path = parent + "/bootstrap-domain.json"
+    _check(budget["bootstrapSnapshotFile"] == str(root / domain_path)
+           and _private_reference(budget["bootstrapSnapshotFile"], root, files) == domain_path
+           and files[domain_path]["mode"] == 0o600 and files[domain_path]["sha256"] == budget["bootstrapSnapshotSha256"]
+           and all(files[domain_path][k] == files[path][k] for k in ("uid", "gid"))
+           and docs.get(domain_path) == {"version": 1, "chainId": "42431", "asset": b["asset"],
+                "contracts": {key: b["contracts"][key] for key in ("account", "escrow", "manager")}}, "STATE_TRANSACTION_BUDGET_INVALID")
+    issued, expires = _integer(budget["issuedAtMs"], True), _integer(budget["expiresAtMs"], True)
+    _check(0 < expires - issued <= 86400000 and 1 <= _integer(budget["maxTransactions"]) <= 40, "STATE_TRANSACTION_BUDGET_INVALID")
+    for key, maximum in (("maxGasPerTransaction", 20000000), ("maxFeePerGas", 3600000003), ("maxFeeRaw", 3000000)):
+        _check(len(budget[key]) <= 30 and _uint(budget[key], True) <= maximum, "STATE_TRANSACTION_BUDGET_INVALID")
+    _check(int(budget["maxFeePerGas"]) <= int(b["maxFeePerGas"]), "STATE_TRANSACTION_BUDGET_INVALID")
+    for key in ("signers", "targets"):
+        values = _array(budget[key])
+        _check(1 <= len(values) <= 16 and len(set(values)) == len(values), "STATE_TRANSACTION_BUDGET_INVALID")
+        for value in values: _checksum_address(value)
+    _check({a.lower() for a in budget["targets"]} <= {b["contracts"][key].lower() for key in ("account", "escrow", "manager")} | {b["asset"]["address"].lower()}, "STATE_TRANSACTION_BUDGET_INVALID")
+    ledger_path = parent + "/transaction-budget-ledger.json"
+    # Reservations survive RPC uncertainty and consume the ceiling forever.
+    # Their presence alone is not proof of an unfinished transaction; the
+    # original payment/workflow journals remain the quiescence authority.
+    if ledger_path in docs:
+        _check(files[ledger_path]["mode"] == 0o600 and all(files[ledger_path][k] == files[path][k] for k in ("uid", "gid")), "STATE_TRANSACTION_BUDGET_INVALID")
+        ledger = _closed(docs[ledger_path], ("version", "budgetId", "digest", "reservations"), "STATE_TRANSACTION_BUDGET_INVALID")
+        _check(ledger["version"] == 1 and ledger["budgetId"] == budget["id"] and ledger["digest"] == files[path]["sha256"], "STATE_TRANSACTION_BUDGET_INVALID")
+        rows = _array(ledger["reservations"])
+        _check(len(rows) <= budget["maxTransactions"], "STATE_TRANSACTION_BUDGET_INVALID")
+        hashes, fee = set(), 0
+        for row in rows:
+            _closed(row, ("hash", "sender", "to", "nonce", "gasLimit", "maxFeePerGas", "feeToken", "maxFeeRaw", "admittedAt"), "STATE_TRANSACTION_BUDGET_INVALID")
+            _check(isinstance(row["hash"], str) and _HASH.fullmatch(row["hash"]) is not None and row["hash"] not in hashes
+                   and row["sender"] in budget["signers"] and row["to"] in budget["targets"] and row["feeToken"] == budget["asset"], "STATE_TRANSACTION_BUDGET_INVALID")
+            hashes.add(row["hash"]); _integer(row["nonce"])
+            gas, rate, amount = (_uint(row[key], True) for key in ("gasLimit", "maxFeePerGas", "maxFeeRaw"))
+            _check(gas <= int(budget["maxGasPerTransaction"]) and rate <= int(budget["maxFeePerGas"])
+                   and amount == (gas * rate + 999999999999) // 1000000000000
+                   and issued <= _iso_millis(row["admittedAt"]) < expires, "STATE_TRANSACTION_BUDGET_INVALID")
+            fee += amount
+        _check(fee <= int(budget["maxFeeRaw"]), "STATE_TRANSACTION_BUDGET_INVALID")
+    for name in set(files) | set(dirs) | set(links):
+        if name.startswith(parent + "/"):
+            _check(name not in links and name in {path, domain_path, ledger_path, parent + "/transaction-budget.lock", parent + "/closure.json"}, "STATE_TRANSACTION_BUDGET_INVALID")
+    lock = parent + "/transaction-budget.lock"
+    if lock in dirs:
+        _check(dirs[lock]["mode"] == 0o700, "STATE_TRANSACTION_BUDGET_INVALID")
+        issues.add("STATE_OPERATOR_INFLIGHT")
+    _check(lock not in files, "STATE_TRANSACTION_BUDGET_INVALID")
+
+
+def _bounded_games(config, db, root, files, dirs, links, docs, issues, autonomy, sealed=False):
+    path, mirror = "operator/bounded-games.json", "operator/bounded-admissions/session.json"
+    grant = _closed(docs.get(path), ("version", "id", "parentRequestId", "chainId", "origin", "asset", "owner", "issuedAtMs", "expiresAtMs",
+        "baselineOwnerGames", "baselineTotalGames", "maxAdditionalGames", "maxGameCalls", "maxGameCompletionTokens", "maxCashRewardsRaw", "actor"), "STATE_BOUNDED_GAMES_INVALID")
+    _check(grant["version"] == 1 and grant["chainId"] == "42431" and grant["origin"] == _ORIGIN
+           and grant["asset"] == "0x20c0000000000000000000000000000000000000", "STATE_BOUNDED_GAMES_INVALID")
+    for key in ("id", "parentRequestId"):
+        _check(isinstance(grant[key], str) and re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", grant[key]) is not None, "STATE_BOUNDED_GAMES_INVALID")
+    _checksum_address(grant["owner"])
+    issued, expires = _integer(grant["issuedAtMs"], True), _integer(grant["expiresAtMs"], True)
+    count = _integer(grant["maxAdditionalGames"], True)
+    _check(0 < expires - issued <= 86400000 and issued <= int(datetime.now().timestamp() * 1000)
+           and count <= 2 and grant["maxGameCalls"] == 20 * count and grant["maxGameCompletionTokens"] == 10240 * count
+           and grant["maxCashRewardsRaw"] == "0", "STATE_BOUNDED_GAMES_INVALID")
+    baseline_owner, baseline_total = _integer(grant["baselineOwnerGames"]), _integer(grant["baselineTotalGames"])
+    _check(baseline_owner <= baseline_total <= 100, "STATE_BOUNDED_GAMES_INVALID")
+    actor = _closed(grant["actor"], ("hostedAgentId", "registryId", "wallet"), "STATE_BOUNDED_GAMES_INVALID")
+    _check(isinstance(actor["hostedAgentId"], str) and re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", actor["hostedAgentId"]) is not None, "STATE_BOUNDED_GAMES_INVALID")
+    _uint(actor["registryId"], True); _checksum_address(actor["wallet"])
+    agents = [a for a in db["agents"] if a["id"] == actor["hostedAgentId"]]
+    _check(len(agents) == 1, "STATE_BOUNDED_GAMES_INVALID")
+    agent = agents[0]
+    def bound_identity(value):
+        return (isinstance(value, dict) and value.get("id") == actor["hostedAgentId"] and value.get("owner") == grant["owner"]
+                and value.get("wallet") == actor["wallet"]
+                and value.get("binding") == {"chainId": "42431", "agentId": actor["registryId"], "wallet": actor["wallet"]})
+    _check(bound_identity(agent) and actor["wallet"] != config["externalProvider"]["wallet"]
+           and actor["registryId"] != config["externalProvider"]["agentId"], "STATE_BOUNDED_GAMES_INVALID")
+    settings = agent
+    if sealed:
+        # The grant can no longer admit a game. Preserve its original execution
+        # settings without pinning the owner's later, ordinary Agent settings.
+        parent_base = f"runtime/hosted/agents/{actor['hostedAgentId']}/runs/{grant['parentRequestId']}"
+        parent = _obj(docs.get(parent_base + "/autonomy-host/session.json"), ("version", "config", "input"))
+        original = _obj(parent["input"], ("agent", "run"))
+        _check(parent["version"] == 1 and parent["config"] == autonomy and bound_identity(original["agent"])
+               and original["run"].get("requestId") == grant["parentRequestId"]
+               and original["run"].get("agentId") == actor["hostedAgentId"] and original["run"].get("action") == "autonomous", "STATE_BOUNDED_GAMES_INVALID")
+        settings = original["agent"]
+    _check(settings.get("modelId") == "kimi-k2.6" and settings.get("strategy") == "balanced" and settings.get("allowCredit") is False
+           and not settings.get("configurationRequired"), "STATE_BOUNDED_GAMES_INVALID")
+    state = _closed(db.get("boundedGames"), ("grant", "digest", "admissions"), "STATE_BOUNDED_GAMES_INVALID")
+    _check(state["grant"] == grant and state["digest"] == files[path]["sha256"] and docs.get(mirror) == state
+           and mirror in files and files[mirror]["mode"] == 0o600
+           and all(files[mirror][k] == files[path][k] for k in ("uid", "gid")), "STATE_BOUNDED_GAMES_INVALID")
+    for name in set(files) | set(dirs) | set(links):
+        if name == "operator/bounded-admissions" or name.startswith("operator/bounded-admissions/"):
+            _check(name not in links and name in {"operator/bounded-admissions", mirror,
+                "operator/bounded-admissions/.writer", "operator/bounded-admissions/.writer/owner.json"}, "STATE_BOUNDED_GAMES_INVALID")
+    admissions = _array(state["admissions"])
+    _check(len(admissions) <= count and db["sponsoredOwners"].get(grant["owner"], 0) >= baseline_owner + len(admissions)
+           and baseline_total + len(admissions) <= db["sponsoredTotal"] <= 100, "STATE_BOUNDED_GAMES_INVALID")
+    children, total_calls = set(), 0
+    for index, row in enumerate(admissions):
+        _closed(row, ("parentRequestId", "childRequestId", "agentId", "ordinal", "admittedAt", "rewardKind"), "STATE_BOUNDED_GAMES_INVALID")
+        child = row["childRequestId"]
+        _check(isinstance(child, str) and re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", child) is not None
+               and child != grant["parentRequestId"] and child not in children and row["parentRequestId"] == grant["parentRequestId"]
+               and row["agentId"] == actor["hostedAgentId"] and type(row["ordinal"]) is int and row["ordinal"] == index + 1
+               and row["rewardKind"] == "llm-credits" and issued <= _iso_millis(row["admittedAt"]) < expires, "STATE_BOUNDED_GAMES_INVALID")
+        children.add(child)
+        _check(_obj(db.get("autonomousGameAdmissions")).get(child) == {"parentRequestId": row["parentRequestId"],
+            "agentId": row["agentId"], "rewardKind": "llm-credits"}, "STATE_BOUNDED_GAMES_INVALID")
+        parents = [r for r in db["runs"] if r["requestId"] == row["parentRequestId"]]
+        _check(len(parents) == 1 and parents[0]["agentId"] == row["agentId"] and parents[0]["action"] == "autonomous", "STATE_BOUNDED_GAMES_INVALID")
+        base = f"runtime/hosted/agents/{row['agentId']}/runs/{row['parentRequestId']}"
+        host, loop = docs.get(base + "/autonomy-host/session.json"), docs.get(base + "/autonomy-loop/session.json")
+        _check(isinstance(host, dict) and host.get("version") == 1 and host.get("config") == autonomy and isinstance(loop, dict)
+               and loop.get("config", {}).get("sessionId") == row["parentRequestId"]
+               and loop["config"].get("maxTasks") == 1 and loop["config"].get("maxDecisions") == 4
+               and loop["config"].get("games") == {k: v for k, v in _GAMES.items() if k != "rewardTaskMinTokens"}, "STATE_BOUNDED_GAMES_INVALID")
+        snapshot = _obj(host.get("children")).get(child)
+        _check(isinstance(snapshot, dict) and snapshot.get("directory") == str(root / base / "children" / child)
+               and snapshot.get("run", {}).get("requestId") == child and snapshot["run"].get("agentId") == row["agentId"]
+               and snapshot["run"].get("action") == "game" and snapshot["run"].get("rewardKind") == "llm-credits"
+               and snapshot["run"].get("reservedRaw") == "0", "STATE_BOUNDED_GAMES_INVALID")
+        steps = [s for s in _array(loop.get("steps")) if s.get("childId") == child]
+        _check(len(steps) == 1 and steps[0].get("decision") == {"action": "run-game", "modelId": "kimi-k2.6", "funding": "cash", "rewardKind": "llm-credits"}
+               and steps[0].get("childLimits", {}).get("maxSpendRaw") == "0", "STATE_BOUNDED_GAMES_INVALID")
+        outcome = steps[0].get("outcome", {})
+        if outcome.get("terminal") is not True or outcome.get("chargedRaw") != "0": issues.add("STATE_GAME_INFLIGHT")
+        child_base = base + "/children/" + child
+        journal, game = docs.get(child_base + "/session.json"), docs.get(child_base + "/game/session.json")
+        if not isinstance(journal, dict) or journal.get("result", {}).get("terminal") is not True or journal.get("phase") not in _TERMINAL:
+            issues.add("STATE_GAME_INFLIGHT")
+        if journal is not None:
+            _check(journal.get("version") == 1 and _SHA.fullmatch(journal.get("binding", "")) is not None
+                   and "award" not in journal and journal.get("result", {}).get("rewardRaw", "0") == "0", "STATE_BOUNDED_GAMES_INVALID")
+            start, end = _integer(journal.get("startedAtMs"), True), _integer(journal.get("deadlineMs"), True)
+            _check(issued <= start <= end <= expires and end - start <= 600000, "STATE_BOUNDED_GAMES_INVALID")
+        if game is not None:
+            _check(game.get("version") == 1 and game.get("matchId") == "hosted-" + child and game.get("limits") == _GAME_LIMITS
+                   and game.get("profiles") == [{"model": "kimi-k2.6", "strategy": "balanced"}] * 2
+                   and journal is not None and all(game.get(k) == journal.get(k) for k in ("startedAtMs", "deadlineMs")), "STATE_BOUNDED_GAMES_INVALID")
+            turns = _array(game.get("turns")); total_calls += len(turns)
+            _check(len(turns) <= 20, "STATE_BOUNDED_GAMES_INVALID")
+            for ordinal, turn in enumerate(turns, 1):
+                request = _closed(turn.get("request"), ("model", "stream", "max_completion_tokens", "thinking", "messages"), "STATE_BOUNDED_GAMES_INVALID")
+                _check(turn.get("turn") == ordinal and type(turn.get("seat")) is int and turn["seat"] in {0, 1}
+                       and turn.get("dispatchIntent") is True and request["model"] == "kimi-k2.6" and request["stream"] is False
+                       and request["max_completion_tokens"] == 512 and request["thinking"] == {"type": "disabled"}
+                       and turn.get("requestDigest") == hashlib.sha256(json.dumps(request, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
+                       and turn.get("outcome") in {"IntentPersisted", "Applied", "HTTPRejected", "ResponseInvalid", "OutcomeUnknown", "DeadlineExpired"}, "STATE_BOUNDED_GAMES_INVALID")
+    _check(total_calls <= grant["maxGameCalls"] and total_calls * 512 <= grant["maxGameCompletionTokens"], "STATE_BOUNDED_GAMES_INVALID")
+
+
+def _external_record(value, trust, gateway):
+    q, request = value["quote"], value["request"]
+    _check(q["price"] == trust["priceRaw"] and q["service"] == trust["serviceId"] and q["model"] == trust["modelId"]
+           and q["payTo"] == trust["provider"] and q["taskId"] == "0" and "tier" not in q, "STATE_EXTERNAL_JOURNAL_INVALID")
+    _uint(q["agentId"], True)
+    _closed(request, ("agentId", "taskId", "service", "model", "messages", "max_completion_tokens", "thinking"), "STATE_EXTERNAL_JOURNAL_INVALID")
+    _check(request["max_completion_tokens"] == 2048 and request["thinking"] == {"type": "disabled"}, "STATE_EXTERNAL_JOURNAL_INVALID")
+    messages = request["messages"]
+    _check(len(messages) == 2 and all(isinstance(m, dict) and set(m) == {"role", "content"} and isinstance(m["content"], str) for m in messages)
+           and messages[0]["role"] == "system" and messages[1]["role"] == "user", "STATE_EXTERNAL_JOURNAL_INVALID")
+    assignment = _obj(_json(messages[1]["content"].encode()), ("originalGoal", "assignment"))
+    nested = _obj(assignment["assignment"], ("name", "taskType", "goal"))
+    # prepareExternalHire strips stage and the top-level taskType before
+    # serializing context. The nested assignment carries the original type.
+    _check(nested["taskType"] == trust["taskType"] and "stage" not in assignment and "taskType" not in assignment
+           and all(isinstance(text, str) and text.strip() and len(text) <= maximum for text, maximum in
+                ((assignment["originalGoal"], 12000), (nested["name"], 160), (nested["goal"], 12000))), "STATE_EXTERNAL_JOURNAL_INVALID")
+    _check(value.get("route") == {"version": 1, "model": trust["modelId"], "upstreams": [{"name": trust["modelId"],
+        "model": trust["physicalModel"], "baseUrl": gateway["url"]}]}, "STATE_EXTERNAL_JOURNAL_INVALID")
+    if "proof" in value:
+        _check(value["proof"]["fromCredit"] == "0", "STATE_EXTERNAL_JOURNAL_INVALID")
+    for attempt in value.get("upstreamAttempts", []):
+        _check(attempt.get("upstream") == trust["modelId"] and attempt.get("model") == trust["physicalModel"], "STATE_EXTERNAL_JOURNAL_INVALID")
+    if value["state"] == "Delivered":
+        receipt, result = value["receipt"], _obj(value["result"])
+        _check(all(receipt.get(k) == q[k] for k in ("agentId", "taskId", "service", "price", "asset", "chainId", "account", "payTo"))
+               and receipt.get("upstream") == trust["modelId"] and receipt.get("model") == trust["physicalModel"]
+               and result.get("model") == trust["responseModel"], "STATE_EXTERNAL_JOURNAL_INVALID")
+        _check(result.get("externalService") == {"version": 1, "id": trust["id"], "serviceId": trust["serviceId"], "taskType": trust["taskType"],
+            "provider": trust["provider"], "identity": trust["identity"], "promptDigest": hashlib.sha256(messages[0]["content"].encode()).hexdigest(),
+            "assignmentDigest": _digest(messages[1]["content"])}, "STATE_EXTERNAL_JOURNAL_INVALID")
+
+
+def _feature_seal(journal, hosted, db, root, files, docs):
+    marker = journal["features"].get("seal")
+    path = "operator/acceptance-20261016/closure.json"
+    if marker is None:
+        _check("seal" not in journal["features"] and "boundedGamesSealed" not in hosted and path not in files, "STATE_FEATURES_SEAL_INVALID")
+        return
+    _closed(marker, ("version", "file", "digest"), "STATE_FEATURES_SEAL_INVALID")
+    _check(marker["version"] == 1 and marker["file"] == str(root / path) and hosted.get("boundedGamesSealed") is True
+           and _private_reference(marker["file"], root, files) == path
+           and files[path]["mode"] == 0o600 and files[path]["sha256"] == marker["digest"]
+           and all(files[path][k] == files["runtime/runtime-journal/session.json"][k] for k in ("uid", "gid")), "STATE_FEATURES_SEAL_INVALID")
+    closure = _closed(docs.get(path), ("version", "id", "closedAt", "goalRequestId", "parentRequestId", "budgetId", "budgetDigest", "ledgerSha256", "boundedAdmissionsSha256"), "STATE_FEATURES_SEAL_INVALID")
+    budget_path, ledger_path = ("operator/acceptance-20261016/" + name for name in ("transaction-budget.json", "transaction-budget-ledger.json"))
+    state, config = db["boundedGames"], journal["features"]["config"]
+    _check(closure["version"] == 1 and closure["id"] == config["id"] and closure["parentRequestId"] == state["grant"]["parentRequestId"]
+           and closure["goalRequestId"] != closure["parentRequestId"] and closure["budgetId"] == docs[budget_path]["id"]
+           and closure["budgetDigest"] == files[budget_path]["sha256"] and ledger_path in files
+           and closure["ledgerSha256"] == files[ledger_path]["sha256"]
+           and closure["boundedAdmissionsSha256"] == files["operator/bounded-admissions/session.json"]["sha256"], "STATE_FEATURES_SEAL_INVALID")
+    closed_at = _iso_millis(closure["closedAt"])
+    _check(closed_at <= int(datetime.now().timestamp() * 1000), "STATE_FEATURES_SEAL_INVALID")
+    for key, action in (("goalRequestId", "goal"), ("parentRequestId", "autonomous")):
+        _check(isinstance(closure[key], str) and _UUID.fullmatch(closure[key]) is not None, "STATE_FEATURES_SEAL_INVALID")
+        matches = [r for r in db["runs"] if r["requestId"] == closure[key]]
+        _check(len(matches) == 1 and matches[0]["action"] == action and matches[0]["agentId"] == state["grant"]["actor"]["hostedAgentId"]
+               and matches[0]["status"] in {"Succeeded", "Failed"} and matches[0].get("result", {}).get("terminal") is True
+               and matches[0]["recoverable"] is False
+               and _iso_millis(matches[0].get("updatedAt")) <= closed_at, "STATE_FEATURES_SEAL_INVALID")
+    _check(all(_iso_millis(r["admittedAt"]) <= closed_at for r in state["admissions"])
+           and all(_iso_millis(r["admittedAt"]) <= closed_at for r in docs[ledger_path]["reservations"]), "STATE_FEATURES_SEAL_INVALID")
+
+
 def _capture(project: Path) -> dict:
     project = Path(project).absolute()
     _check(project == project.resolve(strict=True), "STATE_PATH_INVALID")
@@ -387,9 +755,15 @@ def _capture(project: Path) -> dict:
     _check(journal["version"] == 1 and _SHA.fullmatch(journal["binding"]) is not None)
     _timestamp(journal["startedAt"])
     _obj(journal["ports"])
-    _check(set(journal["ports"]) == {"underwriter", "arena", "fixed", "allowance", "planner", "goalCheap", "goalStrong"})
+    features = _feature_config(journal, b, root, files, docs)
+    expected_ports = _PORTS | ({"external-registry"} | {f"external-{task_type}-{i}" for task_type, _ in _SPECIALISTS for i in (0, 1)} if features else set())
+    _check(set(journal["ports"]) == expected_ports, "STATE_FEATURES_PORTS_INVALID" if features else "STATE_SCHEMA_INVALID")
     for value in journal["ports"].values():
         _check(type(value) is int and 1024 <= value <= 65535)
+    if features:
+        _check(len(set(journal["ports"].values())) == len(expected_ports) and 8794 not in journal["ports"].values()
+               and not {3436, 3437} & set(journal["ports"].values()), "STATE_FEATURES_PORTS_INVALID")
+    _external_paths(features, files, dirs, links)
     issues = set()
     if any(m.get("status") != "Applied" for m in _array(journal.get("migrations", []))):
         issues.add("STATE_MIGRATION_INFLIGHT")
@@ -398,13 +772,29 @@ def _capture(project: Path) -> dict:
         migration = _obj(journal["publicOriginMigration"], ("id", "auditFile", "toOrigin", "publicBinding"))
         audit_path = _private_reference(migration["auditFile"], root, files)
         audit = _obj(docs.get(audit_path), ("id", "status", "origin"))
-        _check(audit["id"] == migration["id"] and audit["status"] == "Applied" and audit["origin"] == migration["toOrigin"] == _ORIGIN
-               and journal.get("effectiveBinding") == migration["publicBinding"], "STATE_MIGRATION_INVALID")
+        _check(audit["id"] == migration["id"] and audit["status"] == "Applied" and audit["origin"] == migration["toOrigin"] == _ORIGIN, "STATE_MIGRATION_INVALID")
+        _origin_binding_chain(journal, migration, audit, b, gateway)
     hosted_config = _obj(docs["runtime/hosted.json"], ("version", "hosted", "executor", "port"))
     hosted = _obj(hosted_config["hosted"], ("origin", "chainId", "directory"))
     _check(hosted_config["version"] == 1 and hosted_config["port"] == 8794 and hosted["chainId"] == "42431"
            and hosted["origin"] == _ORIGIN and hosted["directory"] == str(root / "runtime/hosted")
            and "testSponsorshipFile" not in hosted, "STATE_PRODUCTION_DOMAIN_INVALID")
+    if features:
+        _check(hosted.get("boundedGamesFile") == features["boundedGamesFile"], "STATE_FEATURES_INVALID")
+        external = _external_catalog(features, journal["ports"])
+        expected_goals = {"durationMs": 1200000, "chainLookup": True, "models": [{"id": response,
+            "relayUrl": f"http://127.0.0.1:{journal['ports'][port]}/v1/chat", "provider": b["payTo"], "priceRaw": price,
+            "service": "tabby/mission", "model": model, "physicalModel": physical, "responseModel": response}
+            for port, (model, physical, response, price) in zip(("goalCheap", "goalStrong"), _EXTERNAL_MODELS)], "external": external}
+        _check(hosted_config.get("goals") == expected_goals, "STATE_EXTERNAL_CONFIG_INVALID")
+        autonomy = {"maxTasks": 1, "maxDecisions": 4, "durationMs": 1200000,
+            "plannerRelayUrl": f"http://127.0.0.1:{journal['ports']['planner']}/v1/chat", "plannerProvider": b["payTo"], "plannerPriceRaw": "10000",
+            "plannerService": "infercredit/plan", "plannerModel": "logical-planner", "plannerPhysicalModel": "cheap/kimi-k2.6", "plannerResponseModel": "kimi-k2.6", "games": _GAMES}
+        _check(hosted_config.get("autonomy") == autonomy, "STATE_BOUNDED_GAMES_INVALID")
+    else:
+        external, autonomy = None, None
+        _check("boundedGamesFile" not in hosted and "external" not in _obj(hosted_config.get("goals", {}))
+               and "games" not in _obj(hosted_config.get("autonomy", {})), "STATE_FEATURES_REQUIRED")
     executor = _obj(hosted_config["executor"], ("taskConfigFile", "gameConfigFile"))
     _check(executor == {"taskConfigFile": str(root / "runtime/task.json"), "gameConfigFile": str(root / "runtime/game.json")})
     arena_config = _obj(docs["runtime/arena.json"], ("chainId", "escrowAddress", "ipcDirectory", "tasks", "rpcUrl"))
@@ -419,6 +809,17 @@ def _capture(project: Path) -> dict:
            and task_config["arenaUrl"] == f"http://127.0.0.1:{journal['ports']['arena']}"
            and task_config["underwriterUrl"] == f"http://127.0.0.1:{journal['ports']['underwriter']}")
     _check([m.get("id") for m in _array(task_config["models"])] == ["kimi-k2.6", "kimi-k3"])
+    if features:
+        for index, model in enumerate(task_config["models"]):
+            workflow = {"agentId": "1", "chainId": "42431", "account": b["contracts"]["account"], "asset": b["asset"]["address"], "escrowAddress": b["contracts"]["escrow"],
+                "tasks": [t for t in b["tasks"] if t["taskId"] in features["taskIds"]], "allowCredit": True, "maxPrice": "120000",
+                "deadlineMs": features["taskTemplateDeadlineMs"], "minRemainingMs": 60000, "maxCompletionTokens": 1024,
+                "providers": [{"id": "trusted-fixed", "payTo": b["payTo"], "relayUrl": f"http://127.0.0.1:{journal['ports']['fixed']}/v1/chat",
+                    "service": "infercredit/solve-fixed", "model": "pi-fixed-v1", "routes": [{"tier": "strong" if index else "cheap", "price": "120000",
+                        "capabilities": ["python3-json-stdio", "sum-integers", "unique-sorted", "balanced-brackets", "word-frequency"],
+                        "solve": {"version": 1, "tiers": ["strong", "strong"] if index else ["cheap", "strong"], "maxRounds": 2, "maxToolCalls": 4, "maxCompletionTokens": 1024}}]}]}
+            _check(model.get("physicalModels") == {"cheap": "cheap/kimi-k2.6", "strong": "strong/kimi-k3"}
+                   and model.get("templates") == {strategy: workflow for strategy in ("conservative", "balanced", "aggressive")}, "STATE_FEATURES_TASK_INVALID")
     _check(not any(k.startswith("gasSponsor") or k == "gasGrantWei" for k in task_config))
     game_config = _obj(docs["runtime/game.json"], ("version", "chainId", "identity", "account", "token", "rpcUrlFile", "rpcTransport", "upstreamTransport", "sponsorKeyFile", "walletDirectory", "creditsDirectory", "models"))
     _check(game_config["version"] == 1 and game_config["chainId"] == "42431" and game_config["identity"] == b["identity"]
@@ -427,6 +828,9 @@ def _capture(project: Path) -> dict:
            and game_config["sponsorKeyFile"] == b["roleKeyFiles"]["sponsor"] and game_config["walletDirectory"] == task_config["walletDirectory"]
            and game_config["creditsDirectory"] == str(root / "runtime/credits"))
     _check([m.get("id") for m in _array(game_config["models"])] == ["kimi-k2.6", "kimi-k3"])
+    if features:
+        _check(game_config.get("opponent") == {"binding": b["opponentBinding"], "keyFile": roles["opponent"], "modelId": "kimi-k2.6", "strategy": "balanced"}
+               and game_config["models"] == [{"id": model, "baseUrl": "https://api.moonshot.cn/v1", "keyFile": b["vendorKeyFile"]} for model in ("kimi-k2.6", "kimi-k3")], "STATE_BOUNDED_GAMES_INVALID")
     deployment = _obj(docs["runtime/deployment.json"], ("chainId", "contracts", "asset", "deploymentBlock", "rpcUrl", "underwriterUrl", "arenaUrl", "agents"))
     _check(deployment["chainId"] == "42431" and deployment["contracts"] == b["contracts"] and deployment["asset"] == b["asset"]
            and deployment["deploymentBlock"] == b["deploymentBlock"] and deployment["rpcUrl"] == b["publicRpcUrl"]
@@ -456,6 +860,13 @@ def _capture(project: Path) -> dict:
             issues.add("STATE_HOSTED_INFLIGHT")
         elif not isinstance(run.get("result"), dict) or run["result"].get("terminal") is not True or run["recoverable"]:
             issues.add("STATE_HOSTED_INFLIGHT")
+    if features:
+        _bounded_games(features, db, root, files, dirs, links, docs, issues, autonomy, "seal" in journal["features"])
+        _transaction_budget(features, b, root, files, dirs, links, docs, issues)
+        _feature_seal(journal, hosted, db, root, files, docs)
+    else:
+        _check("boundedGames" not in db and "boundedGamesSealed" not in hosted and not any(p == "operator/bounded-admissions" or p.startswith("operator/bounded-admissions/")
+            for p in set(files) | set(dirs) | set(links)), "STATE_FEATURES_REQUIRED")
     # Capture the authoritative external IPC directory without following links.
     ipc = Path(journal["ipcDirectory"])
     _check(ipc.is_absolute() and ipc.name.startswith("af-tempo-hosted-") and ipc.parent.resolve() == Path("/tmp").resolve(), "STATE_IPC_PATH_INVALID")
@@ -539,6 +950,8 @@ def _capture(project: Path) -> dict:
             ledgers[name] = value
     compensated = set()
     resolved_requests = {}
+    verified_relays = {}
+    external_by_directory = {s["id"]: s for s in external["services"]} if external else {}
 
     def remember_bridge(request, payment_id, source, identity):
         digest = _bridge_request_digest(request)
@@ -546,13 +959,17 @@ def _capture(project: Path) -> dict:
             resolved_requests.setdefault(digest, []).append({"paymentId": payment_id, "source": source, "identity": identity})
 
     for name, value in docs.items():
-        if re.fullmatch(r"runtime/(?:fixed|allowance|planner|goal-cheap|goal-strong)/0x[0-9a-f]{64}\.json", name):
+        core = bool(re.fullmatch(r"runtime/(?:fixed|allowance|planner|goal-cheap|goal-strong)/0x[0-9a-f]{64}\.json", name))
+        external_match = re.fullmatch(r"runtime/external-services/([^/]+)/0x[0-9a-f]{64}\.json", name)
+        if core or external_match:
+            trust = external_by_directory.get(external_match[1]) if external_match else None
+            _check(core or trust is not None, "STATE_EXTERNAL_JOURNAL_INVALID")
             _obj(value, ("quote", "request", "state", "refunds"))
             q = _obj(value["quote"], ("paymentId", "price", "agentId", "taskId", "service", "model", "requestDigest", "serverNonce", "chainId", "account", "asset", "payTo", "quoteExpiry", "createdBlock"))
             _check(q["paymentId"] == Path(name).stem and _HASH.fullmatch(q["requestDigest"]) is not None)
             _uint(q["price"], True); _uint(q["agentId"]); _uint(q["taskId"])
             _uint(q["quoteExpiry"]); _integer(q["createdBlock"])
-            _check(q["chainId"] == "42431" and q["account"] == b["contracts"]["account"] and q["asset"] == b["asset"]["address"] and q["payTo"] == b["payTo"]
+            _check(q["chainId"] == "42431" and q["account"] == b["contracts"]["account"] and q["asset"] == b["asset"]["address"] and q["payTo"] == (trust["provider"] if trust else b["payTo"])
                    and _HASH.fullmatch(q["serverNonce"]) is not None)
             request = _obj(value["request"], ("agentId", "taskId", "service", "model", "messages"))
             _array(request["messages"])
@@ -572,6 +989,10 @@ def _capture(project: Path) -> dict:
                 receipt = _obj(value.get("receipt"), ("paymentId", "txHash", "requestDigest"))
                 _check("result" in value and receipt["paymentId"] == q["paymentId"]
                        and receipt["txHash"] == value["proof"]["txHash"] and receipt["requestDigest"] == q["requestDigest"])
+            if trust:
+                _external_record(value, trust, gateway)
+            _check(q["paymentId"] not in verified_relays, "STATE_RELAY_RECORD_INVALID")
+            verified_relays[q["paymentId"]] = value
             refunds = _array(value["refunds"])
             if any(r.get("state") != "Confirmed" for r in refunds): issues.add("STATE_REFUND_INFLIGHT")
             for attempt in _array(value.get("upstreamAttempts", [])):
@@ -629,7 +1050,9 @@ def _capture(project: Path) -> dict:
                     if call.get("started") and not call.get("response") and not call.get("unpaid"):
                         recovery = call.get("recovery", {})
                         payment = call.get("handle", {}).get("quote", {}).get("paymentId")
-                        matches = [r for p, r in docs.items() if re.fullmatch(r"runtime/goal-(?:cheap|strong)/0x[0-9a-f]{64}\.json", p) and r.get("quote", {}).get("paymentId") == payment]
+                        matches = [r for p, r in docs.items() if (re.fullmatch(r"runtime/goal-(?:cheap|strong)/0x[0-9a-f]{64}\.json", p)
+                            or re.fullmatch(r"runtime/external-services/[^/]+/0x[0-9a-f]{64}\.json", p))
+                            and r.get("quote", {}).get("paymentId") == payment and verified_relays.get(payment) is r]
                         if not (recovery.get("resolved") is True and len(matches) == 1 and _valid_resolution(matches[0])):
                             issues.add("STATE_MISSION_INFLIGHT")
                 if value.get("result", {}).get("terminal") is not True: issues.add("STATE_MISSION_INFLIGHT")
@@ -677,7 +1100,7 @@ def _capture(project: Path) -> dict:
     return {"version": 1, "project": str(project), "root": str(root), "ipcDirectory": str(ipc),
             "files": files, "symlinks": links, "directories": dirs, "special": special,
             "semantic": {name: _digest(value) for name, value in docs.items()}, "metadata": metadata,
-            "settlements": settlements, "issues": sorted(issues),
+            "settlements": settlements, "issues": sorted(issues), "features": bool(features),
             "gateway": {"dispatches": len(dispatches), "responses": sum(e["phase"] == "Response" for e in outcomes.values()),
                         "unknown": sum(e["phase"] == "OutcomeUnknown" for e in outcomes.values()), "resolvedUnknown": resolved_unknown,
                         "journalSha256": files["gateway/attempts.jsonl"]["sha256"]},
@@ -705,8 +1128,9 @@ def require_quiescent(snapshot) -> None:
         raise StateError("STATE_SNAPSHOT_INVALID") from None
 
 
-def _lock_path(name):
-    return bool(re.fullmatch(r"runtime/(?:runtime-journal|hosted/database)/\.writer(?:/owner\.json)?", name))
+def _lock_path(name, snapshot):
+    return bool(re.fullmatch(r"runtime/(?:runtime-journal|hosted/database)/\.writer(?:/owner\.json)?", name)
+                or snapshot.get("features") and re.fullmatch(r"operator/bounded-admissions/\.writer(?:/owner\.json)?", name))
 
 
 def _lifecycle_permissions(snapshot, name, record):
@@ -733,7 +1157,7 @@ def compare(before, after, phase="cold") -> list[str]:
                 left, right = before[section].get(name), after[section].get(name)
                 if left == right: continue
                 _check(phase != "build", "STATE_BUILD_MUTATION")
-                if section != "symlinks" and (_lock_path(name) or name in {"@ipc/settler.owner", "@ipc/controller.token", "@ipc/settler.sock"}):
+                if section != "symlinks" and (_lock_path(name, before) and _lock_path(name, after) or name in {"@ipc/settler.owner", "@ipc/controller.token", "@ipc/settler.sock"}):
                     _lifecycle_permissions(before, name, left)
                     _lifecycle_permissions(after, name, right)
                     if left and right:

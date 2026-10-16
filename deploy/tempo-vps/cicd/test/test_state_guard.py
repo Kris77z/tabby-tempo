@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import tempfile
 import unittest
 
@@ -16,6 +17,13 @@ SPEC.loader.exec_module(guard)
 HASH = "0x" + "1" * 64
 ADDRESS = "0x" + "2" * 40
 UUID = "11111111-1111-1111-1111-111111111111"
+ACTOR = "11111111-1111-4111-8111-111111111111"
+PARENT = "22222222-2222-4222-8222-222222222222"
+CHILD = "33333333-3333-4333-8333-333333333333"
+GOAL = "44444444-4444-4444-8444-444444444444"
+SPECIALISTS = (("writer", "Writing Specialist"), ("analyst", "Analysis Specialist"), ("coder", "Code Specialist"),
+               ("abi-interact", "ABI Reader & Explainer"), ("gas-optimization", "Gas Optimizer"), ("token-scan", "Token Risk Scanner"),
+               ("tx-decode", "Transaction Decoder"), ("yield-search", "Yield Strategy Finder"))
 
 
 class GuardTest(unittest.TestCase):
@@ -180,6 +188,459 @@ class GuardTest(unittest.TestCase):
                  "inference": {"receipt": record["receipt"], "result": record["result"]}})
         self.put(self.relay_path, record)
         return record, ledger
+
+    def enable_features(self):
+        b, journal = self.get("operator/bootstrap.json"), self.get("runtime/runtime-journal/session.json")
+        b["opponentBinding"]["wallet"] = "0x" + "5" * 40
+        original = copy.deepcopy(b)
+        task = {"taskId": "5", "problemId": "sum-integers", "deadlineMs": 2000000000000, "creditLimit": "80000"}
+        b["tasks"].append(task); self.put("operator/bootstrap.json", b)
+        journal["originalCatalog"] = original["tasks"]
+        journal["migrations"] = [{"status": "Applied", "before": original, "after": b, "appended": [task]}]
+        config = {"version": 1, "id": ACTOR, "chainId": "42431", "origin": guard._ORIGIN,
+            "externalProvider": {"chainId": "42431", "registry": b["identity"], "agentId": b["opponentBinding"]["agentId"], "wallet": b["opponentBinding"]["wallet"]},
+            "boundedGamesFile": str(self.root / "operator/bounded-games.json"),
+            "transactionBudgetFile": str(self.root / "operator/acceptance-20261016/transaction-budget.json"),
+            "taskTemplateDeadlineMs": task["deadlineMs"], "taskIds": ["5"]}
+        self.put("operator/features.json", config)
+        journal["features"] = {"version": 1, "file": str(self.root / "operator/features.json"),
+            "digest": hashlib.sha256((self.root / "operator/features.json").read_bytes()).hexdigest(), "config": config}
+        ports = journal["ports"]
+        external = {"version": 1, "registryUrl": "http://127.0.0.1:6116/services", "services": [], "minReputation": 0, "timeoutMs": 10000}
+        for task_type, name in SPECIALISTS:
+            for index, (model, physical, response, price) in enumerate((("cheap", "cheap/kimi-k2.6", "kimi-k2.6", "10000"), ("strong", "strong/kimi-k3", "kimi-k3", "20000"))):
+                port = 6100 + len(external["services"]); ports[f"external-{task_type}-{index}"] = port
+                external["services"].append({"id": f"external-{task_type}-{model}", "name": f"{name} · {model}", "taskType": task_type,
+                    "endpoint": f"http://127.0.0.1:{port}/v1/chat", "serviceId": f"tabby/external/{task_type}", "modelId": model,
+                    "physicalModel": physical, "responseModel": response, "priceRaw": price, "provider": b["opponentBinding"]["wallet"], "identity": config["externalProvider"]})
+        ports["external-registry"] = 6116
+        self.put("runtime/runtime-journal/session.json", journal)
+        ready = self.get("runtime/ready.json"); ready["ports"] = ports; self.put("runtime/ready.json", ready)
+        arena = self.get("runtime/arena.json"); arena["tasks"]["5"] = {"problemId": "sum-integers"}; self.put("runtime/arena.json", arena)
+        hosted = self.get("runtime/hosted.json"); hosted["hosted"]["boundedGamesFile"] = config["boundedGamesFile"]
+        hosted["goals"] = {"durationMs": 1200000, "chainLookup": True, "models": [], "external": external}
+        for i, (logical, physical, response, price) in enumerate((("cheap", "cheap/kimi-k2.6", "kimi-k2.6", "10000"), ("strong", "strong/kimi-k3", "kimi-k3", "20000"))):
+            hosted["goals"]["models"].append({"id": response, "relayUrl": f"http://127.0.0.1:{ports['goalStrong' if i else 'goalCheap']}/v1/chat",
+                "provider": b["payTo"], "priceRaw": price, "service": "tabby/mission", "model": logical, "physicalModel": physical, "responseModel": response})
+        hosted["autonomy"] = {"maxTasks": 1, "maxDecisions": 4, "durationMs": 1200000, "plannerRelayUrl": "http://127.0.0.1:4005/v1/chat",
+            "plannerProvider": b["payTo"], "plannerPriceRaw": "10000", "plannerService": "infercredit/plan", "plannerModel": "logical-planner",
+            "plannerPhysicalModel": "cheap/kimi-k2.6", "plannerResponseModel": "kimi-k2.6",
+            "games": {"maxGames": 2, "maxSpendPerGameRaw": "0", "rewardKinds": ["llm-credits"], "rewardTaskMinTokens": 2048}}
+        self.put("runtime/hosted.json", hosted)
+        task_config = self.get("runtime/task.json")
+        for i, model in enumerate(task_config["models"]):
+            workflow = {"agentId": "1", "chainId": "42431", "account": b["contracts"]["account"], "asset": b["asset"]["address"], "escrowAddress": b["contracts"]["escrow"],
+                "tasks": [task], "allowCredit": True, "maxPrice": "120000", "deadlineMs": task["deadlineMs"], "minRemainingMs": 60000, "maxCompletionTokens": 1024,
+                "providers": [{"id": "trusted-fixed", "payTo": b["payTo"], "relayUrl": "http://127.0.0.1:4003/v1/chat", "service": "infercredit/solve-fixed", "model": "pi-fixed-v1",
+                    "routes": [{"tier": "strong" if i else "cheap", "price": "120000", "capabilities": ["python3-json-stdio", "sum-integers", "unique-sorted", "balanced-brackets", "word-frequency"],
+                        "solve": {"version": 1, "tiers": ["strong", "strong"] if i else ["cheap", "strong"], "maxRounds": 2, "maxToolCalls": 4, "maxCompletionTokens": 1024}}]}]}
+            model.update(physicalModels={"cheap": "cheap/kimi-k2.6", "strong": "strong/kimi-k3"}, templates={s: copy.deepcopy(workflow) for s in ("conservative", "balanced", "aggressive")})
+        self.put("runtime/task.json", task_config)
+        game = self.get("runtime/game.json")
+        game["opponent"] = {"binding": b["opponentBinding"], "keyFile": b["roleKeyFiles"]["opponent"], "modelId": "kimi-k2.6", "strategy": "balanced"}
+        game["models"] = [{"id": model, "baseUrl": "https://api.moonshot.cn/v1", "keyFile": b["vendorKeyFile"]} for model in ("kimi-k2.6", "kimi-k3")]
+        self.put("runtime/game.json", game)
+        grant = {"version": 1, "id": ACTOR, "parentRequestId": PARENT, "chainId": "42431", "origin": guard._ORIGIN, "asset": b["asset"]["address"],
+            "owner": "0x" + "3" * 40, "issuedAtMs": 1760000000000, "expiresAtMs": 1760003600000, "baselineOwnerGames": 3, "baselineTotalGames": 8,
+            "maxAdditionalGames": 2, "maxGameCalls": 40, "maxGameCompletionTokens": 20480, "maxCashRewardsRaw": "0",
+            "actor": {"hostedAgentId": ACTOR, "registryId": "9", "wallet": "0x" + "4" * 40}}
+        self.put("operator/bounded-games.json", grant)
+        bounded = {"grant": grant, "digest": hashlib.sha256((self.root / "operator/bounded-games.json").read_bytes()).hexdigest(), "admissions": []}
+        db = self.get("runtime/hosted/database/session.json")
+        db["agents"] = [{"id": ACTOR, "status": "Ready", "reservedRaw": "0", "spentRaw": "0", "owner": grant["owner"], "wallet": grant["actor"]["wallet"],
+            "binding": {"chainId": "42431", "agentId": "9", "wallet": grant["actor"]["wallet"]}, "modelId": "kimi-k2.6", "strategy": "balanced", "allowCredit": False}]
+        db.update(boundedGames=bounded, sponsoredOwners={grant["owner"]: 3}, sponsoredTotal=8)
+        self.put("runtime/hosted/database/session.json", db); self.put("operator/bounded-admissions/session.json", bounded)
+        domain = {"version": 1, "chainId": "42431", "asset": b["asset"], "contracts": {key: b["contracts"][key] for key in ("account", "escrow", "manager")}}
+        self.put("operator/acceptance-20261016/bootstrap-domain.json", domain)
+        self.put("operator/acceptance-20261016/transaction-budget.json", {"version": 1, "id": ACTOR, "chainId": "42431", "asset": b["asset"]["address"],
+            "bootstrapSnapshotFile": str(self.root / "operator/acceptance-20261016/bootstrap-domain.json"),
+            "bootstrapSnapshotSha256": hashlib.sha256((self.root / "operator/acceptance-20261016/bootstrap-domain.json").read_bytes()).hexdigest(),
+            "issuedAtMs": grant["issuedAtMs"], "expiresAtMs": grant["expiresAtMs"], "maxTransactions": 10, "maxGasPerTransaction": "10000000",
+            "maxFeePerGas": "10000", "maxFeeRaw": "1000", "signers": [grant["actor"]["wallet"]], "targets": [b["contracts"]["account"]]})
+        (self.root / "operator/acceptance-20261016").chmod(0o700)
+        return config
+
+    def external_relay(self, state="Quoted", attempt=None, specialist="writer", model="cheap", messages=None):
+        record = self.relay()
+        (self.root / self.relay_path).unlink()
+        trust = next(s for s in self.get("runtime/hosted.json")["goals"]["external"]["services"] if s["id"] == f"external-{specialist}-{model}")
+        user = json.dumps({"originalGoal": "fixture goal", "assignment": {"name": "fixture", "taskType": specialist, "goal": "fixture goal"}}, separators=(",", ":"))
+        messages = messages or [{"role": "system", "content": "PRIVATE_SENTINEL_PROMPT"}, {"role": "user", "content": user}]
+        user = messages[1]["content"]
+        request = {"agentId": "9", "taskId": "0", "service": trust["serviceId"], "model": model,
+            "messages": messages, "max_completion_tokens": 2048, "thinking": {"type": "disabled"}}
+        digest = guard._keccak(guard._canonical(request))
+        q = record["quote"]; q.update(agentId="9", service=trust["serviceId"], model=model, price=trust["priceRaw"], payTo=trust["provider"], requestDigest=digest)
+        q["paymentId"] = guard._keccak(bytes(32) + bytes.fromhex(digest[2:]) + bytes.fromhex(HASH[2:]))
+        record.update(request=request, state=state, route={"version": 1, "model": model, "upstreams": [{"name": model, "model": trust["physicalModel"], "baseUrl": "http://127.0.0.1:3436/v1"}]})
+        if state != "Quoted": record["proof"] = {**self.proof(), "fromCash": trust["priceRaw"]}
+        record["upstreamAttempts"] = [] if attempt is None else [{"upstream": model, "model": trust["physicalModel"], "startedAt": 1, "state": attempt}]
+        if state == "Delivered":
+            record["receipt"] = {**record["proof"], **{k: q[k] for k in ("paymentId", "agentId", "taskId", "service", "price", "asset", "chainId", "account", "payTo", "requestDigest")}, "upstream": model, "model": trust["physicalModel"]}
+            record["result"] = {"model": trust["responseModel"], "externalService": {"version": 1, "id": trust["id"], "serviceId": trust["serviceId"], "taskType": specialist,
+                "provider": trust["provider"], "identity": trust["identity"], "promptDigest": hashlib.sha256(messages[0]["content"].encode()).hexdigest(), "assignmentDigest": guard._digest(user)}}
+        self.relay_path = f"runtime/external-services/{trust['id']}/{q['paymentId']}.json"
+        self.put(self.relay_path, record)
+        return record
+
+    def bounded_child(self):
+        db = self.get("runtime/hosted/database/session.json"); state = db["boundedGames"]; grant = state["grant"]
+        state["admissions"] = [{"parentRequestId": PARENT, "childRequestId": CHILD, "agentId": ACTOR, "ordinal": 1,
+            "admittedAt": "2025-10-09T08:53:21.000Z", "rewardKind": "llm-credits"}]
+        # Use an exact ISO time calculated from the grant; no wall-clock expiry exemption.
+        state["admissions"][0]["admittedAt"] = guard.datetime.fromtimestamp((grant["issuedAtMs"] + 1000) / 1000, guard.datetime.fromisoformat("2025-01-01T00:00:00+00:00").tzinfo).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        db["sponsoredOwners"][grant["owner"]] += 1; db["sponsoredTotal"] += 1
+        db["autonomousGameAdmissions"] = {CHILD: {"parentRequestId": PARENT, "agentId": ACTOR, "rewardKind": "llm-credits"}}
+        db["runs"] = [{"requestId": PARENT, "agentId": ACTOR, "action": "autonomous", "status": "Succeeded", "reservedRaw": "0", "chargedRaw": "0", "recoverable": False, "result": {"terminal": True}}]
+        self.put("runtime/hosted/database/session.json", db); self.put("operator/bounded-admissions/session.json", state)
+        base = f"runtime/hosted/agents/{ACTOR}/runs/{PARENT}"
+        autonomy = self.get("runtime/hosted.json")["autonomy"]
+        frozen_agent = {**copy.deepcopy(db["agents"][0]), "name": "fixture actor", "perRunBudgetRaw": "120000", "totalBudgetRaw": "1000000",
+            "reservedRaw": "120000", "activeRequestId": PARENT}
+        original_input = {"agent": frozen_agent, "run": {"requestId": PARENT, "agentId": ACTOR, "action": "autonomous", "status": "Queued",
+            "reservedRaw": "120000", "chargedRaw": "0", "recoverable": False}, "directory": str(self.root / base),
+            "keyFile": str(self.root / f"runtime/hosted/agents/{ACTOR}/wallet.key"), "recover": False}
+        self.put(base + "/autonomy-host/session.json", {"version": 1, "config": autonomy, "input": original_input, "children": {CHILD: {
+            "agent": {**copy.deepcopy(frozen_agent), "activeRequestId": CHILD, "reservedRaw": "0"},
+            "directory": str(self.root / base / "children" / CHILD), "run": {"requestId": CHILD, "agentId": ACTOR, "action": "game", "rewardKind": "llm-credits", "reservedRaw": "0"}}}})
+        self.put(base + "/autonomy-loop/session.json", {"version": 1, "phase": "Completed", "config": {"sessionId": PARENT, "maxTasks": 1, "maxDecisions": 4,
+            "games": {"maxGames": 2, "maxSpendPerGameRaw": "0", "rewardKinds": ["llm-credits"]}}, "steps": [{"childId": CHILD,
+            "decision": {"action": "run-game", "modelId": "kimi-k2.6", "funding": "cash", "rewardKind": "llm-credits"}, "childLimits": {"maxSpendRaw": "0"}, "outcome": {"terminal": True, "chargedRaw": "0"}}]})
+        child_base = base + "/children/" + CHILD
+        self.put(child_base + "/session.json", {"version": 1, "binding": "a" * 64, "startedAtMs": grant["issuedAtMs"] + 2000,
+            "deadlineMs": grant["issuedAtMs"] + 602000, "phase": "Succeeded", "result": {"terminal": True, "rewardRaw": "0"}})
+        request = {"model": "kimi-k2.6", "stream": False, "max_completion_tokens": 512, "thinking": {"type": "disabled"},
+            "messages": [{"role": "system", "content": "PRIVATE_SENTINEL_CARDS"}, {"role": "user", "content": "fixture"}]}
+        self.put(child_base + "/game/session.json", {"version": 1, "matchId": "hosted-" + CHILD, "phase": "Complete",
+            "startedAtMs": grant["issuedAtMs"] + 2000, "deadlineMs": grant["issuedAtMs"] + 602000,
+            "limits": {"model": "kimi-k2.6", "maxCalls": 20, "maxCompletionTokens": 512, "deadlineDurationMs": 600000, "upstreamTimeoutMs": 55000, "inferenceRetries": 0},
+            "profiles": [{"model": "kimi-k2.6", "strategy": "balanced"}] * 2, "turns": [{"turn": 1, "seat": 0, "dispatchIntent": True,
+                "request": request, "requestDigest": hashlib.sha256(json.dumps(request, separators=(",", ":")).encode()).hexdigest(), "outcome": "Applied"}]})
+        return child_base
+
+    def seal_features(self):
+        db = self.get("runtime/hosted/database/session.json")
+        grant = db["boundedGames"]["grant"]
+        iso = lambda ms: guard.datetime.fromtimestamp(ms / 1000, guard.timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        db["runs"][0].update(updatedAt=iso(grant["issuedAtMs"] + 650000), reservedRaw="120000", chargedRaw="30000")
+        db["runs"].append({"requestId": GOAL, "agentId": ACTOR, "action": "goal", "status": "Succeeded", "reservedRaw": "120000", "chargedRaw": "50000",
+            "recoverable": False, "result": {"terminal": True}, "updatedAt": iso(grant["issuedAtMs"] + 660000)})
+        self.put("runtime/hosted/database/session.json", db)
+        budget_path = "operator/acceptance-20261016/transaction-budget.json"
+        budget = self.get(budget_path)
+        ledger = {"version": 1, "budgetId": budget["id"], "digest": hashlib.sha256((self.root / budget_path).read_bytes()).hexdigest(), "reservations": []}
+        self.put("operator/acceptance-20261016/transaction-budget-ledger.json", ledger)
+        closure = {"version": 1, "id": self.get("operator/features.json")["id"], "closedAt": iso(grant["issuedAtMs"] + 700000),
+            "goalRequestId": GOAL, "parentRequestId": PARENT, "budgetId": budget["id"], "budgetDigest": ledger["digest"],
+            "ledgerSha256": hashlib.sha256((self.root / "operator/acceptance-20261016/transaction-budget-ledger.json").read_bytes()).hexdigest(),
+            "boundedAdmissionsSha256": hashlib.sha256((self.root / "operator/bounded-admissions/session.json").read_bytes()).hexdigest()}
+        self.reseal(closure)
+        hosted = self.get("runtime/hosted.json"); hosted["hosted"]["boundedGamesSealed"] = True; self.put("runtime/hosted.json", hosted)
+        return closure
+
+    def reseal(self, closure):
+        path = "operator/acceptance-20261016/closure.json"; self.put(path, closure)
+        journal = self.get("runtime/runtime-journal/session.json")
+        journal["features"]["seal"] = {"version": 1, "file": str(self.root / path), "digest": hashlib.sha256((self.root / path).read_bytes()).hexdigest()}
+        self.put("runtime/runtime-journal/session.json", journal)
+
+    def public_origin_append_chain(self):
+        journal = self.get("runtime/runtime-journal/session.json"); gateway = self.get("gateway/ready.json")
+        migration = journal["migrations"][0]
+        previous = {**migration["before"], "frontendOrigin": "http://127.0.0.1:3028"}
+        # This is the production Origin migration's actual public record shape
+        # and migration ID. Temporary fixture paths require regenerated bindings.
+        marker = {"version": 1, "id": "c6820c69b7e433d402e12f861184e35be6a4b35016c9dfa435ec42753686a309",
+            "fromOrigin": "http://127.0.0.1:3028", "toOrigin": guard._ORIGIN, "previousBinding": guard._runtime_binding(previous, gateway),
+            "publicBinding": guard._runtime_binding(migration["before"], gateway), "auditFile": str(self.root / "runtime/vps-origin-migration/session.json")}
+        migration.update(id=guard._js_digest(migration["appended"]), beforeBinding=marker["publicBinding"], afterBinding=guard._runtime_binding(migration["after"], gateway))
+        journal.update(binding=marker["previousBinding"], effectiveBinding=migration["afterBinding"], publicOriginMigration=marker)
+        self.put("runtime/runtime-journal/session.json", journal)
+        self.put("runtime/vps-origin-migration/session.json", {"version": 1, "id": marker["id"], "status": "Applied", "origin": guard._ORIGIN,
+            "previousBinding": marker["previousBinding"], "publicBinding": marker["publicBinding"]})
+        return journal
+
+    def test_origin_audit_allows_only_a_complete_verified_append_chain_to_current_binding(self):
+        self.enable_features(); original = self.public_origin_append_chain(); guard.require_quiescent(self.capture())
+        self.assertNotEqual(original["effectiveBinding"], original["publicOriginMigration"]["publicBinding"])
+        for mutate in (lambda j: j.update(effectiveBinding="f" * 64), lambda j: j["migrations"][0].update(beforeBinding="f" * 64),
+                       lambda j: j["migrations"][0].update(id="f" * 64), lambda j: j["migrations"][0]["after"].update(payTo="0x" + "9" * 40),
+                       lambda j: j["migrations"].append(copy.deepcopy(j["migrations"][0]))):
+            changed = copy.deepcopy(original); mutate(changed); self.put("runtime/runtime-journal/session.json", changed)
+            self.rejects(self.capture, "STATE_MIGRATION_INVALID")
+        self.put("runtime/runtime-journal/session.json", original)
+        audit = self.get("runtime/vps-origin-migration/session.json"); audit["publicBinding"] = "f" * 64; self.put("runtime/vps-origin-migration/session.json", audit)
+        self.rejects(self.capture, "STATE_MIGRATION_INVALID")
+
+    def test_sealed_acceptance_preserves_history_and_allows_later_normal_external_goal(self):
+        self.enable_features(); self.bounded_child(); self.seal_features()
+        before = self.capture(); guard.require_quiescent(before)
+        db = self.get("runtime/hosted/database/session.json")
+        db["runs"].append({"requestId": "55555555-5555-4555-8555-555555555555", "agentId": ACTOR, "action": "goal", "status": "Succeeded",
+            "reservedRaw": "120000", "chargedRaw": "10000", "recoverable": False, "result": {"terminal": True}, "updatedAt": "2026-10-15T00:00:00.000Z"})
+        self.put("runtime/hosted/database/session.json", db); self.external_relay("Delivered", "Delivered")
+        guard.require_quiescent(self.capture())
+        self.rejects(lambda: guard.compare(before, self.capture(), "restart"), "STATE_PROTECTED_CHANGED")
+
+    def test_sealed_settings_can_change_but_current_identity_and_frozen_settings_cannot(self):
+        self.enable_features(); self.bounded_child(); self.seal_features()
+        db = self.get("runtime/hosted/database/session.json")
+        db["agents"][0].update(modelId="kimi-k3", strategy="aggressive", allowCredit=True)
+        self.put("runtime/hosted/database/session.json", db)
+        guard.require_quiescent(self.capture())
+        current = copy.deepcopy(db)
+        for mutate in (lambda a: a.update(owner="0x" + "9" * 40), lambda a: a.update(wallet="0x" + "9" * 40),
+                       lambda a: a["binding"].update(agentId="99")):
+            changed = copy.deepcopy(current); mutate(changed["agents"][0]); self.put("runtime/hosted/database/session.json", changed)
+            self.rejects(self.capture, "STATE_BOUNDED_GAMES_INVALID")
+        self.put("runtime/hosted/database/session.json", current)
+        host_path = f"runtime/hosted/agents/{ACTOR}/runs/{PARENT}/autonomy-host/session.json"
+        original = self.get(host_path)
+        for mutate in (lambda h: h["input"]["agent"].update(modelId="kimi-k3"), lambda h: h["input"]["agent"].update(strategy="aggressive"),
+                       lambda h: h["input"]["agent"].update(allowCredit=True), lambda h: h["input"]["agent"]["binding"].update(agentId="99"),
+                       lambda h: h["input"]["run"].update(requestId=GOAL)):
+            changed = copy.deepcopy(original); mutate(changed); self.put(host_path, changed)
+            self.rejects(self.capture, "STATE_BOUNDED_GAMES_INVALID")
+        self.put(host_path, original)
+        game_path = f"runtime/hosted/agents/{ACTOR}/runs/{PARENT}/children/{CHILD}/game/session.json"
+        game = self.get(game_path); game["profiles"][0]["model"] = "kimi-k3"; self.put(game_path, game)
+        self.rejects(self.capture, "STATE_BOUNDED_GAMES_INVALID")
+
+    def test_unsealed_settings_remain_bound_to_the_current_actor(self):
+        self.enable_features(); self.bounded_child()
+        original = self.get("runtime/hosted/database/session.json")
+        for values in ({"modelId": "kimi-k3"}, {"strategy": "aggressive"}, {"allowCredit": True}):
+            changed = copy.deepcopy(original); changed["agents"][0].update(values); self.put("runtime/hosted/database/session.json", changed)
+            self.rejects(self.capture, "STATE_BOUNDED_GAMES_INVALID")
+
+    def test_seal_requires_terminal_original_requests_canonical_time_and_explicit_hosted_flag(self):
+        self.enable_features(); self.bounded_child(); closure = self.seal_features()
+        for mutate in (lambda c: c.update(parentRequestId=CHILD), lambda c: c.update(goalRequestId=CHILD), lambda c: c.update(budgetId=CHILD),
+                       lambda c: c.update(closedAt="2020-01-01T00:00:00.000Z"), lambda c: c.update(closedAt="2025-10-09T16:53:20.000+08:00")):
+            changed = copy.deepcopy(closure); mutate(changed); self.reseal(changed); self.rejects(self.capture)
+        self.reseal(closure)
+        hosted = self.get("runtime/hosted.json"); hosted["hosted"].pop("boundedGamesSealed"); self.put("runtime/hosted.json", hosted)
+        self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID")
+        hosted["hosted"]["boundedGamesSealed"] = True; self.put("runtime/hosted.json", hosted)
+        db = self.get("runtime/hosted/database/session.json"); db["runs"][1]["result"]["terminal"] = False; self.put("runtime/hosted/database/session.json", db)
+        self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID")
+
+    def test_sealed_ledger_and_admission_bytes_cannot_change_or_hide_unknown_child(self):
+        self.enable_features(); base = self.bounded_child(); self.seal_features()
+        ledger_path = self.root / "operator/acceptance-20261016/transaction-budget-ledger.json"
+        original = ledger_path.read_bytes(); ledger_path.write_bytes(original + b"\n")
+        self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID"); ledger_path.write_bytes(original)
+        mirror = self.root / "operator/bounded-admissions/session.json"
+        original = mirror.read_bytes(); mirror.write_bytes(original + b"\n")
+        self.rejects(self.capture, "STATE_FEATURES_SEAL_INVALID"); mirror.write_bytes(original)
+        game = self.get(base + "/game/session.json"); game["phase"] = "Stopped"; game["turns"][0]["outcome"] = "OutcomeUnknown"; self.put(base + "/game/session.json", game)
+        self.rejects(lambda: guard.require_quiescent(self.capture()), "STATE_GAME_INFLIGHT")
+
+    def test_explicit_features_accept_exact_catalog_without_changing_legacy_terminal_state(self):
+        self.enable_features()
+        snapshot = self.capture(); guard.require_quiescent(snapshot)
+        self.assertTrue(snapshot["features"])
+        self.assertEqual(len(self.get("runtime/runtime-journal/session.json")["ports"]), 24)
+        self.assertNotIn("PRIVATE_SENTINEL", json.dumps(snapshot))
+        self.assertEqual(guard.compare(snapshot, self.capture(), "restart"), [])
+
+    def test_legacy_six_agents_twenty_seven_terminal_runs_need_no_features(self):
+        db = self.get("runtime/hosted/database/session.json")
+        db["agents"] = [{"id": str(i), "status": "Ready", "reservedRaw": "0", "spentRaw": "1"} for i in range(6)]
+        db["runs"] = [{"requestId": str(i), "agentId": "0", "action": "task", "status": "Succeeded", "reservedRaw": "0", "chargedRaw": "1", "recoverable": False, "result": {"terminal": True}} for i in range(27)]
+        db["testSponsorship"] = {"historical": "PRIVATE_SENTINEL_EXPIRED_GRANT"}
+        self.put("runtime/hosted/database/session.json", db)
+        before = self.capture(); guard.require_quiescent(before)
+        self.assertEqual(before["hosted"]["agents"], 6); self.assertEqual(before["hosted"]["runs"], 27)
+        self.assertFalse(before["features"])
+
+    def test_feature_marker_requires_raw_digest_private_path_and_explicit_task_append(self):
+        self.enable_features(); original = self.get("runtime/runtime-journal/session.json")
+        for mutate in (lambda j: j["features"].update(digest="a" * 64), lambda j: j["features"].update(file=str(self.root / "operator/bootstrap.json")),
+                       lambda j: j["features"].update(automatic=True), lambda j: j.update(migrations=[]),
+                       lambda j: j["originalCatalog"][0].update(deadlineMs=1), lambda j: j.update(features=None)):
+            changed = copy.deepcopy(original); mutate(changed); self.put("runtime/runtime-journal/session.json", changed)
+            self.rejects(self.capture, "STATE_FEATURES_INVALID")
+        self.put("runtime/runtime-journal/session.json", original)
+        (self.root / "operator/features.json").chmod(0o644)
+        self.rejects(self.capture, "STATE_PRIVATE_FILE_INVALID")
+
+    def test_external_and_games_configuration_require_feature_marker(self):
+        for extra in ({"goals": {"external": {}}}, {"autonomy": {"games": {}}}, {"hosted": {**self.get("runtime/hosted.json")["hosted"], "boundedGamesFile": "/tmp/grant"}}):
+            hosted = self.get("runtime/hosted.json"); original = copy.deepcopy(hosted); hosted.update(extra); self.put("runtime/hosted.json", hosted)
+            self.rejects(self.capture, "STATE_FEATURES_REQUIRED"); self.put("runtime/hosted.json", original)
+        self.write("runtime/external-services/external-writer-cheap/" + HASH + ".json", "{}")
+        self.rejects(self.capture, "STATE_EXTERNAL_JOURNAL_INVALID")
+
+    def test_external_ports_catalog_and_task_scope_are_exact(self):
+        self.enable_features(); original = self.get("runtime/hosted.json")
+        for mutate in (lambda h: h["goals"]["external"]["services"][0].update(priceRaw="1"),
+                       lambda h: h["goals"]["external"]["services"][0].update(provider=ADDRESS),
+                       lambda h: h["goals"]["external"]["services"][0].update(responseModel="kimi-k3"),
+                       lambda h: h["goals"]["external"]["services"][0].update(endpoint="https://remote.invalid/v1/chat"),
+                       lambda h: h["goals"]["external"]["services"][0].update(reputation={"score": 5}),
+                       lambda h: h["autonomy"]["games"].update(rewardKinds=["usdc"]),
+                       lambda h: h["autonomy"].update(maxTasks=2)):
+            changed = copy.deepcopy(original); mutate(changed); self.put("runtime/hosted.json", changed); self.rejects(self.capture)
+        self.put("runtime/hosted.json", original)
+        journal = self.get("runtime/runtime-journal/session.json"); journal["ports"]["external-writer-1"] = journal["ports"]["external-writer-0"]
+        self.put("runtime/runtime-journal/session.json", journal); self.rejects(self.capture, "STATE_FEATURES_PORTS_INVALID")
+        journal["ports"]["external-writer-1"] += 1; self.put("runtime/runtime-journal/session.json", journal)
+        task = self.get("runtime/task.json"); task["models"][0]["templates"]["balanced"]["tasks"] = self.get("operator/bootstrap.json")["tasks"]
+        self.put("runtime/task.json", task); self.rejects(self.capture, "STATE_FEATURES_TASK_INVALID")
+
+    def test_all_external_journals_accept_only_unpaid_quotes_and_bound_deliveries(self):
+        self.enable_features()
+        for task_type, _ in SPECIALISTS:
+            for model in ("cheap", "strong"):
+                self.external_relay("Delivered", "Delivered", task_type, model)
+        snapshot = self.capture(); guard.require_quiescent(snapshot)
+        self.assertEqual(sum(p.startswith("runtime/external-services/") for p in snapshot["files"]), 16)
+        self.assertNotIn("PRIVATE_SENTINEL", json.dumps(snapshot))
+        self.external_relay(); guard.require_quiescent(self.capture())
+
+    @unittest.skipUnless((MODULE.parents[3] / "node_modules/tsx").is_dir(), "pure application wire test requires npm ci; custody fixtures remain dependency-free")
+    def test_external_real_prepare_hire_wire_and_provenance_are_accepted(self):
+        self.enable_features()
+        trust = self.get("runtime/hosted.json")["goals"]["external"]["services"][0]
+        # Run the real pure application preparation code, with no transport,
+        # key, wallet, journal or chain. This catches Python fixture drift.
+        code = '''
+import {prepareExternalHire} from './services/hosted-agents/src/external/hiring.ts';
+import {tempoRuntimeBinding} from './scripts/tempo-hosted-runtime.ts';
+import {validateGatewayCatalog} from './services/hosted-agents/src/inference-gateway.ts';
+let raw='';for await (const chunk of process.stdin) raw+=chunk;
+const {trust,bootstrap,gateway}=JSON.parse(raw), service={trust,service:{taskType:'writer'},registryDigest:'a'.repeat(64)};
+const result=prepareExternalHire({binding:'b'.repeat(64),input:{goal:'fixture goal',chainId:'42431'}},service,
+ {stage:'phase:0',taskType:'writer',originalGoal:'fixture goal',assignment:{name:'fixture',taskType:'writer',goal:'fixture goal'}});
+const catalog=validateGatewayCatalog(gateway.models.map((m,i)=>({...m,route:gateway.endpoint,inputMicroCreditsPerToken:i?'3':'1',outputMicroCreditsPerToken:i?'6':'2',maxCompletionTokens:1024})));
+process.stdout.write(JSON.stringify({...result,runtimeBinding:tempoRuntimeBinding(bootstrap,gateway,catalog)}));
+'''
+        node = Path("/Users/jungle/.nvm/versions/node/v22.23.2/bin/node")
+        executable = str(node) if node.exists() else shutil.which("node")
+        self.assertTrue(executable, "Node with repository tsx is required for the pure wire-contract test")
+        bootstrap, gateway = self.get("operator/bootstrap.json"), self.get("gateway/ready.json")
+        gateway["models"] = [dict(reversed(list(model.items()))) for model in gateway["models"]]
+        result = subprocess.run([executable, "--import", "tsx", "--input-type=module", "-e", code], cwd=MODULE.parents[3],
+            input=json.dumps({"trust": trust, "bootstrap": bootstrap, "gateway": gateway}), text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+        self.assertEqual(result.returncode, 0, "pure prepareExternalHire fixture failed")
+        prepared = json.loads(result.stdout)
+        self.assertEqual(prepared["runtimeBinding"], guard._runtime_binding(bootstrap, gateway))
+        user = json.loads(prepared["call"]["messages"][1]["content"])
+        self.assertNotIn("taskType", user); self.assertEqual(user["assignment"]["taskType"], "writer")
+        record = self.external_relay("Delivered", "Delivered", messages=prepared["call"]["messages"])
+        self.assertEqual(record["result"]["externalService"]["promptDigest"], prepared["hire"]["promptDigest"])
+        self.assertEqual(record["result"]["externalService"]["assignmentDigest"], prepared["hire"]["assignmentDigest"])
+        guard.require_quiescent(self.capture())
+
+    def test_external_paid_processing_unknown_and_partial_refund_block_deployment(self):
+        self.enable_features()
+        for state in ("Paid", "Processing"):
+            self.external_relay(state)
+            self.rejects(lambda: guard.require_quiescent(self.capture()), "STATE_RELAY_INFLIGHT")
+        self.external_relay("Delivered", "Unknown")
+        self.rejects(lambda: guard.require_quiescent(self.capture()), "STATE_RELAY_UNKNOWN")
+        record = self.external_relay("Refunded", "Rejected")
+        record["refunds"] = [{"id": HASH, "amount": "10000", "state": "Prepared"}]; self.put(self.relay_path, record)
+        self.rejects(lambda: guard.require_quiescent(self.capture()), "STATE_REFUND_INFLIGHT")
+
+    def test_external_unknown_requires_exact_refund_resolution_and_bridge_body(self):
+        self.enable_features(); record = self.external_relay("Refunded", "Unknown")
+        record["refunds"] = [{"id": HASH, "amount": "10000", "state": "Confirmed", "transaction": {"rawTransaction": "0x01", "txHash": guard._keccak(b"\x01"), "nonce": 1}}]
+        record["operatorResolution"] = {"version": 1, "paymentId": record["quote"]["paymentId"], "resolutionId": UUID, "evidenceDigest": HASH,
+            "expectedAttemptsDigest": guard._keccak(guard._canonical(record["upstreamAttempts"])), "reason": "operator-accepted-nondelivery-cost", "resolvedAt": 1}
+        self.put(self.relay_path, record)
+        inference = {k: v for k, v in record["request"].items() if k not in {"agentId", "taskId", "service", "tier"}}
+        wire = {**inference, "model": "kimi-k2.6"}
+        intent = {"attempt": 1, "phase": "DispatchIntent", "at": "2026-10-14T00:00:00Z", "model": "kimi-k2.6", "requestDigest": hashlib.sha256(json.dumps(wire, separators=(",", ":")).encode()).hexdigest(), "maxCompletionTokens": 2048}
+        unknown = {"attempt": 1, "phase": "OutcomeUnknown", "at": intent["at"]}
+        self.write("gateway/attempts.jsonl", json.dumps(intent) + "\n" + json.dumps(unknown) + "\n")
+        self.put(f"runtime/hosted/agents/{ACTOR}/runs/{PARENT}/mission/session.json", {"version": 1, "view": {}, "calls": [{"started": True,
+            "handle": {"quote": record["quote"]}, "recovery": {"resolved": True}}], "result": {"terminal": True}})
+        guard.require_quiescent(self.capture())
+        record["operatorResolution"]["expectedAttemptsDigest"] = HASH; self.put(self.relay_path, record)
+        self.rejects(self.capture, "STATE_RESOLUTION_INVALID")
+
+    def test_external_unconfigured_paths_symlinks_and_payment_binding_are_rejected(self):
+        self.enable_features(); record = self.external_relay(); original = copy.deepcopy(record)
+        for mutate in (lambda r: r["quote"].update(payTo=ADDRESS), lambda r: r["quote"].update(price="20000"),
+                       lambda r: r["route"]["upstreams"][0].update(baseUrl="https://remote.invalid/v1"),
+                       lambda r: r["request"].update(max_completion_tokens=4096)):
+            changed = copy.deepcopy(original); mutate(changed); self.put(self.relay_path, changed); self.rejects(self.capture)
+        self.put(self.relay_path, original)
+        for path in ("runtime/external-services/not-approved", "runtime/external-services/external-writer-cheap/nested", "runtime/external-unconfigured"):
+            (self.root / path).mkdir(); self.rejects(self.capture, "STATE_EXTERNAL_JOURNAL_INVALID"); (self.root / path).rmdir()
+        linked = self.root / "runtime/external-services/external-writer-strong"; linked.symlink_to(self.root / "operator")
+        self.rejects(self.capture, "STATE_EXTERNAL_JOURNAL_INVALID"); linked.unlink()
+        self.write("runtime/external-services/external-writer-cheap/unfinished.tmp", "PRIVATE_SENTINEL")
+        self.rejects(self.capture, "STATE_EXTERNAL_JOURNAL_INVALID")
+
+    def test_bounded_expired_history_is_allowed_but_mirror_actor_and_admission_tampering_are_not(self):
+        self.enable_features(); child_base = self.bounded_child(); guard.require_quiescent(self.capture())
+        db = self.get("runtime/hosted/database/session.json"); original = copy.deepcopy(db)
+        for mutate in (lambda d: d["boundedGames"]["admissions"][0].update(parentRequestId=CHILD), lambda d: d["boundedGames"]["admissions"][0].update(rewardKind="usdc"),
+                       lambda d: d["boundedGames"]["admissions"].append(d["boundedGames"]["admissions"][0]),
+                       lambda d: d["agents"][0].update(allowCredit=True), lambda d: d.update(sponsoredTotal=8),
+                       lambda d: d["autonomousGameAdmissions"][CHILD].update(agentId=PARENT)):
+            changed = copy.deepcopy(original); mutate(changed); self.put("runtime/hosted/database/session.json", changed)
+            self.put("operator/bounded-admissions/session.json", changed["boundedGames"]); self.rejects(self.capture)
+        self.put("runtime/hosted/database/session.json", original); self.put("operator/bounded-admissions/session.json", original["boundedGames"])
+        self.put("operator/bounded-admissions/session.json", {**original["boundedGames"], "admissions": []})
+        self.rejects(self.capture, "STATE_BOUNDED_GAMES_INVALID")
+
+    def test_bounded_terminal_parent_cannot_hide_unknown_or_unfinished_game_child(self):
+        self.enable_features(); base = self.bounded_child()
+        for state in ("IntentPersisted", "OutcomeUnknown"):
+            game = self.get(base + "/game/session.json"); game["phase"] = "Stopped"; game["turns"][0]["outcome"] = state; self.put(base + "/game/session.json", game)
+            self.rejects(lambda: guard.require_quiescent(self.capture()), "STATE_GAME_INFLIGHT")
+        game["phase"] = "Complete"; game["turns"][0]["outcome"] = "Applied"; self.put(base + "/game/session.json", game)
+        journal = self.get(base + "/session.json"); journal["phase"] = "CreditsPending"; journal["result"]["terminal"] = False; self.put(base + "/session.json", journal)
+        self.rejects(lambda: guard.require_quiescent(self.capture()), "STATE_GAME_INFLIGHT")
+        journal["phase"] = "Succeeded"; journal["result"]["terminal"] = True; journal["award"] = {}; self.put(base + "/session.json", journal)
+        self.rejects(self.capture, "STATE_BOUNDED_GAMES_INVALID")
+
+    def test_bounded_lock_is_lifecycle_only_and_all_authorizations_and_business_files_are_protected(self):
+        self.enable_features(); before = self.capture()
+        self.put("operator/bounded-admissions/.writer/owner.json", {"pid": 99, "token": UUID}); (self.root / "operator/bounded-admissions/.writer").chmod(0o700)
+        self.assertEqual(guard.compare(before, self.capture(), "restart"), ["operator/bounded-admissions/.writer", "operator/bounded-admissions/.writer/owner.json"])
+        self.rejects(lambda: guard.compare(before, self.capture(), "build"), "STATE_BUILD_MUTATION")
+        locked = self.capture(); shutil.rmtree(self.root / "operator/bounded-admissions/.writer")
+        self.assertEqual(guard.compare(locked, self.capture(), "cold"), ["operator/bounded-admissions/.writer", "operator/bounded-admissions/.writer/owner.json"])
+        current = self.capture(); self.external_relay()
+        self.rejects(lambda: guard.compare(current, self.capture(), "restart"), "STATE_PROTECTED_CHANGED")
+
+    def test_transaction_budget_accepts_checksummed_pathusd_target_from_lowercase_bootstrap(self):
+        self.enable_features()
+        path = "operator/acceptance-20261016/transaction-budget.json"
+        budget = self.get(path)
+        pathusd = "0x20C0000000000000000000000000000000000000"
+        self.assertEqual(self.get("operator/bootstrap.json")["asset"]["address"], pathusd.lower())
+        budget["targets"].append(pathusd); self.put(path, budget)
+        guard.require_quiescent(self.capture())
+        budget["targets"].append("0x" + "9" * 40); self.put(path, budget)
+        self.rejects(self.capture, "STATE_TRANSACTION_BUDGET_INVALID")
+
+    def test_transaction_budget_domain_allowlist_rounding_and_lock_are_enforced(self):
+        self.enable_features(); path = "operator/acceptance-20261016/transaction-budget.json"; budget = self.get(path)
+        ledger = {"version": 1, "budgetId": budget["id"], "digest": hashlib.sha256((self.root / path).read_bytes()).hexdigest(), "reservations": [{"hash": HASH,
+            "sender": budget["signers"][0], "to": budget["targets"][0], "nonce": 0, "gasLimit": "10000000", "maxFeePerGas": "10000", "feeToken": budget["asset"], "maxFeeRaw": "1",
+            "admittedAt": "2025-10-09T08:53:21.000Z"}]}
+        grant = self.get("operator/bounded-games.json")
+        ledger["reservations"][0]["admittedAt"] = guard.datetime.fromtimestamp((grant["issuedAtMs"] + 1000) / 1000, guard.datetime.fromisoformat("2025-01-01T00:00:00+00:00").tzinfo).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        ledger_path = "operator/acceptance-20261016/transaction-budget-ledger.json"; self.put(ledger_path, ledger)
+        before = self.capture(); guard.require_quiescent(before)
+        for mutate in (lambda d: d["reservations"][0].update(maxFeeRaw="2"), lambda d: d["reservations"].append(d["reservations"][0]),
+                       lambda d: d["reservations"][0].update(to="0x" + "9" * 40), lambda d: d["reservations"][0].update(feeToken=ADDRESS)):
+            changed = copy.deepcopy(ledger); mutate(changed); self.put(ledger_path, changed); self.rejects(self.capture, "STATE_TRANSACTION_BUDGET_INVALID")
+        self.put(ledger_path, ledger)
+        changed = copy.deepcopy(ledger); changed["reservations"][0]["nonce"] = 1; self.put(ledger_path, changed)
+        self.rejects(lambda: guard.compare(before, self.capture(), "restart"), "STATE_PROTECTED_CHANGED")
+        self.put(ledger_path, ledger)
+        lock = self.root / "operator/acceptance-20261016/transaction-budget.lock"; lock.mkdir(mode=0o700)
+        self.rejects(lambda: guard.require_quiescent(self.capture()), "STATE_OPERATOR_INFLIGHT"); lock.rmdir()
+        domain_path = "operator/acceptance-20261016/bootstrap-domain.json"; domain = self.get(domain_path); domain["contracts"]["account"] = ADDRESS; self.put(domain_path, domain)
+        self.rejects(self.capture, "STATE_TRANSACTION_BUDGET_INVALID")
 
     def test_keccak_vectors(self):
         self.assertEqual(guard._keccak(b""), "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470")
