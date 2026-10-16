@@ -4,8 +4,9 @@ import { isDeepStrictEqual } from "node:util";
 import type { GoalCall, GoalState } from "./executor.js";
 
 export interface GoalPaymentRecovery { chargedRaw:string; refundedRaw:string; resolved:boolean; reverted?:boolean; voided?:boolean }
-/** Read-only proof. An unknown vendor dispatch is terminal only after explicit
- * nondelivery resolution and its canonical full refund; a timeout is not proof. */
+/** Read-only proof. An explicitly unattempted payment needs its canonical full
+ * refund. Unknown dispatch still needs explicit nondelivery resolution too;
+ * a timeout or absent dispatch history is not proof. */
 export async function reconcileGoalPayment(state:GoalState, call:GoalCall, accountAddress:string, asset:string, rpc:JsonRpcProvider):Promise<GoalPaymentRecovery|undefined>{
  const handle=call.handle;if(!handle)return;
  const quote=handle.quote,route=call.route??state.route,same=(a:string,b:string)=>a.toLowerCase()===b.toLowerCase();
@@ -45,8 +46,22 @@ export async function reconcileGoalPayment(state:GoalState, call:GoalCall, accou
  try{
   const url=new URL(handle.relayUrl);url.pathname=`/payments/${quote.paymentId}`;url.search=new URLSearchParams({agentId:state.input.chainAgentId,requestDigest:quote.requestDigest}).toString();
   const response=await fetch(url,{signal:AbortSignal.timeout(10000),redirect:"error"});if(!response.ok)return paid;
-  const view=await response.json() as {state?:string;paymentId?:string;refundedAmount?:string;result?:unknown;receipt?:unknown;upstreamAttempts?:{state:string}[];operatorResolution?:{version:number;paymentId:string;resolutionId:string;expectedAttemptsDigest:string;evidenceDigest:string;reason:string;resolvedAt:number};confirmedRefunds?:{refundId:string;amount:string;txHash:string}[]};
+  const view=await response.json() as {state?:string;paymentId?:string;refundedAmount?:string;result?:unknown;receipt?:unknown;upstreamAttempts?:{state:string}[];operatorCompensation?:unknown;operatorResolution?:{version:number;paymentId:string;resolutionId:string;expectedAttemptsDigest:string;evidenceDigest:string;reason:string;resolvedAt:number};confirmedRefunds?:{refundId:string;amount:string;txHash:string}[]};
   const resolution=view.operatorResolution,refunds=view.confirmedRefunds;
+  // Only an explicit empty dispatch history proves this is a natural refund.
+  // Missing legacy history and every attempted dispatch keep their old rules.
+  if(view.state==="Refunded"&&view.paymentId===quote.paymentId&&view.refundedAmount===quote.price&&payment.refundedAmount===BigInt(quote.price)
+   &&view.result===undefined&&view.receipt===undefined&&call.inference===undefined&&call.response===undefined
+   &&resolution===undefined&&view.operatorCompensation===undefined&&Array.isArray(view.upstreamAttempts)&&view.upstreamAttempts.length===0
+   &&Array.isArray(refunds)&&refunds.length===1&&hash(refunds[0].refundId)&&hash(refunds[0].txHash)&&refunds[0].amount===quote.price){
+   const manager=await account.getFunction("creditManager").staticCall({blockTag:head.number}),refund=refunds[0],refundReceipt=await rpc.getTransactionReceipt(refund.txHash);
+   if(!refundReceipt||refundReceipt.status!==1||refundReceipt.hash!==refund.txHash||refundReceipt.blockNumber>head.number||(await rpc.getBlock(refundReceipt.blockNumber))?.hash!==refundReceipt.blockHash)return paid;
+   const refundEvents=refundReceipt.logs.filter(log=>same(log.address,manager)).flatMap(log=>{try{const e=managerInterface.parseLog(log);return e?.name==="RefundProcessed"?[e]:[];}catch{return[];}});
+   if(refundEvents.length!==1||refundEvents[0].args.paymentId!==quote.paymentId||refundEvents[0].args.refundId!==refund.refundId||refundEvents[0].args.amount!==BigInt(quote.price)
+    ||refundEvents[0].args.debtReduced!==0n||refundEvents[0].args.toCash!==BigInt(quote.price)
+    ||await account.getFunction("refundConsumed").staticCall(refund.refundId,{blockTag:head.number})!==true||(await rpc.getBlock(head.number))?.hash!==head.hash)return paid;
+   return{chargedRaw:"0",refundedRaw:quote.price,resolved:true};
+  }
   if(view.state!=="Refunded"||view.paymentId!==quote.paymentId||view.refundedAmount!==quote.price||payment.refundedAmount!==BigInt(quote.price)||view.result!==undefined||view.receipt!==undefined||!resolution||resolution.version!==1||resolution.paymentId!==quote.paymentId
    ||resolution.reason!=="operator-accepted-nondelivery-cost"||!Number.isSafeInteger(resolution.resolvedAt)||resolution.resolvedAt<=0||!(hash(resolution.resolutionId)||/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(resolution.resolutionId))||!hash(resolution.evidenceDigest)
    ||!view.upstreamAttempts?.some(a=>a.state==="Unknown")||view.upstreamAttempts.some(a=>!["Unknown","Rejected"].includes(a.state))||resolution.expectedAttemptsDigest!==keccak256(toUtf8Bytes(canonical(view.upstreamAttempts as unknown as Json)))

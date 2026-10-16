@@ -197,7 +197,7 @@ export class Relay {
     refundedAmount: record.refunds.filter(refund => refund.state === "Confirmed").reduce((sum, refund) => sum + BigInt(refund.amount), 0n).toString(),
     confirmedRefunds: record.refunds.filter(refund => refund.state === "Confirmed" && refund.transaction).map(refund => ({ refundId: refund.id, amount: refund.amount, txHash: refund.transaction!.txHash })),
     ...(this.isDeliveryUncertain(record) ? { deliveryError: "UPSTREAM_UNCERTAIN" } : record.lastError ? { deliveryError: record.lastError } : {}),
-    ...(record.upstreamAttempts?.length ? { upstreamAttempts: record.upstreamAttempts } : {}),
+    ...(record.upstreamAttempts !== undefined ? { upstreamAttempts: record.upstreamAttempts } : {}),
     ...(record.operatorResolution ? { operatorResolution: record.operatorResolution } : {}),
     ...(record.operatorCompensation ? { operatorCompensation: record.operatorCompensation, originalDelivery: { result: record.result, receipt: record.receipt } } : {}),
     ...(record.state === "Delivered" && !record.operatorCompensation ? { result: record.result, receipt: record.receipt } : {}) }; }

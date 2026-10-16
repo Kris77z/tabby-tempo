@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { dirname, join, resolve } from "node:path";
+import { lstat, readdir, readFile } from "node:fs/promises";
 import { getAddress } from "ethers";
 import { taskPrivateFile } from "../packages/pi-loop/src/task-runner/config.js";
 import type { WorkflowConfig } from "../packages/pi-loop/src/workflow.js";
@@ -19,6 +20,7 @@ export interface TempoHostedFeaturesSeal { version: 1; file: string; digest: str
 export interface TempoFeatureClosure {
   version: 1; id: string; closedAt: string; goalRequestId: string; parentRequestId: string;
   budgetId: string; budgetDigest: string; ledgerSha256: string; boundedAdmissionsSha256: string;
+  outcome?: "aborted-before-parent";
 }
 export interface TempoHostedFeaturesJournal { version: 1; file: string; digest: string; config: TempoHostedFeatures; seal?: TempoHostedFeaturesSeal }
 export const TEMPO_EXTERNAL_PORTS = [...missionSpecialists.flatMap(s => [`external-${s.id}-0`, `external-${s.id}-1`]), "external-registry"];
@@ -75,7 +77,8 @@ export async function verifyTempoFeatureSeal(record: TempoHostedFeaturesJournal,
     if (seal.version !== 1 || seal.file !== tempoFeaturePaths(directory).closureFile || !/^[0-9a-f]{64}$/.test(seal.digest)) fail();
     const sha = (raw: string) => createHash("sha256").update(raw).digest("hex");
     const raw = await taskPrivateFile(seal.file), closure = JSON.parse(raw);
-    closed(closure, ["version", "id", "closedAt", "goalRequestId", "parentRequestId", "budgetId", "budgetDigest", "ledgerSha256", "boundedAdmissionsSha256"]);
+    closed(closure, ["version", "id", "closedAt", "goalRequestId", "parentRequestId", "budgetId", "budgetDigest", "ledgerSha256", "boundedAdmissionsSha256", ...(Object.hasOwn(closure, "outcome") ? ["outcome"] : [])]);
+    if (Object.hasOwn(closure, "outcome") && closure.outcome !== "aborted-before-parent") fail();
     const closedAt = Date.parse(closure.closedAt), uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
     if (sha(raw) !== seal.digest || closure.version !== 1 || closure.id !== record.config.id || !Number.isSafeInteger(closedAt)
       || new Date(closedAt).toISOString() !== closure.closedAt || closedAt > Date.now() || !uuid.test(closure.goalRequestId) || !uuid.test(closure.parentRequestId)
@@ -93,9 +96,71 @@ export async function verifyTempoFeatureSeal(record: TempoHostedFeaturesJournal,
       || !hosted.boundedGames || hosted.boundedGames.digest !== authorization.digest || !isDeepStrictEqual(hosted.boundedGames.grant, authorization.grant)
       || !isDeepStrictEqual(JSON.parse(mirrorRaw), hosted.boundedGames) || !Array.isArray(hosted.runs)) fail();
     assertBoundedGameAdmissions(hosted.boundedGames);
-    const referenced = [hosted.runs.find((run: any) => run.requestId === closure.goalRequestId), hosted.runs.find((run: any) => run.requestId === closure.parentRequestId)];
+    const aborted = closure.outcome === "aborted-before-parent";
+    const oneRun = (requestId: string) => {
+      const matches = hosted.runs.filter((run: any) => run.requestId === requestId);
+      if (matches.length !== 1) fail();
+      return matches[0];
+    };
+    const referenced = [oneRun(closure.goalRequestId), ...(!aborted ? [oneRun(closure.parentRequestId)] : [])];
     for (const [index, run] of referenced.entries()) if (!run || run.action !== (index ? "autonomous" : "goal") || run.agentId !== authorization.grant.actor.hostedAgentId
       || !["Succeeded", "Failed"].includes(run.status) || run.recoverable !== false || run.result?.terminal !== true || !Number.isFinite(Date.parse(run.updatedAt)) || Date.parse(run.updatedAt) > closedAt) fail();
+    if (aborted) {
+      const grant = authorization.grant, goal = referenced[0], actor = grant.actor;
+      if (actor.registryId !== "73" || goal.status !== "Failed" || goal.result.success !== false || hosted.boundedGames.admissions.length !== 0
+        || !Array.isArray(hosted.creations) || hosted.creations.some((creation: any) => creation.requestId === closure.parentRequestId)
+        || hosted.runs.some((run: any) => run.requestId === closure.parentRequestId || run.fundingFor === closure.parentRequestId)) fail();
+      const admissions = hosted.autonomousGameAdmissions ?? {};
+      if (!admissions || typeof admissions !== "object" || Array.isArray(admissions)
+        || Object.entries(admissions).some(([child, admission]: [string, any]) => child === closure.parentRequestId || admission?.parentRequestId === closure.parentRequestId)) fail();
+      const ownerGames = hosted.sponsoredOwners?.[grant.owner] ?? 0;
+      if (!Number.isSafeInteger(ownerGames) || !Number.isSafeInteger(hosted.sponsoredTotal)
+        || ownerGames < grant.baselineOwnerGames || hosted.sponsoredTotal < grant.baselineTotalGames
+        || allTerminalTimes && (ownerGames !== grant.baselineOwnerGames || hosted.sponsoredTotal !== grant.baselineTotalGames)) fail();
+      const parentReference = (value: unknown): boolean => {
+        if (Array.isArray(value)) return value.some(parentReference);
+        if (!value || typeof value !== "object") return false;
+        return Object.entries(value).some(([key, item]) => ["requestId", "parentRequestId", "childId"].includes(key) && item === closure.parentRequestId
+          || key === "children" && !!item && typeof item === "object" && Object.hasOwn(item, closure.parentRequestId) || parentReference(item));
+      };
+      if (parentReference([...hosted.runs, ...hosted.creations])) fail();
+      // Never fabricate the absent parent, even as a child under another Agent.
+      const noParentPath = async (path: string): Promise<void> => {
+        let entries;
+        try { entries = await readdir(path, { withFileTypes: true }); }
+        catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return; throw error; }
+        for (const entry of entries) {
+          const child = join(path, entry.name);
+          if (entry.name === closure.parentRequestId) fail();
+          if (entry.isDirectory()) await noParentPath(child);
+          else if (entry.isFile() && entry.name.endsWith(".json") && child !== join(directory, "hosted/database/session.json")) {
+            if (parentReference(JSON.parse(await readFile(child, "utf8")))) fail();
+          }
+        }
+      };
+      await noParentPath(directory);
+      const creditsDirectory = join(directory, "credits", actor.hostedAgentId);
+      const info = await lstat(creditsDirectory).catch(error => { if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined; throw error; });
+      if (info) {
+        if (allTerminalTimes || !info.isDirectory() || info.isSymbolicLink()) fail();
+        // New, later ordinary games are not part of this aborted authorization.
+        const credits = JSON.parse(await taskPrivateFile(join(creditsDirectory, "session.json")));
+        const expectedAccounts = [{ agentId: actor.registryId, wallet: actor.wallet.toLowerCase() },
+          { agentId: record.config.externalProvider.agentId, wallet: record.config.externalProvider.wallet.toLowerCase() }];
+        if (credits.version !== 1 || !Array.isArray(credits.accounts) || !Array.isArray(credits.grants) || !Array.isArray(credits.redemptions)
+          || !isDeepStrictEqual([...credits.accounts].sort((a, b) => a.agentId.localeCompare(b.agentId)), expectedAccounts.sort((a, b) => a.agentId.localeCompare(b.agentId)))) fail();
+        for (const item of [...credits.grants, ...credits.redemptions]) {
+          const createdAt = Date.parse(item.createdAt);
+          if (!Number.isFinite(createdAt) || new Date(createdAt).toISOString() !== item.createdAt || createdAt <= closedAt || createdAt > Date.now()
+            || parentReference(item) || ["grantId", "matchId", "redemptionId"].some(key => String(item[key] ?? "").includes(closure.parentRequestId))) fail();
+        }
+      }
+      const mission = JSON.parse(await taskPrivateFile(join(directory, "hosted/agents", actor.hostedAgentId, "runs", closure.goalRequestId, "mission/session.json")));
+      if (mission.version !== 1 || mission.result?.terminal !== true || mission.result.success !== false || !Array.isArray(mission.calls)
+        || mission.input?.chainId !== "42431" || mission.input.chainAgentId !== "73" || mission.input.agentId !== actor.hostedAgentId
+        || mission.input.owner !== grant.owner || mission.input.wallet !== actor.wallet || mission.input.goal !== goal.goal
+        || mission.calls.some((call: any) => call.started && !call.response && !call.unpaid && call.recovery?.resolved !== true)) fail();
+    }
     if (allTerminalTimes && hosted.runs.some((run: any) => !["Succeeded", "Failed"].includes(run.status) || run.recoverable !== false || run.result?.terminal !== true || !Number.isFinite(Date.parse(run.updatedAt)) || Date.parse(run.updatedAt) > closedAt)) fail();
     return closure as TempoFeatureClosure;
   } catch { return fail(); }

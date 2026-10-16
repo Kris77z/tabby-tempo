@@ -9,7 +9,7 @@ import { randomUUID } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { Interface, Wallet, keccak256 } from "ethers";
-import { accountInterface, requestDigest, paymentId, EMPTY_AUTH, type PaymentHandle } from "@agentfuel/sdk";
+import { InferCredit, PaymentError, accountInterface, requestDigest, paymentId, EMPTY_AUTH, type PaymentHandle } from "@agentfuel/sdk";
 import { fixture, startAnvil, stopAnvil, key, tx } from "../../underwriter/test/fixture.js";
 import { HostedGoalExecutor, type GoalState, type GoalCall, type GoalModelRoute } from "../src/goals/executor.js";
 import { paidGoalCall } from "../src/goals/payment.js";
@@ -143,6 +143,31 @@ test("saved policy recovery binds original signatures and never writes while sto
       }});
       await m.executor.execute(m.input);m.stop("cancel");const sends=methods.filter(m=>m==="eth_sendRawTransaction").length;
       const result=await m.resume(),state=await m.read();assert.equal(result.terminal,false);assert.equal(state.calls[0].unpaid,false);assert.deepEqual(state.calls[0].handle,original!);assert.equal(state.calls[0].voidSubmission,undefined);assert.equal(state.calls[0].route?.id,route.id);assert.equal(guardCode(state),"STATE_MISSION_INFLIGHT");assert.equal(methods.filter(m=>m==="eth_sendRawTransaction").length,sends);assert.ok(relayPaths.every(path=>path.startsWith("/payments/")));
+    });
+    await t.test("the first allowlisted SDK code persists before activity failure without saving private diagnostics",async st=>{
+      const secret="SYNTHETIC_PRIVATE_DIAGNOSTIC_MUST_NOT_PERSIST";
+      const m=await mission({seedCall:async(_state,call)=>{
+        const input={service:route.service,model:route.model,messages:call.messages,max_completion_tokens:call.max_completion_tokens,thinking:{type:"disabled"},agentId:"1",taskId:"0"},serverNonce="0x"+"6".repeat(64),digest=requestDigest(input);
+        call.handle={version:1,relayUrl:route.relayUrl,input,quote:{paymentId:paymentId("0",digest,serverNonce),agentId:"1",taskId:"0",requestDigest:digest,serverNonce,service:route.service,model:route.model,price:route.priceRaw,payTo:route.provider,asset:await f!.token!.getAddress(),chainId:"31337",account,quoteExpiry:"9999999999",createdBlock:1},creditNonce:"1"};
+      }});
+      await m.executor.execute(m.input);
+      let failure:unknown=new PaymentError("RELAY_UNAVAILABLE",secret,{rawTransaction:secret});
+      st.mock.method(InferCredit.prototype,"resume",async()=>{throw failure;});
+      const state=await m.read(),call=state.calls[0],file=join(m.input.directory,"mission/session.json"),originalHandle=structuredClone(call.handle);
+      const save=async()=>writeFile(file,JSON.stringify(state),{mode:0o600});
+      const execution={...m.input,activity:async()=>{assert.equal((await m.read()).calls[0].firstPaymentErrorCode,call.firstPaymentErrorCode);throw Error("SYNTHETIC_ACTIVITY_FAILURE");}};
+      await assert.rejects(paidGoalCall(config,state,call,execution,save,async()=>({paused:false,cancelled:false})),/SYNTHETIC_ACTIVITY_FAILURE/);
+      assert.equal((await m.read()).calls[0].firstPaymentErrorCode,"RELAY_UNAVAILABLE");
+      failure=new PaymentError("UPSTREAM_UNCERTAIN",secret,{rawTransaction:secret});
+      await assert.rejects(paidGoalCall(config,state,call,execution,save,async()=>({paused:false,cancelled:false})),/SYNTHETIC_ACTIVITY_FAILURE/);
+      assert.equal(call.firstPaymentErrorCode,"RELAY_UNAVAILABLE");
+      delete call.firstPaymentErrorCode;await save();
+      for(const error of [new PaymentError(secret,secret,{rawTransaction:secret}),Object.assign(new Error(secret),{code:"PAYMENT_UNCERTAIN"})]){
+        failure=error;await assert.rejects(paidGoalCall(config,state,call,execution,save,async()=>({paused:false,cancelled:false})),/SYNTHETIC_ACTIVITY_FAILURE/);
+        assert.equal((await m.read()).calls[0].firstPaymentErrorCode,undefined);
+      }
+      assert.deepEqual(call.handle,originalHandle);assert.equal(call.inference,undefined);assert.equal(call.response,undefined);
+      assert.equal((await readFile(file,"utf8")).includes(secret),false);
     });
     await t.test("combined unconfirmed policy blocks an otherwise voidable expired payment handle",async()=>{
       const policy=await signed();let original:PaymentHandle;
