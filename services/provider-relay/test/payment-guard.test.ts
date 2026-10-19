@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import type { ChildProcess } from "node:child_process";
 import { BrowserProvider, Wallet, type TransactionRequest } from "ethers";
-import { EMPTY_AUTH, InferCredit, PaymentError, type ChatInput, type InferOptions, type PaymentHandle } from "@agentfuel/sdk";
+import { EMPTY_AUTH, InferCredit, PaymentError, InferenceControlError, type ChatInput, type InferOptions, type PaymentHandle } from "@agentfuel/sdk";
 import type { RelayConfig } from "../src/config.js";
 import { createHttpServer } from "../src/http.js";
 import { Refunder } from "../src/refunder.js";
@@ -59,6 +59,36 @@ test("payment guard covers sign, raw replay, browser send and durable handles; p
       } });
       return { provider, signer: await provider.getSigner(active.agentAddress), sends: () => sends };
     };
+
+    await t.test("explicit beforePayment controls survive without signing; a pause string remains uncertain with safe cause", async () => {
+      for (const reason of ["paused", "cancelled", "deadline"] as const) {
+        const before = await snapshot(), signer = new CountingWallet(key(2), active.provider), control = new InferenceControlError(reason);
+        const infer = new InferCredit({ ...options, signer, beforePayment: () => { throw control; } });
+        try { await assert.rejects(infer.fetch(relayUrl, { body }), error => error === control && !!control.handle); assert.equal(signer.signs, 0); assert.deepEqual(await snapshot(), before); }
+        finally { infer.close(); }
+      }
+      const signer = new CountingWallet(key(2), active.provider), infer = new InferCredit({ ...options, signer, beforePayment: () => { throw Error("HOSTED_AGENT_PAUSED"); } });
+      try { await assert.rejects(infer.fetch(relayUrl, { body }), e => e instanceof PaymentError && e.code === "PAYMENT_UNCERTAIN" && !!e.safeCause); assert.equal(signer.signs, 0); }
+      finally { infer.close(); }
+    });
+
+    await t.test("lost broadcast response stays Unknown; cold same-handle canonical read needs no new signature or broadcast", async () => {
+      const signer = new CountingWallet(key(2), active.provider), original = active.provider.broadcastTransaction;
+      let broadcasts = 0, saved!: PaymentHandle;
+      active.provider.broadcastTransaction = async raw => { broadcasts++; await original.call(active.provider, raw); throw Object.assign(new Error("synthetic private URL/token"), { code: "ECONNRESET" }); };
+      const infer = new InferCredit({ ...options, signer, onHandle: handle => { saved = structuredClone(handle); } });
+      try { await assert.rejects(infer.fetch(relayUrl, { body }), error => error instanceof PaymentError && error.code === "PAYMENT_UNCERTAIN" && error.safeCause?.code === "ECONNRESET"); }
+      finally { infer.close(); active.provider.broadcastTransaction = original; }
+      assert.equal(signer.signs, 1); assert.equal(broadcasts, 1); assert.ok(saved.submission?.rawTransaction);
+      const receipt = await active.provider.getTransactionReceipt(saved.submission!.txHash!); assert.equal(receipt!.status, 1);
+      const before = await snapshot(), calls = upstreamCalls, pause = new InferenceControlError("paused");
+      active.provider.broadcastTransaction = async raw => { broadcasts++; return original.call(active.provider, raw); };
+      const cold = new InferCredit({ ...options, signer, beforePayment: () => { assert.fail("known payment cannot pay again"); }, beforeDispatch: () => { throw pause; } });
+      try { await assert.rejects(cold.resume(structuredClone(saved)), error => error === pause && (pause.handle as PaymentHandle).submission!.txHash === receipt!.hash); }
+      finally { cold.close(); active.provider.broadcastTransaction = original; active.agent.reset(); }
+      assert.equal(signer.signs, 1); assert.equal(broadcasts, 1); assert.equal(upstreamCalls, calls); assert.deepEqual(await snapshot(), before);
+      const paid = await relay!.store.read(saved.quote.paymentId); assert.equal(paid.state, "Paid"); assert.deepEqual(paid.upstreamAttempts, []);
+    });
 
     await t.test("last guard before Wallet signing refuses without changing balances or nonce", async () => {
       const before = await snapshot();
@@ -179,6 +209,33 @@ test("payment guard covers sign, raw replay, browser send and durable handles; p
       } finally { preBroadcast.close(); st.mock.restoreAll(); }
     });
 
+    await t.test("paid dispatch has a separate admission guard; interruption, restart and cache never pay or dispatch twice", async () => {
+      const input = { ...body, agentId: "1", taskId: "0" } as ChatInput, quote = await relay!.quote(input);
+      const payment = await tx(active.account, active.agent, "payProvider", [1n, config.payTo, quote.price, quote.paymentId, EMPTY_AUTH, "0x"]);
+      const paid = await snapshot(), before = upstreamCalls;
+      const handle: PaymentHandle = { version: 1, relayUrl, input, quote, creditNonce: "1" };
+      let admit = false, admissionChecks = 0;
+      const optionsWithGuard = { ...options, signer: new CountingWallet(key(2), active.provider), beforePayment: () => { throw denied(); },
+        beforeDispatch: () => { admissionChecks++; if (!admit) throw denied(); } };
+      const interrupted = new InferCredit(optionsWithGuard);
+      try { await assert.rejects(interrupted.resume(handle), errorCode("GUARD_DENIED")); } finally { interrupted.close(); }
+      assert.equal(upstreamCalls, before); assert.deepEqual(await snapshot(), paid);
+      const pending = await relay!.store.read(quote.paymentId); assert.equal(pending.state, "Paid"); assert.deepEqual(pending.upstreamAttempts, []);
+      const restart = new Relay(config, { provider: active.provider, upstreamFetch: async () => { throw Error("RESTART_MUST_NOT_DISPATCH"); } });
+      try { await restart.initialize(); await restart.recover({ dispatch: false }); assert.equal((await restart.store.read(quote.paymentId)).state, "Paid"); }
+      finally { restart.close(); }
+      assert.equal(upstreamCalls, before); assert.deepEqual(await snapshot(), paid);
+      admit = true;
+      const restarted = new InferCredit(optionsWithGuard);
+      try {
+        const delivered = await restarted.resume(structuredClone(handle)); assert.equal(delivered.receipt.txHash, payment.hash);
+        assert.equal(upstreamCalls, before + 1); assert.deepEqual(await snapshot(), paid);
+        admit = false;
+        assert.deepEqual((await restarted.resume(structuredClone(handle))).result, delivered.result);
+        assert.equal(upstreamCalls, before + 1); assert.equal(admissionChecks, 2); assert.deepEqual(await snapshot(), paid);
+      } finally { restarted.close(); }
+    });
+
     await t.test("confirmed cash payment and cached delivery reconcile after wall-clock expiry without invoking the spending guard", async st => {
       const input = { ...body, agentId: "1", taskId: "0" } as ChatInput;
       const quote = await relay!.quote(input);
@@ -190,9 +247,9 @@ test("payment guard covers sign, raw replay, browser send and durable handles; p
       try {
         const delivered = await infer.resume(handle);
         assert.equal(delivered.receipt.txHash, payment.hash); assert.equal(delivered.receipt.fromCash, quote.price); assert.equal(delivered.receipt.fromCredit, "0");
-        assert.equal(checks, 0); assert.equal(upstreamCalls, 1); assert.deepEqual(await snapshot(), paid);
+        assert.equal(checks, 0); assert.equal(upstreamCalls, 2); assert.deepEqual(await snapshot(), paid);
         assert.deepEqual((await infer.resume(structuredClone(handle))).result, delivered.result);
-        assert.equal(checks, 0); assert.equal(upstreamCalls, 1); assert.deepEqual(await snapshot(), paid);
+        assert.equal(checks, 0); assert.equal(upstreamCalls, 2); assert.deepEqual(await snapshot(), paid);
       } finally { infer.close(); st.mock.restoreAll(); }
     });
     await t.test("confirmed late payment reaches relay refund-only reconciliation instead of the local expiry guard", async () => {
@@ -203,7 +260,7 @@ test("payment guard covers sign, raw replay, browser send and durable handles; p
       const infer = new InferCredit({ ...options, signer, beforePayment: () => { throw denied(); } });
       try {
         await assert.rejects(infer.resume({ version: 1, relayUrl, input, quote, creditNonce: "1" }), errorCode("PAYMENT_AFTER_EXPIRY"));
-        assert.equal(signer.signs, 0); assert.equal(upstreamCalls, 1); assert.deepEqual(await snapshot(), paid);
+        assert.equal(signer.signs, 0); assert.equal(upstreamCalls, 2); assert.deepEqual(await snapshot(), paid);
         assert.equal((await relay!.store.read(quote.paymentId)).expiredPayment, true);
       } finally { infer.close(); }
     });

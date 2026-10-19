@@ -8,7 +8,9 @@ const relay = new Relay(config);
 const refunder = new Refunder(relay);
 try {
   await relay.initialize(); await refunder.initialize();
-  await refunder.recover(); await relay.recover();
+  // Startup reconciles money only. An original client handle must still admit
+  // any new model delivery; restarting a process is not renewed authorization.
+  await refunder.recover(); await relay.recover({ dispatch: false });
   const server = createHttpServer(relay, refunder);
   server.once("error", () => { relay.close(); console.error("Relay listen failed"); process.exitCode = 1; });
   server.listen(config.port, config.host, () => console.log(`Relay listening on http://${config.host}:${config.port}`));

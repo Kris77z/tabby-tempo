@@ -132,6 +132,9 @@ export class Relay {
   }
   async confirm(record: PaymentRecord, suppliedHash?: string) {
     this.assertRecord(record);
+    if (record.scanBlock !== undefined && (!Number.isSafeInteger(record.scanBlock) || record.scanBlock < record.quote.createdBlock)) {
+      throw new RelayError("STORE_BINDING_MISMATCH", "Persisted scan cursor must not precede the quote");
+    }
     if (record.state !== "Quoted") {
       if (suppliedHash && suppliedHash !== record.proof?.txHash) throw new RelayError("PAYMENT_MISMATCH", "Payment already confirmed with another transaction");
       return;
@@ -310,11 +313,13 @@ export class Relay {
     if (!candidates.length) throw new RelayError("ROUTE_UNAVAILABLE", "Original tier/model candidates are unavailable; restore that route or request an operator refund");
     return candidates;
   }
-  async recover() {
+  /** Reconcile chain state without starting model work when an authorization
+   * window is closed. Existing callers retain dispatch recovery by default. */
+  async recover(options: { dispatch?: boolean } = {}) {
     for (const id of await this.store.ids()) await this.store.lock(id, async () => {
       const record = await this.store.read(id);
       if (record.refunds.length || record.state === "Delivered" || record.state === "Refunded") return;
-      try { await this.confirm(record); if (record.state === "Paid" || record.state === "Processing") await this.deliver(record); }
+      try { await this.confirm(record); if (options.dispatch !== false && (record.state === "Paid" || record.state === "Processing")) await this.deliver(record); }
       catch (error) { if (!(error instanceof RelayError)) throw error; }
     });
   }

@@ -290,6 +290,7 @@ export class HostedService {
   async create(who: string, input: AgentCreation & { requestId: string }) {
     const agent = await this.serial(async () => {
       object(input, ["requestId", "name", "modelId", "strategy", "perRunBudgetRaw", "totalBudgetRaw", "allowCredit"]); id(input.requestId);
+      if (this.config.boundedGamesSealed && this.state.boundedGames?.grant.parentRequestId === input.requestId) fail("HOSTED_BOUNDED_PARENT_SEALED", 409);
       const { requestId, ...rest } = input;
       const deferred = Object.keys(rest).length === 1 && "name" in rest;
       if (deferred && (typeof rest.name !== "string" || !rest.name.trim() || rest.name.length > 80 || /[\x00-\x1f\x7f]/.test(rest.name))) fail("HOSTED_SETTINGS_INVALID");
@@ -333,6 +334,11 @@ export class HostedService {
     if (creation && (creation.agentId !== a.id || input.action !== "provision")) fail("HOSTED_REQUEST_CONFLICT", 409);
     if (this.state.autonomousGameAdmissions?.[input.requestId]) fail("HOSTED_REQUEST_CONFLICT", 409);
     const previous = this.state.runs.find(r => r.requestId === input.requestId);
+    // An unused sealed parent is a tombstone, not a new request. Reject before
+    // reserving budget or persisting a run; admitted/terminal original runs keep
+    // their existing recovery and replay semantics below.
+    if (!previous && this.config.boundedGamesSealed && this.state.boundedGames?.grant.parentRequestId === input.requestId)
+      fail("HOSTED_BOUNDED_PARENT_SEALED", 409);
     if (previous) {
       if (previous.agentId !== a.id || previous.action !== input.action || previous.rewardKind !== input.rewardKind || previous.amountRaw !== input.amountRaw || previous.goal !== input.goal) fail("HOSTED_REQUEST_CONFLICT", 409);
       if (previous.status === "Failed" && previous.action === "autonomous" && previous.reason === "AUTONOMY_INVALID_DECISION") {
