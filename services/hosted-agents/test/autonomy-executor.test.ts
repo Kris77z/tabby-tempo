@@ -57,7 +57,7 @@ function catalogObservation(adapter: HostedTaskExecutor, count = 1) {
   const escrowInterface = new Interface(["function getTask(uint256) view returns(tuple(address poster,uint256 reward,uint256 escrowBalance,uint256 agentId,uint256 deadline,uint16 protocolFeeBps,uint8 status))"]);
   const managerAbi = new Interface(["function agentAccount() view returns(address)", "function taskEscrow() view returns(address)",
     "function getLoan(uint256) view returns(tuple(uint256 agentId,uint256 principal,uint256 fee,uint256 loanDueAt,uint8 status))"]);
-  const state = { fail: false, reorg: false, reorgOnRecheck: false, blockReads: 0, chainId: "0x7a69", taskReads: 0, statuses: Array.from({ length: count }, () => 1n) };
+  const state = { fail: false, reorg: false, reorgOnRecheck: false, blockReads: 0, chainId: "0x7a69", taskReads: 0, rewards: Array.from({ length: count }, () => 150n), protocolFeeBps: 0n, statuses: Array.from({ length: count }, () => 1n) };
   const provider = { send: async () => state.chainId, getBlock: async () => ({ ...block,
     hash: state.reorg || state.reorgOnRecheck && ++state.blockReads > 1 ? `0x${"ff".repeat(32)}` : block.hash }),
     call: async ({ to, data, blockTag }: { to: string; data: string; blockTag: number }) => {
@@ -70,7 +70,7 @@ function catalogObservation(adapter: HostedTaskExecutor, count = 1) {
       }
       assert.equal(to.toLowerCase(), escrow.toLowerCase()); state.taskReads++;
       const id = Number(escrowInterface.decodeFunctionData("getTask", data)[0]);
-      return escrowInterface.encodeFunctionResult("getTask", [[config.plannerProvider, 150, state.statuses[id - 1] === 1n ? 150 : 0, 0, deadline, 0, state.statuses[id - 1]]]);
+      return escrowInterface.encodeFunctionResult("getTask", [[config.plannerProvider, state.rewards[id - 1], state.statuses[id - 1] === 1n ? state.rewards[id - 1] : 0, 0, deadline, state.protocolFeeBps, state.statuses[id - 1]]]);
     },
   } as unknown as JsonRpcProvider;
   catalogFixtures.set(adapter, { provider, block });
@@ -463,13 +463,14 @@ test("real planner prompt separates paid planning, package purchase, borrowing f
     return { phase: "Succeeded", terminal: true, success: true, chargedRaw: "120000" };
   }, async () => ({ ...finance, cashRaw: "50000", debtRaw: "0", credit: { ...finance.credit, tierCapRaw: "200000", feeBps: "1500" },
     policy: { ...finance.policy, maxCashPerTxRaw: "120000", maxDebtPerTxRaw: "120000", maxDebtPerDayRaw: "300000" } }));
+  catalogObservation(adapter).state.rewards[0] = 150000n;
   adapter.config.metered!.priceRaw = "120000";
   for (const model of adapter.config.models) model.templates.balanced.tasks[0].creditLimit = "80000";
   const configured = { ...config, maxTasks: 1, plannerPriceRaw: "10000" };
   const executor = autonomy(adapter, configured, { planner: async context => {
     const request = createHostedPlannerRequest(configured, context);
     const messages = request.messages as { content: string }[];
-    const sent = JSON.parse(messages[1].content);
+    const sent = JSON.parse(messages.at(-1)!.content);
     assert.equal(sent.observation.cashRaw, "50000"); assert.equal(sent.observation.executionCosts.planningCashRaw, "10000");
     assert.equal(sent.observation.executionCosts.taskPackagePriceRaw, "120000"); assert.equal(sent.observation.executionCosts.taskPackageCreditsRaw, "200000");
     assert.equal(sent.fundingQuote.cashAfterPlanningRaw, "40000"); assert.equal(sent.fundingQuote.budgetAfterPlanningRaw, "290000");
@@ -615,4 +616,64 @@ test("runtime pause is distinct from a model stop in public decisions",async()=>
  const events:import("../src/scene-types.js").HostedActivityInput[]=[];
  const executor=autonomy(task(async()=>{throw Error("must not execute");},async()=>({...finance,block:{...finance.block,hash:`0x${"ab".repeat(32)}`}})),config,{shouldContinue:async()=>false});
  const result=await executor.execute({...input(directory),activity:async event=>{events.push(importedValidate(event));}});assert.equal(result.reason,"HOSTED_AGENT_PAUSED");assert.ok(events.some(e=>e.reason==="HOSTED_AGENT_PAUSED"));assert.equal(events.some(e=>e.reason==="AUTONOMY_MODEL_STOPPED"),false);
+}));
+
+test("a clearly losing task stops before paid planning, games or child creation", async t => {
+  for (const cashRaw of ["500", "0"]) await t.test(cashRaw, async () => fixture(async directory => {
+    let plans = 0, games = 0, tasks = 0;
+    const adapter = task(async () => { tasks++; throw new Error("must not run"); }, async () => noCredit(cashRaw));
+    catalogObservation(adapter).state.rewards[0] = 90n; // 80 package + 10 planner leaves no positive margin.
+    const executor = autonomy(adapter, { ...config, games: { ...automaticGames, rewardKinds: ["usdc"] } }, {
+      games: { rewardBalance: async () => rewardView(0), execute: async () => { games++; throw new Error("must not refuel a losing task"); } },
+      planner: async () => { plans++; throw new Error("must not pay a planner"); },
+    });
+    const result = await executor.execute(input(directory));
+    assert.equal(result.reason, "ECONOMICS_NOT_WORTHWHILE"); assert.equal(result.phase, "Stopped"); assert.equal(result.chargedRaw, "0");
+    assert.deepEqual([plans, games, tasks], [0, 0, 0]);
+    const host = JSON.parse(await readFile(join(directory, "autonomy-host", "session.json"), "utf8"));
+    assert.equal(host.economicsVersion, 1); assert.deepEqual(host.children, {});
+  }));
+});
+
+test("a profitable model cannot authorize a different model's losing task", async () => fixture(async directory => {
+  let tasks = 0, plans = 0;
+  const adapter = task(async () => { tasks++; throw new Error("losing task must not run"); });
+  const chain = catalogObservation(adapter, 2); chain.state.rewards = [90n, 150n];
+  adapter.config.models[0].templates.balanced.tasks = [adapter.config.models[0].templates.balanced.tasks[1]];
+  adapter.config.models[1].templates.balanced.tasks = [adapter.config.models[1].templates.balanced.tasks[0]];
+  const executor = autonomy(adapter, { ...config, maxTasks: 1 }, { planner: async context => {
+    plans++;
+    const options = context.observation.taskEconomics!.options;
+    assert.deepEqual(options.find(option => option.modelId === "cheap" && option.funding === "cash")?.taskIds, ["2"]);
+    assert.deepEqual(options.find(option => option.modelId === "strong" && option.funding === "cash")?.taskIds, []);
+    return { decision: { action: "run-task", modelId: "strong", funding: "cash" }, chargedRaw: "10" };
+  } });
+  const result = await executor.execute(input(directory));
+  assert.equal(result.reason, "ECONOMICS_NOT_WORTHWHILE"); assert.equal(result.chargedRaw, "10"); assert.equal(plans, 1); assert.equal(tasks, 0);
+  const host = JSON.parse(await readFile(join(directory, "autonomy-host", "session.json"), "utf8")); assert.deepEqual(host.children, {});
+}));
+
+test("paid planning is allocated to reward-token children while runtime reward admission stays free", async t => {
+  for (const paid of [true, false]) await t.test(String(paid), async () => fixture(async directory => {
+    let plans = 0, tasks = 0;
+    const adapter = rewardAdapter(async child => {
+      tasks++; assert.deepEqual(child.taskEconomics, { version: 1, planningCostRaw: paid ? "10" : "0" });
+      return { phase: "Succeeded", terminal: true, success: true, chargedRaw: "0" };
+    }, async () => noCredit(paid ? "500" : "0"));
+    const executor = autonomy(adapter, { ...config, maxTasks: 1, games: automaticGames }, {
+      games: { rewardBalance: async () => rewardView(4096), execute: async () => { throw new Error("no refuel needed"); } },
+      planner: async () => { plans++; return { decision: { action: "run-task", modelId: "kimi-k2.6", funding: "reward-tokens" }, chargedRaw: "10" }; },
+    });
+    const result = await executor.execute(input(directory));
+    assert.equal(result.phase, "Completed"); assert.equal(result.chargedRaw, paid ? "10" : "0"); assert.equal(plans, paid ? 1 : 0); assert.equal(tasks, 1);
+  }));
+});
+
+test("available credit does not buy a planner when its fee makes every currently fundable task unprofitable", async () => fixture(async directory => {
+  let plans = 0, tasks = 0;
+  const adapter = task(async () => { tasks++; throw new Error("lossy credit task"); }, async () => ({ ...finance, cashRaw: "10", debtRaw: "0" }));
+  catalogObservation(adapter).state.rewards[0] = 91n; // cash would leave +1, but borrowing 80 adds fee 12.
+  const executor = autonomy(adapter, config, { planner: async () => { plans++; throw new Error("credit is affordable but not worthwhile"); } });
+  const result = await executor.execute(input(directory));
+  assert.equal(result.reason, "ECONOMICS_NOT_WORTHWHILE"); assert.equal(result.chargedRaw, "0"); assert.deepEqual([plans, tasks], [0, 0]);
 }));

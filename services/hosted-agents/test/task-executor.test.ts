@@ -6,6 +6,7 @@ import { join } from "node:path";
 import {validateHostedActivity,type HostedActivityInput} from "../src/scene-types.js";
 import { Transaction, Wallet } from "ethers";
 import { HostedTaskExecutor, loadHostedTaskExecutorConfig, validateHostedTaskExecutorConfig } from "../src/task-executor.js";
+import { readHostedAccounting } from "../src/accounting.js";
 import { createHostedTaskFixture } from "./task-fixture.js";
 import { key, read, tx } from "../../underwriter/test/fixture.js";
 
@@ -45,9 +46,10 @@ test("two hosted agents register/enroll independent wallets and run the real fix
     cheap.agent.binding = first.binding; strong.agent.binding = second.binding;
     // A user's smaller budget cannot buy this 120000 service or consume another Agent's cash.
     const tooSmall = strong.input("task", { perRunBudgetRaw: "119999" });
+    const beforeSmallPolicy = await read(fx.fx.f.account, "getPolicy", ["3"]), beforeSmallNonce = await fx.fx.f.provider.getTransactionCount(strong.wallet.address);
     const rejected = await fx.executor.execute(tooSmall); assert.equal(rejected.phase, "Stopped"); assert.equal(rejected.reason, "NO_FEASIBLE_CANDIDATE"); assert.equal(rejected.chargedRaw, "0");
     assert.equal(fx.fx.calls.length, 0); assert.equal(await fx.fx.f.providerBalance(), 0n);
-    assert.equal((await read(fx.fx.f.account, "getPolicy", ["3"])).maxDebtPerTx, 119999n);
+    assert.deepEqual(Array.from(await read(fx.fx.f.account, "getPolicy", ["3"])), Array.from(beforeSmallPolicy)); assert.equal(await fx.fx.f.provider.getTransactionCount(strong.wallet.address), beforeSmallNonce);
     fx.fx.queue(fx.GOOD_CODE["sum-integers"]);
     const task = cheap.input("task"),activities:HostedActivityInput[]=[];task.activity=async e=>{activities.push(validateHostedActivity(e));};
     const delivered = await fx.executor.execute(task);
@@ -55,6 +57,12 @@ test("two hosted agents register/enroll independent wallets and run the real fix
     assert.equal(delivered.phase, "Succeeded", JSON.stringify(delivered)); assert.equal(delivered.terminal, true); assert.equal(delivered.chargedRaw, "120000"); assert.equal(delivered.principalRaw, "0"); assert.equal(delivered.feeRaw, "0");
     assert.equal(fx.fx.calls.length, 1); assert.equal(fx.fx.calls[0].model, "controlled-cheap");
     assert.equal((await read(fx.fx.f.manager, "getLoan", [delivered.taskId!])).status, 2n);
+    const accounting = await readHostedAccounting({ directory, agent: cheap.agent,
+      runs: [{ ...task.run, status: "Succeeded", chargedRaw: delivered.chargedRaw, result: delivered }] });
+    assert.equal(accounting.status, "complete", JSON.stringify(accounting.coverage));
+    assert.deepEqual([accounting.totals.taskRevenueRaw, accounting.totals.inferenceCostRaw, accounting.totals.loanPrincipalRaw,
+      accounting.totals.borrowingFeeRaw, accounting.totals.netOperatingRaw], ["150000", "120000", "80000", "12000", "18000"],
+    "real settled loan balances are zero, but original principal and borrowing expense remain in the operating account");
     assert.equal((await read(fx.fx.f.escrow, "getTask", [delivered.taskId!])).agentId, 2n);
     assert.equal(await read(fx.fx.f.account, "cash", ["3"]), 40000n);
     const before = await fx.fx.f.provider.getTransactionCount(cheap.wallet.address);
@@ -70,8 +78,8 @@ test("two hosted agents register/enroll independent wallets and run the real fix
     // Catalog/settings changes do not rewrite an existing successful request's snapshot or buy it again.
     const changed = structuredClone(fx.config); changed.models[0].templates.balanced.maxPrice = "1";
     assert.deepEqual(await new HostedTaskExecutor(changed, { provider: fx.fx.f.provider }).execute({ ...task, recover: true }), delivered);
-    const noBorrow = cheap.input("task", { allowCredit: false });
-    const noFunds = await fx.executor.execute(noBorrow); assert.equal(noFunds.phase, "Stopped"); assert.equal(noFunds.chargedRaw, "0"); assert.equal((await read(fx.fx.f.account, "getPolicy", ["2"])).maxDebtPerTx, 0n);
+    const noBorrow = cheap.input("task", { allowCredit: false }), beforeNoBorrowPolicy = await read(fx.fx.f.account, "getPolicy", ["2"]);
+    const noFunds = await fx.executor.execute(noBorrow); assert.equal(noFunds.phase, "Stopped"); assert.equal(noFunds.chargedRaw, "0"); assert.deepEqual(Array.from(await read(fx.fx.f.account, "getPolicy", ["2"])), Array.from(beforeNoBorrowPolicy));
   } finally { await fx.close(); await rm(directory, { recursive: true, force: true }); }
 });
 

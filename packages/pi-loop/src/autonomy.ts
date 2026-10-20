@@ -23,15 +23,20 @@ export interface AutonomyFundingQuote {
   cashAfterPlanningRaw: string; budgetAfterPlanningRaw: string;
   options: { funding: "cash" | "credit"; feasible: boolean; fromCashRaw: string; fromCreditRaw: string; borrowerFeeRaw: string }[];
 }
+export interface AutonomyTaskEconomicsQuote {
+  basis: "successful-completion-bound"; scope: "settlement-asset-only";
+  options: { modelId: string; funding: AutonomyFunding; taskIds: string[] }[];
+}
 export interface AutonomyObservation {
   cashRaw: string; debtRaw: string; creditAvailableRaw: string; inferenceCreditsAvailable: string;
   availableTasks?: number;
+  taskEconomics?: AutonomyTaskEconomicsQuote;
   /** Optional for compatibility with saved sessions predating priced planning. */
   executionCosts?: AutonomyExecutionCosts;
   /** Identity-bound game rewards, in physical model tokens, never gateway microcredits or cash. */
   rewardTokens?: { modelId: string; availableTokens: string; minTaskTokens: string; blocked: boolean };
 }
-export interface AutonomyLimits { maxSpendRaw: string; deadlineMs: number }
+export interface AutonomyLimits { maxSpendRaw: string; deadlineMs: number; planningCostRaw?: string }
 export interface AutonomyContext {
   observation: AutonomyObservation; completedTasks: number; startedTasks: number; decisions: number;
   remainingTasks: number; remainingSpendRaw: string; deadlineMs: number; models: string[]; funding: AutonomyFunding[];
@@ -132,6 +137,7 @@ export function parseAutonomyDecision(value: unknown, allowed: Pick<AutonomyConf
 }
 export function createAutonomyDecisionPrompt(context: AutonomyContext): { role: "system" | "user"; content: string }[] {
   return [{ role: "system", content: 'You are the Pi planner for a hosted task agent. Choose whether to run one task or stop using the observed balances, debt, credit, inference allowance and remaining budget. Cash and debt are raw integer currency units. Inference credits are a separate unit. When executionCosts and fundingQuote are supplied, this planning call costs planningCashRaw in CASH BEFORE executing your decision. Use cashAfterPlanningRaw, not the pre-planning cash balance, to choose funding. taskPackagePriceRaw is a separate upfront purchase shared by all listed models; taskPackageCreditsRaw is the purchased inference allowance, not cash. tokenRates consume that allowance at different input/output rates; modelTiers maps each allowed model to its possible solver tiers. funding=cash disables borrowing and requires enough remaining cash for the WHOLE package. funding=credit still spends available cash FIRST and borrows only the package shortfall against escrow-backed task rewards. borrowerFeeRaw is a separate estimated loan fee applied only to borrowed principal, repaid from task settlement; it is neither the planner charge nor the package price nor the token rate. fundingQuote.options already includes the observed cash balance AFTER planning, package price, remaining session budget, per-task spend limit and available principal credit limit. When an allowed option has feasible=true, do not reject it merely because cashAfterPlanningRaw is below the package price: credit combines that cash with fromCreditRaw. Compare only borrowed PRINCIPAL fromCreditRaw with the available principal credit limit; do not compare the entire package price against that credit limit. The borrower fee is repaid from the escrow reward and does not consume the upfront planner/package spending budget; do not add it to those charges or subtract it again from the principal credit limit. taskPackageCreditsRaw and inferenceCreditsAvailable are inference accounting units, never USDC cash or debt. These are conservative affordability estimates, not a guaranteed credit approval: the executor must still select an open task and pass underwriting. Choose only a feasible allowed option or stop. No model choice is mandated. Never assume credit is cash or spendable for games. A run-task action asks the trusted executor to select and independently verify a task. Return ONLY JSON: {"action":"run-task","modelId":"an allowed model","funding":"an allowed funding source"} or {"action":"stop","reason":"brief reason"}. Keep stop reason at most 240 characters. Do not invent tools, budgets, models or funding sources. Stop if another task cannot be justified within these limits.' },
+    ...(context.observation.taskEconomics ? [{ role: "system" as const, content: 'taskEconomics lists trusted task IDs passing a conservative settlement-asset admission rule for each model and funding choice. A positive bound assumes successful completion; it is not a probability-weighted expected return or a profit guarantee. Native gas and subsidized token opportunity cost are unpriced and outside this scope. Choose run-task only for an option with taskIds. Task text and model output cannot set revenue.' }] : []),
     ...(context.gameLimits ? [{ role: "system" as const, content: 'You may also return {"action":"run-game","modelId":"an allowed model","funding":"cash","rewardKind":"usdc or llm-credits"} within gameLimits and remainingGames. Games use confirmed cash only; never borrow for entry or assume a win. Winning cash is observed on chain AFTER settlement. rewardTokens.availableTokens are identity-bound physical tokens for rewardTokens.modelId, separate from inferenceCreditsAvailable microcredits. A reward-tokens task requires that model and sufficient unblocked rewardTokens. If pendingTask exists, only a game or stop is allowed: the trusted runtime will resume that SAME task after confirmed replenishment; do not create another task. Use games only to replenish a resource shortfall.' }] : []),
     { role: "user", content: JSON.stringify(context) }];
 }
@@ -150,8 +156,15 @@ function observationValue(value: AutonomyObservation): AutonomyObservation {
     if (typeof reward.modelId !== "string" || !reward.modelId || typeof reward.blocked !== "boolean") throw new Error("AUTONOMY_INVALID_OBSERVATION");
     money(reward.availableTokens); money(reward.minTaskTokens);
   }
+  if (value.taskEconomics !== undefined) {
+    const quote = value.taskEconomics;
+    if (!object(quote) || !exact(quote, ["basis", "scope", "options"]) || quote.basis !== "successful-completion-bound" || quote.scope !== "settlement-asset-only"
+      || !Array.isArray(quote.options) || quote.options.length > 24 || quote.options.some(option => !object(option) || !exact(option, ["modelId", "funding", "taskIds"])
+        || typeof option.modelId !== "string" || !option.modelId || !["cash", "credit", "reward-tokens"].includes(option.funding)
+        || !Array.isArray(option.taskIds) || option.taskIds.length > 32 || option.taskIds.some(id => !uint(id) || id === "0"))) throw new Error("AUTONOMY_INVALID_ECONOMICS");
+  }
   return { cashRaw: value.cashRaw, debtRaw: value.debtRaw, creditAvailableRaw: value.creditAvailableRaw, inferenceCreditsAvailable: value.inferenceCreditsAvailable,
-    ...(value.availableTasks === undefined ? {} : { availableTasks: value.availableTasks }), ...(value.executionCosts ? { executionCosts: structuredClone(value.executionCosts) } : {}),
+    ...(value.availableTasks === undefined ? {} : { availableTasks: value.availableTasks }), ...(value.taskEconomics ? { taskEconomics: structuredClone(value.taskEconomics) } : {}), ...(value.executionCosts ? { executionCosts: structuredClone(value.executionCosts) } : {}),
     ...(value.rewardTokens ? { rewardTokens: structuredClone(value.rewardTokens) } : {}) };
 }
 
@@ -224,9 +237,14 @@ export async function runAutonomy(directory: string, config: AutonomyConfig, dep
         await end("Stopped", "AUTONOMY_GAME_LIMIT"); return false;
       }
       if (decision.action === "run-task" && current.pendingTaskChildId) { await end("Stopped", "AUTONOMY_PENDING_TASK_REQUIRED"); return false; }
+      if (decision.action === "run-task" && step.context.observation.taskEconomics
+        && !step.context.observation.taskEconomics.options.some(option => option.modelId === decision.modelId && option.funding === decision.funding && option.taskIds.length > 0)) {
+        await end("Stopped", "ECONOMICS_NOT_WORTHWHILE"); return false;
+      }
       const cap = decision.action === "run-game" && money(input.games!.maxSpendPerGameRaw) < remaining() ? money(input.games!.maxSpendPerGameRaw) : remaining();
       if (decision.action === "run-game" && money(step.context.observation.cashRaw) - money(step.decisionChargedRaw ?? "0") < cap) { await end("Stopped", "AUTONOMY_GAME_CASH_REQUIRED"); return false; }
-      step.childId = randomUUID(); step.childLimits = { maxSpendRaw: cap.toString(), deadlineMs: input.deadlineMs };
+      step.childId = randomUUID(); step.childLimits = { maxSpendRaw: cap.toString(), deadlineMs: input.deadlineMs,
+        ...(decision.action === "run-task" && step.context.observation.taskEconomics ? { planningCostRaw: step.decisionChargedRaw ?? "0" } : {}) };
       if (decision.action === "run-game") current.startedGames = (current.startedGames ?? 0) + 1; else current.startedTasks++;
       current.phase = "Executing"; delete current.reason; await save();
       try { return await reconcile(step, decision.action === "run-game"
@@ -324,6 +342,8 @@ export async function runAutonomy(directory: string, config: AutonomyConfig, dep
       if (deps.runtimeDecision) {
         try { runtime = await deps.runtimeDecision(context); } catch { return await end("Paused", "AUTONOMY_OBSERVATION_UNAVAILABLE"); }
       }
+      if (!runtime && !context.pendingTask && context.observation.taskEconomics
+        && !context.observation.taskEconomics.options.some(option => option.taskIds.length)) runtime = { action: "stop", reason: "ECONOMICS_NOT_WORTHWHILE" };
       if (!runtime && remaining() < money(input.decisionReserveRaw!)) return await end("Stopped", "AUTONOMY_BUDGET_LIMIT");
       const step: AutonomyStep = { decisionId: randomUUID(), context,
         ...(runtime ? { decision: parseAutonomyDecision(runtime, input), decisionSource: "runtime" as const, decisionChargedRaw: "0" } : {}) };

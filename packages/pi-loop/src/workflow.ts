@@ -5,9 +5,10 @@ import { Contract, Interface, JsonRpcProvider, Transaction, Wallet, keccak256 } 
 import { ACCOUNT_ABI, MANAGER_ABI, PaymentError, canonical, requestDigest, sameAddress, uint, type Json, type PaymentHandle } from "@agentfuel/sdk";
 import type { DockerExecutor } from "@agentfuel/arena/docker";
 import type { SubmissionRecoveryPermission } from "./submission.js";
+import { assertEconomicPayment, assessTaskEconomics, type TaskRevenue } from "./economics.js";
 import { runRewardTask, type RewardTaskSession, type RewardTaskOptions } from "./reward-task.js";
 import { SessionStore } from "./session.js";
-import { selectInference, type SelectionCandidate, type SelectionConfig, type SelectionDecision, type SelectionProvider, type SelectionRoute } from "./selector.js";
+import { selectInference, selectionRejectionReason, type SelectionCandidate, type SelectionConfig, type SelectionDecision, type SelectionProvider, type SelectionRoute } from "./selector.js";
 import { validateSolveSpec, type SolveSpec } from "./provider.js";
 import { runFixedPriceTask, type FixedTaskConfig, type FixedTaskSession } from "./fixed-task.js";
 
@@ -25,7 +26,7 @@ export interface WorkflowOptions {
 }
 export type WorkflowPhase = "Selected" | "AcceptPending" | "Running" | "Succeeded" | "Failed" | "Refunded" | "Stopped" | "Paused" | "SubmissionPending" | "RefundPending";
 interface AcceptJournal { rawTransaction: string; txHash: string; from: string; nonce: number; confirmed: boolean; receipt?: unknown }
-interface TaskObservation { taskId: string; status: string; agentId: string; deadlineMs: number; loanStatus: string }
+interface TaskObservation { taskId: string; status: string; agentId: string; deadlineMs: number; loanStatus: string; revenue?: TaskRevenue }
 export interface WorkflowSession {
   version: 1; binding: string; config: WorkflowConfig; signer: string; decision: SelectionDecision; observations: TaskObservation[];
   phase: WorkflowPhase; reason?: string; rewardChild?: RewardTaskSession; accept?: AcceptJournal; childConfig?: FixedTaskConfig; child?: FixedTaskSession; handle?: PaymentHandle; reservedPrice: string;
@@ -55,7 +56,7 @@ function selectionConfig(config: WorkflowConfig): SelectionConfig {
 }
 function decide(config: WorkflowConfig, snapshot: SelectionDecision["snapshot"]): SelectionDecision {
   const decision = selectInference(selectionConfig(config), snapshot);
-  if (config.funding) {
+  if (config.funding && !config.economics) {
     // Cash quotes still describe the alternative service. Reward tasks never purchase that service.
     for (const candidate of decision.candidates) candidate.rejected = candidate.rejected.filter(reason => reason !== "FUNDS" && reason !== "PRICE_LIMIT");
     decision.selected = decision.candidates.find(candidate => !candidate.rejected.length);
@@ -65,6 +66,9 @@ function decide(config: WorkflowConfig, snapshot: SelectionDecision["snapshot"])
 export function validateWorkflowConfig(value: unknown): WorkflowConfig {
   const config = structuredClone(value) as WorkflowConfig;
   if (!config || config.funding !== undefined && config.funding !== "reward-tokens" && config.funding !== "inference-allowance" || !Array.isArray(config.providers)) stop("INVALID_WORKFLOW_CONFIG");
+  if (config.economics && (config.funding === "reward-tokens" && config.economics.executionCostRaw !== "0"
+    || config.funding === "inference-allowance" && (!config.economics.executionCostRaw || BigInt(config.economics.executionCostRaw) === 0n)
+    || !config.funding && config.economics.executionCostRaw !== undefined)) stop("INVALID_WORKFLOW_ECONOMICS");
   for (const provider of config.providers) {
     if (provider.service !== "infercredit/solve-fixed" || provider.model !== "pi-fixed-v1" || !Array.isArray(provider.routes)) stop("INVALID_WORKFLOW_PROVIDER");
     for (const route of provider.routes) {
@@ -103,6 +107,30 @@ export async function readWorkflowStatus(directory: string): Promise<WorkflowSta
   catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined; stop("WORKFLOW_STATE_INVALID"); }
 }
 
+/** Read-only admission at one canonical block. Call before any policy, acceptance or payment transaction. */
+export async function previewTaskWorkflow(config: WorkflowConfig, rpc: JsonRpcProvider, creditEnabled: boolean): Promise<{ decision: SelectionDecision; observations: TaskObservation[] }> {
+  validateWorkflowConfig(config);
+  if (BigInt(await rpc.send("eth_chainId", [])) !== BigInt(config.chainId)) stop("NETWORK_MISMATCH");
+  const block = await rpc.getBlock("latest"); if (!block?.hash) stop("ECONOMICS_OBSERVATION_UNCONFIRMED");
+  const at = { blockTag: block.number }, account = new Contract(config.account, ACCOUNT_ABI, rpc);
+  const escrow = new Contract(config.escrowAddress, escrowAbi, rpc);
+  const manager = new Contract(await account.getFunction("creditManager").staticCall(at), MANAGER_ABI, rpc);
+  const [cash, observations] = await Promise.all([account.getFunction("cash").staticCall(config.agentId, at), Promise.all(config.tasks.map(async entry => {
+    const [task, loan] = await Promise.all([escrow.getFunction("getTask").staticCall(entry.taskId, at), manager.getFunction("getLoan").staticCall(entry.taskId, at)]);
+    return { taskId: entry.taskId, status: String(task.status), agentId: String(task.agentId), deadlineMs: Number(task.deadline) * 1000, loanStatus: String(loan.status),
+      ...(config.economics ? { revenue: { rewardRaw: String(task.reward), escrowBalanceRaw: String(task.escrowBalance), protocolFeeBps: String(task.protocolFeeBps) } } : {}) };
+  }))]);
+  if ((await rpc.getBlock(block.number))?.hash !== block.hash || BigInt(await rpc.send("eth_chainId", [])) !== BigInt(config.chainId)) stop("ECONOMICS_OBSERVATION_UNCONFIRMED");
+  const decision = decide(config, { atMs: config.economics ? Math.max(Date.now(), block.timestamp * 1000) : Date.now(), cash: String(cash), creditEnabled, tasks: config.tasks.map(task => {
+    const current = observations.find(value => value.taskId === task.taskId)!;
+    return { ...task, ...(current.revenue ? { revenue: current.revenue } : {}), assigned: (current.status === "1" || current.status === "2" && current.agentId === config.agentId) && current.deadlineMs === task.deadlineMs && current.loanStatus === "0" };
+  }) });
+  return { decision, observations };
+}
+export function taskAdmissionReason(decision: SelectionDecision): string {
+  return selectionRejectionReason(decision);
+}
+
 /** One wallet writer and task, funded by one fixed-price purchase or a reward allowance, with independent Arena submission. */
 export async function runTaskWorkflow(directory: string, input: WorkflowConfig, options: WorkflowOptions): Promise<WorkflowStatus> {
   const config = validateWorkflowConfig(input), binding = digest(config);
@@ -119,10 +147,11 @@ export async function runTaskWorkflow(directory: string, input: WorkflowConfig, 
   const account = new Contract(config.account, ACCOUNT_ABI, rpc), escrow = new Contract(config.escrowAddress, escrowAbi, rpc);
   const chain = async () => { if (BigInt(await rpc.send("eth_chainId", [])) !== BigInt(config.chainId)) stop("NETWORK_MISMATCH"); };
   const time = (deadline = config.deadlineMs) => { if (Date.now() + config.minRemainingMs >= deadline) stop("WORKFLOW_DEADLINE"); };
-  const observe = async (taskId: string): Promise<TaskObservation> => {
-    const manager = new Contract(await account.getFunction("creditManager").staticCall(), MANAGER_ABI, rpc);
-    const [task, loan] = await Promise.all([escrow.getFunction("getTask").staticCall(taskId), manager.getFunction("getLoan").staticCall(taskId)]);
-    return { taskId, status: String(task.status), agentId: String(task.agentId), deadlineMs: Number(task.deadline) * 1000, loanStatus: String(loan.status) };
+  const observe = async (taskId: string, blockTag?: number): Promise<TaskObservation> => {
+    const at = blockTag === undefined ? {} : { blockTag };
+    const manager = new Contract(await account.getFunction("creditManager").staticCall(at), MANAGER_ABI, rpc);
+    const [task, loan] = await Promise.all([escrow.getFunction("getTask").staticCall(taskId, at), manager.getFunction("getLoan").staticCall(taskId, at)]);
+    return { ...(config.economics ? { revenue: { rewardRaw: String(task.reward), escrowBalanceRaw: String(task.escrowBalance), protocolFeeBps: String(task.protocolFeeBps) } } : {}), taskId, status: String(task.status), agentId: String(task.agentId), deadlineMs: Number(task.deadline) * 1000, loanStatus: String(loan.status) };
   };
   try {
     const active = await walletStore.read();
@@ -143,12 +172,8 @@ export async function runTaskWorkflow(directory: string, input: WorkflowConfig, 
     if (state && terminal(state.phase)) { await save(); return project(state); }
     await chain();
     if (!state) {
-      const [cash, observations] = await Promise.all([account.getFunction("cash").staticCall(config.agentId), Promise.all(config.tasks.map(task => observe(task.taskId)))]);
-      const decision = decide(config, { atMs: Date.now(), cash: String(cash), creditEnabled: Boolean(options.underwriterUrl), tasks: config.tasks.map(task => {
-        const current = observations.find(value => value.taskId === task.taskId)!;
-        return { ...task, assigned: (current.status === "1" || current.status === "2" && current.agentId === config.agentId) && current.deadlineMs === task.deadlineMs && current.loanStatus === "0" };
-      }) });
-      state = { version: 1, binding, config, signer, decision, observations, phase: decision.selected ? "Selected" : "Stopped", reservedPrice: "0", ...(!decision.selected ? { reason: "NO_FEASIBLE_CANDIDATE" } : {}) };
+      const { decision, observations } = await previewTaskWorkflow(config, rpc, Boolean(options.underwriterUrl));
+      state = { version: 1, binding, config, signer, decision, observations, phase: decision.selected ? "Selected" : "Stopped", reservedPrice: "0", ...(!decision.selected ? { reason: taskAdmissionReason(decision) } : {}) };
       await save();
     }
     const selected = state.decision.selected; if (!selected) return project(state);
@@ -176,14 +201,24 @@ export async function runTaskWorkflow(directory: string, input: WorkflowConfig, 
         await save(); return project(state);
       }
     }
-    const funding = async () => {
-      time(deadline); if (config.funding) return; const cash = await account.getFunction("cash").staticCall(config.agentId);
-      if (BigInt(selected.price) > cash + (selected.funding === "task-credit" && config.allowCredit ? BigInt(selected.creditLimit) : 0n)) stop("WORKFLOW_FUNDS_CHANGED");
+    const funding = async (observedCash?: bigint) => {
+      time(deadline); if (config.funding && !config.economics) return; const cash = observedCash ?? await account.getFunction("cash").staticCall(config.agentId);
+      if (BigInt(config.economics?.executionCostRaw ?? selected.price) > cash + (selected.funding === "task-credit" && config.allowCredit ? BigInt(selected.creditLimit) : 0n)) stop("WORKFLOW_FUNDS_CHANGED");
     };
     const assigned = async (allowOpen = false) => {
-      await chain(); time(deadline); const task = await observe(selected.taskId);
+      await chain(); time(deadline);
+      const block = config.economics ? await rpc.getBlock("latest") : undefined;
+      if (config.economics && !block?.hash) stop("ECONOMICS_OBSERVATION_UNCONFIRMED");
+      const task = await observe(selected.taskId, block?.number);
+      const cash = config.economics ? await account.getFunction("cash").staticCall(config.agentId, { blockTag: block!.number }) : undefined;
+      if (block && (await rpc.getBlock(block.number))?.hash !== block.hash) stop("ECONOMICS_OBSERVATION_UNCONFIRMED");
       if (task.deadlineMs !== selected.deadlineMs || !(task.status === "2" && task.agentId === config.agentId || allowOpen && task.status === "1")) stop("WORKFLOW_TASK_CHANGED");
-      await funding(); return task;
+      await funding(cash);
+      if (config.economics) {
+        const economics = assessTaskEconomics(config.economics, task.revenue, selected.price, String(cash));
+        if (economics.reason) stop(economics.reason);
+      }
+      return task;
     };
     if (!state.childConfig) {
       const task = await observe(selected.taskId);
@@ -229,6 +264,11 @@ export async function runTaskWorkflow(directory: string, input: WorkflowConfig, 
     if (config.funding) {
       const childConfig = state.childConfig;
       const metered = config.funding === "inference-allowance" ? await options.metered!(childConfig, async handle => {
+        if (config.economics) {
+          assertEconomicPayment(config.economics, handle);
+          const payment = await account.getFunction("getPayment").staticCall(handle.quote.paymentId);
+          if (payment.fromCash + payment.fromCredit === 0n) await assigned();
+        }
         if (state!.handle && state!.handle.quote.paymentId !== handle.quote.paymentId) stop("WORKFLOW_QUOTE_CHANGED");
         state!.handle = structuredClone(handle); state!.reservedPrice = handle.quote.price; await save();
       }) : undefined;
@@ -243,6 +283,7 @@ export async function runTaskWorkflow(directory: string, input: WorkflowConfig, 
       if (!metered) state.reservedPrice = "0";
     } else {
     const checkHandle = (handle: PaymentHandle) => {
+      if (config.economics) assertEconomicPayment(config.economics, handle);
       if (handle.quote.price !== selected.price || handle.quote.tier !== undefined || handle.quote.taskId !== selected.taskId || handle.input.taskId !== selected.taskId ||
         handle.relayUrl !== offered.relayUrl || handle.input.service !== "infercredit/solve-fixed" || handle.input.model !== "pi-fixed-v1" || handle.input.tier !== undefined || digest(handle.input.solve) !== digest(state!.childConfig!.solve) || handle.quote.requestDigest !== requestDigest(handle.input) ||
         (state!.handle && (state!.handle.quote.paymentId !== handle.quote.paymentId || state!.handle.creditNonce !== handle.creditNonce))) stop("WORKFLOW_QUOTE_CHANGED");

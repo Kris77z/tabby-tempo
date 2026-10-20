@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { hostedRequest, HostedClientError, HostedWalletNetworkError, hostedError, signedLogin, switchHostedWalletToTempo, injectedWallet, readPending, savePending, replayInput, authenticatedSnapshotOwner,
   type HostedSnapshot, type HostedAgent, type HostedRun, type AgentCreation, type AgentSettings, type PendingCommand, type RunInput } from "./hosted-client";
 import { useHostedFinance } from "./use-hosted-finance";
+import { useHostedAccounting } from "./use-hosted-accounting";
 
 // An owner-scoped UI hint only. Authentication always comes from a verified
 // snapshot or signed login, and the saved ID must still belong to that snapshot.
@@ -29,6 +30,11 @@ export function useHostedAgentsController(enabled: boolean) {
   const [snapshotStale, setSnapshotStale] = useState(false);
   const [busy, setBusy] = useState(false), [refreshing, setRefreshing] = useState(false);
   const [pending, setPending] = useState<PendingCommand | null>(null);
+  const [accountingReaders, setAccountingReaders] = useState(0);
+  const observeAccounting = useCallback(() => {
+    setAccountingReaders(count => count + 1);
+    return () => setAccountingReaders(count => Math.max(0, count - 1));
+  }, []);
   const readInFlight = useRef(false), mutationInFlight = useRef(false), sessionEpoch = useRef(0), requireLogin = useRef(false);
   const readCompletion = useRef<Promise<void> | null>(null);
   const authCleanup = useRef<Promise<unknown> | null>(null), authLoginCompletion = useRef<Promise<void> | null>(null);
@@ -143,7 +149,7 @@ export function useHostedAgentsController(enabled: boolean) {
     try {
       await cleanupBeforeLogin?.catch(() => undefined);
       // An earlier 401 read can also clear cookies, so finish it before login.
-      await Promise.all([readCompletion.current, finance.waitUntilIdle()]);
+      await Promise.all([readCompletion.current, finance.waitUntilIdle(), accounting.waitUntilIdle()]);
       if (requestedWalletVersion !== walletVersion.current) return;
       // Expiry of an earlier cookie is compatible with this explicit new login;
       // a wallet change while waiting is handled by walletVersion above.
@@ -261,6 +267,9 @@ export function useHostedAgentsController(enabled: boolean) {
   const financeRevision = snapshot?.runs.filter(run => run.agentId === selectedId && !["Queued", "Running"].includes(run.status))
     .map(run => `${run.requestId}:${run.status}:${run.updatedAt}`).join("|") ?? "";
   const finance = useHostedFinance(selected, enabled && access === "authenticated", financeRevision, invalidate);
+  const accountingRevision = snapshot?.runs.filter(run => run.agentId === selectedId)
+    .map(run => `${run.requestId}:${run.status}:${run.updatedAt}:${run.chargedRaw}`).join("|") ?? "";
+  const accounting = useHostedAccounting(selected, enabled && access === "authenticated" && accountingReaders > 0, accountingRevision, invalidate);
   return { snapshot, snapshotStale, selected, selectedId, select, access, owner, error, notice, busy, refreshing, pending, walletNetworkTarget,
-    finance, refresh, login, switchWalletNetwork, logout, create, run, recover, update, pause, cancelGoal, retryPending: () => pending ? command(pending) : Promise.resolve(false) };
+    finance, accounting, observeAccounting, refresh, login, switchWalletNetwork, logout, create, run, recover, update, pause, cancelGoal, retryPending: () => pending ? command(pending) : Promise.resolve(false) };
 }

@@ -249,3 +249,27 @@ test("fixed and reward workflows keep accepted-run recovery opt-in and durable w
     }
   } finally { t.mock.restoreAll(); await fx.close(); await rm(directory, { recursive: true, force: true }); }
 });
+
+test("economic admission rejects a funded losing task before accept, quote, nonce or payment and preserves its reason", { timeout: 90000 }, async () => {
+  const directory = await mkdtemp(join(tmpdir(), "af-wf-economics-"));
+  const fx = await createWorkflowFixture(directory, [{ problemId: "sum-integers", open: true, reward: 100000n }, { problemId: "unique-sorted", open: true, reward: 150000n }]);
+  try {
+    const { hostedTaskEconomics } = await import("../src/economics.js");
+    const { previewTaskWorkflow } = await import("../src/workflow.js");
+    const config = { ...structuredClone(fx.config), economics: hostedTaskEconomics("10000") };
+    const preview = await previewTaskWorkflow(config, fx.f.provider, true);
+    assert.equal(preview.decision.selected?.taskId, config.tasks[1].taskId);
+    assert.equal(preview.decision.candidates[0].economics?.reason, "ECONOMICS_NOT_WORTHWHILE");
+    config.tasks = [config.tasks[0]];
+    let quotes = 0; const quote = fx.relay.quote.bind(fx.relay); fx.relay.quote = async input => { quotes++; return quote(input); };
+    const before = [await fx.f.provider.getTransactionCount(fx.f.agentAddress), await read(fx.f.account, "cash", ["1"]), await fx.f.providerBalance(), Array.from(await read(fx.f.escrow, "getTask", [config.tasks[0].taskId]), String), Array.from(await read(fx.f.manager, "getLoan", [config.tasks[0].taskId]), String)];
+    const path = join(directory, "rejected"), result = await runTaskWorkflow(path, config, fx.options);
+    assert.equal(result.phase, "Stopped"); assert.equal(result.reason, "ECONOMICS_NOT_WORTHWHILE"); assert.equal(result.acceptTxHash, undefined); assert.equal(result.paymentId, undefined);
+    assert.deepEqual([await fx.f.provider.getTransactionCount(fx.f.agentAddress), await read(fx.f.account, "cash", ["1"]), await fx.f.providerBalance(), Array.from(await read(fx.f.escrow, "getTask", [config.tasks[0].taskId]), String), Array.from(await read(fx.f.manager, "getLoan", [config.tasks[0].taskId]), String)], before);
+    assert.equal(quotes, 0); assert.equal(fx.calls.length, 0);
+    const saved = await json(join(path, "session.json")); assert.deepEqual(saved.config.economics, config.economics);
+    assert.equal(saved.decision.snapshot.tasks[0].revenue.rewardRaw, "100000");
+    assert.deepEqual(await runTaskWorkflow(path, config, { ...fx.options, recoverLock: true }), result);
+    assert.equal(await fx.f.provider.getTransactionCount(fx.f.agentAddress), before[0]);
+  } finally { await fx.close(); await rm(directory, { recursive: true, force: true }); }
+});

@@ -29,6 +29,7 @@ export function runOutcomeLabel(run:HostedRun):string {
  if(view?.stage==='needs-input')return '需要补充信息';
  if(view?.stage==='cancelled'||run.reason==='HOSTED_GOAL_CANCELLED')return '已取消';
  if(run.result?.phase==='Refunded')return '已退款';
+ if(run.action==='autonomous'&&(run.reason??run.result?.reason)==='AUTONOMY_NO_AVAILABLE_TASKS'&&run.status==='Failed'&&!run.result?.autonomousTasks)return '暂无可用任务';
  if(run.action==='game'&&run.status==='Succeeded'){
   const outcome=run.activities?.findLast(event=>event.scene==='game'&&event.evidence?.outcome)?.evidence?.outcome;
   if(outcome)return ({won:'对局获胜',lost:'对局结束 · 未获奖',draw:'对局平局','no-reward':'对局结束 · 无奖励'} as const)[outcome];
@@ -52,6 +53,7 @@ function fallback(run:HostedRun|undefined,context:TabbySceneContext):{scene:Host
  if(view?.stage==='needs-input')return {scene:'decision',state:'blocked',reason,requiredAction:'provide-input'};
  if(view?.stage==='cancelled'||reason==='HOSTED_GOAL_CANCELLED')return {scene:'interruption',state:'cancelled',reason};
  if(result?.phase==='Refunded')return {scene:'interruption',state:'refunded',reason,evidence:{refundedRaw:result.refundedRaw,txHash:result.txHash}};
+ if(run.action==='autonomous'&&reason==='AUTONOMY_NO_AVAILABLE_TASKS'&&run.status==='Failed'&&!result?.autonomousTasks)return {scene:'task',state:'blocked',reason};
  if(reason?.includes('GAS_REQUIRED'))return {scene:'funding',state:'blocked',reason,requiredAction:'fund-gas'};
  if(reason?.includes('CONFIGURATION_REQUIRED'))return {scene:'onboarding',state:'blocked',reason,requiredAction:'configure'};
  if(reason&&/BUDGET_REQUIRED|BUDGET_EXHAUSTED|BUDGET_LIMIT/.test(reason))return {scene:'funding',state:'blocked',reason,requiredAction:'configure'};
@@ -92,7 +94,7 @@ function labelFor(scene:HostedScene,state:HostedActivityState,evidence:HostedAct
  if(state==='paused')return '已暂停';
  if(state==='failed')return scene==='review'?'复核未通过 · 保留产出':'已失败 · 保留费用与凭证';
  if(requiredAction)return ({configure:scene==='funding'?'预算达到上限':'等待模型与预算配置',deposit:'资金 / 额度不足', 'fund-gas':'等待补充 Gas','provide-input':'等待你补充信息',resume:'等待恢复原请求',reconcile:'结果待确认','play-game':'奖励额度不足 · 等待补给'} as const)[requiredAction];
- if(state==='blocked')return scene==='specialists'?'没有可调用的匹配专家':scene==='chain-lookup'?'部分链上来源不可用':scene==='funding'?'原模型额度包不足':'等待处理';
+ if(state==='blocked')return scene==='task'&&(run?.reason??run?.result?.reason)==='AUTONOMY_NO_AVAILABLE_TASKS'?'暂无可执行任务':scene==='specialists'?'没有可调用的匹配专家':scene==='chain-lookup'?'部分链上来源不可用':scene==='funding'?'原模型额度包不足':'等待处理';
  const terminal=['confirmed','completed'].includes(state);
  switch(scene){
   case 'onboarding':return terminal?'链上身份已确认':state==='queued'?'开户排队中':'等待链上开户';
@@ -144,7 +146,7 @@ export function tabbyScene(run?:HostedRun,context:TabbySceneContext={}):TabbySce
  let activity:ReturnType<typeof fallback>|HostedActivity=latest??fallback(run,context);
  if(!context.activity&&run){
   const guarded=fallback(run,context);
-  if(run.status==='Queued'||guarded.state==='stopping'||guarded.state==='reconciling'||guarded.state==='cancelled'||guarded.state==='refunded'||guarded.requiredAction==='provide-input'||['Paused','Failed'].includes(run.status)&&latest&&['started','selected','waiting'].includes(latest.state))activity={...guarded,evidence:{...(latest?.evidence??{}),...(guarded.evidence??{}),chargedRaw:run.chargedRaw,...(run.result?.refundedRaw!==undefined?{refundedRaw:run.result.refundedRaw}:{})}};
+  if(run.status==='Queued'||guarded.state==='stopping'||guarded.state==='reconciling'||guarded.state==='cancelled'||guarded.state==='refunded'||guarded.requiredAction==='provide-input'||guarded.scene==='task'&&guarded.state==='blocked'&&guarded.reason==='AUTONOMY_NO_AVAILABLE_TASKS'||['Paused','Failed'].includes(run.status)&&latest&&['started','selected','waiting'].includes(latest.state))activity={...guarded,evidence:{...(latest?.evidence??{}),...(guarded.evidence??{}),chargedRaw:run.chargedRaw,...(run.result?.refundedRaw!==undefined?{refundedRaw:run.result.refundedRaw}:{})}};
  }
  const e={...(activity.evidence??{})};
  e.chainId??=context.agent?.binding?.chainId??run?.result?.chainId;
