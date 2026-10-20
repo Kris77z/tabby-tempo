@@ -128,6 +128,26 @@ test("one actual settled task exhausts the configured catalog and closes a two-t
     const requests = t.requests.length, nonce = await t.f.fx.f.provider.getTransactionCount(actor.wallet.address);
     assert.deepEqual(await executor.execute({ ...parent, recover: true }), result);
     assert.equal(t.requests.length, requests); assert.equal(await t.f.fx.f.provider.getTransactionCount(actor.wallet.address), nonce);
+
+    // A new parent must see the already-settled canonical task before a game,
+    // sponsor admission, planner payment or a second task can be dispatched.
+    const emptyParent = actor.input("task"); emptyParent.run.action = "autonomous"; emptyParent.run.reservedRaw = "130000";
+    const roleAddresses = Array.from({ length: 10 }, (_, index) => new Wallet(key(index + 1)).address);
+    const roleNonces = await Promise.all(roleAddresses.map(address => t.f.fx.f.provider.getTransactionCount(address)));
+    const empty = await executor.execute(emptyParent);
+    assert.equal(empty.phase, "Stopped"); assert.equal(empty.reason, "AUTONOMY_NO_AVAILABLE_TASKS");
+    assert.equal(empty.terminal, true); assert.equal(empty.success, false); assert.equal(empty.autonomousTasks, 0); assert.equal(empty.autonomousGames, 0);
+    assert.equal(empty.chargedRaw, "0"); assert.equal(t.requests.length, requests);
+    const emptyHost = await readFile(join(emptyParent.directory, "autonomy-host", "session.json"), "utf8");
+    const emptyLoop = await readFile(join(emptyParent.directory, "autonomy-loop", "session.json"), "utf8");
+    assert.deepEqual(JSON.parse(emptyHost).children, {});
+    assert.equal(JSON.parse(emptyLoop).startedTasks, 0); assert.equal(JSON.parse(emptyLoop).startedGames ?? 0, 0);
+    assert.deepEqual(await Promise.all(roleAddresses.map(address => t.f.fx.f.provider.getTransactionCount(address))), roleNonces);
+    assert.deepEqual(await executor.execute({ ...emptyParent, recover: true }), empty);
+    assert.equal(t.requests.length, requests);
+    assert.equal(await readFile(join(emptyParent.directory, "autonomy-host", "session.json"), "utf8"), emptyHost);
+    assert.equal(await readFile(join(emptyParent.directory, "autonomy-loop", "session.json"), "utf8"), emptyLoop);
+    assert.deepEqual(await Promise.all(roleAddresses.map(address => t.f.fx.f.provider.getTransactionCount(address))), roleNonces);
   } finally { await t.close(); }
 });
 

@@ -5,13 +5,14 @@ import type { JsonRpcProvider, Wallet } from "ethers";
 import { PaymentError } from "@agentfuel/sdk";
 import { runProviderSolver, type ProviderSolveOptions, type ProviderSolveState, type SolveSpec } from "./provider.js";
 import { SessionStore } from "./session.js";
-import { submitProgrammingCandidate, type SubmissionConfig, type SubmissionState } from "./submission.js";
+import { submitProgrammingCandidate, type SubmissionConfig, type SubmissionState, type SubmissionRecoveryPermission } from "./submission.js";
 
 export interface RewardTaskConfig extends SubmissionConfig { solve: SolveSpec }
 export interface RewardTaskSession extends SubmissionState {
   version: 1; config: RewardTaskConfig; solve?: ProviderSolveState; creditsUsed: number;
 }
 export interface RewardTaskOptions {
+  submissionRecovery?: SubmissionRecoveryPermission;
   onProgress?: (progress: {phase:string;reason?:string}) => Promise<void>;
   submitFailedCandidate?: boolean;
   signer: Wallet; provider: JsonRpcProvider; solver: ProviderSolveOptions;
@@ -45,7 +46,7 @@ export async function runRewardTask(directory: string, config: RewardTaskConfig,
       || state.submission && state.submission.payload.code !== code) throw new Error("REWARD_TASK_CANDIDATE_INVALID");
     state.candidate = code; state.phase = state.submission ? "SubmissionPending" : "ReadyToSubmit"; delete state.reason; await save();
     await submitProgrammingCandidate(state, config, { signer: options.signer, rpc: options.provider, save,
-      timeoutMs: options.timeoutMs, pollTimeoutMs: options.pollTimeoutMs }, config.solve.problemId);
+      timeoutMs: options.timeoutMs, pollTimeoutMs: options.pollTimeoutMs, submissionRecovery: options.submissionRecovery }, config.solve.problemId);
     return structuredClone(state);
   } catch (error) {
     if (!state || !(error instanceof PaymentError)) throw error;

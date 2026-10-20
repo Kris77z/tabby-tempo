@@ -4,7 +4,7 @@ import { createServer, type Server, type Socket } from "node:net";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { Contract, JsonRpcProvider, keccak256, Wallet } from "ethers";
-import { atomicJson, digest, ESCROW_ABI, privateDirectory, settlementTimeout, validateVerdict, type ArenaConfig, type Settlement, type Verdict } from "./protocol.js";
+import { atomicJson, digest, ESCROW_ABI, privateDirectory, settlementTimeout, uintString, validateVerdict, type ArenaConfig, type Settlement, type Verdict } from "./protocol.js";
 
 interface RecordEntry { verdict: Verdict; verdictHash: string; rawTx: string; txHash: string; settlement?: Settlement }
 type Journal = Record<string, RecordEntry>;
@@ -80,12 +80,20 @@ export class ArenaSettler {
       // Disconnecting a slow peer never cancels the journal operation below.
       socket.setTimeout(settlementTimeout(this.config.settlementTimeoutMs), () => socket.destroy());
       const operation = this.queue.then(async () => {
-        const request = JSON.parse(body) as { token: unknown; verdict: unknown };
+        const request = JSON.parse(body) as { token: unknown; verdict: unknown; action?: unknown; taskId?: unknown };
         if (typeof request.token !== "string" || !/^[a-f0-9]{64}$/.test(request.token) || !timingSafeEqual(Buffer.from(request.token), Buffer.from(this.token))) throw new Error("UNAUTHORIZED_CONTROLLER");
-        return this.settle(validateVerdict(request.verdict, this.config));
+        if (request.action === "inspect") {
+          const taskId = uintString(request.taskId, "TASK_ID");
+          if (!Object.hasOwn(this.config.tasks, taskId)) throw new Error("TASK_NOT_AUTHORIZED");
+          await this.domain();
+          const entry = this.journal[taskId];
+          return { intent: entry ? { verdict: entry.verdict, txHash: entry.txHash } : null };
+        }
+        if (request.action !== undefined) throw new Error("INVALID_IPC_ACTION");
+        return { settlement: await this.settle(validateVerdict(request.verdict, this.config)) };
       });
       this.queue = operation.catch(() => undefined);
-      operation.then(settlement => socket.end(JSON.stringify({ settlement }) + "\n"), error => {
+      operation.then(result => socket.end(JSON.stringify(result) + "\n"), error => {
         // Never leak RPC credentials, the private key, or raw transactions.
         const message = (error as Error).message;
         socket.end(JSON.stringify({ error: /^[A-Z_]+$/.test(message) ? message : "SETTLEMENT_UNAVAILABLE" }) + "\n");
@@ -97,7 +105,6 @@ export class ArenaSettler {
     const hash = digest(JSON.stringify(verdict));
     let entry = this.journal[verdict.taskId];
     if (entry && entry.verdictHash !== hash) throw new Error("TASK_ALREADY_SUBMITTED");
-    if (entry?.settlement) return entry.settlement;
     if (!entry) {
       const task = await this.escrow.getFunction("getTask").staticCall(verdict.taskId);
       if (task.status !== 2n) throw new Error("TASK_NOT_ASSIGNED");

@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { Contract, Interface, JsonRpcProvider, Transaction, Wallet, keccak256 } from "ethers";
 import { ACCOUNT_ABI, MANAGER_ABI, PaymentError, canonical, requestDigest, sameAddress, uint, type Json, type PaymentHandle } from "@agentfuel/sdk";
 import type { DockerExecutor } from "@agentfuel/arena/docker";
+import type { SubmissionRecoveryPermission } from "./submission.js";
 import { runRewardTask, type RewardTaskSession, type RewardTaskOptions } from "./reward-task.js";
 import { SessionStore } from "./session.js";
 import { selectInference, type SelectionCandidate, type SelectionConfig, type SelectionDecision, type SelectionProvider, type SelectionRoute } from "./selector.js";
@@ -15,6 +16,7 @@ export interface WorkflowRoute extends SelectionRoute { solve: WorkflowSolvePlan
 export interface WorkflowProvider extends Omit<SelectionProvider, "routes"> { routes: WorkflowRoute[] }
 export interface WorkflowConfig extends Omit<SelectionConfig, "providers"> { providers: WorkflowProvider[]; funding?: "reward-tokens" | "inference-allowance" }
 export interface WorkflowOptions {
+  submissionRecovery?: SubmissionRecoveryPermission;
   onProgress?: (status: WorkflowStatus) => Promise<void>;
   signer: Wallet; provider: JsonRpcProvider; rpcUrl: string; arenaUrl: string; underwriterUrl: string; walletLockDirectory: string;
   reward?: Pick<RewardTaskOptions, "solver" | "creditsUsed">;

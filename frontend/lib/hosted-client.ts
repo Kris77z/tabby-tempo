@@ -1,13 +1,25 @@
 import { validGoal } from "../../services/hosted-agents/src/goal-types";
 import type { AgentCreation, AgentSettings, HostedAction, HostedAgent, HostedRun, HostedCatalogModel, HostedFinance, HostedCapabilities, HostedSponsorship } from "../../services/hosted-agents/src/types";
 export type { AgentCreation, AgentSettings, HostedAction, HostedAgent, HostedRun, HostedCatalogModel, HostedFinance, HostedCapabilities, HostedSponsorship };
-export interface HostedSnapshot { capabilities?: HostedCapabilities; sponsorship?: HostedSponsorship; agents: HostedAgent[]; runs: HostedRun[]; models: HostedCatalogModel[] }
+export interface HostedSnapshot { owner?: string; capabilities?: HostedCapabilities; sponsorship?: HostedSponsorship; agents: HostedAgent[]; runs: HostedRun[]; models: HostedCatalogModel[] }
 export type { HostedActivity, HostedActivityInput, HostedActivityEvidence, HostedActivityState, HostedScene, HostedRequiredAction } from "../../services/hosted-agents/src/scene-types";
 export interface RunInput { requestId: string; action: HostedAction; rewardKind?: "usdc" | "llm-credits"; amountRaw?: string; goal?: string }
 export type PendingCommand = { owner: string; kind: "create"; input: AgentCreation & { requestId: string } } | { owner: string; kind: "run"; agentId: string; input: RunInput };
 import { networkName } from "./networks";
 export class HostedClientError extends Error {
   constructor(readonly code: string, readonly status: number) { super(code); }
+}
+
+/** Call only for a successful authenticated snapshot response. A local pending
+ * command, wallet event or URL cannot establish the platform's current owner. */
+export function authenticatedSnapshotOwner(snapshot: HostedSnapshot): string | null {
+  const candidate = snapshot.owner === undefined ? snapshot.agents[0]?.owner : snapshot.owner;
+  if (candidate === undefined) return null; // Legacy empty snapshot has no identity evidence.
+  if (typeof candidate !== "string" || !/^0x[0-9a-f]{40}$/i.test(candidate)
+    || snapshot.agents.some(agent => typeof agent.owner !== "string" || agent.owner.toLowerCase() !== candidate.toLowerCase())) {
+    throw new HostedClientError("HOSTED_UNAVAILABLE", 503);
+  }
+  return candidate;
 }
 
 /** Same-origin cookies are the only credentials. Never accept/store a bearer token. */
@@ -33,6 +45,8 @@ const messages: Record<string, string> = {
   HOSTED_GOAL_MODEL_DOWNGRADED: "剩余预算不足，后续调用已切换到批准的低价模型。",
   GATEWAY_MODEL_DOWNGRADED: "本轮改用低价模型，原任务与已有结果已保留。",
   AUTONOMY_GAME_LIMIT: "已达到自动参赛次数上限，原任务和奖励记录已保留。",
+  AUTONOMY_NO_AVAILABLE_TASKS: "目录中暂无可执行任务，本轮已停止新的规划与参赛。",
+  AUTONOMY_OBSERVATION_UNAVAILABLE: "暂时无法核验任务与资金状态，原请求已暂停，未继续发起新的调用。",
   AUTONOMY_REWARD_RESOURCE_UNAVAILABLE: "没有符合当前预算与模型的可用奖励资源。",
   HOSTED_AUTONOMY_GAMES_NOT_READY: "自动参赛服务尚未配置完成。",
   HOSTED_EXTERNAL_SERVICE_UNAVAILABLE: "注册表中没有匹配能力的外部 Agent。",
@@ -160,6 +174,29 @@ export function readPending(owner: string): PendingCommand | null {
 
 type Injected = { request(args: { method: string; params?: unknown[] }): Promise<unknown>; on?: (event: string, listener: (...args: unknown[]) => void) => void; removeListener?: (event: string, listener: (...args: unknown[]) => void) => void };
 export function injectedWallet(): Injected | undefined { return (window as Window & { ethereum?: Injected }).ethereum; }
+export class HostedWalletNetworkError extends Error {
+  constructor(readonly expectedChainId: "31337" | "10143" | "42431") {
+    super(`钱包网络不匹配。请切换到 ${networkName(expectedChainId)}（${expectedChainId}） 后重新登录。`);
+  }
+}
+/** Explicit user action only: switch to an already installed Tempo network.
+ * We have no verified EIP-3085 nativeCurrency descriptor, so never invent one
+ * or leak a private provider URL through wallet_addEthereumChain. */
+export async function switchHostedWalletToTempo(injected = injectedWallet()): Promise<void> {
+  if (!injected) throw new Error("钱包未检测到。请安装并启用 EIP-1193 钱包扩展。");
+  try {
+    await injected.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0xa5bf" }] });
+    if (BigInt(String(await injected.request({ method: "eth_chainId" }))) !== 42431n)
+      throw new Error("钱包尚未切换到 Tempo Moderato Testnet，请在钱包确认后重试。");
+  } catch (cause) {
+    if (cause instanceof Error && cause.message.startsWith("钱包")) throw cause;
+    const code = Number((cause as { code?: unknown })?.code);
+    throw new Error(code === 4902 ? "钱包尚未配置 Tempo Moderato Testnet，请先按官方信息手工添加网络，再点击切换。"
+      : code === 4001 ? "钱包切换已取消。可以再次点击切换到 Tempo Moderato Testnet。"
+      : code === -32002 ? "钱包已有待确认请求，请先在钱包处理后再试。"
+      : "钱包未能切换到 Tempo Moderato Testnet。请在钱包确认网络后重新签名登录。");
+  }
+}
 export async function signedLogin(options: { isCurrent?: () => boolean; onWalletReady?: () => void } = {}): Promise<string> {
   const assertCurrent = () => { if (options.isCurrent && !options.isCurrent()) throw new Error("钱包账号或网络已变化，请重新签名登录。"); };
   const injected = injectedWallet();
@@ -174,9 +211,10 @@ export async function signedLogin(options: { isCurrent?: () => boolean; onWallet
   const challenge = await hostedRequest<{ id: string; message: string; expiresAt: number }>("/auth/challenge", "POST", { wallet });
   assertCurrent();
   const chainMatch = /^Chain: (31337|10143|42431)$/m.exec(challenge.message);
-  if (!chainMatch || BigInt(String(chain)) !== BigInt(chainMatch[1])) throw new Error(`钱包网络不匹配。请切换到 ${chainMatch ? `${networkName(chainMatch[1])}（${chainMatch[1]}）` : "平台配置的网络"} 后重新登录。`);
+  if (!chainMatch) throw new Error("钱包登录挑战与当前地址不一致，请刷新重试。");
   const expected = `AgentFuel hosted agent login\nOrigin: ${window.location.origin}\nWallet: ${wallet}\nChain: ${chainMatch[1]}\nNonce: ${challenge.id}\nExpires: ${new Date(challenge.expiresAt).toISOString()}\nThis signature authenticates your platform account. It authorizes no blockchain transaction.`;
   if (challenge.message !== expected || challenge.expiresAt <= Date.now() || challenge.expiresAt > Date.now() + 301_000) throw new Error("钱包登录挑战与当前地址不一致，请刷新重试。");
+  if (BigInt(String(chain)) !== BigInt(chainMatch[1])) throw new HostedWalletNetworkError(chainMatch[1] as "31337" | "10143" | "42431");
   const signature = await signer.signMessage(challenge.message);
   assertCurrent();
   const accounts = await injected.request({ method: "eth_accounts" }) as string[];

@@ -288,15 +288,15 @@ export class HostedAutonomyExecutor implements HostedExecutor {
               tokenRates: metered.catalog.map((model, index) => ({ tier: index === 0 ? "cheap" : "strong", inputMicroCreditsPerToken: model.inputMicroCreditsPerToken, outputMicroCreditsPerToken: model.outputMicroCreditsPerToken })) } };
 
         },
-        ...(this.config.games ? {
-          runtimeDecision: async (context: AutonomyContext) => {
+        runtimeDecision: async (context: AutonomyContext) => {
             if (this.deps.shouldContinue && !await this.deps.shouldContinue(parent.agent.id)) return { action: "stop" as const, reason: "HOSTED_AGENT_PAUSED" };
-            if (context.completedTasks > 0 && !context.pendingTask) {
+            if (!context.pendingTask) {
               if (!observedFinance) invalid("HOSTED_AUTONOMY_TASK_CATALOG_UNCONFIRMED");
               const provider = this.deps.provider ?? (ownedTransport ??= await openHostedPlannerConnection((await taskPrivateFile(this.task.config.rpcUrlFile)).trim(), parent.agent.binding!.chainId, this.task.config.rpcTransport)).provider;
               context.observation.availableTasks = await readHostedAvailableTasks(this.task.config, parent, observedFinance, provider, context.deadlineMs, (this.deps.now ?? Date.now)());
               if (context.observation.availableTasks === 0) return { action: "stop" as const, reason: "AUTONOMY_NO_AVAILABLE_TASKS" };
             }
+            if (!this.config.games) return null;
             const rewards = context.observation.rewardTokens;
             const rewardReady = rewards && !rewards.blocked && context.models.includes(rewards.modelId) && context.funding.includes("reward-tokens")
               && BigInt(rewards.availableTokens) >= BigInt(rewards.minTaskTokens);
@@ -308,7 +308,8 @@ export class HostedAutonomyExecutor implements HostedExecutor {
             const kind = context.pendingTask ? "llm-credits" : BigInt(context.observation.cashRaw) < BigInt(this.config.plannerPriceRaw) && this.config.games!.rewardKinds.includes("usdc") ? "usdc" : this.config.games!.rewardKinds.includes("llm-credits") ? "llm-credits" : "usdc";
             if (!this.config.games!.rewardKinds.includes(kind) || !rewards || !context.models.includes(rewards.modelId)) return { action: "stop" as const, reason: "AUTONOMY_REWARD_RESOURCE_UNAVAILABLE" };
             return { action: "run-game" as const, modelId: rewards.modelId, funding: "cash" as const, rewardKind: kind };
-          },
+        },
+        ...(this.config.games ? {
           canResumeTask: async (context: AutonomyContext) => {
             if (this.deps.shouldContinue && !await this.deps.shouldContinue(parent.agent.id)) return false;
             const rewards = context.observation.rewardTokens, pending = context.pendingTask;
@@ -372,7 +373,8 @@ export class HostedAutonomyExecutor implements HostedExecutor {
       const admissionStops = ["AUTONOMY_PLANNER_CASH_REQUIRED", "AUTONOMY_TASK_BUDGET_REQUIRED", "HOSTED_AGENT_PAUSED"];
       const reason = modelStopped && result.steps.at(-1)?.decisionSource!=="runtime" && !admissionStops.includes(result.reason ?? "") ? "AUTONOMY_MODEL_STOPPED"
         : result.reason && /^[A-Z][A-Z0-9_]{0,100}$/.test(result.reason) ? result.reason : "AUTONOMY_EXECUTION_STOPPED";
-      return Object.assign({ phase: result.phase, terminal, success: terminal && !childFailed && (result.phase === "Completed" || result.steps.at(-1)?.decision?.action === "stop"),
+      return Object.assign({ phase: result.phase, terminal, success: terminal && !childFailed && (result.phase === "Completed" || result.steps.at(-1)?.decision?.action === "stop")
+          && (reason !== "AUTONOMY_NO_AVAILABLE_TASKS" || result.completedTasks > 0),
         chargedRaw: result.chargedRaw, refundedRaw: result.steps.reduce((sum, step) => sum + BigInt(step.decisionRefundedRaw ?? "0") + BigInt(step.outcome?.refundedRaw ?? "0"), 0n).toString(), reason }, { autonomousTasks: result.completedTasks,
           ...(this.config.games ? { autonomousGames: result.completedGames ?? 0 } : {}) });
     } finally { ownedTransport?.close(); await store.close(); }

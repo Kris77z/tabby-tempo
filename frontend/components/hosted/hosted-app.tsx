@@ -31,6 +31,7 @@ type CenterPane='mission'|'games'|'finance';
 type MobilePane = 'agent'|'requests'|'resources';
 const panes:{id:MobilePane;label:string}[]=[{id:'agent',label:'agent.sys'},{id:'requests',label:'mission.log'},{id:'resources',label:'mesh.net'}];
 const time=(value:string)=>new Date(value).toLocaleString('zh-CN',{hour12:false});
+const operationMode=(value?:string):HostedAction=>value==='task'||value==='metered-task'||value==='autonomous'||value==='game'||value==='reward-task'||value==='deposit'?value:'goal';
 
 /** Layout ported from monad-rebel dashboard; the hosted runtime remains the source of truth. */
 export default function HostedApp({initialPanel='mission',initialOperation}:{initialPanel?:CenterPane;initialOperation?:string}){
@@ -43,7 +44,7 @@ export default function HostedApp({initialPanel='mission',initialOperation}:{ini
  const latestSeen=useRef<{agentId:string;requestId?:string}|undefined>(undefined);
  const missionScroll=useRef<HTMLDivElement>(null),dialog=useRef<HTMLDialogElement>(null),agent=state.selected;
  const runs=state.snapshot?.runs.filter(r=>r.agentId===agent?.id)??[],active=runs.find(r=>r.requestId===agent?.activeRequestId);
- const selectedRun=runs.find(r=>r.requestId===focusedRequest)??active;
+ const selectedRun=runs.find(r=>r.requestId===focusedRequest)??active??runs.find(r=>r.action!=='provision'&&r.action!=='deposit')??runs[0];
  const current=selectedRun?.action==='provision'?undefined:selectedRun;
  const provision=selectedRun?.action==='provision'?selectedRun:runs.find(r=>r.action==='provision');
  const blocked=state.busy||!!state.pending||!agent||agent.status!=='Ready'||!!agent.activeRequestId||agent.configurationRequired===true;
@@ -56,17 +57,25 @@ export default function HostedApp({initialPanel='mission',initialOperation}:{ini
  const sceneRun=selectedRun??(agent?.status==='Pending'?provision:undefined);
  const sceneProps={run:sceneRun,ready:!!agent&&agent.status==='Ready'&&!agent.configurationRequired,agent:agent??undefined,capabilities:state.snapshot?.capabilities,finance:state.finance.stale?null:state.finance.value,history:historyMode,disconnected:state.snapshotStale,onSelectExpert:setSceneExpert};
  useEffect(()=>{if(modal&&!dialog.current?.open)dialog.current?.showModal();else if(!modal&&dialog.current?.open)dialog.current.close();},[modal]);
- useEffect(()=>{setModal(false);setHistoryOpen(false);setProfile(null);setSceneExpert(undefined);setHistoryMode(false);const op=initialOperation;setMode(op==='game'||op==='task'||op==='metered-task'?op:'goal');setFocusedRequest(undefined);},[state.selectedId,state.access,initialOperation]);
+ useEffect(()=>{setModal(false);setHistoryOpen(false);setProfile(null);setSceneExpert(undefined);setHistoryMode(false);setFocusedRequest(undefined);},[state.selectedId,state.access]);
+ useEffect(()=>{setMode(operationMode(initialOperation));},[state.selectedId,state.access,initialOperation]);
  useEffect(()=>{if(active){setFocusedRequest(active.requestId);setHistoryMode(false);setSceneExpert(undefined);}},[active?.requestId]);
  useEffect(()=>{if(!agent)return;const latest=runs[0]?.requestId;if(latestSeen.current?.agentId===agent.id&&latest&&latestSeen.current.requestId!==latest){setFocusedRequest(latest);setHistoryMode(false);setSceneExpert(undefined);}latestSeen.current={agentId:agent.id,requestId:latest};},[agent?.id,runs[0]?.requestId]);
  useEffect(()=>{missionScroll.current?.scrollTo({top:0});},[current?.requestId]);
- const operation=(value:HostedAction)=>{setMode(value);setMobilePane('requests');setCenter(value==='game'?'games':value==='deposit'?'finance':'mission');if(value==='game')setGamesOpened(true);};
- const showPane=(pane:CenterPane)=>{setCenter(pane);setMobilePane('requests');if(pane==='games')setGamesOpened(true);};
+ const navigatePane=(pane:CenterPane,value?:HostedAction)=>{
+  setCenter(pane);setMode(value??'goal');setMobilePane('requests');if(pane==='games')setGamesOpened(true);
+  const url=new URL(window.location.href);url.searchParams.set('panel',pane);
+  if(value&&value!=='goal')url.searchParams.set('operation',value);else url.searchParams.delete('operation');
+  const href=url.pathname+url.search+url.hash;
+  if(href!==window.location.pathname+window.location.search+window.location.hash)router.replace(href,{scroll:false});
+ };
+ const operation=(value:HostedAction)=>navigatePane(value==='game'?'games':value==='deposit'?'finance':'mission',value);
+ const showPane=(pane:CenterPane)=>navigatePane(pane);
  const network=agent?.binding?.chainId?networkName(agent.binding.chainId):"链上待就绪", symbol=settlementSymbol(agent?.binding?.chainId);
  return <div className={`${styles.shell} ${agora.workspace}`} data-testid="hosted-terminal-shell">
  <a href="#hosted-content" className={styles.skipLink}>跳到工作台</a>
  <WorkspaceHeader section="hosted" title="Tabby Agent 工作台" actions={<button className={agora.headerButton} onClick={()=>setHistoryOpen(true)} title="任务历史"><Icon name="history" size={14}/><span>历史</span>{runs.length>0&&<small>{runs.length}</small>}</button>}/>
- <MissionHistory chainId={agent?.binding?.chainId} open={historyOpen} onClose={()=>setHistoryOpen(false)} runs={runs} onSelect={r=>{setFocusedRequest(r.requestId);setHistoryMode(r.requestId!==active?.requestId);setSceneExpert(undefined);setCenter('mission');setMobilePane('requests');}}/>
+ <MissionHistory chainId={agent?.binding?.chainId} open={historyOpen} onClose={()=>setHistoryOpen(false)} runs={runs} onSelect={r=>{setFocusedRequest(r.requestId);setHistoryMode(r.requestId!==active?.requestId);setSceneExpert(undefined);showPane('mission');}}/>
  <div className={styles.mobileTabs} role="tablist" aria-label="工作台面板">{panes.map(p=><button key={p.id} id={'tab-'+p.id} role="tab" aria-selected={mobilePane===p.id} aria-controls={'panel-'+p.id} onClick={()=>setMobilePane(p.id)}>{p.label}</button>)}</div>
  <WorkspaceNotifications key={state.selectedId+state.access} error={state.error} notice={state.notice} busy={state.busy||state.refreshing} pending={state.pending?`原请求等待确认 · ${state.pending.kind==='create'?'创建 Agent':actionLabel[state.pending.input.action]}`:undefined} onRefresh={()=>void state.refresh()} onRetry={()=>void state.retryPending()}/>
  <main id="hosted-content" className={styles.main}><div className={agora.columns} data-testid="hosted-terminal-grid">
@@ -89,7 +98,7 @@ export default function HostedApp({initialPanel='mission',initialOperation}:{ini
  <div className={agora.centerTabs} role="tablist" aria-label="Dashboard 内容">{([{id:'mission',label:'任务'},{id:'games',label:'游戏'},{id:'finance',label:'资金与借贷'}] as const).map(tab=><button key={tab.id} role="tab" aria-selected={center===tab.id} onClick={()=>showPane(tab.id)}>{tab.label}</button>)}<span>{center==='mission'?'mission.log':center==='games'?'tabby.games':'funds & credit'}</span></div>
  <div className={agora.centerFrame} data-testid="hosted-center-surface" data-panel={center}>
  {center==='finance'&&<div className={agora.centerSurface}>{agent&&<MagpiePanel {...sceneProps}/>}<FinanceApp onTask={()=>operation(state.snapshot?.capabilities?.inference?'metered-task':'task')}/></div>}
- {gamesOpened&&<div className={agora.centerSurface} hidden={center!=='games'}><ArenaPlay hostedTempo={agent?.binding?.chainId === "42431"} embedded initialGame={null} initialMode="challenge" onReward={()=>{setMode('game');setCenter('mission');}}/></div>}
+ {gamesOpened&&<div className={agora.centerSurface} hidden={center!=='games'}><ArenaPlay hostedTempo={agent?.binding?.chainId === "42431"} embedded initialGame={null} initialMode="challenge" onReward={()=>navigatePane('mission','game')}/></div>}
  <div className={`${agora.centerSurface} ${agora.missionSurface}`} hidden={center!=='mission'}>
  <div ref={missionScroll} className={agora.timeline}>
  <MagpiePanel {...sceneProps}/>

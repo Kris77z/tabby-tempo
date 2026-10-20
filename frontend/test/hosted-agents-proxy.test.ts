@@ -17,6 +17,7 @@ test("owner sponsorship snapshot and run binding survive the proxy without the p
 const origin = "http://127.0.0.1:3000", upstreamUrl = "http://127.0.0.1:8791", token = "s".repeat(64);
 const config = { origin, upstreamUrl }, cookie = `agentfuel_hosted_session=${token}`;
 const settings = { name: "Hosted", modelId: "coder", strategy: "balanced", perRunBudgetRaw: "120000", totalBudgetRaw: "1000000", allowCredit: true };
+const owner = "0x48aEd9c702B97A18A520edA3BB04d959453f0B80";
 function request(path: string, method = "GET", body?: unknown, headers: Record<string, string> = {}) {
   return new Request(`${origin}/api/hosted${path}`, { method, headers: { host: "127.0.0.1:3000", origin, "content-type": "application/json", cookie, ...headers }, body: body === undefined ? undefined : JSON.stringify(body) });
 }
@@ -64,7 +65,7 @@ test("fixed paths use only cookie bearer and public projections; upstream errors
   const fetcher = (async (url, options) => {
     calls++; assert.equal(new Headers(options?.headers).get("authorization"), `Bearer ${token}`);
     assert.equal(new Headers(options?.headers).get("x-owner"), null); assert.equal(new Headers(options?.headers).get("cookie"), null);
-    const value = { ...settings, id: "agent-1", owner: "owner", wallet: "wallet", privateKey: "SECRET", keyFile: "/private/secret", binding: { chainId: "31337", agentId: "0", wallet: "wallet", rpcUrl: "SECRET" } };
+    const value = { ...settings, id: "agent-1", owner, wallet: "wallet", privateKey: "SECRET", keyFile: "/private/secret", binding: { chainId: "31337", agentId: "0", wallet: "wallet", rpcUrl: "SECRET" } };
     if (String(url).endsWith("/runs")) { const command = JSON.parse(options!.body as string); return Response.json({ requestId: "run", agentId: "agent-1", action: command.action, ...(command.amountRaw ? { amountRaw: command.amountRaw } : {}), status: "Queued", result: { phase: "done", chargedRaw: "120000", rawTransaction: "SECRET" }, token: "SECRET" }, { status: 202 }); }
     if (options?.method === "GET") return Response.json({ agents: [value], runs: [], models: [{ id: "coder", label: "Coder", apiKey: "SECRET" }], token: "SECRET" });
     return Response.json(value, { status: 202 });
@@ -78,6 +79,25 @@ test("fixed paths use only cookie bearer and public projections; upstream errors
   assert.equal(unauthorized.status, 401); assert.match(unauthorized.headers.get("set-cookie")!, /Max-Age=0/); assert.deepEqual(await unauthorized.json(), { error: "HOSTED_SESSION_EXPIRED" });
   for (const fetcher of [(async () => { throw new Error("SECRET URL credential"); }), (async () => Response.json({ error: "SECRET" }, { status: 502 }))] as typeof fetch[]) {
     const response = await hostedAgentsRequest(request("/agents"), { ...config, fetcher }); assert.equal(response.status, 503); assert.deepEqual(await response.json(), { error: "HOSTED_UNAVAILABLE" });
+  }
+});
+test("authenticated snapshot projects the zero-Agent owner and rejects invalid or mixed ownership without accepting browser identity", async () => {
+  const snapshot = async (payload: unknown) => hostedAgentsRequest(request("/agents"), { ...config, fetcher: (async (_url, options) => {
+    assert.equal(new Headers(options?.headers).get("authorization"), `Bearer ${token}`);
+    return Response.json(payload);
+  }) as typeof fetch });
+  const empty = await snapshot({ owner: owner.toLowerCase(), agents: [], runs: [], models: [], token: "SECRET" });
+  assert.equal(empty.status, 200); assert.deepEqual(await empty.json(), { owner, agents: [], runs: [], models: [] });
+  const legacy = await snapshot({ agents: [{ id: "one", owner }, { id: "two", owner: owner.toLowerCase() }], runs: [], models: [] });
+  assert.equal(legacy.status, 200); assert.equal((await legacy.json()).owner, undefined);
+  for (const payload of [
+    { owner: "not-an-address", agents: [] }, { owner: null, agents: [] }, { owner: {}, agents: [] },
+    { owner, agents: [{ id: "other", owner: "0x1111111111111111111111111111111111111111" }] },
+    { owner, agents: [{ id: "missing-owner" }] },
+    { agents: [{ owner }, { owner: "0x1111111111111111111111111111111111111111" }] },
+  ]) {
+    const rejected = await snapshot({ runs: [], models: [], ...payload });
+    assert.equal(rejected.status, 503); assert.deepEqual(await rejected.json(), { error: "HOSTED_UNAVAILABLE" });
   }
 });
 test("JSON input/output is bounded and redirects are refused without retries", async () => {
@@ -235,7 +255,7 @@ test("goal snapshots project nested artifacts and cancellation flags without pri
     review: { passed: true, summary: "Requirements checked", checks: ["Three concrete steps"], modelKey: "PRIVATE_SENTINEL" },
     calls: [{ stage: "phase-0", model: "kimi-k2.6", chargedRaw: "10000", promptTokens: 50, completionTokens: 20, rawTransaction: "PRIVATE_SENTINEL" }], privateKey: "PRIVATE_SENTINEL" };
   const run = { requestId: "run-1", agentId: "agent-1", action: "goal", goal: "帮我完成一个计划", stopRequested: true, mission, result: { mission, chargedRaw: "10000", phase: "Completed", walletKey: "PRIVATE_SENTINEL" } };
-  const response = await hostedAgentsRequest(request("/agents"), { ...config, fetcher: (async () => Response.json({ agents: [{ id: "agent-1", configurationRequired: true }], runs: [run], models: [],
+  const response = await hostedAgentsRequest(request("/agents"), { ...config, fetcher: (async () => Response.json({ agents: [{ id: "agent-1", owner, configurationRequired: true }], runs: [run], models: [],
     capabilities: { goals: { maxPhases: 3, models: [{ id: "kimi-k2.6", pricePerCallRaw: "10000", relayUrl: "PRIVATE_SENTINEL" }], provider: "PRIVATE_SENTINEL" } } })) as typeof fetch });
   assert.equal(response.status, 200); const text = await response.text(), body = JSON.parse(text);
   assert.doesNotMatch(text, /PRIVATE_SENTINEL|rawTransaction|privateKey|keyFile|relayUrl|walletKey|modelKey/);

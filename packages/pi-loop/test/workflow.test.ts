@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Wallet, id } from "ethers";
 import { runTaskWorkflow, readWorkflowStatus, validateWorkflowConfig } from "../src/workflow.js";
-import { createWorkflowFixture, GOOD_CODE } from "./workflow-fixture.js";
+import { createWorkflowFixture, GOOD_CODE, modelToolResponse } from "./workflow-fixture.js";
 import { key, read, tx } from "../../../services/underwriter/test/fixture.js";
 
 const json = async (file: string) => JSON.parse(await readFile(file, "utf8"));
@@ -203,5 +203,49 @@ test("recover observes canonical external expiry without dispatch or payment and
     const next = await runTaskWorkflow(join(directory, "next"), nextConfig, fx.options);
     assert.equal(next.phase, "Succeeded", JSON.stringify(next)); assert.equal(next.finance?.fromCredit, "0"); assert.equal(fx.calls.length, 2);
     assert.equal((await read(fx.f.manager, "getLoan", [config.tasks[0].taskId])).status, 3n); assert.equal(await fx.f.providerBalance(), 240000n);
+  } finally { t.mock.restoreAll(); await fx.close(); await rm(directory, { recursive: true, force: true }); }
+});
+
+
+test("fixed and reward workflows keep accepted-run recovery opt-in and durable without new payment or model dispatch", { timeout: 120000 }, async t => {
+  const directory = await mkdtemp(join(tmpdir(), "af-wf-arena-recovery-"));
+  const fx = await createWorkflowFixture(directory, [{ problemId: "sum-integers", open: true }, { problemId: "sum-integers", open: true }]);
+  const originalFetch = globalThis.fetch;
+  try {
+    for (const [index, funding] of [undefined, "reward-tokens" as const].entries()) {
+      const path = join(directory, `flow-${index}`), config = structuredClone(fx.config); config.tasks = [config.tasks[index]];
+      if (funding) config.funding = funding;
+      let posts = 0, guards = 0, recovered = false, rewardModels = 0;
+      const payloads: string[] = [];
+      t.mock.method(globalThis, "fetch", async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+        const url = String(input);
+        if (url === fx.options.arenaUrl + "/submissions" && init?.method === "POST") {
+          posts++; payloads.push(String(init.body)); if (posts > 1) recovered = true;
+        }
+        if (url.startsWith(fx.options.arenaUrl + "/runs/") && !recovered) {
+          const runId = url.split("/").at(-1)!;
+          return Response.json({ runId, taskId: config.tasks[0].taskId, status: "error", error: "CONTROLLED_INTERRUPTED_RUN" });
+        }
+        return originalFetch(input, init);
+      });
+      const options = { ...fx.options, ...(funding ? { reward: { creditsUsed: async () => 30, solver: {
+        routes: { cheap: { name: "cheap", model: "controlled-cheap", baseUrl: "https://cheap.invalid/v1" }, strong: { name: "strong", model: "controlled-strong", baseUrl: "https://strong.invalid/v1" } },
+        invoke: async (_tier: unknown, body: { model?: unknown }) => { rewardModels++; return modelToolResponse(GOOD_CODE["sum-integers"], String(body.model)); },
+      } } } : {}) };
+      if (!funding) fx.queue(GOOD_CODE["sum-integers"]);
+      const pending = await runTaskWorkflow(path, config, options);
+      assert.equal(pending.reason, "ARENA_SETTLEMENT_UNCERTAIN"); assert.equal(posts, 1);
+      const nonce = await fx.f.provider.getTransactionCount(fx.f.agentAddress), models = fx.calls.length + rewardModels;
+      const stillPending = await runTaskWorkflow(path, config, { ...options, recoverLock: true });
+      assert.equal(stillPending.reason, "ARENA_SETTLEMENT_UNCERTAIN"); assert.equal(posts, 1, "lock recovery is not dispatch permission");
+      const finished = await runTaskWorkflow(path, config, { ...options, recoverLock: true,
+        submissionRecovery: { maxAttempts: 1, assertAllowed: () => { guards++; } } });
+      assert.equal(finished.phase, "Succeeded", JSON.stringify(finished)); assert.equal(posts, 2); assert.equal(guards, 2); assert.equal(payloads[0], payloads[1]);
+      assert.equal(await fx.f.provider.getTransactionCount(fx.f.agentAddress), nonce); assert.equal(fx.calls.length + rewardModels, models);
+      const child = await json(join(path, funding ? "reward-task" : "fixed-task", "session.json")); assert.equal(child.submission.recovery.attempts, 1);
+      await runTaskWorkflow(path, config, { ...options, recoverLock: true, submissionRecovery: { maxAttempts: 1, assertAllowed: () => { throw new Error("terminal must not use permission"); } } });
+      assert.equal(posts, 2); assert.equal(fx.calls.length + rewardModels, models);
+      t.mock.restoreAll();
+    }
   } finally { t.mock.restoreAll(); await fx.close(); await rm(directory, { recursive: true, force: true }); }
 });

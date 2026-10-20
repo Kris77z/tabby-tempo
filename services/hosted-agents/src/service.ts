@@ -285,7 +285,7 @@ export class HostedService {
     const sponsorship = { used, limit, remaining: Math.max(0, Math.min(limit - used, 100 - this.state.sponsoredTotal)), globalLimit: 100,
       ...(extension ? { testAuthorization: { id: extension.grant.id, maxTotalGames: 9, expiresAt: new Date(extension.grant.expiresAtMs).toISOString(), active, additionalUsed: extension.admissions.length,
         actorRewards: extension.grant.actors.map(({ hostedAgentId, rewardKind }) => ({ hostedAgentId, rewardKind })) } } : {}) };
-    return structuredClone({ agents, runs, models: this.config.models, sponsorship, ...(this.executor.capabilities ? { capabilities: this.executor.capabilities } : {}) });
+    return structuredClone({ owner: address, agents, runs, models: this.config.models, sponsorship, ...(this.executor.capabilities ? { capabilities: this.executor.capabilities } : {}) });
   }); }
   async create(who: string, input: AgentCreation & { requestId: string }) {
     const agent = await this.serial(async () => {

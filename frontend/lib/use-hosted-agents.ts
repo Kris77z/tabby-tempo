@@ -1,8 +1,19 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { hostedRequest, HostedClientError, hostedError, signedLogin, injectedWallet, readPending, savePending, replayInput,
+import { hostedRequest, HostedClientError, HostedWalletNetworkError, hostedError, signedLogin, switchHostedWalletToTempo, injectedWallet, readPending, savePending, replayInput, authenticatedSnapshotOwner,
   type HostedSnapshot, type HostedAgent, type HostedRun, type AgentCreation, type AgentSettings, type PendingCommand, type RunInput } from "./hosted-client";
 import { useHostedFinance } from "./use-hosted-finance";
+
+// An owner-scoped UI hint only. Authentication always comes from a verified
+// snapshot or signed login, and the saved ID must still belong to that snapshot.
+function preferredAgent(owner: string): string | null {
+  try { return sessionStorage.getItem(`agentfuel:hosted:selected:${owner.toLowerCase()}`); }
+  catch { return null; }
+}
+function rememberAgent(owner: string, id: string) {
+  try { sessionStorage.setItem(`agentfuel:hosted:selected:${owner.toLowerCase()}`, id); }
+  catch { /* Storage restrictions must not block authenticated use. */ }
+}
 
 // Mounted once in HostedAgentsProvider so auth queues and transport leases survive
 // navigation between the terminal onboarding and dashboard.
@@ -14,6 +25,7 @@ export function useHostedAgentsController(enabled: boolean) {
   const [access, setAccess] = useState<"loading" | "signed-out" | "authenticated" | "unavailable">("loading");
   const [owner, setOwner] = useState<string | null>(null), [selectedId, setSelectedId] = useState("");
   const [error, setError] = useState(""), [notice, setNotice] = useState("");
+  const [walletNetworkTarget, setWalletNetworkTarget] = useState<"42431" | null>(null);
   const [snapshotStale, setSnapshotStale] = useState(false);
   const [busy, setBusy] = useState(false), [refreshing, setRefreshing] = useState(false);
   const [pending, setPending] = useState<PendingCommand | null>(null);
@@ -21,6 +33,7 @@ export function useHostedAgentsController(enabled: boolean) {
   const readCompletion = useRef<Promise<void> | null>(null);
   const authCleanup = useRef<Promise<unknown> | null>(null), authLoginCompletion = useRef<Promise<void> | null>(null);
   const sessionActive = useRef(false), loginStage = useRef<"idle" | "connecting" | "signing">("idle");
+  const authenticatedOwner = useRef<string | null>(null);
   const walletVersion = useRef(0), mutationLease = useRef(0);
   function beginMutation() {
     const lease = ++mutationLease.current;
@@ -35,14 +48,22 @@ export function useHostedAgentsController(enabled: boolean) {
   }
 
   const invalidate = useCallback(() => {
-    requireLogin.current = true; sessionActive.current = false;
-    sessionEpoch.current++; setSnapshot(null); setOwner(null); setSelectedId(""); setPending(null); setNotice(""); setAccess("signed-out");
+    requireLogin.current = true; sessionActive.current = false; authenticatedOwner.current = null;
+    sessionEpoch.current++; setSnapshot(null); setOwner(null); setSelectedId(""); setPending(null); setNotice(""); setWalletNetworkTarget(null); setAccess("signed-out");
   }, []);
   // A logout response can clear an HttpOnly cookie. It must follow any already
   // started login, and every later login must wait for this cleanup to settle.
   const queueLogout = useCallback(() => {
     const previous = authCleanup.current, login = authLoginCompletion.current;
-    const cleanup = Promise.all([previous?.catch(() => undefined), login]).then(() => hostedRequest("/auth/logout", "POST", {}));
+    const cleanup = Promise.all([previous?.catch(() => undefined), login]).then(async () => {
+      try { return await hostedRequest("/auth/logout", "POST", {}); }
+      catch (cause) {
+        // A second wallet event can log out an already-cleared session. Only
+        // authentication expiry confirms cleanup; transport/service errors do not.
+        if (cause instanceof HostedClientError && cause.status === 401) return;
+        throw cause;
+      }
+    });
     authCleanup.current = cleanup;
     return cleanup;
   }, []);
@@ -57,9 +78,20 @@ export function useHostedAgentsController(enabled: boolean) {
     try {
       const next = await hostedRequest<HostedSnapshot>("/agents");
       if (epoch !== sessionEpoch.current) return;
+      // The new service explicitly identifies even owners with zero Agents.
+      // A legacy empty response may retain only this epoch's verified sign-in;
+      // refresh after a reload cannot infer an owner from local recovery hints.
+      const nextOwner = authenticatedSnapshotOwner(next) ?? authenticatedOwner.current;
+      const ownerChanged = !!authenticatedOwner.current && !!nextOwner && authenticatedOwner.current.toLowerCase() !== nextOwner.toLowerCase();
+      if (ownerChanged) {
+        sessionEpoch.current++; setSelectedId(""); setPending(null); setNotice("");
+      }
+      authenticatedOwner.current = nextOwner;
       sessionActive.current = true; setSnapshot(next); setAccess("authenticated"); setSnapshotStale(false); setError("");
-      if (next.agents[0]) setOwner(next.agents[0].owner);
-      setSelectedId(id => next.agents.some(agent => agent.id === id) ? id : next.agents[0]?.id ?? "");
+      setOwner(nextOwner);
+      const savedId = nextOwner ? preferredAgent(nextOwner) : null;
+      const preferred = next.agents.find(agent => agent.id === savedId && agent.owner.toLowerCase() === nextOwner?.toLowerCase())?.id;
+      setSelectedId(id => !ownerChanged && next.agents.some(agent => agent.id === id) ? id : preferred ?? next.agents[0]?.id ?? "");
     } catch (cause) {
       if (epoch !== sessionEpoch.current) return;
       if (cause instanceof HostedClientError && cause.status === 401) invalidate();
@@ -102,6 +134,7 @@ export function useHostedAgentsController(enabled: boolean) {
 
   async function login() {
     if (mutationInFlight.current) return;
+    setWalletNetworkTarget(null);
     const lease = beginMutation(), requestedWalletVersion = walletVersion.current;
     let epoch = sessionEpoch.current;
     const cleanupBeforeLogin = authCleanup.current;
@@ -118,14 +151,40 @@ export function useHostedAgentsController(enabled: boolean) {
       loginStage.current = "connecting";
       const address = await signedLogin({ isCurrent: () => epoch === sessionEpoch.current, onWalletReady: () => { loginStage.current = "signing"; } });
       if (epoch !== sessionEpoch.current) return;
-      requireLogin.current = false; sessionActive.current = true; setSnapshot(null); setOwner(address); setAccess("authenticated");
+      requireLogin.current = false; sessionActive.current = true; authenticatedOwner.current = address; setSnapshot(null); setOwner(address); setAccess("authenticated");
       await refresh();
       if (epoch === sessionEpoch.current) setNotice("钱包签名登录成功。Agent 的独立钱包由平台托管。");
-    } catch (cause) { if (epoch === sessionEpoch.current) setError(hostedError(cause)); }
+    } catch (cause) { if (epoch === sessionEpoch.current) {
+      setWalletNetworkTarget(cause instanceof HostedWalletNetworkError && cause.expectedChainId === "42431" ? "42431" : null);
+      setError(hostedError(cause));
+    } }
     finally { loginStage.current = "idle"; authLoginCompletion.current = null; completeLogin(); finishMutation(lease); }
+  }
+  async function switchWalletNetwork() {
+    if (mutationInFlight.current || walletNetworkTarget !== "42431") return;
+    const lease = beginMutation();
+    // A chainChanged event still invalidates ownership and queued UI state.
+    // Switching never restores an owner: require a fresh explicit signed login.
+    invalidate(); setWalletNetworkTarget("42431");
+    try {
+      await queueLogout();
+      await switchHostedWalletToTempo();
+      // chainChanged queues another cleanup. Finish it before reporting success
+      // so its delayed response cannot replace the network-switch notice.
+      await authCleanup.current;
+      setWalletNetworkTarget(null); setError("");
+      setNotice("钱包已切换到 Tempo Moderato Testnet，请点击签名登录。");
+    } catch (cause) { setWalletNetworkTarget("42431"); setError(hostedError(cause)); }
+    finally { finishMutation(lease); }
   }
   function persist(command: PendingCommand | null, address: string) {
     savePending(command, address); setPending(command);
+  }
+  function select(id: string) {
+    const address = authenticatedOwner.current;
+    const agent = snapshot?.agents.find(agent => agent.id === id);
+    if (access !== "authenticated" || !address || !agent || agent.owner.toLowerCase() !== address.toLowerCase()) return;
+    setSelectedId(id); rememberAgent(address, id);
   }
   async function command(command: PendingCommand): Promise<boolean> {
     if (mutationInFlight.current) return false;
@@ -141,6 +200,7 @@ export function useHostedAgentsController(enabled: boolean) {
       if (command.kind === "create") {
         const agent = response as HostedAgent;
         setSnapshot(current => current ? { ...current, agents: [...current.agents.filter(item => item.id !== agent.id), agent] } : current);
+        if (agent.owner.toLowerCase() === command.owner.toLowerCase()) rememberAgent(command.owner, agent.id);
         setSelectedId(agent.id); setNotice("Agent 已创建，平台正在初始化独立钱包与链上身份。");
       } else {
         const run = response as HostedRun;
@@ -201,6 +261,6 @@ export function useHostedAgentsController(enabled: boolean) {
   const financeRevision = snapshot?.runs.filter(run => run.agentId === selectedId && !["Queued", "Running"].includes(run.status))
     .map(run => `${run.requestId}:${run.status}:${run.updatedAt}`).join("|") ?? "";
   const finance = useHostedFinance(selected, enabled && access === "authenticated", financeRevision, invalidate);
-  return { snapshot, snapshotStale, selected, selectedId, select: setSelectedId, access, owner, error, notice, busy, refreshing, pending,
-    finance, refresh, login, logout, create, run, recover, update, pause, cancelGoal, retryPending: () => pending ? command(pending) : Promise.resolve(false) };
+  return { snapshot, snapshotStale, selected, selectedId, select, access, owner, error, notice, busy, refreshing, pending, walletNetworkTarget,
+    finance, refresh, login, switchWalletNetwork, logout, create, run, recover, update, pause, cancelGoal, retryPending: () => pending ? command(pending) : Promise.resolve(false) };
 }

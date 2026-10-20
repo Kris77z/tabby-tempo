@@ -3,10 +3,10 @@ import { createServer, type IncomingMessage } from "node:http";
 import { JsonRpcProvider } from "ethers";
 import { ArenaController, type Acceptance } from "./controller.js";
 import { problemCatalog } from "./problems.js";
-import { digest, uintString, type ArenaConfig } from "./protocol.js";
+import { digest, uintString, type ArenaConfig, type Evaluation } from "./protocol.js";
 import { authorizeSubmission, type Submission } from "./submission-auth.js";
 
-export type RunStatus = { runId: string; taskId: string; status: "running" | "settled" | "error"; result?: Acceptance; error?: string };
+export type RunStatus = { runId: string; taskId: string; status: "running" | "settled" | "error"; evaluation?: Evaluation; result?: Acceptance; error?: string };
 export interface ArenaHttpJournal {
   runs: RunStatus[]; submissions: [string, { runId: string; requestHash: string }][];
 }
@@ -36,12 +36,45 @@ export function createArenaHttpServer(config: ArenaConfig, origins: string[] = [
   for (const [taskId, entry] of submissions) if (runs.get(entry.runId)?.taskId !== taskId || !/^[a-f0-9]{64}$/.test(entry.requestHash)) throw new Error("INVALID_ARENA_HTTP_JOURNAL");
   let saves: Promise<void> = Promise.resolve();
   const save = (completed?: RunStatus) => {
-    const journal = structuredClone({ runs: [...runs.values()].map(run => completed?.runId === run.runId ? completed : run), submissions: [...submissions.entries()] });
-    return saves = saves.then(() => persistence?.save(journal));
+    const transition = completed && structuredClone(completed);
+    const operation = saves.then(async () => {
+      // Read the latest complete state when this write reaches the queue. A
+      // snapshot captured earlier could overwrite another run's new evidence.
+      const journal = structuredClone({ runs: [...runs.values()].map(run => transition?.runId === run.runId ? transition : run), submissions: [...submissions.entries()] });
+      await persistence?.save(journal);
+      // Commit inside the same queue entry, before any later write snapshots
+      // state or a controller is allowed to send its settlement transaction.
+      if (transition) runs.set(transition.runId, transition);
+    });
+    saves = operation.catch(() => undefined);
+    return operation;
   };
   const provider = injectedProvider ?? new JsonRpcProvider(config.rpcUrl, undefined, { cacheTimeout: -1 });
   const abort = new AbortController();
   const work = new Set<Promise<void>>();
+  const launch = async (runId: string, taskId: string, code: string) => {
+    const evaluation = runs.get(runId)?.evaluation;
+    const running: RunStatus = { runId, taskId, status: "running", ...(evaluation ? { evaluation } : {}) };
+    runs.set(runId, running);
+    try { await save(); }
+    catch { runs.set(runId, { ...running, status: "error", error: "ARENA_DURABILITY_UNCONFIRMED" }); throw new Error("ARENA_DURABILITY_UNCONFIRMED"); }
+    const operation = controller.submit({ taskId, code, runId, signal: abort.signal, evaluation,
+      onEvaluated: async value => {
+        const evaluated: RunStatus = { runId, taskId, status: "running", evaluation: value };
+        await save(evaluated);
+      },
+    }).then(async result => {
+      const completed: RunStatus = { runId, taskId, status: "settled", evaluation: { verdict: result.verdict, tests: result.tests }, result };
+      try { await save(completed); }
+      catch { runs.set(runId, { ...runs.get(runId)!, status: "error", error: "ARENA_DURABILITY_UNCONFIRMED" }); }
+    }, async error => {
+      const message = (error as Error).message;
+      runs.set(runId, { ...runs.get(runId)!, status: "error", error: /^[A-Z_]+$/.test(message) ? message : "SUBMISSION_UNAVAILABLE" });
+      try { await save(); } catch { runs.set(runId, { ...runs.get(runId)!, status: "error", error: "ARENA_DURABILITY_UNCONFIRMED" }); }
+    });
+    work.add(operation);
+    void operation.finally(() => work.delete(operation)).catch(() => {});
+  };
   const server = createServer(async (request, response) => {
     const reply = (status: number, value: unknown) => { response.writeHead(status, { "content-type": "application/json" }); response.end(JSON.stringify(value)); };
     const origin = request.headers.origin;
@@ -72,8 +105,11 @@ export function createArenaHttpServer(config: ArenaConfig, origins: string[] = [
         const requestHash = digest(JSON.stringify(submission));
         const previous = submissions.get(taskId);
         if (previous) {
-          if (previous.requestHash === requestHash) reply(200, { runId: previous.runId, taskId, status: runs.get(previous.runId)!.status });
-          else reply(409, { error: "TASK_ALREADY_SUBMITTED", runId: previous.runId });
+          if (previous.requestHash !== requestHash) { reply(409, { error: "TASK_ALREADY_SUBMITTED", runId: previous.runId }); return; }
+          // Only the exact admitted signature/code may recover this run. The
+          // original authentication stays valid after its admission deadline.
+          if (runs.get(previous.runId)!.status === "error") await launch(previous.runId, taskId, input.code);
+          reply(200, { runId: previous.runId, taskId, status: runs.get(previous.runId)!.status });
           return;
         }
         if (runs.size >= 100) { reply(503, { error: "RUN_LIMIT_REACHED" }); return; }
@@ -85,20 +121,7 @@ export function createArenaHttpServer(config: ArenaConfig, origins: string[] = [
         }
         const runId = randomUUID();
         submissions.set(taskId, { runId, requestHash });
-        runs.set(runId, { runId, taskId, status: "running" });
-        try { await save(); } // Admission must survive before the controller can settle.
-        catch { runs.set(runId, { runId, taskId, status: "error", error: "ARENA_DURABILITY_UNCONFIRMED" }); throw new Error("ARENA_DURABILITY_UNCONFIRMED"); }
-        const operation = controller.submit({ taskId, code: input.code, runId, signal: abort.signal }).then(async result => {
-          const completed: RunStatus = { runId, taskId, status: "settled", result };
-          try { await save(completed); runs.set(runId, completed); }
-          catch { runs.set(runId, { runId, taskId, status: "error", error: "ARENA_DURABILITY_UNCONFIRMED" }); }
-        }, async error => {
-          const message = (error as Error).message;
-          runs.set(runId, { runId, taskId, status: "error", error: /^[A-Z_]+$/.test(message) ? message : "SUBMISSION_UNAVAILABLE" });
-          try { await save(); } catch { runs.set(runId, { runId, taskId, status: "error", error: "ARENA_DURABILITY_UNCONFIRMED" }); }
-        });
-        work.add(operation);
-        void operation.finally(() => work.delete(operation)).catch(() => {});
+        await launch(runId, taskId, input.code);
         reply(202, { runId, taskId, status: "running" }); return;
       }
       reply(404, { error: "NOT_FOUND" });
