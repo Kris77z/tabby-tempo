@@ -87,7 +87,7 @@ export async function openMeteredTask(directory: string, config: MeteredTaskConf
         const infer = new InferCredit({ agentId: task.agentId, signer: options.signer, chainId: BigInt(task.chainId), account: task.account, asset: task.asset,
           provider: config.payTo, ...(options.allowCredit ? { underwriterUrl: task.underwriterUrl } : {}), maxPrice: BigInt(config.priceRaw), timeoutMs: meteredPurchaseTimeout(task.deadlineMs, options.timeoutMs),
           onHandle: async handle => { checkHandle(handle); snapshot.handle = structuredClone(handle); await store.write(snapshot); await options.onHandle(handle); },
-          beforePayment: async handle => { checkHandle(handle); await assigned();await options.activity?.({scene:"funding",state:"waiting",evidence:{taskId:task.taskId,paymentId:handle.quote.paymentId,priceRaw:config.priceRaw}}); if (Date.now() >= task.deadlineMs) throw new PaymentError("SESSION_DEADLINE", "Task expired"); },
+          beforePayment: async handle => { checkHandle(handle); await options.onHandle(handle); await assigned();await options.activity?.({scene:"funding",state:"waiting",evidence:{taskId:task.taskId,paymentId:handle.quote.paymentId,priceRaw:config.priceRaw}}); if (Date.now() >= task.deadlineMs) throw new PaymentError("SESSION_DEADLINE", "Task expired"); },
         });
         try { snapshot.inference = snapshot.handle ? await infer.resume(structuredClone(snapshot.handle)) : await infer.forTask(task.taskId).fetch(config.relayUrl, {
           body: allowanceBody({ creditsRaw: config.creditsRaw, modelCatalogDigest: modelCatalogDigest(config.catalog) }),
@@ -103,6 +103,12 @@ export async function openMeteredTask(directory: string, config: MeteredTaskConf
       await options.activity?.({scene:BigInt(receipt.fromCredit)>0n?"credit":"funding",state:"confirmed",evidence:{taskId:task.taskId,paymentId:receipt.paymentId,txHash:receipt.txHash,fromCashRaw:receipt.fromCash,fromCreditRaw:receipt.fromCredit,chargedRaw:receipt.price}});
       await options.onHandle(snapshot.handle!);
     };
+    const purchaseForDispatch = async () => {
+      try { await purchase(); } catch (error) {
+        if (error instanceof PaymentError && !snapshot.handle?.submission && ["UNDERWRITER_REQUIRED", "CASH_REQUIRED", "AUTHORIZATION_REJECTED", "AUTHORIZATION_MISMATCH"].includes(error.code)) throw new InferenceFundingRequired();
+        throw new InferenceFundingRequired(error instanceof PaymentError ? error.code : "ALLOWANCE_PURCHASE_UNCERTAIN");
+      }
+    };
     if (snapshot.inference) await purchase();
     let round = 0, useReward = false;
     const routes = Object.fromEntries((["cheap", "strong"] as const).map((tier, i) => [tier, { name: tier, model: config.catalog[i].id, baseUrl }])) as NonNullable<WorkflowOptions["reward"]>["solver"]["routes"];
@@ -113,7 +119,7 @@ export async function openMeteredTask(directory: string, config: MeteredTaskConf
       if (ledger.balance().frozen) throw new InferenceFundingRequired("GATEWAY_OUTCOME_UNKNOWN");
       // A prior allowance purchase must be reconciled on its original handle before
       // considering a model route. A funding timeout cannot authorize a replacement.
-      if (snapshot.handle && !snapshot.inference) await purchase();
+      if (snapshot.handle && !snapshot.inference) await purchaseForDispatch();
       let model = config.catalog.find(model => model.id === body.model);
       if (!model) throw new InferenceFundingRequired("GATEWAY_MODEL_UNAVAILABLE");
       if (options.reward && (model.responseModel ?? model.model) === "kimi-k2.6") {
@@ -144,10 +150,7 @@ export async function openMeteredTask(directory: string, config: MeteredTaskConf
       if (BigInt(ledger.balance().availableCredits) < BigInt(required)) {
         if (snapshot.inference) throw new InferenceFundingRequired("ALLOWANCE_EXHAUSTED");
         if (BigInt(config.creditsRaw) < BigInt(required)) throw new InferenceFundingRequired("ALLOWANCE_TOO_SMALL");
-        try { await purchase(); } catch (error) {
-          if (error instanceof PaymentError && !snapshot.handle?.submission && ["UNDERWRITER_REQUIRED", "CASH_REQUIRED", "AUTHORIZATION_REJECTED", "AUTHORIZATION_MISMATCH"].includes(error.code)) throw new InferenceFundingRequired();
-          throw new InferenceFundingRequired(error instanceof PaymentError ? error.code : "ALLOWANCE_PURCHASE_UNCERTAIN");
-        }
+        await purchaseForDispatch();
       }
       if (BigInt(ledger.balance().availableCredits) < BigInt(required)) throw new InferenceFundingRequired();
       if (downgraded) return { tier: "cheap" as const };

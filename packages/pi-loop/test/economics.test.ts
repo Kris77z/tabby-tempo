@@ -82,3 +82,14 @@ test("Tempo type0x76 is explicitly unsupported before broadcast, while type2 kee
   const rawTransaction=await signer.signTransaction({type:2,chainId:42431,nonce:0,gasLimit:500000,maxFeePerGas:1,maxPriorityFeePerGas:1,to:"0x1111111111111111111111111111111111111111",data:accountInterface.encodeFunctionData("payProvider",["1","0x2222222222222222222222222222222222222222","100",`0x${"01".repeat(32)}`,{...EMPTY_AUTH,feeBps:1500},"0x"])});
   assert.doesNotThrow(() => assertEconomicPayment(policy,{quote:{price:"100"},submission:{rawTransaction}} as PaymentHandle));
 });
+
+test("a cash-funded decision rejects any signed credit cap or fee before broadcast", async () => {
+  const signer = Wallet.createRandom(), policy = hostedTaskEconomics("0", "100");
+  for (const [principalCap, feeBps] of [[0, 0], [1, 0], [0, 1]]) {
+    const rawTransaction = await signer.signTransaction({ type: 2, chainId: 42431, nonce: 0, gasLimit: 500000, maxFeePerGas: 1, maxPriorityFeePerGas: 1,
+      to: "0x1111111111111111111111111111111111111111", data: accountInterface.encodeFunctionData("payProvider", ["1", "0x2222222222222222222222222222222222222222", "100", `0x${"01".repeat(32)}`, { ...EMPTY_AUTH, principalCap, feeBps }, "0x"]) });
+    const handle = { quote: { price: "100" }, submission: { rawTransaction } } as PaymentHandle;
+    if (principalCap || feeBps) assert.throws(() => assertEconomicPayment(policy, handle, true), (error: any) => error.code === "ECONOMICS_CASH_ONLY");
+    else assert.doesNotThrow(() => assertEconomicPayment(policy, handle, true));
+  }
+});

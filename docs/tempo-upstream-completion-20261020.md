@@ -13,6 +13,8 @@
 
 恢复默认不会自动重POST。仅明确的原submission恢复许可可消耗一次持久额度，绑定原run/task/payload并在保存后复查；不构成新的付款或模型授权。签名交易结果不明不自动重签/重播。type2沿现有保护，Tempo type0x76目前明确不支持并在广播前拒绝。
 
+经济准入区分贡献不足与暂时缺款：可行的推理包可等待原任务的明确现金补款，即使允许信用但当前额度不足，也不把补款当成借款。已保存的现金候选在签名及冷恢复广播前拒绝非零借款授权；既有无经济策略snapshot保持原规则。首轮CI暴露的补款回归已作针对性修复，保留原补款、原handle与幂等断言。
+
 离线验收：独立SDK11项、经济/投影83项、三条实际执行回归74项、补充currency/scene15项、desktop/mobile accounting10项通过。`review:check`含31项证据/回放负例与201项受控机制及SDK11项，全部通过（这些计数存在覆盖，不相加）。CI/部署守卫21项通过，fixture frontend build和类型检查通过。`review:artifacts --execute-local`实际运行五组owned Anvil/Docker机制并验证打包；独立Worker含真实SIGKILL冷进程恢复、原Unknown阻断和明确退款/任务关闭，重放无新增付款/模型派发。注册记录位于[本地摘要目录](acceptance/tempo-local-20261020/)，不混用旧真实窗口或Monad证据。
 
 这些是本地合约、受控模型、固定Docker的工程证据。没有证明公共Tempo完整信用/专家/游戏/奖励闭环、TLS稳定性、真实模型可用性、供应商账单或线上独立Worker；生产Alchemy、模型路由、本地faucet代理规则和合约/部署配置不变。当前仍为Draft PR，远端新head完整CI结果另行记录，不自动合并。

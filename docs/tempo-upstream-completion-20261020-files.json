@@ -1572,7 +1572,7 @@
         "packages/pi-loop/src/economics.ts"
       ],
       "targetSha256": {
-        "packages/pi-loop/src/economics.ts": "e292e8ab0d60eac56bdd3e95f1ddd2fdd24ba48a402f9dceb9f920fc8188de75"
+        "packages/pi-loop/src/economics.ts": "1351d5ea65e0e319e60773db39e4faec0112b942ffd7ad985e722e9c51f9889d"
       }
     },
     {
@@ -1614,7 +1614,7 @@
         "packages/pi-loop/src/workflow.ts"
       ],
       "targetSha256": {
-        "packages/pi-loop/src/workflow.ts": "377c553aa46457298f007b6b41eadf34ea80af54d3153f068613b2ab410de92d"
+        "packages/pi-loop/src/workflow.ts": "01a2066749520d91d184292bc2fcbf4388695e1b7645618b36290981c919cb16"
       }
     },
     {
@@ -1628,7 +1628,7 @@
         "packages/pi-loop/test/economics.test.ts"
       ],
       "targetSha256": {
-        "packages/pi-loop/test/economics.test.ts": "16d0b3f966415f3df9300440200ac38e677c74176231180ee7ff38fa009b9fde"
+        "packages/pi-loop/test/economics.test.ts": "39b5502cd736529034a40e8f91b5803f60ffb09d47eb312f489f113dfc9ee2c5"
       }
     },
     {

@@ -50,7 +50,7 @@ export const hostedTaskEconomics = (planningCostRaw = "0", executionCostRaw?: st
   borrowerFeeBps: "1500", ...(executionCostRaw === undefined ? {} : { executionCostRaw }) });
 
 /** Runs in the SDK durable-handle callback before broadcast. A changed signed credit fee cannot escape the bound. */
-export function assertEconomicPayment(policy: TaskEconomicsPolicy, handle: PaymentHandle): void {
+export function assertEconomicPayment(policy: TaskEconomicsPolicy, handle: PaymentHandle, cashOnly = false): void {
   validateTaskEconomicsPolicy(policy);
   if (policy.executionCostRaw !== undefined && handle.quote.price !== policy.executionCostRaw) throw new PaymentError("ECONOMICS_EXECUTION_PRICE_CHANGED", "Execution quote exceeded the saved economic price");
   const raw = handle.submission?.rawTransaction;
@@ -64,4 +64,6 @@ export function assertEconomicPayment(policy: TaskEconomicsPolicy, handle: Payme
   const call = accountInterface.parseTransaction({ data: signed.data, value: signed.value });
   if (!call || call.name !== "payProvider" || call.args[2] !== BigInt(handle.quote.price)
     || call.args[4].feeBps > BigInt(policy.borrowerFeeBps)) throw new PaymentError("ECONOMICS_BORROWER_FEE_CHANGED", "Signed borrowing fee exceeded the saved economic bound");
+  if (cashOnly && (call.args[4].principalCap !== 0n || call.args[4].feeBps !== 0n))
+    throw new PaymentError("ECONOMICS_CASH_ONLY", "A cash-funded economic decision cannot authorize borrowing");
 }

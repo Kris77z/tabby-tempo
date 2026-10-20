@@ -5,7 +5,8 @@ import { mkdtemp, realpath, writeFile, readFile, rm } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { Wallet } from "ethers";
+import { Wallet, type TransactionRequest } from "ethers";
+import { accountInterface } from "@agentfuel/sdk";
 import { createHostedTaskFixture } from "./task-fixture.js";
 import { createHostedTaskExecutor } from "../src/task-executor.js";
 import { modelCatalogDigest } from "../src/metered-task.js";
@@ -19,7 +20,7 @@ import { HostedService } from "../src/service.js";
 import type { HostedConfig, HostedExecution, HostedExecutor } from "../src/types.js";
 import type { GatewayModel } from "../src/inference-gateway.js";
 
-test("cash refill lends only the waiting metered wallet slot and resumes its original accepted task without borrowing", { timeout: 180000 }, async () => {
+for (const allowCredit of [false, true]) test(`cash refill lends only the waiting metered wallet slot and resumes its original accepted task without borrowing (credit ${allowCredit})`, { timeout: 180000 }, async t => {
   const directory = await realpath(await mkdtemp(join(tmpdir(), "af-metered-deposit-")));
   let succeeded = false;
   const f = await createHostedTaskFixture(join(directory, "chain"));
@@ -33,15 +34,22 @@ test("cash refill lends only the waiting metered wallet slot and resumes its ori
     { creditsRaw: "100000", modelCatalogDigest: modelCatalogDigest(catalog), provider: f.fx.f.provider });
   const server = createHttpServer(relay, new Refunder(relay)); await relay.initialize(); server.listen(0, "127.0.0.1"); await once(server, "listening");
   const config = structuredClone(f.config); config.initialCashRaw = "0";
+  // Credit is optionally enabled, but this task has no borrowable allowance.
+  if (allowCredit) for (const model of config.models) for (const plan of Object.values(model.templates)) for (const task of plan.tasks) task.creditLimit = "0";
   config.metered = { relayUrl: `http://127.0.0.1:${(server.address() as { port: number }).port}/v1/chat`, payTo: f.fx.f.payee, priceRaw: "120000", creditsRaw: "100000", catalog, keyFile };
   let calls = 0;
   const tasks = createHostedTaskExecutor(config, { provider: f.fx.f.provider, gatewayDispatch: async (model) => {
     calls++; return { status: 200, body: modelToolResponse(f.GOOD_CODE["sum-integers"], model.model) };
   } });
   try {
-    const actor = await f.actor(5, "cheap", 0n); actor.agent.allowCredit = false;
+    const actor = await f.actor(5, "cheap", 0n); actor.agent.allowCredit = allowCredit;
     const ready = await tasks.execute(actor.input("provision")); assert.equal(ready.success, true, JSON.stringify(ready));
     actor.agent.binding = ready.binding; actor.agent.status = "Ready";
+    const losing = actor.input("task"); losing.run.action = "metered-task"; losing.taskEconomics = { version: 1, planningCostRaw: "5000000" };
+    const beforeNonce = await f.fx.f.provider.getTransactionCount(actor.wallet.address);
+    const rejectedEconomics = await tasks.execute(losing);
+    assert.equal(rejectedEconomics.reason, "ECONOMICS_NOT_WORTHWHILE"); assert.equal(rejectedEconomics.acceptTxHash, undefined); assert.equal(calls, 0);
+    assert.equal(await f.fx.f.provider.getTransactionCount(actor.wallet.address), beforeNonce, "economically losing work cannot accept or buy a package");
     const parent = actor.input("task"); parent.run.action = "metered-task";
     const paused = await tasks.execute(parent);
     assert.equal(paused.phase, "Paused", JSON.stringify(paused)); assert.equal(paused.reason, "INFERENCE_FUNDING_REQUIRED"); assert.ok(paused.acceptTxHash); assert.equal(calls, 0);
@@ -69,6 +77,39 @@ test("cash refill lends only the waiting metered wallet slot and resumes its ori
     assert.deepEqual(await tasks.execute({ ...deposit, recover: true }), resumedDeposit);
     assert.deepEqual(JSON.parse(await readFile(slotPath, "utf8")), finishedSlot);
     assert.deepEqual(await tasks.execute({ ...parent, recover: true }), result); assert.equal(await f.fx.f.provider.getTransactionCount(actor.wallet.address), nonce);
+    if (allowCredit) {
+      // A changed balance/authorization cannot turn the saved cash-only decision into a loan.
+      const other = await f.actor(6, "cheap", 120000n), provisioned = await tasks.execute(other.input("provision"));
+      other.agent.binding = provisioned.binding; other.agent.status = "Ready";
+      const signer = other.wallet.connect(f.fx.f.provider);
+      await tx(f.fx.f.token!, signer, "approve", [await f.fx.f.account.getAddress(), 120000n]);
+      await tx(f.fx.f.account, signer, "depositCash", [other.agent.binding!.agentId, 120000n]);
+      const sign = Wallet.prototype.signTransaction;
+      let packageSignatures = 0;
+      t.mock.method(Wallet.prototype, "signTransaction", async function (this: Wallet, request: TransactionRequest) {
+        if (this.address === signer.address && String(await request.to).toLowerCase() === (await f.fx.f.account.getAddress()).toLowerCase()) {
+          const call = accountInterface.parseTransaction({ data: String(await request.data) });
+          if (call?.name === "payProvider") {
+            packageSignatures++;
+            const args = Array.from(call.args), auth = Array.from(call.args[4]); auth[2] = 1n; args[4] = auth;
+            request = { ...request, data: accountInterface.encodeFunctionData("payProvider", args) };
+          }
+        }
+        return sign.call(this, request);
+      });
+      const cashOnly = other.input("task"); cashOnly.run.action = "metered-task";
+      const stopped = await tasks.execute(cashOnly);
+      assert.equal(stopped.reason, "ECONOMICS_CASH_ONLY", JSON.stringify(stopped)); assert.equal(stopped.chargedRaw, "0");
+      const signedNonce = await f.fx.f.provider.getTransactionCount(signer.address);
+      const stored = JSON.parse(await readFile(join(cashOnly.directory, "task-executor/workflow/metered/allowance-purchase/session.json"), "utf8"));
+      assert.ok(stored.handle.submission.rawTransaction); assert.equal(packageSignatures, 1); assert.equal(calls, 1);
+      const cold = await tasks.execute({ ...cashOnly, recover: true });
+      assert.equal(cold.reason, "ECONOMICS_CASH_ONLY", JSON.stringify(cold)); assert.equal(cold.chargedRaw, "0");
+      assert.equal(await f.fx.f.provider.getTransactionCount(signer.address), signedNonce, "recovery must not broadcast the disallowed signed payment");
+      assert.equal(packageSignatures, 1); assert.equal(calls, 1);
+      assert.deepEqual(JSON.parse(await readFile(join(cashOnly.directory, "task-executor/workflow/metered/allowance-purchase/session.json"), "utf8")).handle, stored.handle);
+      t.mock.restoreAll();
+    }
     succeeded = true;
   } catch (error) {
     if (error instanceof Error) error.message += `\nPreserved metered refill failure fixture: ${directory}`;

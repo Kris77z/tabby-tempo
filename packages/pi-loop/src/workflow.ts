@@ -56,6 +56,18 @@ function selectionConfig(config: WorkflowConfig): SelectionConfig {
 }
 function decide(config: WorkflowConfig, snapshot: SelectionDecision["snapshot"]): SelectionDecision {
   const decision = selectInference(selectionConfig(config), snapshot);
+  if (config.funding === "inference-allowance" && config.economics) {
+    // Economic potential is separate from a temporary package-funding shortage.
+    // An unaffordable package may wait for explicit cash refill, never assume a loan.
+    for (const candidate of decision.candidates) if (candidate.rejected.includes("FUNDS")) {
+      const revenue = snapshot.tasks.find(task => task.taskId === candidate.taskId)?.revenue;
+      candidate.economics = assessTaskEconomics(config.economics, revenue, candidate.price, config.economics.executionCostRaw!);
+      candidate.rejected = candidate.rejected.filter(reason => reason !== "FUNDS" && !reason.startsWith("ECONOMICS_"));
+      if (candidate.economics.reason) candidate.rejected.push(candidate.economics.reason);
+      candidate.funding = "cash";
+    }
+    decision.selected = decision.candidates.find(candidate => !candidate.rejected.length);
+  }
   if (config.funding && !config.economics) {
     // Cash quotes still describe the alternative service. Reward tasks never purchase that service.
     for (const candidate of decision.candidates) candidate.rejected = candidate.rejected.filter(reason => reason !== "FUNDS" && reason !== "PRICE_LIMIT");
@@ -202,7 +214,7 @@ export async function runTaskWorkflow(directory: string, input: WorkflowConfig, 
       }
     }
     const funding = async (observedCash?: bigint) => {
-      time(deadline); if (config.funding && !config.economics) return; const cash = observedCash ?? await account.getFunction("cash").staticCall(config.agentId);
+      time(deadline); if (config.funding) return; const cash = observedCash ?? await account.getFunction("cash").staticCall(config.agentId);
       if (BigInt(config.economics?.executionCostRaw ?? selected.price) > cash + (selected.funding === "task-credit" && config.allowCredit ? BigInt(selected.creditLimit) : 0n)) stop("WORKFLOW_FUNDS_CHANGED");
     };
     const assigned = async (allowOpen = false) => {
@@ -215,7 +227,8 @@ export async function runTaskWorkflow(directory: string, input: WorkflowConfig, 
       if (task.deadlineMs !== selected.deadlineMs || !(task.status === "2" && task.agentId === config.agentId || allowOpen && task.status === "1")) stop("WORKFLOW_TASK_CHANGED");
       await funding(cash);
       if (config.economics) {
-        const economics = assessTaskEconomics(config.economics, task.revenue, selected.price, String(cash));
+        const cashBasis = config.funding === "inference-allowance" && selected.funding === "cash" ? config.economics.executionCostRaw! : String(cash);
+        const economics = assessTaskEconomics(config.economics, task.revenue, selected.price, cashBasis);
         if (economics.reason) stop(economics.reason);
       }
       return task;
@@ -265,12 +278,17 @@ export async function runTaskWorkflow(directory: string, input: WorkflowConfig, 
       const childConfig = state.childConfig;
       const metered = config.funding === "inference-allowance" ? await options.metered!(childConfig, async handle => {
         if (config.economics) {
-          assertEconomicPayment(config.economics, handle);
+          assertEconomicPayment(config.economics, handle, selected.funding === "cash");
           const payment = await account.getFunction("getPayment").staticCall(handle.quote.paymentId);
           if (payment.fromCash + payment.fromCredit === 0n) await assigned();
         }
         if (state!.handle && state!.handle.quote.paymentId !== handle.quote.paymentId) stop("WORKFLOW_QUOTE_CHANGED");
         state!.handle = structuredClone(handle); state!.reservedPrice = handle.quote.price; await save();
+        if (config.economics && selected.funding === "cash" && !handle.submission) {
+          const payment = await account.getFunction("getPayment").staticCall(handle.quote.paymentId);
+          if (payment.fromCash + payment.fromCredit === 0n && BigInt(handle.quote.price) > await account.getFunction("cash").staticCall(config.agentId))
+            throw new PaymentError("CASH_REQUIRED", "Original package awaits explicit cash refill; no borrowing is authorized by admission");
+        }
       }) : undefined;
       try { state.rewardChild = await runRewardTask(join(directory, "reward-task"), {
         taskId: childConfig.taskId, agentId: childConfig.agentId, chainId: childConfig.chainId,
@@ -283,7 +301,7 @@ export async function runTaskWorkflow(directory: string, input: WorkflowConfig, 
       if (!metered) state.reservedPrice = "0";
     } else {
     const checkHandle = (handle: PaymentHandle) => {
-      if (config.economics) assertEconomicPayment(config.economics, handle);
+      if (config.economics) assertEconomicPayment(config.economics, handle, selected.funding === "cash");
       if (handle.quote.price !== selected.price || handle.quote.tier !== undefined || handle.quote.taskId !== selected.taskId || handle.input.taskId !== selected.taskId ||
         handle.relayUrl !== offered.relayUrl || handle.input.service !== "infercredit/solve-fixed" || handle.input.model !== "pi-fixed-v1" || handle.input.tier !== undefined || digest(handle.input.solve) !== digest(state!.childConfig!.solve) || handle.quote.requestDigest !== requestDigest(handle.input) ||
         (state!.handle && (state!.handle.quote.paymentId !== handle.quote.paymentId || state!.handle.creditNonce !== handle.creditNonce))) stop("WORKFLOW_QUOTE_CHANGED");
