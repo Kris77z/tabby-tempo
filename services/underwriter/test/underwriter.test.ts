@@ -58,6 +58,21 @@ test("borrowed RPC survives Underwriter close, restart and rejected initializati
   } finally { await f?.close(); if (child) await stopAnvil(child); await rm(directory, { recursive: true, force: true }); }
 });
 
+test("signed authorization and hashed evidence never exceed Manager per-epoch draw ceiling", { timeout: 60000 }, async () => {
+  const directory = await mkdtemp(join(tmpdir(), "underwriter-draw-cap-")), local = await startAnvil();
+  const f = await fixture(local.rpc, directory, 6);
+  try {
+    await tx(f.manager, f.admin, "setGlobalLimits", [120000n, 80000n]); const taskId = await f.task();
+    const signed = await f.underwriter.authorize(f.agentId, taskId, 1n);
+    assert.equal(signed.authorization.principalCap, 80000n);
+    const bytes = await readFile(join(directory, `${signed.evidenceHash}.json`), "utf8"), evidence = JSON.parse(bytes);
+    assert.equal(evidence.caps.escrowCap, "104347"); assert.equal(evidence.caps.protocolDrawCap, "80000"); assert.equal(evidence.caps.principalCap, "80000");
+    assert.equal(keccak256(toUtf8Bytes(bytes)), signed.evidenceHash);
+    await tx(f.account, f.agent, "payProvider", [f.agentId, f.payee, 120000n, "0x" + "8".repeat(64), signed.authorization, signed.signature]);
+    assert.equal((await read(f.manager, "getLoan", [taskId])).principal, 80000n);
+  } finally { await f.close(); await stopAnvil(local.child); await rm(directory, { recursive: true, force: true }); }
+});
+
 test("real HTTP signatures are consumed by Anvil contracts in USDC-6 and native-18 modes", { timeout: 120_000 }, async t => {
   const directory = await mkdtemp(join(tmpdir(), "agentfuel-underwriter-"));
   let child: ChildProcess | undefined;

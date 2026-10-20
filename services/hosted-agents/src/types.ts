@@ -51,9 +51,46 @@ export type HostedFinance = { status: "unavailable"; observedAt: string; reason:
   counts: { repayments: string; defaults: string; mirrorRepayments: string; successes: string; mirrorDefaults: string };
 };
 export interface HostedExecution {
+  /** Trusted executor context only; owner HTTP commands cannot supply it. */
+  taskEconomics?: { version: 1; planningCostRaw: string };
   activity?: (event: HostedActivityInput) => Promise<void>;
   progress?: (view: GoalView) => Promise<void>;
   deadlineMs?: number; agent: HostedAgent; run: HostedRun; directory: string; keyFile: string; recover: boolean;
+}
+/** Read-only accounting of retained hosted executions; never a wallet balance or a chain-wide audit. */
+export interface HostedAccounting {
+  /** Legacy projections may omit these; readers normalize missing costs to unknown, never zero. */
+  costScope?: "settlement-asset-only"; chainFeesRaw?: null; actualProfitRaw?: null;
+  version: 1; observedAt: string; agentId: string; currency: "USDC" | "PathUSD"; decimals: 6;
+  status: "complete" | "partial";
+  totals: {
+    /** Settled task proceeds after protocol fees, before inference and borrowing costs. Gross reward is not reconstructed. */
+    taskRevenueRaw: string;
+    /** Net confirmed settlement-asset charges; refunds are already deducted and must not be deducted again. */
+    inferenceCostRaw: string; borrowingFeeRaw: string; refundsRaw: string;
+    /** Subsidies, capital and loan principal are excluded from operating revenue. */
+    gameSubsidyRaw: string; ownerCapitalRaw: string; startupCapitalRaw: string; loanPrincipalRaw: string;
+    /** Recorded granted reward tokens and inference tokens used (paid plus reward); their difference is not a reward balance. */
+    creditsGranted: number; creditsUsed: number;
+    /** Null whenever a payment, settlement, fee or retained-history coverage remains unresolved. */
+    netOperatingRaw: string | null;
+  };
+  coverage: {
+    scope: "retained-hosted-history"; since: string | null; runCount: number; entryCount: number;
+    pendingCount: number; incompleteCount: number; returnedEntryCount: number; entriesTruncated: boolean;
+    /** Agent's terminal cumulative spend not covered by retained terminal root runs; active charges cannot fill this gap. */
+    uncoveredSpentRaw: string; reasons: string[];
+  };
+  /** Financial whitelist only: no private prompts, provider responses, credentials or signed transactions. */
+  entries: HostedAccountingEntry[];
+}
+export interface HostedAccountingEntry {
+  id: string; requestId: string; parentRequestId?: string; action: HostedAction | "planning"; at: string;
+  status: "confirmed" | "pending" | "incomplete";
+  inferenceCostRaw: string; refundsRaw: string; taskRevenueRaw: string; borrowingFeeRaw: string;
+  gameSubsidyRaw: string; ownerCapitalRaw: string; startupCapitalRaw: string; loanPrincipalRaw: string;
+  creditsGranted: number; creditsUsed: number;
+  taskId?: string; paymentId?: string; txHash?: string; reasons: string[];
 }
 export interface HostedCapabilities {
   goals?: { maxPhases: number; external?: { services: ExternalServiceView[] }; chainLookup?:{chainId:string;maxTargets:number}; specialists?:{id:string;serviceId:string;name:string;output:"text"|"json"}[]; models: { id: string; pricePerCallRaw: string }[] };

@@ -54,3 +54,7 @@ Built-in specialists are input-analysis roles, not independently registered Agen
 Production facts and recovery are in the [VPS runbook](../deploy/tempo-vps/README.md) and [CI/CD runbook](../deploy/tempo-vps/cicd/README.md). PR and main push use the same `Offline checks`; only successful main CI can enter the main-only production environment. This application migration does not modify the root-owned deployment engine or change Tempo Origin, fee/nonce recovery policy or the existing contracts. Local development must use fresh isolated Anvil/synthetic directories and controlled inference, never the archived local Tempo runtime or a second writer beside the VPS. The expired game sponsorship retains its original digest/admissions/expiry; it is not renewed by a code upgrade.
 
 The product does not provide open expert recruitment, arbitrary subtask publishing, arbitrary goal shell/file/wallet tools, public LP lending or universal fact verification. External hiring and autonomous-game additions have owned-fixture evidence only. [Verification](VERIFICATION.md) distinguishes actual Tempo history, read-only probes, controlled payments and synthetic UI; code availability alone does not prove production activation or paid Tempo acceptance.
+
+## 2026-10-20 代码层经济与恢复能力
+
+新增冻结经济准入、owner只读经营/策略/operating投影、独立SDK和本地Publisher/Worker；见 [Review](REVIEW.md)。仅owned31337、合成模型与固定Docker离线验证，不更新此文档原有历史Tempo验收事实，不宣称公共链完整流程、TLS可靠性、真实模型或部署已通过。PathUSD结算贡献排除尚未归集链费，完整净利润未知。

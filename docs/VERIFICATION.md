@@ -42,3 +42,7 @@ Unknown supplier usage/cost remains unknown. Operator compensation is distinct f
 Cash-only goals use task ID zero and model review; they do not inherit Task 7/8 income, hidden-test acceptance or credit reputation. No new live Tempo goal or nonce-replacement transaction is claimed. Synthetic public transaction hashes in UI tests are test data. No new source screenshot or Monad receipt is presented as Tempo evidence.
 
 External hiring stays unconfigured and disabled in production until specific provider/registry bindings are approved; source Monad identities and balances are not migrated. Autonomous-game fixtures do not reactivate the expired grant. The root-owned deployment engine is unchanged by this application migration, and the VPS remains the only writer.
+
+## 2026-10-20 代码层经济与恢复能力
+
+新增冻结经济准入、owner只读经营/策略/operating投影、独立SDK和本地Publisher/Worker；见 [Review](REVIEW.md)。仅owned31337、合成模型与固定Docker离线验证，不更新此文档原有历史Tempo验收事实，不宣称公共链完整流程、TLS可靠性、真实模型或部署已通过。PathUSD结算贡献排除尚未归集链费，完整净利润未知。

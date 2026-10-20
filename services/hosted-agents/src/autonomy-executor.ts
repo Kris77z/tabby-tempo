@@ -6,6 +6,7 @@ import { InferCredit, ACCOUNT_ABI, MANAGER_ABI, accountInterface, managerInterfa
 import { SessionStore } from "@agentfuel/pi-loop/session";
 import { confirmPaidDelivery } from "@agentfuel/pi-loop/fixed-task";
 import { createAutonomyDecisionPrompt, parseAutonomyDecision, runAutonomy, type AutonomyState, type AutonomyConfig, type AutonomyContext, type AutonomyLimits, type AutonomyDecisionRecovery } from "../../../packages/pi-loop/src/autonomy.js";
+import { assessTaskEconomics, hostedTaskEconomics } from "../../../packages/pi-loop/src/economics.js";
 import { taskLoopbackUrl, taskPrivateFile } from "../../../packages/pi-loop/src/task-runner/config.js";
 import { chainRpcProvider, type RpcTransport } from "../../../scripts/demo-rpc.js";
 import type { HostedTaskExecutor, HostedTaskExecutorConfig } from "./task-executor.js";
@@ -31,7 +32,7 @@ export interface HostedAutonomyDependencies {
   admitGame?(parent: HostedExecution, child: HostedExecution): Promise<void>;
 }
 interface Snapshot {
-  version: 1; config: HostedAutonomyConfig; input: HostedExecution; controller: AutonomyConfig; children: Record<string, HostedExecution>;
+  version: 1; config: HostedAutonomyConfig; input: HostedExecution; controller: AutonomyConfig; economicsVersion?: 1; children: Record<string, HostedExecution>;
 }
 interface PlannerState { version: 1; context: AutonomyContext; handle?: PaymentHandle; inference?: Inference; recovery?: AutonomyDecisionRecovery }
 type TaskAdapter = Pick<HostedTaskExecutor, "config" | "finance" | "execute">;
@@ -76,7 +77,7 @@ export async function openHostedPlannerConnection(rpcUrl: string, chainId: strin
 /** Count executable catalog entries at the finance reader's canonical block.
  * A failed or inconsistent read throws; it can never establish an empty queue. */
 export async function readHostedAvailableTasks(config: HostedTaskExecutorConfig, input: HostedExecution, finance: Extract<HostedFinance, { status: "confirmed" }>,
-  provider: JsonRpcProvider, deadlineMs: number, nowMs: number): Promise<number> {
+  provider: JsonRpcProvider, deadlineMs: number, nowMs: number, economic?: { context: AutonomyContext; plannerPriceRaw: string }): Promise<number> {
   const binding = input.agent.binding, plans = config.models.map(model => model.templates[input.agent.strategy]), first = plans[0];
   if (!binding || !first || finance.chainId !== binding.chainId || finance.agentId !== binding.agentId
     || getAddress(finance.wallet) !== getAddress(binding.wallet) || getAddress(input.agent.wallet) !== getAddress(binding.wallet)
@@ -93,6 +94,8 @@ export async function readHostedAvailableTasks(config: HostedTaskExecutorConfig,
   const escrow = new Contract(first.escrowAddress, ["function getTask(uint256) view returns(tuple(address poster,uint256 reward,uint256 escrowBalance,uint256 agentId,uint256 deadline,uint16 protocolFeeBps,uint8 status))"], provider);
   const ids = [...new Set(plans.flatMap(plan => plan.tasks.map(task => task.taskId)))];
   let available = 0;
+  const options = config.models.flatMap(model => (["cash", "credit", "reward-tokens"] as const).map(funding => ({ modelId: model.id, funding, taskIds: [] as string[] })));
+
   for (const id of ids) {
     const [task, loan] = await Promise.all([at(escrow, "getTask", [id]), at(manager, "getLoan", [id])]);
     const entries = plans.flatMap(plan => plan.tasks.filter(entry => entry.taskId === id).map(entry => ({ plan, entry })));
@@ -101,9 +104,27 @@ export async function readHostedAvailableTasks(config: HostedTaskExecutorConfig,
     const assigned = task.status === 1n && task.agentId === 0n || task.status === 2n && task.agentId === BigInt(binding.agentId);
     if (assigned && loan.status === 0n && task.reward > 0n && task.escrowBalance > 0n
       && entries.some(({ plan, entry }) => Math.min(entry.deadlineMs, plan.deadlineMs, deadlineMs) > Math.max(nowMs, block!.timestamp * 1000) + plan.minRemainingMs
-        && plan.providers.some(provider => provider.routes.some(route => route.capabilities.includes("python3-json-stdio") && route.capabilities.includes(entry.problemId))))) available++;
+        && plan.providers.some(provider => provider.routes.some(route => route.capabilities.includes("python3-json-stdio") && route.capabilities.includes(entry.problemId))))) {
+      available++;
+      if (economic) for (const option of options) {
+        const context = economic.context, model = config.models.find(model => model.id === option.modelId)!, plan = model.templates[input.agent.strategy];
+        const entry = plan.tasks.find(entry => entry.taskId === id);
+        if (!entry || !context.funding.includes(option.funding) || Math.min(entry.deadlineMs, plan.deadlineMs, deadlineMs) <= Math.max(nowMs, block!.timestamp * 1000) + plan.minRemainingMs
+          || !plan.providers.some(provider => provider.routes.some(route => route.capabilities.includes("python3-json-stdio") && route.capabilities.includes(entry.problemId)))) continue;
+        const subsidized = option.funding === "reward-tokens", planning = subsidized ? 0n : BigInt(economic.plannerPriceRaw), price = subsidized ? 0n : BigInt(config.metered!.priceRaw);
+        if (subsidized && (option.modelId !== "kimi-k2.6" || context.observation.rewardTokens?.modelId !== option.modelId)) continue;
+        const cashBefore = BigInt(finance.cashRaw), observedCash = cashBefore > planning ? cashBefore - planning : 0n;
+        // Economic potential is separate from resource admission: a cash-funded task has no borrower fee,
+        // even while an allowed game is needed to replenish cash. FundingQuote still controls affordability.
+        const cash = option.funding === "cash" ? price : observedCash;
+        const result = assessTaskEconomics(hostedTaskEconomics(planning.toString(), price.toString()),
+          { rewardRaw: String(task.reward), escrowBalanceRaw: String(task.escrowBalance), protocolFeeBps: String(task.protocolFeeBps) }, price.toString(), cash.toString());
+        if (!result.reason) option.taskIds.push(id);
+      }
+    }
   }
   if ((await provider.getBlock(block!.number))?.hash !== block!.hash || BigInt(await provider.send("eth_chainId", [])) !== BigInt(binding.chainId)) invalid("HOSTED_AUTONOMY_TASK_CATALOG_UNCONFIRMED");
+  if (economic) economic.context.observation.taskEconomics = { basis: "successful-completion-bound", scope: "settlement-asset-only", options };
   return available;
 }
 
@@ -236,7 +257,7 @@ export class HostedAutonomyExecutor implements HostedExecutor {
     let ownedTransport: Awaited<ReturnType<typeof openHostedPlannerConnection>> | undefined;
     try {
       let snapshot = await store.read();
-      if (snapshot && (!isDeepStrictEqual(snapshot.config, this.config) || snapshot.input.agent.id !== input.agent.id || snapshot.input.agent.owner !== input.agent.owner
+      if (snapshot && (snapshot.economicsVersion !== undefined && snapshot.economicsVersion !== 1 || !isDeepStrictEqual(snapshot.config, this.config) || snapshot.input.agent.id !== input.agent.id || snapshot.input.agent.owner !== input.agent.owner
         || snapshot.input.agent.wallet !== input.agent.wallet || !isDeepStrictEqual(snapshot.input.agent.binding, input.agent.binding)
         || snapshot.input.run.requestId !== input.run.requestId || snapshot.input.run.reservedRaw !== input.run.reservedRaw || snapshot.input.keyFile !== input.keyFile)) invalid("HOSTED_AUTONOMY_BINDING_CHANGED");
       if (!snapshot) {
@@ -248,7 +269,7 @@ export class HostedAutonomyExecutor implements HostedExecutor {
             ...(this.config.games?.rewardKinds.includes("llm-credits") && models.includes("kimi-k2.6") ? ["reward-tokens" as const] : [])], decisionReserveRaw: this.config.plannerPriceRaw,
           ...(this.config.games ? { games: { maxGames: this.config.games.maxGames, maxSpendPerGameRaw: this.config.games.maxSpendPerGameRaw, rewardKinds: [...this.config.games.rewardKinds] } } : {}) };
         const {activity:_activity,progress:_progress,...persistedInput}=input;
-        snapshot = { version: 1, config: this.config, input: structuredClone(persistedInput), controller, children: {} }; await store.write(snapshot);
+        snapshot = { version: 1, economicsVersion: 1, config: this.config, input: structuredClone(persistedInput), controller, children: {} }; await store.write(snapshot);
       }
       const state = snapshot, parent = state.input;
       const executeChild = async (child: HostedExecution, recover: boolean) => {
@@ -288,27 +309,33 @@ export class HostedAutonomyExecutor implements HostedExecutor {
               tokenRates: metered.catalog.map((model, index) => ({ tier: index === 0 ? "cheap" : "strong", inputMicroCreditsPerToken: model.inputMicroCreditsPerToken, outputMicroCreditsPerToken: model.outputMicroCreditsPerToken })) } };
 
         },
-        ...(this.config.games ? {
-          runtimeDecision: async (context: AutonomyContext) => {
+        runtimeDecision: async (context: AutonomyContext) => {
             if (this.deps.shouldContinue && !await this.deps.shouldContinue(parent.agent.id)) return { action: "stop" as const, reason: "HOSTED_AGENT_PAUSED" };
-            if (context.completedTasks > 0 && !context.pendingTask) {
+            if (!context.pendingTask) {
               if (!observedFinance) invalid("HOSTED_AUTONOMY_TASK_CATALOG_UNCONFIRMED");
               const provider = this.deps.provider ?? (ownedTransport ??= await openHostedPlannerConnection((await taskPrivateFile(this.task.config.rpcUrlFile)).trim(), parent.agent.binding!.chainId, this.task.config.rpcTransport)).provider;
-              context.observation.availableTasks = await readHostedAvailableTasks(this.task.config, parent, observedFinance, provider, context.deadlineMs, (this.deps.now ?? Date.now)());
+              context.observation.availableTasks = await readHostedAvailableTasks(this.task.config, parent, observedFinance, provider, context.deadlineMs, (this.deps.now ?? Date.now)(), state.economicsVersion === 1 ? { context, plannerPriceRaw: this.config.plannerPriceRaw } : undefined);
               if (context.observation.availableTasks === 0) return { action: "stop" as const, reason: "AUTONOMY_NO_AVAILABLE_TASKS" };
+            }
+            const opportunities = context.observation.taskEconomics?.options;
+            if (!context.pendingTask && opportunities && !opportunities.some(option => option.taskIds.length)) return { action: "stop" as const, reason: "ECONOMICS_NOT_WORTHWHILE" };
+            const feasiblePaidTask = context.fundingQuote?.options.some(option => option.feasible && (!opportunities || opportunities.some(value => value.funding === option.funding && value.taskIds.length)));
+            if (!this.config.games) {
+              if (opportunities && context.fundingQuote?.options.some(option => option.feasible) && !feasiblePaidTask) return { action: "stop" as const, reason: "ECONOMICS_NOT_WORTHWHILE" };
+              return null;
             }
             const rewards = context.observation.rewardTokens;
             const rewardReady = rewards && !rewards.blocked && context.models.includes(rewards.modelId) && context.funding.includes("reward-tokens")
               && BigInt(rewards.availableTokens) >= BigInt(rewards.minTaskTokens);
-            const feasiblePaidTask = context.fundingQuote?.options.some(option => option.feasible);
             if (!context.pendingTask && feasiblePaidTask) return null;
-            if (!context.pendingTask && rewardReady) return { action: "run-task" as const, modelId: rewards.modelId, funding: "reward-tokens" as const };
+            if (!context.pendingTask && rewardReady && (!opportunities || opportunities.some(option => option.funding === "reward-tokens" && option.modelId === rewards.modelId && option.taskIds.length))) return { action: "run-task" as const, modelId: rewards.modelId, funding: "reward-tokens" as const };
             if (rewards?.blocked) return { action: "stop" as const, reason: "REWARD_ACCOUNT_BLOCKED_BY_USAGE_OVERRUN" };
             if ((context.remainingGames ?? 0) < 1) return { action: "stop" as const, reason: "AUTONOMY_GAME_LIMIT" };
             const kind = context.pendingTask ? "llm-credits" : BigInt(context.observation.cashRaw) < BigInt(this.config.plannerPriceRaw) && this.config.games!.rewardKinds.includes("usdc") ? "usdc" : this.config.games!.rewardKinds.includes("llm-credits") ? "llm-credits" : "usdc";
             if (!this.config.games!.rewardKinds.includes(kind) || !rewards || !context.models.includes(rewards.modelId)) return { action: "stop" as const, reason: "AUTONOMY_REWARD_RESOURCE_UNAVAILABLE" };
             return { action: "run-game" as const, modelId: rewards.modelId, funding: "cash" as const, rewardKind: kind };
-          },
+        },
+        ...(this.config.games ? {
           canResumeTask: async (context: AutonomyContext) => {
             if (this.deps.shouldContinue && !await this.deps.shouldContinue(parent.agent.id)) return false;
             const rewards = context.observation.rewardTokens, pending = context.pendingTask;
@@ -345,7 +372,8 @@ export class HostedAutonomyExecutor implements HostedExecutor {
             perRunBudgetRaw: decision.funding === "reward-tokens" ? parent.agent.perRunBudgetRaw : budget, totalBudgetRaw: parent.agent.totalBudgetRaw,
             spentRaw: (BigInt(parent.agent.spentRaw) + BigInt(parent.run.reservedRaw) - BigInt(limits.maxSpendRaw)).toString(), reservedRaw: decision.funding === "reward-tokens" ? "0" : budget, activeRequestId: childId },
             run: { requestId: childId, agentId: parent.agent.id, action: decision.funding === "reward-tokens" ? "reward-task" : "metered-task", status: "Running", createdAt: timestamp, updatedAt: timestamp,
-              reservedRaw: decision.funding === "reward-tokens" ? "0" : budget, chargedRaw: "0", recoverable: true }, directory: join(parent.directory, "children", childId), keyFile: parent.keyFile, recover: false, deadlineMs: limits.deadlineMs };
+              reservedRaw: decision.funding === "reward-tokens" ? "0" : budget, chargedRaw: "0", recoverable: true }, directory: join(parent.directory, "children", childId), keyFile: parent.keyFile, recover: false, deadlineMs: limits.deadlineMs,
+            ...(state.economicsVersion === 1 ? { taskEconomics: { version: 1 as const, planningCostRaw: limits.planningCostRaw ?? "0" } } : {}) };
           state.children[childId] = child; await store.write(state);
           return executeChild(child, false);
         },
@@ -372,7 +400,8 @@ export class HostedAutonomyExecutor implements HostedExecutor {
       const admissionStops = ["AUTONOMY_PLANNER_CASH_REQUIRED", "AUTONOMY_TASK_BUDGET_REQUIRED", "HOSTED_AGENT_PAUSED"];
       const reason = modelStopped && result.steps.at(-1)?.decisionSource!=="runtime" && !admissionStops.includes(result.reason ?? "") ? "AUTONOMY_MODEL_STOPPED"
         : result.reason && /^[A-Z][A-Z0-9_]{0,100}$/.test(result.reason) ? result.reason : "AUTONOMY_EXECUTION_STOPPED";
-      return Object.assign({ phase: result.phase, terminal, success: terminal && !childFailed && (result.phase === "Completed" || result.steps.at(-1)?.decision?.action === "stop"),
+      return Object.assign({ phase: result.phase, terminal, success: terminal && !childFailed && (result.phase === "Completed" || result.steps.at(-1)?.decision?.action === "stop")
+          && (!["AUTONOMY_NO_AVAILABLE_TASKS", "ECONOMICS_NOT_WORTHWHILE"].includes(reason) || result.completedTasks > 0),
         chargedRaw: result.chargedRaw, refundedRaw: result.steps.reduce((sum, step) => sum + BigInt(step.decisionRefundedRaw ?? "0") + BigInt(step.outcome?.refundedRaw ?? "0"), 0n).toString(), reason }, { autonomousTasks: result.completedTasks,
           ...(this.config.games ? { autonomousGames: result.completedGames ?? 0 } : {}) });
     } finally { ownedTransport?.close(); await store.close(); }

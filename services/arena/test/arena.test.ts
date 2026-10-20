@@ -13,9 +13,10 @@ import { AUTH_TYPES } from "../../underwriter/src/underwriter.js";
 import { ArenaController } from "../src/controller.js";
 import { DEFAULT_IMAGE } from "../src/docker.js";
 import { ArenaSettler } from "../src/settler.js";
-import { createArenaHttpServer } from "../src/http.js";
-import { readControllerToken, requestSettlement } from "../src/ipc.js";
-import { parseConfig, validateVerdict, type ArenaConfig, type Verdict } from "../src/protocol.js";
+import { createArenaHttpServer, type ArenaHttpJournal } from "../src/http.js";
+import { DockerExecutor } from "../src/docker.js";
+import { readControllerToken, readSettlementIntent, requestSettlement } from "../src/ipc.js";
+import { digest, parseConfig, validateVerdict, type ArenaConfig, type Evaluation, type Verdict } from "../src/protocol.js";
 import { recoverStaleSettler } from "../src/recover.js";
 import { submissionTypedData } from "../src/submission-auth.js";
 
@@ -293,6 +294,102 @@ test("settler polls only its persisted hash, rejects a noncanonical receipt and 
     assert.equal(await f.provider.getTransactionCount(new Wallet(key(4)).address), nonce + 1);
     assert.equal((await read(f.escrow, "getTask", [taskId])).status, 3n);
   } finally { await settler?.close(); f?.provider.destroy(); await stop(anvil); await rm(directory, { recursive: true, force: true }); }
+});
+
+test("HTTP settlement recovery retains original signature, tests and raw transaction without another Docker execution", { timeout: 90000 }, async t => {
+  const directory = await mkdtemp(join(tmpdir(), "af-arena-http-recovery-")), local = await startAnvil();
+  let f: Awaited<ReturnType<typeof fixture>> | undefined, settler: ArenaSettler | undefined, service: ReturnType<typeof createArenaHttpServer> | undefined;
+  try {
+    f = await fixture(local.rpc, directory, true); await f.draw(f.taskIds[0], 1);
+    const verifier = new Wallet(key(4)).address, taskId = f.taskIds[0], code = "import json,sys\nprint(json.dumps(sum(json.load(sys.stdin))))\n";
+    settler = new ArenaSettler(f.config, key(4), f.provider); await settler.start();
+    await f.provider.send("anvil_setBalance", [verifier, "0x0"]);
+    let executions = 0, persisted: ArenaHttpJournal = { runs: [], submissions: [] };
+    const execute = DockerExecutor.prototype.execute;
+    t.mock.method(DockerExecutor.prototype, "execute", async function(this: DockerExecutor, ...args: Parameters<typeof execute>) { executions++; return execute.apply(this, args); });
+    const start = async (initial?: ArenaHttpJournal) => {
+      service = createArenaHttpServer(f!.config, [], f!.provider, { initial, save: async value => { persisted = structuredClone(value); } });
+      service.server.listen(0, "127.0.0.1"); await once(service.server, "listening");
+      const url = `http://127.0.0.1:${(service.server.address() as { port: number }).port}`;
+      return { post: (body: unknown) => fetch(url + "/submissions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
+        wait: async (runId: string) => { for (let i = 0; i < 500; i++) { const run = await (await fetch(url + `/runs/${runId}`)).json(); if (run.status !== "running") return run; await delay(50); } throw new Error("TEST_RUN_TIMEOUT"); } };
+    };
+    let http = await start();
+    const payload = { taskId, code, deadline: String((await f.provider.getBlock("latest"))!.timestamp + 300), signature: "" };
+    const typed = submissionTypedData(f.config, payload); payload.signature = await f.agentWallet.signTypedData(typed.domain, typed.types, typed.message);
+    const admitted = await http.post(payload); assert.equal(admitted.status, 202); const { runId } = await admitted.json();
+    const failed = await http.wait(runId); assert.equal(failed.status, "error"); assert.equal(failed.evaluation.tests.length, 5); assert.equal(executions, 5);
+    const original = JSON.parse(await readFile(join(f.config.ipcDirectory, "settlements.json"), "utf8"))[taskId];
+    assert.equal(original.settlement, undefined); assert.equal(keccak256(original.rawTx), original.txHash);
+    const token = await readControllerToken(f.config.ipcDirectory);
+    assert.deepEqual(await readSettlementIntent(f.config.ipcDirectory, token, taskId), { verdict: original.verdict, txHash: original.txHash });
+    await assert.rejects(readSettlementIntent(f.config.ipcDirectory, "f".repeat(64), taskId), /UNAUTHORIZED_CONTROLLER/);
+    assert.equal(await f.provider.getTransactionCount(verifier), 0);
+    assert.equal((await http.post({ ...payload, code: "print(0)" })).status, 409); assert.equal(executions, 5);
+    await service!.close(); service = undefined;
+    await f.provider.send("evm_increaseTime", [301]); await f.provider.send("evm_mine", []);
+    await f.provider.send("anvil_setBalance", [verifier, "0x3635c9adc5dea00000"]);
+    const agentNonce = await f.provider.getTransactionCount(f.agentWallet.address);
+    http = await start(persisted);
+    const repeated = await Promise.all([http.post(payload), http.post(payload)]);
+    for (const response of repeated) assert.equal((await response.json()).runId, runId);
+    const recovered = await http.wait(runId); assert.equal(recovered.status, "settled"); assert.equal(recovered.result.settlement.txHash, original.txHash);
+    assert.deepEqual(recovered.result.verdict, original.verdict); assert.deepEqual(recovered.result.tests, failed.evaluation.tests); assert.equal(executions, 5);
+    const after = JSON.parse(await readFile(join(f.config.ipcDirectory, "settlements.json"), "utf8"))[taskId];
+    assert.equal(after.rawTx, original.rawTx); assert.equal(await f.provider.getTransactionCount(verifier), 1);
+    assert.equal(await f.provider.getTransactionCount(f.agentWallet.address), agentNonce);
+    assert.equal((await read(f.manager, "getLoan", [taskId])).status, 2n); assert.equal(await read(f.manager, "repaymentCount", [1n]), 1n);
+    // A crash after mining but before the HTTP completion save still has real
+    // independent tests. Restore its interrupted run without Docker or signing.
+    const interrupted = structuredClone(persisted); interrupted.runs[0] = { runId, taskId, status: "running", evaluation: recovered.evaluation };
+    await service!.close(); service = undefined; http = await start(interrupted);
+    assert.equal((await (await http.post(payload)).json()).runId, runId);
+    assert.equal((await http.wait(runId)).result.settlement.txHash, original.txHash);
+    assert.equal(executions, 5); assert.equal(await f.provider.getTransactionCount(verifier), 1);
+  } finally { await service?.close(); await settler?.close(); f?.provider.destroy(); await stop(local.child); await rm(directory, { recursive: true, force: true }); }
+});
+
+test("legacy Arena recovery rechecks original code only while Assigned and refuses invented evidence after settlement", { timeout: 90000 }, async t => {
+  const directory = await mkdtemp(join(tmpdir(), "af-arena-legacy-recovery-")), local = await startAnvil();
+  let f: Awaited<ReturnType<typeof fixture>> | undefined, settler: ArenaSettler | undefined, controller: ArenaController | undefined, service: ReturnType<typeof createArenaHttpServer> | undefined;
+  try {
+    f = await fixture(local.rpc, directory, true); const taskId = f.taskIds[0], verifier = new Wallet(key(4)).address;
+    const code = "import json,sys\nprint(json.dumps(sum(json.load(sys.stdin))))\n", runId = randomUUID();
+    settler = new ArenaSettler(f.config, key(4), f.provider); await settler.start(); await f.provider.send("anvil_setBalance", [verifier, "0x0"]);
+    controller = new ArenaController(f.config, {}, f.provider);
+    let executions = 0, mismatched = false, evaluated: Evaluation | undefined;
+    const execute = DockerExecutor.prototype.execute;
+    t.mock.method(DockerExecutor.prototype, "execute", async function(this: DockerExecutor, ...args: Parameters<typeof execute>) { executions++; return mismatched ? { stdout: "0", exitCode: 0 } : execute.apply(this, args); });
+    await assert.rejects(controller.submit({ taskId, code, runId, onEvaluated: async value => { evaluated = value; } }));
+    assert.equal(executions, 5);
+    const original = JSON.parse(await readFile(join(f.config.ipcDirectory, "settlements.json"), "utf8"))[taskId];
+    // An altered saved evaluation/code cannot reuse a genuine signed verdict.
+    await assert.rejects(controller.submit({ taskId, code: code + "# replacement\n", runId, evaluation: evaluated }), /ARENA_EVALUATION_MISMATCH/);
+    assert.equal(executions, 5);
+    mismatched = true;
+    await assert.rejects(controller.submit({ taskId, code, runId }), /ARENA_EVALUATION_MISMATCH/);
+    assert.ok(executions > 5 && executions < 10); assert.equal(await f.provider.getTransactionCount(verifier), 0); mismatched = false;
+    const beforeMigration = executions;
+    await f.provider.send("anvil_setBalance", [verifier, "0x3635c9adc5dea00000"]);
+    const payload = { taskId, code, deadline: String((await f.provider.getBlock("latest"))!.timestamp + 300), signature: "" };
+    const typed = submissionTypedData(f.config, payload); payload.signature = await f.agentWallet.signTypedData(typed.domain, typed.types, typed.message);
+    const legacy: ArenaHttpJournal = { runs: [{ taskId, runId, status: "error", error: "SETTLEMENT_UNAVAILABLE" }], submissions: [[taskId, { runId, requestHash: digest(JSON.stringify(payload)) }]] };
+    const start = async () => {
+      service = createArenaHttpServer(f!.config, [], f!.provider, { initial: legacy, save: async () => {} });
+      service.server.listen(0, "127.0.0.1"); await once(service.server, "listening");
+      const url = `http://127.0.0.1:${(service.server.address() as { port: number }).port}`;
+      const post = await fetch(url + "/submissions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+      assert.equal((await post.json()).runId, runId);
+      for (let i = 0; i < 500; i++) { const run = await (await fetch(url + `/runs/${runId}`)).json(); if (run.status !== "running") return run; await delay(50); } throw new Error("TEST_RUN_TIMEOUT");
+    };
+    const restored = await start(); assert.equal(restored.status, "settled"); assert.equal(restored.result.settlement.txHash, original.txHash); assert.equal(executions, beforeMigration + 5);
+    assert.deepEqual(restored.result.verdict, original.verdict);
+    const recoveredJournal = JSON.parse(await readFile(join(f.config.ipcDirectory, "settlements.json"), "utf8"))[taskId];
+    assert.equal(recoveredJournal.rawTx, original.rawTx); assert.equal(await f.provider.getTransactionCount(verifier), 1);
+    await service!.close(); service = undefined;
+    const missingEvidence = await start(); assert.equal(missingEvidence.status, "error"); assert.equal(missingEvidence.error, "TASK_NOT_ASSIGNED");
+    assert.equal(executions, beforeMigration + 5); assert.equal(await f.provider.getTransactionCount(verifier), 1);
+  } finally { await service?.close(); controller?.close(); await settler?.close(); f?.provider.destroy(); await stop(local.child); await rm(directory, { recursive: true, force: true }); }
 });
 
 test("separate settler process consumes controller verdicts on real USDC/native Anvil contracts", { timeout: 180000 }, async t => {

@@ -28,3 +28,7 @@ On 2026-10-14, main `40647f0dc9f966bbbe98bf3e474cfbe612c0ffa8` from [PR #1](http
 - [2026-10-15 controlled migration](tempo-upstream-sync-20261015.md), including retained Tempo configuration, fixture evidence and production exclusions.
 
 Historical documents such as [implementation status](implementation-status.md), [Day-0 findings](day0-findings.md), [core source runtime](core-runtime.md) and [Monad acceptance](monad-hosted-acceptance-20261012.md) describe their dated source environments. Their private archive paths are not downloadable public evidence. They do not authorize another local writer or reuse of an old grant.
+
+## 2026-10-20 代码层经济与恢复能力
+
+新增冻结经济准入、owner只读经营/策略/operating投影、独立SDK和本地Publisher/Worker；见 [Review](REVIEW.md)。仅owned31337、合成模型与固定Docker离线验证，不更新此文档原有历史Tempo验收事实，不宣称公共链完整流程、TLS可靠性、真实模型或部署已通过。PathUSD结算贡献排除尚未归集链费，完整净利润未知。

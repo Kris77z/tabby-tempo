@@ -58,6 +58,28 @@ export const EMPTY_AUTH = { agentId: 0, taskId: 0, principalCap: 0, feeBps: 0, r
 
 export class PaymentError extends Error {
   constructor(public code: string, message: string, public handle?: unknown, public reason?: number) { super(message); }
+  safeCause?: SafePaymentCause;
+}
+export interface SafePaymentCause { name: string; code?: string; messageDigest: string; messageBytes: number; cause?: SafePaymentCause }
+/** Evidence survives SDK normalization without retaining raw RPC text, URLs,
+ * signed bytes or arbitrary error codes. Safe in browser and Node clients. */
+export function paymentCause(error: unknown, depth = 0): SafePaymentCause {
+  const e = error as { name?: unknown; code?: unknown; message?: unknown; cause?: unknown } | null;
+  const message = typeof e?.message === "string" ? e.message : typeof error === "string" ? error : "[non-error]";
+  const bytes = new TextEncoder().encode(message);
+  const codes = ["CALL_EXCEPTION", "SERVER_ERROR", "NETWORK_ERROR", "TIMEOUT", "UNKNOWN_ERROR", "ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "UND_ERR_SOCKET", "UND_ERR_CONNECT_TIMEOUT"];
+  return { name: ["Error", "TypeError", "AbortError", "TimeoutError"].includes(String(e?.name)) ? String(e?.name) : "Error",
+    ...(typeof e?.code === "string" && codes.includes(e.code) ? { code: e.code } : {}), messageDigest: keccak256(bytes), messageBytes: bytes.length,
+    ...(depth < 2 && e?.cause && e.cause !== error ? { cause: paymentCause(e.cause, depth + 1) } : {}) };
+}
+/** Only a host hook can construct this control signal. A string from a relay
+ * or RPC which merely resembles a pause code is still a payment error. */
+export class InferenceControlError extends Error {
+  handle?: unknown;
+  constructor(readonly reason: "paused" | "cancelled" | "deadline") {
+    if (!["paused", "cancelled", "deadline"].includes(reason)) throw Error("INVALID_INFERENCE_CONTROL");
+    super(`INFERENCE_${reason.toUpperCase()}`); this.name = "InferenceControlError";
+  }
 }
 export function contractError(error: unknown): PaymentError {
   const candidate = error as { data?: string; info?: { error?: { data?: string } } };
@@ -65,9 +87,9 @@ export function contractError(error: unknown): PaymentError {
   if (typeof data === "string") for (const iface of [accountInterface, managerInterface]) {
     try {
       const decoded = iface.parseError(data);
-      if (decoded) return new PaymentError(decoded.name, decoded.name === "SpendRejected" ? `SpendRejected reason ${decoded.args.reason}` : decoded.name,
-        undefined, decoded.name === "SpendRejected" ? Number(decoded.args.reason) : undefined);
+      if (decoded) { const result = new PaymentError(decoded.name, decoded.name === "SpendRejected" ? `SpendRejected reason ${decoded.args.reason}` : decoded.name,
+        undefined, decoded.name === "SpendRejected" ? Number(decoded.args.reason) : undefined); result.safeCause = paymentCause(error); return result; }
     } catch { /* A different contract may own this selector. */ }
   }
-  return new PaymentError("PAYMENT_UNCERTAIN", "Transaction outcome is uncertain; resume the same payment handle");
+  const result = new PaymentError("PAYMENT_UNCERTAIN", "Transaction outcome is uncertain; resume the same payment handle"); result.safeCause = paymentCause(error); return result;
 }

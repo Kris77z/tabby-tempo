@@ -18,9 +18,12 @@ import { discoverExternalServices, rankExternalServices, validateExternalHiringC
 import { prepareExternalHire, executeExternalHire, type ExternalHireState } from "../external/hiring.js";
 import { openHostedPlannerConnection } from "../autonomy-executor.js";
 import { taskPrivateFile } from "../../../../packages/pi-loop/src/task-runner/config.js";
+import { goalExecutionEvidence } from "./execution-evidence.js";
+import { goalProtocolContext } from "./protocol-context.js";
+import { isDeepStrictEqual } from "node:util";
 export interface GoalModelRoute { id:string; relayUrl:string; provider:string; priceRaw:string; service:string; model:string; physicalModel:string; responseModel?:string }
 export interface HostedGoalConfig { models:GoalModelRoute[]; durationMs:number; chainLookup?:boolean; external?:ExternalHiringConfig }
-export interface GoalCall { stage:string; route?:GoalModelRoute; futureReserveRaw?:string; firstPaymentErrorCode?:GoalPaymentErrorCode; policy?:{raw:string;hash:string;receipt?:{txHash:string;status:0|1;blockNumber:number;blockHash:string}}; serviceId?:string; promptDigest?:string; messages:{role:string;content:string}[]; max_completion_tokens:number; handle?:PaymentHandle; inference?:Inference; started?:boolean; unpaid?:boolean; voidSubmission?:{raw:string;hash:string}; recovery?:GoalPaymentRecovery; response?:{text:string;chargedRaw:string;promptTokens:number;completionTokens:number;paymentId?:string;txHash?:string;deliveryError?:string} }
+export interface GoalCall { stage:string; route?:GoalModelRoute; futureReserveRaw?:string; firstPaymentErrorCode?:GoalPaymentErrorCode; firstPaymentErrorCause?:import('@agentfuel/sdk').SafePaymentCause; firstControlError?:'paused'|'cancelled'|'deadline'; policy?:{raw:string;hash:string;receipt?:{txHash:string;status:0|1;blockNumber:number;blockHash:string}}; serviceId?:string; promptDigest?:string; messages:{role:string;content:string}[]; max_completion_tokens:number; handle?:PaymentHandle; inference?:Inference; started?:boolean; unpaid?:boolean; voidSubmission?:{raw:string;hash:string}; recovery?:GoalPaymentRecovery; response?:{text:string;chargedRaw:string;promptTokens:number;completionTokens:number;paymentId?:string;txHash?:string;deliveryError?:string} }
 export interface GoalState { version:1; lookupEnabled?:boolean; research?:ChainResearch; externalConfig?:ExternalHiringConfig; externalServices?:ExternalServiceSnapshot[]; externalHires?:Record<string,ExternalHireState>; binding:string; deadlineMs:number; route:GoalModelRoute; routes?:GoalModelRoute[]; input:{goal:string;owner:string;wallet:string;agentId:string;chainAgentId:string;chainId:string;strategy:string;reservedRaw:string}; view:GoalView; calls:GoalCall[]; result?:HostedResult; policy?:GoalCall['policy'] }
 export interface GoalDependencies {
   lookup?:typeof collectChainResearch;
@@ -146,7 +149,19 @@ export class HostedGoalExecutor implements HostedExecutor {
         }
         for(let index=0;index<state.view.phases.length;index++){
           const phase=state.view.phases[index];
-          if(phase.output)continue;state.view.stage="executing";await publish();
+          if(phase.output){
+            // A resumed mission must not promote a merely shape-valid saved
+            // proof into trusted reviewer context. Recheck the original paid
+            // response and canonical receipt, without quoting or dispatching.
+            if(state.externalConfig){
+              const stage=`phase-${index}`,entry=state.calls.find(c=>c.stage===stage),hire=state.externalHires?.[stage];
+              if(!entry?.inference||!hire)throw Error("HOSTED_GOAL_EXECUTION_EVIDENCE_INVALID");
+              const verified=await executeExternalHire(this.task,state,entry,hire,input,save,()=>this.deps.control?.(input.agent.id,input.run.requestId));
+              const proof=state.view.calls.find(c=>c.stage===stage)?.external;
+              if(verified.output!==phase.output||!isDeepStrictEqual(verified.proof,proof))throw Error("HOSTED_GOAL_EXECUTION_EVIDENCE_INVALID");
+            }
+            continue;
+          }state.view.stage="executing";await publish();
           if(state.externalConfig){
             const stage=`phase-${index}`;
             let hire=state.externalHires?.[stage],entry=state.calls.find(c=>c.stage===stage);
@@ -202,7 +217,7 @@ export class HostedGoalExecutor implements HostedExecutor {
           else await activity?.({scene:"specialists",state:"blocked",phaseId:`phase-${index}`,reason:"HOSTED_GOAL_SPECIALIST_UNAVAILABLE"});
           await activity?.({scene:"execution",state:"started",phaseId:`phase-${index}`,...(selected?{subject:{id:selected.id,name:selected.name,kind:"specialist" as const}}:{})});
           const profile=specialistPrompt(phase.taskType,specialistSystem,identity.chainId);
-          const output=normalizeSpecialistOutput(phase.taskType,await call(`phase-${index}`,profile.system,JSON.stringify({originalGoal:identity.goal,...research,assignment:phase,previous:state.view.phases.slice(0,index)}),2048,profile));
+          const output=normalizeSpecialistOutput(phase.taskType,await call(`phase-${index}`,profile.system,JSON.stringify({originalGoal:identity.goal,...research,protocolContext:goalProtocolContext,assignment:phase,previous:state.view.phases.slice(0,index)}),2048,profile));
           state.view.phases[index].output=output;
           state.view.answer=output;await publish();
           await activity?.({scene:"execution",state:"completed",phaseId:`phase-${index}`,...(selected?{subject:{id:selected.id,name:selected.name,kind:"specialist" as const}}:{})});
@@ -212,7 +227,7 @@ export class HostedGoalExecutor implements HostedExecutor {
         const reviewArtifact=async(stage:string,artifact:string)=>{
           await activity?.({scene:"review",state:"started",phaseId:stage,subject:{id:"independent-model-review",name:"Independent Model Review",kind:"artifact"}});
           const measurement=inspectGoalArtifact(identity.goal,artifact,state.research?.evidence.observedAt);
-          const review=parseMissionReview(await call(stage,reviewSystem,JSON.stringify({originalGoal:identity.goal,...research,plan:state.view.phases.map(({output,...p})=>p),outputContract:specialistOutputContract(state.view.phases.at(-1)!.taskType),artifact,measuredLengths:measurement}),1536));
+          const review=parseMissionReview(await call(stage,reviewSystem,JSON.stringify({originalGoal:identity.goal,...research,executionEvidence:goalExecutionEvidence(state,stage,artifact),plan:state.view.phases.map(({output,...p})=>p),outputContract:specialistOutputContract(state.view.phases.at(-1)!.taskType),artifact,measuredLengths:measurement}),1536));
           if(measurement.failures.length){review.passed=false;review.summary=`验收未通过：${measurement.failures.join(" ")}`.slice(0,4000);review.checks=[...measurement.failures,...review.checks].slice(0,20).map(c=>c.slice(0,1000));}
           await activity?.({scene:"review",state:review.passed?"confirmed":"failed",phaseId:stage,evidence:{passed:review.passed}});
           return review;
@@ -225,7 +240,7 @@ export class HostedGoalExecutor implements HostedExecutor {
           const measured=inspectGoalArtifact(identity.goal,originalArtifact);
           const compression=measured.maxCharacters!==undefined?`当前 ${measured.characters} 个非空白字符，上限 ${measured.maxCharacters}；本次请重写为不超过 ${Math.max(1,Math.floor(measured.maxCharacters*0.8))} 个非空白 Unicode 字符，留出计数余量。标点、数字、Markdown 符号也计入。优先去掉粗体等 Markdown 装饰、重复原始数据列、重复结论和冗余说明；保留用户要求的全部指标、计算、建议和邮件等交付物。精简重写，不要直接截断或遗漏必需内容。`:measured.maxWords!==undefined?`Rewrite to at most ${Math.max(1,Math.floor(measured.maxWords*0.8))} words, below the hard ${measured.maxWords}-word limit. Remove repetition and formatting, preserving every required deliverable; do not truncate.`:undefined;
           const revisionType=state.view.phases.at(-1)!.taskType,profile=specialistPrompt(revisionType,specialistSystem,identity.chainId);
-          const revised=normalizeSpecialistOutput(revisionType,await call("revision",profile.system,JSON.stringify({originalGoal:identity.goal,...research,artifact:originalArtifact,review:state.view.review,measuredLengths:measured,...(compression?{compressionTarget:compression}:{}),assignment:"Revise the complete artifact to resolve all review findings. Return only the full corrected deliverable. Preserve all required facts and deliverables, remove unsupported facts or dates, and obey the compression target."}),2048,profile));
+          const revised=normalizeSpecialistOutput(revisionType,await call("revision",profile.system,JSON.stringify({originalGoal:identity.goal,...research,protocolContext:goalProtocolContext,artifact:originalArtifact,review:state.view.review,measuredLengths:measured,...(compression?{compressionTarget:compression}:{}),assignment:"Revise the complete artifact to resolve all review findings. Return only the full corrected deliverable. Preserve all required facts and deliverables, remove unsupported facts or dates, and obey the compression target."}),2048,profile));
           state.view.answer=revised;await publish();
           const revisedReview=await reviewArtifact("revision-review",revised);state.view.review=revisedReview;
         }

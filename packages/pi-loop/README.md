@@ -146,3 +146,7 @@ node --import tsx --test scripts/test/live-selection.test.ts
 
 
 2026-10-07 root真实选择验收通过：宿主预设求和/括号候选及能力标签，选择器选出括号cheap→真实Kimi K2.6一次（输入76/输出1454/总1530 tokens，含1301 reasoning）。本地cash40000→30000、credit0；重复读取同session没有新增模型、付款或nonce。保存签名和ProviderPaid原始回执已离线复核，见独立验收（本机档案 `demo-output/live-selection-20261007-root/root-acceptance.json`）。root独立12+4项测试和typecheck:all通过；这次不执行返回代码、不调用Arena、不证明题目已完成，不参与Monad或Magpie。能力标签来自宿主策略，不是模型能力测试结果。
+
+### Scoped economic admission
+
+New Hosted snapshots freeze a versioned minimum settlement contribution, full execution quote, allocated planning cost and borrowing-fee bound. Old snapshots keep their original policy and signed digest. See [Tempo economics](../../docs/ECONOMICS.md): PathUSD chain fees remain unknown/excluded, and unsupported type0x76 signed payments fail closed before broadcast. No expected profit or model suggestion grants spending authority.

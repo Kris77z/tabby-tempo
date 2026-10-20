@@ -202,6 +202,23 @@ test("sealed service rejects every new child while preserving original admitted 
   assert.equal((await f.run()).status, "Succeeded"); await f.run(); assert.equal(dispatches, 1); assert.deepEqual((await f.state()).boundedGames, admissions);
 });
 
+test("sealed unused parent is rejected before any run, reservation or admission is persisted", async t => {
+  const f = await fixture(t); let executions = 0;
+  f.config.boundedGamesSealed = true; await f.restart();
+  f.plan(async () => { executions++; return completed; });
+  const database = await readFile(f.database, "utf8"), mirror = await readFile(f.mirror, "utf8");
+  await assert.rejects(f.service.create(f.owner, { ...settings, requestId: f.grant.parentRequestId }), /HOSTED_BOUNDED_PARENT_SEALED/);
+  assert.equal(await readFile(f.database, "utf8"), database);
+  for (const action of ["autonomous", "task", "game"] as const) {
+    await assert.rejects(f.service.command(f.owner, f.actors[0].id, { action, requestId: f.grant.parentRequestId,
+      ...(action === "game" ? { rewardKind: "llm-credits" as const } : {}) }), /HOSTED_BOUNDED_PARENT_SEALED/);
+    assert.equal(await readFile(f.database, "utf8"), database); assert.equal(await readFile(f.mirror, "utf8"), mirror);
+  }
+  await f.restart();
+  await assert.rejects(f.run(), /HOSTED_BOUNDED_PARENT_SEALED/); assert.equal(executions, 0);
+  assert.equal((await f.state()).runs.some((run: any) => run.requestId === f.grant.parentRequestId), false);
+});
+
 test("bounded admission history rejects a second parent, duplicate child, changed ordinal or out-of-window timestamp", async t => {
   const f = await fixture(t), child = randomUUID();
   const row = { parentRequestId: f.grant.parentRequestId, childRequestId: child, agentId: f.actors[0].id, ordinal: 1, admittedAt: new Date().toISOString(), rewardKind: "llm-credits" as const };

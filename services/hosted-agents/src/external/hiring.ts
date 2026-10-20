@@ -10,6 +10,7 @@ import { taskPrivateFile } from "../../../../packages/pi-loop/src/task-runner/co
 import type { HostedTaskExecutorConfig } from "../task-executor.js";
 import type { HostedExecution } from "../types.js";
 import { externalDigest, readExternalServiceChainMetadata, type ExternalServiceSnapshot } from "./registry.js";
+import { goalProtocolContext } from "../goals/protocol-context.js";
 
 export interface ExternalHireState {
   version: 1; binding: string; stage: string; service: ExternalServiceSnapshot;
@@ -29,7 +30,7 @@ export function prepareExternalHire(mission: GoalState, service: ExternalService
     assignment.originalGoal !== mission.input.goal || !assignment.stage || assignment.stage.length > 100) throw new Error("HOSTED_EXTERNAL_ASSIGNMENT_INVALID");
   const profile = specialistPrompt(assignment.taskType, specialistSystem, mission.input.chainId);
   const { stage, taskType: _taskType, ...context } = assignment;
-  const user = JSON.stringify(context);
+  const user = JSON.stringify({ ...context, protocolContext: goalProtocolContext });
   if (Buffer.byteLength(JSON.stringify({ system: profile.system, user })) > 112000) throw new Error("HOSTED_GOAL_INPUT_TOO_LARGE");
   const trust = service.trust;
   const route: GoalModelRoute = { id: trust.modelId, relayUrl: trust.endpoint, provider: trust.provider,

@@ -7,8 +7,9 @@ import { Contract, Interface, JsonRpcProvider, Transaction, Wallet, ZeroAddress,
 import { ACCOUNT_ABI, MANAGER_ABI, canonical, sameAddress, uint, type Json } from "@agentfuel/sdk";
 import { IdentityRegistry, IDENTITY_ABI, registrationFromReceipt } from "@agentfuel/erc8004/identity";
 import type { DockerExecutor } from "@agentfuel/arena/docker";
-import { readWorkflowStatus, runTaskWorkflow, validateWorkflowConfig, type WorkflowConfig, type WorkflowSession, type WorkflowStatus, type WorkflowOptions } from "@agentfuel/pi-loop/workflow";
+import { readWorkflowStatus, runTaskWorkflow, previewTaskWorkflow, taskAdmissionReason, validateWorkflowConfig, type WorkflowConfig, type WorkflowSession, type WorkflowStatus, type WorkflowOptions } from "@agentfuel/pi-loop/workflow";
 import { SessionStore } from "@agentfuel/pi-loop/session";
+import { hostedTaskEconomics } from "../../../packages/pi-loop/src/economics.js";
 import { taskLoopbackUrl, taskPrivateFile } from "../../../packages/pi-loop/src/task-runner/config.js";
 import { chainRpcProvider, type RpcTransport } from "../../../scripts/demo-rpc.js";
 import { journalDiagnostic, type JournalDiagnostic } from "../../../scripts/demo-common.js";
@@ -37,7 +38,7 @@ interface Snapshot {
   agent: string; owner: string; wallet: string; request: string; action: "provision" | "deposit" | "task" | "reward-task" | "metered-task"; reservedRaw: string; amountRaw?: string;
   settings: AgentSettings; config: HostedTaskExecutorConfig; workflow: WorkflowConfig; physicalModels: HostedTaskModel["physicalModels"]; fundingFor?: string;
 }
-interface ExecutorState { version: 1; snapshot: Snapshot; binding: string; transactions: Record<string, RecordedTransaction>; agentId?: string; result?: HostedResult; suspended?: WalletSlot;
+interface ExecutorState { admission?: import("../../../packages/pi-loop/src/selector.js").SelectionDecision; version: 1; snapshot: Snapshot; binding: string; transactions: Record<string, RecordedTransaction>; agentId?: string; result?: HostedResult; suspended?: WalletSlot;
   failures?: { observedAt: string; reason: string; diagnostic: JournalDiagnostic; rpcMethod?: string; selector?: string }[] }
 interface WalletSlot { chainId: string; signer: string; account: string; directory: string; binding: string; phase: string }
 interface GuardianSlot { directory?: string; hash?: string }
@@ -165,6 +166,12 @@ export class HostedTaskExecutor implements HostedExecutor {
     } else if (input.run.action === "deposit") {
       if (!agent.binding || agent.binding.chainId !== workflow.chainId || !sameAddress(agent.binding.wallet, agent.wallet) || reserved !== 0n || BigInt(amount(input.run.amountRaw)) === 0n) fail("HOSTED_DEPOSIT_BINDING_INVALID");
     } else if (agent.binding || reserved !== 0n) fail("HOSTED_PROVISION_BINDING_INVALID");
+    if (["task", "metered-task", "reward-task"].includes(input.run.action)) {
+      const planning = input.taskEconomics;
+      if (planning !== undefined && (!planning || typeof planning !== "object" || Array.isArray(planning) || planning.version !== 1 || Object.keys(planning).sort().join(",") !== "planningCostRaw,version")) fail("INVALID_TASK_ECONOMICS");
+      workflow.economics = hostedTaskEconomics(planning ? amount(planning.planningCostRaw) : "0",
+        input.run.action === "reward-task" ? "0" : input.run.action === "metered-task" ? this.config.metered!.priceRaw : undefined);
+    }
     validateWorkflowConfig(workflow);
     return { agent: agent.id, owner: agent.owner, wallet: getAddress(agent.wallet), request: input.run.requestId, action: input.run.action as Snapshot["action"], reservedRaw: input.run.reservedRaw, ...(input.run.action === "deposit" ? { amountRaw: input.run.amountRaw } : {}), settings,
       config: structuredClone(this.config), workflow, physicalModels: structuredClone(model.physicalModels), ...(input.run.fundingFor ? { fundingFor: input.run.fundingFor } : {}) };
@@ -403,6 +410,14 @@ export class HostedTaskExecutor implements HostedExecutor {
         if (["task", "reward-task", "metered-task"].includes(snapshot.action) && await readWorkflowStatus(directory)) {
           const existing = JSON.parse(await readFile(join(directory, "session.json"), "utf8")) as WorkflowSession;
           pendingPayment = !!(existing.handle?.submission || existing.child?.inference || existing.rewardChild?.submission);
+        }
+        if (workflow.economics && !await readWorkflowStatus(directory)) {
+          const { decision } = await previewTaskWorkflow(workflow, rpc, Boolean(config.underwriterUrl));
+          if (!decision.selected) {
+            state.admission = structuredClone(decision);
+            state.result = { phase: "Stopped", terminal: true, success: false, chargedRaw: "0", reason: taskAdmissionReason(decision) };
+            await walletSlot("Failed"); await save(); return structuredClone(state.result);
+          }
         }
         // Paid/uncertain requests must still reach the existing workflow's read-only refund/chain-termination recovery,
         // including when a default has frozen the Agent. They must never trigger a new policy transaction.

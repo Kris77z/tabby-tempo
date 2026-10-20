@@ -6,7 +6,7 @@ import { DockerExecutor } from "@agentfuel/arena/docker";
 import { publicSampleFor, testPublicSample, type SampleResult } from "./public-sample.js";
 import { validateSolveSpec, type SolveSpec, type ProviderSolveState } from "./provider.js";
 import { SessionStore } from "./session.js";
-import { submitProgrammingCandidate, type SubmissionState, type SubmissionConfig } from "./submission.js";
+import { submitProgrammingCandidate, type SubmissionState, type SubmissionConfig, type SubmissionRecoveryPermission } from "./submission.js";
 
 export interface FixedTaskConfig extends SubmissionConfig {
   account: string; asset: string; provider: string; relayUrl: string; underwriterUrl: string; maxServicePrice: string; solve: SolveSpec;
@@ -18,7 +18,7 @@ export interface FixedTaskSession extends SubmissionState {
 }
 export interface TaskExecutionProgress { phase: string; reason?: string }
 export interface ConfirmedTaskPayment { paymentId: string; txHash: string; fromCash: string; fromCredit: string; price: string }
-export interface FixedTaskOptions { signer: Signer; provider?: JsonRpcProvider; runner?: DockerExecutor; recoverLock?: boolean; timeoutMs?: number; pollTimeoutMs?: number;
+export interface FixedTaskOptions { submissionRecovery?: SubmissionRecoveryPermission; signer: Signer; provider?: JsonRpcProvider; runner?: DockerExecutor; recoverLock?: boolean; timeoutMs?: number; pollTimeoutMs?: number;
   onProgress?: (progress: TaskExecutionProgress) => Promise<void>;
   onPayment?: (payment: ConfirmedTaskPayment) => Promise<void>;
   onHandle?: (handle: PaymentHandle) => Promise<void> | void; beforePayment?: (handle: PaymentHandle) => Promise<void> | void }

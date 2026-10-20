@@ -1,5 +1,5 @@
 import { Contract, Wallet, Interface, Transaction, keccak256 } from "ethers";
-import { InferCredit, PaymentError, ACCOUNT_ABI, type Json } from "@agentfuel/sdk";
+import { InferCredit, PaymentError, InferenceControlError, ACCOUNT_ABI, type Json } from "@agentfuel/sdk";
 import { confirmPaidDelivery } from "@agentfuel/pi-loop/fixed-task";
 import { taskPrivateFile } from "../../../../packages/pi-loop/src/task-runner/config.js";
 import { openHostedPlannerConnection } from "../autonomy-executor.js";
@@ -68,7 +68,7 @@ export async function paidGoalCall(config:HostedTaskExecutorConfig,state:GoalSta
       // Only canonical policy resolution plus no signed SDK payment establishes
       // that cancellation cannot leave a chain write or payment outstanding.
       if(!call.handle?.submission&&!call.inference){call.unpaid=true;await save();}
-      throw new Error(reason);
+      throw new InferenceControlError(reason === "HOSTED_GOAL_CANCELLED" ? "cancelled" : reason === "HOSTED_AGENT_PAUSED" ? "paused" : "deadline");
     }
   };
   try{
@@ -132,7 +132,7 @@ export async function paidGoalCall(config:HostedTaskExecutorConfig,state:GoalSta
       }
       sdk=new InferCredit({agentId:state.input.chainAgentId,signer:wallet,chainId:BigInt(state.input.chainId),account:template.account,asset:template.asset,
         provider:route.provider,maxPrice:BigInt(route.priceRaw),timeoutMs:config.timeoutMs??120000,
-        onHandle:async handle=>{if(handle.input.taskId!=="0"||call.handle&&call.handle.quote.paymentId!==handle.quote.paymentId)throw new Error("HOSTED_GOAL_BINDING_CHANGED");call.handle=structuredClone(handle);await save();await input.activity?.({scene:"model",state:"waiting",phaseId:call.stage,evidence:{paymentId:handle.quote.paymentId,priceRaw:handle.quote.price,...(handle.submission?{txHash:handle.submission.txHash}:{})}});},beforePayment:async()=>{await guard();await input.activity?.({scene:"funding",state:"waiting",phaseId:call.stage,evidence:{priceRaw:route.priceRaw,...(call.handle?{paymentId:call.handle.quote.paymentId}:{})}});}});
+        onHandle:async handle=>{if(handle.input.taskId!=="0"||call.handle&&call.handle.quote.paymentId!==handle.quote.paymentId)throw new Error("HOSTED_GOAL_BINDING_CHANGED");call.handle=structuredClone(handle);await save();await input.activity?.({scene:"model",state:"waiting",phaseId:call.stage,evidence:{paymentId:handle.quote.paymentId,priceRaw:handle.quote.price,...(handle.submission?{txHash:handle.submission.txHash}:{})}});},beforeDispatch:async()=>guard(),beforePayment:async()=>{await guard();await input.activity?.({scene:"funding",state:"waiting",phaseId:call.stage,evidence:{priceRaw:route.priceRaw,...(call.handle?{paymentId:call.handle.quote.paymentId}:{})}});}});
       call.started=true;await save();
       call.inference=call.handle?await sdk.resume(call.handle):await sdk.fetch(route.relayUrl,{body:{service:route.service,model:route.model,messages:call.messages as unknown as Json[],max_completion_tokens:call.max_completion_tokens,thinking:{type:"disabled"}}});await save();
     }
@@ -152,10 +152,11 @@ export async function paidGoalCall(config:HostedTaskExecutorConfig,state:GoalSta
     const deliveryError=result?.model!==(route.responseModel??route.physicalModel)?"HOSTED_GOAL_MODEL_CHANGED":!validUsage?"HOSTED_GOAL_OUTPUT_INVALID":undefined;
     return{text:result?.choices?.[0]?.message?.content??"",chargedRaw:receipt.fromCash,promptTokens:validUsage?result.usage!.prompt_tokens!:0,completionTokens:validUsage?result.usage!.completion_tokens!:0,paymentId:receipt.paymentId,txHash:receipt.txHash,...(deliveryError?{deliveryError}:{})};
   }catch(error){
+    if(error instanceof InferenceControlError&&call.firstControlError===undefined){call.firstControlError=error.reason;await save();}
     // Persist only the first recognized SDK code before any observer can throw.
     // Messages, stack traces and arbitrary relay-provided codes are never saved.
     if(error instanceof PaymentError&&call.firstPaymentErrorCode===undefined&&GOAL_PAYMENT_ERROR_CODES.includes(error.code as GoalPaymentErrorCode)){
-      call.firstPaymentErrorCode=error.code as GoalPaymentErrorCode;await save();
+      call.firstPaymentErrorCode=error.code as GoalPaymentErrorCode;if(error.safeCause)call.firstPaymentErrorCause=error.safeCause;await save();
     }
     // Record canonical cash movement even when the vendor/relay response is lost.
     // Recovery never invents a new quote and never redispatches a refunded call.
@@ -165,6 +166,7 @@ export async function paidGoalCall(config:HostedTaskExecutorConfig,state:GoalSta
       catch{/* Preserve unresolved reservation if any evidence cannot be confirmed. */}
       if(call.recovery?.resolved)throw new Error(call.recovery.voided?"HOSTED_GOAL_PAYMENT_VOIDED":call.recovery.reverted?"HOSTED_GOAL_PAYMENT_REVERTED":"HOSTED_GOAL_UNDELIVERED_REFUNDED");
     }
+    if(error instanceof InferenceControlError)throw new Error(error.reason==="paused"?"HOSTED_AGENT_PAUSED":error.reason==="cancelled"?"HOSTED_GOAL_CANCELLED":"HOSTED_GOAL_DEADLINE");
     throw error;
   }finally{sdk?.close();connection.close();}
 }

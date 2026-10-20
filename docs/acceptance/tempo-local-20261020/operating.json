@@ -1,0 +1,1067 @@
+{
+  "version": 1,
+  "demonstration": "controlled-offline-operating-report",
+  "observedAt": "2026-10-17T00:00:00.000Z",
+  "currency": "USDC",
+  "decimals": 6,
+  "scope": {
+    "controlledFixtures": true,
+    "fixtureContainsSyntheticSignedEnvelopes": true,
+    "productionRead": false,
+    "productionWrite": false,
+    "externalRpcCalls": 0,
+    "modelCalls": 0,
+    "signedTransactions": 0,
+    "broadcastTransactions": 0,
+    "profitCalibrated": false,
+    "operatorObservations": "explicit-operator-declarations-only",
+    "evidenceDigest": "reference-only-not-authenticated-invoice",
+    "exclusions": [
+      "native-gas",
+      "token-valuation",
+      "unobserved-costs",
+      "global-private-books"
+    ]
+  },
+  "contribution": {
+    "version": 1,
+    "agentId": "22222222-2222-4222-8222-222222222222",
+    "observedAt": "2026-10-17T00:00:00.000Z",
+    "currency": "USDC",
+    "decimals": 6,
+    "mode": "read-only",
+    "scope": "owner-agent-contribution",
+    "status": "partial",
+    "agent": {
+      "taskRevenueRaw": "1400000",
+      "netServiceCostRaw": "180000",
+      "refundsRaw": "20000",
+      "borrowingFeeRaw": "15000",
+      "settlementOperatingRaw": "1205000",
+      "actualProfitRaw": null,
+      "ownerCapitalRaw": "1000000",
+      "startupCapitalRaw": "200000",
+      "loanPrincipalRaw": "100000",
+      "gaps": [
+        "OPERATING_HOSTING_COST_UNRECORDED",
+        "OPERATING_CHAIN_FEES_UNRECORDED"
+      ]
+    },
+    "platform": {
+      "scope": "this-agent-only",
+      "derivedProtocolFeeRaw": "100000",
+      "knownDerivedProtocolFeeRaw": "100000",
+      "creditFeeSettledRaw": "15000",
+      "knownCreditFeeSettledRaw": "15000",
+      "creditFeeRecipient": "credit-vault",
+      "treasuryReceiptsRaw": null,
+      "actualProfitRaw": null,
+      "gaps": [
+        "OPERATING_CHAIN_FEES_UNRECORDED",
+        "OPERATING_HOSTING_COST_UNRECORDED",
+        "OPERATING_PROTOCOL_FEE_RECEIPT_NOT_RETAINED",
+        "OPERATING_TREASURY_RECEIPTS_UNCONFIRMED"
+      ]
+    },
+    "suppliers": {
+      "scope": "this-agent-only",
+      "grossReceiptsRaw": "200000",
+      "refundsRaw": "20000",
+      "netReceiptsRaw": "180000",
+      "unattributedNetServiceCostRaw": "0",
+      "actualProfitRaw": null,
+      "rows": [
+        {
+          "routeBinding": "3ca3ddc0f43949ab813b5e3d979486c4b0e518717d37c33d2fbc09dafed6ce4f",
+          "providerId": "controlled-supplier",
+          "payTo": "0x4444444444444444444444444444444444444444",
+          "chainId": "31337",
+          "account": "0x1111111111111111111111111111111111111111",
+          "asset": "0x2222222222222222222222222222222222222222",
+          "service": "infercredit/solve-fixed",
+          "model": "pi-fixed-v1",
+          "grossReceiptsRaw": "200000",
+          "refundsRaw": "20000",
+          "netReceiptsRaw": "180000",
+          "paymentCount": 2,
+          "actualProfitRaw": null
+        }
+      ],
+      "gaps": [
+        "OPERATING_CHAIN_FEES_UNRECORDED",
+        "OPERATING_HOSTING_COST_UNRECORDED",
+        "OPERATING_SUPPLIER_COST_UNRECORDED",
+        "OPERATING_UPSTREAM_COST_UNRECORDED"
+      ]
+    },
+    "subsidy": {
+      "gameUsdcGrantedRaw": "400000",
+      "startupCapitalGrantedRaw": "200000",
+      "gameDistributionOutflowRaw": "400000",
+      "distributionScope": "recorded-game-rewards-to-this-agent",
+      "startupCapitalSource": "unattributed-capital",
+      "usdcAttributedConsumptionRaw": null,
+      "usdcGrantRemainingRaw": null,
+      "rewardTokensGranted": 10000,
+      "inferenceTokensUsed": 215,
+      "rewardTokensConsumed": null,
+      "rewardTokensRemaining": null,
+      "tokenUsageScope": "paid-and-reward-mix-unknown",
+      "gaps": [
+        "OPERATING_CASH_ALLOCATION_UNKNOWN",
+        "OPERATING_REWARD_TOKEN_ALLOCATION_UNKNOWN",
+        "OPERATING_STARTUP_CAPITAL_SOURCE_UNKNOWN"
+      ]
+    },
+    "cash": {
+      "status": "confirmed",
+      "cashRaw": "1000000",
+      "financeObservedAt": "2026-10-17T00:00:00.000Z",
+      "pendingReservationsRaw": "0",
+      "outstandingDebtRaw": "100000",
+      "reserveCashRaw": "0",
+      "spendableCashRaw": "900000",
+      "shortfallRaw": "0",
+      "creditIncluded": false
+    },
+    "scenario": null,
+    "runway": {
+      "source": "none",
+      "scope": "agent-spendable-cash",
+      "availableRaw": "900000",
+      "burnAmountRaw": null,
+      "burnWindowMs": null,
+      "status": "unknown",
+      "horizonMs": null,
+      "fullTasks": null,
+      "reasons": [
+        "OPERATING_BURN_ASSUMPTION_REQUIRED"
+      ]
+    },
+    "consolidation": {
+      "externalRevenueRaw": null,
+      "roleTotalsAdditive": false,
+      "gaps": [
+        "OPERATING_ROLE_OVERLAP_UNKNOWN"
+      ]
+    },
+    "coverage": {
+      "scope": "retained-hosted-history",
+      "since": "2026-10-17T00:00:00.000Z",
+      "runCount": 7,
+      "entryCount": 7,
+      "pendingCount": 0,
+      "incompleteCount": 0,
+      "returnedEntryCount": 7,
+      "entriesTruncated": false,
+      "uncoveredSpentRaw": "0",
+      "reasons": [],
+      "roleEntriesTruncated": false
+    },
+    "gaps": [
+      "OPERATING_BURN_ASSUMPTION_REQUIRED",
+      "OPERATING_CASH_ALLOCATION_UNKNOWN",
+      "OPERATING_CHAIN_FEES_UNRECORDED",
+      "OPERATING_HOSTING_COST_UNRECORDED",
+      "OPERATING_PROTOCOL_FEE_RECEIPT_NOT_RETAINED",
+      "OPERATING_REWARD_TOKEN_ALLOCATION_UNKNOWN",
+      "OPERATING_ROLE_OVERLAP_UNKNOWN",
+      "OPERATING_STARTUP_CAPITAL_SOURCE_UNKNOWN",
+      "OPERATING_SUPPLIER_COST_UNRECORDED",
+      "OPERATING_TREASURY_RECEIPTS_UNCONFIRMED",
+      "OPERATING_UPSTREAM_COST_UNRECORDED"
+    ]
+  },
+  "operatorDeclarations": {
+    "platform": {
+      "version": 1,
+      "source": "operator-declared",
+      "role": "platform",
+      "subjectId": "controlled-platform",
+      "currency": "USDC",
+      "decimals": 6,
+      "period": {
+        "from": "2026-10-16T00:00:00.000Z",
+        "to": "2026-10-17T00:00:00.000Z"
+      },
+      "evidenceDigest": "9c56063225fe8dfd880cc1682d303fd2e5dc9653bb559bc0604b754368d21d03",
+      "reportedNetReceiptsRaw": "100000",
+      "reportedContributionRaw": "-500000",
+      "actualProfitRaw": null,
+      "subsidy": {
+        "grantedRaw": "400000",
+        "explicitlyAllocatedRaw": "150000",
+        "unallocatedGrantRaw": "250000",
+        "unpaidCommittedRaw": "0",
+        "budgetRaw": "1000000",
+        "remainingBudgetRaw": "600000",
+        "budgetShortfallRaw": "0",
+        "budgetRunway": {
+          "source": "operator-declared",
+          "scope": "game-subsidy-distribution-budget",
+          "availableRaw": "600000",
+          "burnAmountRaw": "50000",
+          "burnWindowMs": 86400000,
+          "status": "finite",
+          "horizonMs": "1036800000",
+          "fullTasks": null,
+          "reasons": []
+        }
+      },
+      "runway": {
+        "source": "operator-declared",
+        "scope": "operator-cash",
+        "availableRaw": "600000",
+        "burnAmountRaw": "100000",
+        "burnWindowMs": 86400000,
+        "status": "finite",
+        "horizonMs": "518400000",
+        "fullTasks": "12",
+        "reasons": []
+      },
+      "gaps": [
+        "OPERATING_OPERATOR_DECLARATION_UNVERIFIED"
+      ]
+    },
+    "supplier": {
+      "version": 1,
+      "source": "operator-declared",
+      "role": "supplier",
+      "subjectId": "controlled-supplier",
+      "currency": "USDC",
+      "decimals": 6,
+      "period": {
+        "from": "2026-10-16T00:00:00.000Z",
+        "to": "2026-10-17T00:00:00.000Z"
+      },
+      "evidenceDigest": "28ab4380b85d0ea6e9d68a865a42c441ae029b361d4c602bce105615dc3a0d5b",
+      "reportedNetReceiptsRaw": "180000",
+      "reportedContributionRaw": "50000",
+      "actualProfitRaw": null,
+      "subsidy": {
+        "grantedRaw": null,
+        "explicitlyAllocatedRaw": null,
+        "unallocatedGrantRaw": null,
+        "unpaidCommittedRaw": "0",
+        "budgetRaw": null,
+        "remainingBudgetRaw": null,
+        "budgetShortfallRaw": null,
+        "budgetRunway": null
+      },
+      "runway": {
+        "source": "operator-declared",
+        "scope": "operator-cash",
+        "availableRaw": "600000",
+        "burnAmountRaw": "100000",
+        "burnWindowMs": 86400000,
+        "status": "finite",
+        "horizonMs": "518400000",
+        "fullTasks": "12",
+        "reasons": []
+      },
+      "gaps": [
+        "OPERATING_OPERATOR_DECLARATION_UNVERIFIED"
+      ]
+    },
+    "netPositive": {
+      "version": 1,
+      "source": "operator-declared",
+      "role": "supplier",
+      "subjectId": "controlled-supplier",
+      "currency": "USDC",
+      "decimals": 6,
+      "period": {
+        "from": "2026-10-16T00:00:00.000Z",
+        "to": "2026-10-17T00:00:00.000Z"
+      },
+      "evidenceDigest": "28ab4380b85d0ea6e9d68a865a42c441ae029b361d4c602bce105615dc3a0d5b",
+      "reportedNetReceiptsRaw": "180000",
+      "reportedContributionRaw": "50000",
+      "actualProfitRaw": null,
+      "subsidy": {
+        "grantedRaw": null,
+        "explicitlyAllocatedRaw": null,
+        "unallocatedGrantRaw": null,
+        "unpaidCommittedRaw": "0",
+        "budgetRaw": null,
+        "remainingBudgetRaw": null,
+        "budgetShortfallRaw": null,
+        "budgetRunway": null
+      },
+      "runway": {
+        "source": "operator-declared",
+        "scope": "operator-cash",
+        "availableRaw": "600000",
+        "burnAmountRaw": "0",
+        "burnWindowMs": 86400000,
+        "status": "zero-burn",
+        "horizonMs": null,
+        "fullTasks": null,
+        "reasons": [
+          "OPERATING_ZERO_BURN_NO_FINITE_HORIZON"
+        ]
+      },
+      "gaps": [
+        "OPERATING_OPERATOR_DECLARATION_UNVERIFIED"
+      ]
+    },
+    "unknown": {
+      "version": 1,
+      "source": "operator-declared",
+      "role": "platform",
+      "subjectId": "controlled-platform",
+      "currency": "USDC",
+      "decimals": 6,
+      "period": {
+        "from": "2026-10-16T00:00:00.000Z",
+        "to": "2026-10-17T00:00:00.000Z"
+      },
+      "evidenceDigest": "9c56063225fe8dfd880cc1682d303fd2e5dc9653bb559bc0604b754368d21d03",
+      "reportedNetReceiptsRaw": "100000",
+      "reportedContributionRaw": "-100000",
+      "actualProfitRaw": null,
+      "subsidy": {
+        "grantedRaw": null,
+        "explicitlyAllocatedRaw": null,
+        "unallocatedGrantRaw": null,
+        "unpaidCommittedRaw": "0",
+        "budgetRaw": null,
+        "remainingBudgetRaw": null,
+        "budgetShortfallRaw": null,
+        "budgetRunway": null
+      },
+      "runway": {
+        "source": "operator-declared",
+        "scope": "operator-cash",
+        "availableRaw": "600000",
+        "burnAmountRaw": null,
+        "burnWindowMs": null,
+        "status": "unknown",
+        "horizonMs": null,
+        "fullTasks": null,
+        "reasons": [
+          "OPERATING_BURN_ASSUMPTION_REQUIRED"
+        ]
+      },
+      "gaps": [
+        "OPERATING_OPERATOR_DECLARATION_UNVERIFIED"
+      ]
+    }
+  },
+  "runway": {
+    "finite": {
+      "source": "owner-hypothetical",
+      "scope": "agent-spendable-cash",
+      "availableRaw": "700000",
+      "burnAmountRaw": "100000",
+      "burnWindowMs": 86400000,
+      "status": "finite",
+      "horizonMs": "604800000",
+      "fullTasks": "14",
+      "reasons": []
+    },
+    "zeroBurn": {
+      "source": "owner-hypothetical",
+      "scope": "agent-spendable-cash",
+      "availableRaw": "700000",
+      "burnAmountRaw": "0",
+      "burnWindowMs": 86400000,
+      "status": "zero-burn",
+      "horizonMs": null,
+      "fullTasks": null,
+      "reasons": [
+        "OPERATING_ZERO_BURN_NO_FINITE_HORIZON"
+      ]
+    },
+    "unknown": {
+      "source": "none",
+      "scope": "agent-spendable-cash",
+      "availableRaw": "900000",
+      "burnAmountRaw": null,
+      "burnWindowMs": null,
+      "status": "unknown",
+      "horizonMs": null,
+      "fullTasks": null,
+      "reasons": [
+        "OPERATING_BURN_ASSUMPTION_REQUIRED"
+      ]
+    },
+    "subsidyBudget": {
+      "source": "owner-hypothetical",
+      "scope": "game-subsidy-distribution-budget",
+      "availableRaw": "200000",
+      "burnAmountRaw": "50000",
+      "burnWindowMs": 86400000,
+      "status": "finite",
+      "horizonMs": "345600000",
+      "fullTasks": null,
+      "reasons": []
+    },
+    "noSubsidyBurn": {
+      "source": "owner-hypothetical",
+      "scope": "game-subsidy-distribution-budget",
+      "availableRaw": "200000",
+      "burnAmountRaw": null,
+      "burnWindowMs": null,
+      "status": "unknown",
+      "horizonMs": null,
+      "fullTasks": null,
+      "reasons": [
+        "OPERATING_BURN_ASSUMPTION_REQUIRED"
+      ]
+    }
+  },
+  "ownerHypothetical": {
+    "version": 1,
+    "agentId": "22222222-2222-4222-8222-222222222222",
+    "observedAt": "2026-10-17T00:00:00.000Z",
+    "currency": "USDC",
+    "decimals": 6,
+    "mode": "read-only",
+    "scope": "owner-agent-contribution",
+    "status": "partial",
+    "agent": {
+      "taskRevenueRaw": "1400000",
+      "netServiceCostRaw": "180000",
+      "refundsRaw": "20000",
+      "borrowingFeeRaw": "15000",
+      "settlementOperatingRaw": "1205000",
+      "actualProfitRaw": null,
+      "ownerCapitalRaw": "1000000",
+      "startupCapitalRaw": "200000",
+      "loanPrincipalRaw": "100000",
+      "gaps": [
+        "OPERATING_HOSTING_COST_UNRECORDED",
+        "OPERATING_CHAIN_FEES_UNRECORDED"
+      ]
+    },
+    "platform": {
+      "scope": "this-agent-only",
+      "derivedProtocolFeeRaw": "100000",
+      "knownDerivedProtocolFeeRaw": "100000",
+      "creditFeeSettledRaw": "15000",
+      "knownCreditFeeSettledRaw": "15000",
+      "creditFeeRecipient": "credit-vault",
+      "treasuryReceiptsRaw": null,
+      "actualProfitRaw": null,
+      "gaps": [
+        "OPERATING_CHAIN_FEES_UNRECORDED",
+        "OPERATING_HOSTING_COST_UNRECORDED",
+        "OPERATING_PROTOCOL_FEE_RECEIPT_NOT_RETAINED",
+        "OPERATING_TREASURY_RECEIPTS_UNCONFIRMED"
+      ]
+    },
+    "suppliers": {
+      "scope": "this-agent-only",
+      "grossReceiptsRaw": "200000",
+      "refundsRaw": "20000",
+      "netReceiptsRaw": "180000",
+      "unattributedNetServiceCostRaw": "0",
+      "actualProfitRaw": null,
+      "rows": [
+        {
+          "routeBinding": "3ca3ddc0f43949ab813b5e3d979486c4b0e518717d37c33d2fbc09dafed6ce4f",
+          "providerId": "controlled-supplier",
+          "payTo": "0x4444444444444444444444444444444444444444",
+          "chainId": "31337",
+          "account": "0x1111111111111111111111111111111111111111",
+          "asset": "0x2222222222222222222222222222222222222222",
+          "service": "infercredit/solve-fixed",
+          "model": "pi-fixed-v1",
+          "grossReceiptsRaw": "200000",
+          "refundsRaw": "20000",
+          "netReceiptsRaw": "180000",
+          "paymentCount": 2,
+          "actualProfitRaw": null
+        }
+      ],
+      "gaps": [
+        "OPERATING_CHAIN_FEES_UNRECORDED",
+        "OPERATING_HOSTING_COST_UNRECORDED",
+        "OPERATING_SUPPLIER_COST_UNRECORDED",
+        "OPERATING_UPSTREAM_COST_UNRECORDED"
+      ]
+    },
+    "subsidy": {
+      "gameUsdcGrantedRaw": "400000",
+      "startupCapitalGrantedRaw": "200000",
+      "gameDistributionOutflowRaw": "400000",
+      "distributionScope": "recorded-game-rewards-to-this-agent",
+      "startupCapitalSource": "unattributed-capital",
+      "usdcAttributedConsumptionRaw": null,
+      "usdcGrantRemainingRaw": null,
+      "rewardTokensGranted": 10000,
+      "inferenceTokensUsed": 215,
+      "rewardTokensConsumed": null,
+      "rewardTokensRemaining": null,
+      "tokenUsageScope": "paid-and-reward-mix-unknown",
+      "gaps": [
+        "OPERATING_CASH_ALLOCATION_UNKNOWN",
+        "OPERATING_REWARD_TOKEN_ALLOCATION_UNKNOWN",
+        "OPERATING_STARTUP_CAPITAL_SOURCE_UNKNOWN"
+      ]
+    },
+    "cash": {
+      "status": "confirmed",
+      "cashRaw": "1000000",
+      "financeObservedAt": "2026-10-17T00:00:00.000Z",
+      "pendingReservationsRaw": "0",
+      "outstandingDebtRaw": "100000",
+      "reserveCashRaw": "200000",
+      "spendableCashRaw": "700000",
+      "shortfallRaw": "0",
+      "creditIncluded": false
+    },
+    "scenario": {
+      "source": "owner-hypothetical",
+      "recurringCostRaw": "50000",
+      "settlementOperatingAfterAssumedCostRaw": "1155000",
+      "costScope": "retained-history-period",
+      "costPeriod": {
+        "from": "2026-10-17T00:00:00.000Z",
+        "to": "2026-10-17T00:00:00.000Z"
+      },
+      "subsidyBudgetRaw": "600000",
+      "subsidyBudgetRemainingRaw": "200000",
+      "subsidyBudgetShortfallRaw": "0",
+      "subsidyBudgetRunway": {
+        "source": "owner-hypothetical",
+        "scope": "game-subsidy-distribution-budget",
+        "availableRaw": "200000",
+        "burnAmountRaw": "50000",
+        "burnWindowMs": 86400000,
+        "status": "finite",
+        "horizonMs": "345600000",
+        "fullTasks": null,
+        "reasons": []
+      }
+    },
+    "runway": {
+      "source": "owner-hypothetical",
+      "scope": "agent-spendable-cash",
+      "availableRaw": "700000",
+      "burnAmountRaw": "100000",
+      "burnWindowMs": 86400000,
+      "status": "finite",
+      "horizonMs": "604800000",
+      "fullTasks": "14",
+      "reasons": []
+    },
+    "consolidation": {
+      "externalRevenueRaw": null,
+      "roleTotalsAdditive": false,
+      "gaps": [
+        "OPERATING_ROLE_OVERLAP_UNKNOWN"
+      ]
+    },
+    "coverage": {
+      "scope": "retained-hosted-history",
+      "since": "2026-10-17T00:00:00.000Z",
+      "runCount": 7,
+      "entryCount": 7,
+      "pendingCount": 0,
+      "incompleteCount": 0,
+      "returnedEntryCount": 7,
+      "entriesTruncated": false,
+      "uncoveredSpentRaw": "0",
+      "reasons": [],
+      "roleEntriesTruncated": false
+    },
+    "gaps": [
+      "OPERATING_CASH_ALLOCATION_UNKNOWN",
+      "OPERATING_CHAIN_FEES_UNRECORDED",
+      "OPERATING_HOSTING_COST_UNRECORDED",
+      "OPERATING_PROTOCOL_FEE_RECEIPT_NOT_RETAINED",
+      "OPERATING_REWARD_TOKEN_ALLOCATION_UNKNOWN",
+      "OPERATING_ROLE_OVERLAP_UNKNOWN",
+      "OPERATING_STARTUP_CAPITAL_SOURCE_UNKNOWN",
+      "OPERATING_SUPPLIER_COST_UNRECORDED",
+      "OPERATING_TREASURY_RECEIPTS_UNCONFIRMED",
+      "OPERATING_UPSTREAM_COST_UNRECORDED"
+    ]
+  },
+  "duplicatePayment": {
+    "status": "partial",
+    "netServiceCostRaw": "180000",
+    "refundsRaw": "20000",
+    "loanPrincipalRaw": "100000",
+    "supplierReceiptsRaw": "180000",
+    "gaps": [
+      "ACCOUNTING_DUPLICATE_PAYMENT",
+      "ACCOUNTING_DUPLICATE_TASK",
+      "OPERATING_BURN_ASSUMPTION_REQUIRED",
+      "OPERATING_CASH_ALLOCATION_UNKNOWN",
+      "OPERATING_CHAIN_FEES_UNRECORDED",
+      "OPERATING_CREDIT_FEE_UNKNOWN",
+      "OPERATING_HOSTING_COST_UNRECORDED",
+      "OPERATING_LIABILITIES_UNRESOLVED",
+      "OPERATING_PROTOCOL_FEE_RECEIPT_NOT_RETAINED",
+      "OPERATING_PROTOCOL_FEE_UNKNOWN",
+      "OPERATING_REWARD_TOKEN_ALLOCATION_UNKNOWN",
+      "OPERATING_ROLE_OVERLAP_UNKNOWN",
+      "OPERATING_STARTUP_CAPITAL_SOURCE_UNKNOWN",
+      "OPERATING_SUPPLIER_COST_UNRECORDED",
+      "OPERATING_TREASURY_RECEIPTS_UNCONFIRMED",
+      "OPERATING_UPSTREAM_COST_UNRECORDED"
+    ]
+  },
+  "invalidRefund": {
+    "status": "partial",
+    "settlementOperatingRaw": null,
+    "gaps": [
+      "ACCOUNTING_COST_MISMATCH",
+      "OPERATING_BURN_ASSUMPTION_REQUIRED",
+      "OPERATING_CASH_ALLOCATION_UNKNOWN",
+      "OPERATING_CHAIN_FEES_UNRECORDED",
+      "OPERATING_CREDIT_FEE_UNKNOWN",
+      "OPERATING_HOSTING_COST_UNRECORDED",
+      "OPERATING_LIABILITIES_UNRESOLVED",
+      "OPERATING_PROTOCOL_FEE_RECEIPT_NOT_RETAINED",
+      "OPERATING_PROTOCOL_FEE_UNKNOWN",
+      "OPERATING_REWARD_TOKEN_ALLOCATION_UNKNOWN",
+      "OPERATING_ROLE_OVERLAP_UNKNOWN",
+      "OPERATING_STARTUP_CAPITAL_SOURCE_UNKNOWN",
+      "OPERATING_SUPPLIER_ATTRIBUTION_INCOMPLETE",
+      "OPERATING_SUPPLIER_COST_UNRECORDED",
+      "OPERATING_TREASURY_RECEIPTS_UNCONFIRMED",
+      "OPERATING_UPSTREAM_COST_UNRECORDED"
+    ]
+  },
+  "unresolved": {
+    "status": "partial",
+    "settlementOperatingRaw": null,
+    "runway": {
+      "source": "owner-hypothetical",
+      "scope": "agent-spendable-cash",
+      "availableRaw": null,
+      "burnAmountRaw": "100000",
+      "burnWindowMs": 86400000,
+      "status": "unknown",
+      "horizonMs": null,
+      "fullTasks": null,
+      "reasons": [
+        "OPERATING_LIABILITIES_UNRESOLVED"
+      ]
+    },
+    "gaps": [
+      "ACCOUNTING_PAYMENT_UNRESOLVED",
+      "ACCOUNTING_PENDING",
+      "ACCOUNTING_SETTLEMENT_MISSING",
+      "OPERATING_CASH_ALLOCATION_UNKNOWN",
+      "OPERATING_CHAIN_FEES_UNRECORDED",
+      "OPERATING_CREDIT_FEE_UNKNOWN",
+      "OPERATING_HOSTING_COST_UNRECORDED",
+      "OPERATING_LIABILITIES_UNRESOLVED",
+      "OPERATING_PROTOCOL_FEE_RECEIPT_NOT_RETAINED",
+      "OPERATING_PROTOCOL_FEE_UNKNOWN",
+      "OPERATING_REWARD_TOKEN_ALLOCATION_UNKNOWN",
+      "OPERATING_ROLE_OVERLAP_UNKNOWN",
+      "OPERATING_STARTUP_CAPITAL_SOURCE_UNKNOWN",
+      "OPERATING_SUPPLIER_ATTRIBUTION_INCOMPLETE",
+      "OPERATING_SUPPLIER_COST_UNRECORDED",
+      "OPERATING_TREASURY_RECEIPTS_UNCONFIRMED",
+      "OPERATING_UPSTREAM_COST_UNRECORDED"
+    ],
+    "report": {
+      "version": 1,
+      "agentId": "22222222-2222-4222-8222-222222222222",
+      "observedAt": "2026-10-17T00:00:00.000Z",
+      "currency": "USDC",
+      "decimals": 6,
+      "mode": "read-only",
+      "scope": "owner-agent-contribution",
+      "status": "partial",
+      "agent": {
+        "taskRevenueRaw": "1400000",
+        "netServiceCostRaw": "190000",
+        "refundsRaw": "20000",
+        "borrowingFeeRaw": "15000",
+        "settlementOperatingRaw": null,
+        "actualProfitRaw": null,
+        "ownerCapitalRaw": "1000000",
+        "startupCapitalRaw": "200000",
+        "loanPrincipalRaw": "100000",
+        "gaps": [
+          "OPERATING_HOSTING_COST_UNRECORDED",
+          "OPERATING_CHAIN_FEES_UNRECORDED"
+        ]
+      },
+      "platform": {
+        "scope": "this-agent-only",
+        "derivedProtocolFeeRaw": null,
+        "knownDerivedProtocolFeeRaw": "100000",
+        "creditFeeSettledRaw": null,
+        "knownCreditFeeSettledRaw": "15000",
+        "creditFeeRecipient": "credit-vault",
+        "treasuryReceiptsRaw": null,
+        "actualProfitRaw": null,
+        "gaps": [
+          "OPERATING_CHAIN_FEES_UNRECORDED",
+          "OPERATING_CREDIT_FEE_UNKNOWN",
+          "OPERATING_HOSTING_COST_UNRECORDED",
+          "OPERATING_PROTOCOL_FEE_RECEIPT_NOT_RETAINED",
+          "OPERATING_PROTOCOL_FEE_UNKNOWN",
+          "OPERATING_TREASURY_RECEIPTS_UNCONFIRMED"
+        ]
+      },
+      "suppliers": {
+        "scope": "this-agent-only",
+        "grossReceiptsRaw": "200000",
+        "refundsRaw": "20000",
+        "netReceiptsRaw": "180000",
+        "unattributedNetServiceCostRaw": "10000",
+        "actualProfitRaw": null,
+        "rows": [
+          {
+            "routeBinding": "3ca3ddc0f43949ab813b5e3d979486c4b0e518717d37c33d2fbc09dafed6ce4f",
+            "providerId": "controlled-supplier",
+            "payTo": "0x4444444444444444444444444444444444444444",
+            "chainId": "31337",
+            "account": "0x1111111111111111111111111111111111111111",
+            "asset": "0x2222222222222222222222222222222222222222",
+            "service": "infercredit/solve-fixed",
+            "model": "pi-fixed-v1",
+            "grossReceiptsRaw": "200000",
+            "refundsRaw": "20000",
+            "netReceiptsRaw": "180000",
+            "paymentCount": 2,
+            "actualProfitRaw": null
+          }
+        ],
+        "gaps": [
+          "OPERATING_CHAIN_FEES_UNRECORDED",
+          "OPERATING_HOSTING_COST_UNRECORDED",
+          "OPERATING_SUPPLIER_ATTRIBUTION_INCOMPLETE",
+          "OPERATING_SUPPLIER_COST_UNRECORDED",
+          "OPERATING_UPSTREAM_COST_UNRECORDED"
+        ]
+      },
+      "subsidy": {
+        "gameUsdcGrantedRaw": "400000",
+        "startupCapitalGrantedRaw": "200000",
+        "gameDistributionOutflowRaw": "400000",
+        "distributionScope": "recorded-game-rewards-to-this-agent",
+        "startupCapitalSource": "unattributed-capital",
+        "usdcAttributedConsumptionRaw": null,
+        "usdcGrantRemainingRaw": null,
+        "rewardTokensGranted": 10000,
+        "inferenceTokensUsed": 215,
+        "rewardTokensConsumed": null,
+        "rewardTokensRemaining": null,
+        "tokenUsageScope": "paid-and-reward-mix-unknown",
+        "gaps": [
+          "OPERATING_CASH_ALLOCATION_UNKNOWN",
+          "OPERATING_REWARD_TOKEN_ALLOCATION_UNKNOWN",
+          "OPERATING_STARTUP_CAPITAL_SOURCE_UNKNOWN"
+        ]
+      },
+      "cash": {
+        "status": "confirmed",
+        "cashRaw": "1000000",
+        "financeObservedAt": "2026-10-17T00:00:00.000Z",
+        "pendingReservationsRaw": "100000",
+        "outstandingDebtRaw": "100000",
+        "reserveCashRaw": "200000",
+        "spendableCashRaw": null,
+        "shortfallRaw": null,
+        "creditIncluded": false
+      },
+      "scenario": {
+        "source": "owner-hypothetical",
+        "recurringCostRaw": "50000",
+        "settlementOperatingAfterAssumedCostRaw": null,
+        "costScope": "retained-history-period",
+        "costPeriod": {
+          "from": "2026-10-17T00:00:00.000Z",
+          "to": "2026-10-17T00:00:00.000Z"
+        },
+        "subsidyBudgetRaw": "600000",
+        "subsidyBudgetRemainingRaw": "200000",
+        "subsidyBudgetShortfallRaw": "0",
+        "subsidyBudgetRunway": {
+          "source": "owner-hypothetical",
+          "scope": "game-subsidy-distribution-budget",
+          "availableRaw": "200000",
+          "burnAmountRaw": "50000",
+          "burnWindowMs": 86400000,
+          "status": "finite",
+          "horizonMs": "345600000",
+          "fullTasks": null,
+          "reasons": []
+        }
+      },
+      "runway": {
+        "source": "owner-hypothetical",
+        "scope": "agent-spendable-cash",
+        "availableRaw": null,
+        "burnAmountRaw": "100000",
+        "burnWindowMs": 86400000,
+        "status": "unknown",
+        "horizonMs": null,
+        "fullTasks": null,
+        "reasons": [
+          "OPERATING_LIABILITIES_UNRESOLVED"
+        ]
+      },
+      "consolidation": {
+        "externalRevenueRaw": null,
+        "roleTotalsAdditive": false,
+        "gaps": [
+          "OPERATING_ROLE_OVERLAP_UNKNOWN"
+        ]
+      },
+      "coverage": {
+        "scope": "retained-hosted-history",
+        "since": "2026-10-17T00:00:00.000Z",
+        "runCount": 8,
+        "entryCount": 8,
+        "pendingCount": 1,
+        "incompleteCount": 0,
+        "returnedEntryCount": 8,
+        "entriesTruncated": false,
+        "uncoveredSpentRaw": "0",
+        "reasons": [
+          "ACCOUNTING_PAYMENT_UNRESOLVED",
+          "ACCOUNTING_PENDING",
+          "ACCOUNTING_SETTLEMENT_MISSING"
+        ],
+        "roleEntriesTruncated": false
+      },
+      "gaps": [
+        "ACCOUNTING_PAYMENT_UNRESOLVED",
+        "ACCOUNTING_PENDING",
+        "ACCOUNTING_SETTLEMENT_MISSING",
+        "OPERATING_CASH_ALLOCATION_UNKNOWN",
+        "OPERATING_CHAIN_FEES_UNRECORDED",
+        "OPERATING_CREDIT_FEE_UNKNOWN",
+        "OPERATING_HOSTING_COST_UNRECORDED",
+        "OPERATING_LIABILITIES_UNRESOLVED",
+        "OPERATING_PROTOCOL_FEE_RECEIPT_NOT_RETAINED",
+        "OPERATING_PROTOCOL_FEE_UNKNOWN",
+        "OPERATING_REWARD_TOKEN_ALLOCATION_UNKNOWN",
+        "OPERATING_ROLE_OVERLAP_UNKNOWN",
+        "OPERATING_STARTUP_CAPITAL_SOURCE_UNKNOWN",
+        "OPERATING_SUPPLIER_ATTRIBUTION_INCOMPLETE",
+        "OPERATING_SUPPLIER_COST_UNRECORDED",
+        "OPERATING_TREASURY_RECEIPTS_UNCONFIRMED",
+        "OPERATING_UPSTREAM_COST_UNRECORDED"
+      ]
+    }
+  },
+  "subsidyGrantsUnknown": {
+    "version": 1,
+    "agentId": "22222222-2222-4222-8222-222222222222",
+    "observedAt": "2026-10-17T00:00:00.000Z",
+    "currency": "USDC",
+    "decimals": 6,
+    "mode": "read-only",
+    "scope": "owner-agent-contribution",
+    "status": "partial",
+    "agent": {
+      "taskRevenueRaw": "1400000",
+      "netServiceCostRaw": "180000",
+      "refundsRaw": "20000",
+      "borrowingFeeRaw": "15000",
+      "settlementOperatingRaw": null,
+      "actualProfitRaw": null,
+      "ownerCapitalRaw": "1000000",
+      "startupCapitalRaw": "200000",
+      "loanPrincipalRaw": "100000",
+      "gaps": [
+        "OPERATING_HOSTING_COST_UNRECORDED",
+        "OPERATING_CHAIN_FEES_UNRECORDED"
+      ]
+    },
+    "platform": {
+      "scope": "this-agent-only",
+      "derivedProtocolFeeRaw": null,
+      "knownDerivedProtocolFeeRaw": "100000",
+      "creditFeeSettledRaw": null,
+      "knownCreditFeeSettledRaw": "15000",
+      "creditFeeRecipient": "credit-vault",
+      "treasuryReceiptsRaw": null,
+      "actualProfitRaw": null,
+      "gaps": [
+        "OPERATING_CHAIN_FEES_UNRECORDED",
+        "OPERATING_CREDIT_FEE_UNKNOWN",
+        "OPERATING_HOSTING_COST_UNRECORDED",
+        "OPERATING_PROTOCOL_FEE_RECEIPT_NOT_RETAINED",
+        "OPERATING_PROTOCOL_FEE_UNKNOWN",
+        "OPERATING_TREASURY_RECEIPTS_UNCONFIRMED"
+      ]
+    },
+    "suppliers": {
+      "scope": "this-agent-only",
+      "grossReceiptsRaw": "200000",
+      "refundsRaw": "20000",
+      "netReceiptsRaw": "180000",
+      "unattributedNetServiceCostRaw": "0",
+      "actualProfitRaw": null,
+      "rows": [
+        {
+          "routeBinding": "3ca3ddc0f43949ab813b5e3d979486c4b0e518717d37c33d2fbc09dafed6ce4f",
+          "providerId": "controlled-supplier",
+          "payTo": "0x4444444444444444444444444444444444444444",
+          "chainId": "31337",
+          "account": "0x1111111111111111111111111111111111111111",
+          "asset": "0x2222222222222222222222222222222222222222",
+          "service": "infercredit/solve-fixed",
+          "model": "pi-fixed-v1",
+          "grossReceiptsRaw": "200000",
+          "refundsRaw": "20000",
+          "netReceiptsRaw": "180000",
+          "paymentCount": 2,
+          "actualProfitRaw": null
+        }
+      ],
+      "gaps": [
+        "OPERATING_CHAIN_FEES_UNRECORDED",
+        "OPERATING_HOSTING_COST_UNRECORDED",
+        "OPERATING_SUPPLIER_COST_UNRECORDED",
+        "OPERATING_UPSTREAM_COST_UNRECORDED"
+      ]
+    },
+    "subsidy": {
+      "gameUsdcGrantedRaw": "400000",
+      "startupCapitalGrantedRaw": "200000",
+      "gameDistributionOutflowRaw": "400000",
+      "distributionScope": "recorded-game-rewards-to-this-agent",
+      "startupCapitalSource": "unattributed-capital",
+      "usdcAttributedConsumptionRaw": null,
+      "usdcGrantRemainingRaw": null,
+      "rewardTokensGranted": 10000,
+      "inferenceTokensUsed": 215,
+      "rewardTokensConsumed": null,
+      "rewardTokensRemaining": null,
+      "tokenUsageScope": "paid-and-reward-mix-unknown",
+      "gaps": [
+        "OPERATING_CASH_ALLOCATION_UNKNOWN",
+        "OPERATING_REWARD_TOKEN_ALLOCATION_UNKNOWN",
+        "OPERATING_STARTUP_CAPITAL_SOURCE_UNKNOWN",
+        "OPERATING_SUBSIDY_GRANTS_UNKNOWN"
+      ]
+    },
+    "cash": {
+      "status": "confirmed",
+      "cashRaw": "1000000",
+      "financeObservedAt": "2026-10-17T00:00:00.000Z",
+      "pendingReservationsRaw": "0",
+      "outstandingDebtRaw": "100000",
+      "reserveCashRaw": "200000",
+      "spendableCashRaw": null,
+      "shortfallRaw": null,
+      "creditIncluded": false
+    },
+    "scenario": {
+      "source": "owner-hypothetical",
+      "recurringCostRaw": "50000",
+      "settlementOperatingAfterAssumedCostRaw": null,
+      "costScope": "retained-history-period",
+      "costPeriod": {
+        "from": "2026-10-17T00:00:00.000Z",
+        "to": "2026-10-17T00:00:00.000Z"
+      },
+      "subsidyBudgetRaw": "600000",
+      "subsidyBudgetRemainingRaw": null,
+      "subsidyBudgetShortfallRaw": null,
+      "subsidyBudgetRunway": {
+        "source": "owner-hypothetical",
+        "scope": "game-subsidy-distribution-budget",
+        "availableRaw": null,
+        "burnAmountRaw": "50000",
+        "burnWindowMs": 86400000,
+        "status": "unknown",
+        "horizonMs": null,
+        "fullTasks": null,
+        "reasons": [
+          "OPERATING_SUBSIDY_GRANTS_UNKNOWN"
+        ]
+      }
+    },
+    "runway": {
+      "source": "owner-hypothetical",
+      "scope": "agent-spendable-cash",
+      "availableRaw": null,
+      "burnAmountRaw": "100000",
+      "burnWindowMs": 86400000,
+      "status": "unknown",
+      "horizonMs": null,
+      "fullTasks": null,
+      "reasons": [
+        "OPERATING_LIABILITIES_UNRESOLVED"
+      ]
+    },
+    "consolidation": {
+      "externalRevenueRaw": null,
+      "roleTotalsAdditive": false,
+      "gaps": [
+        "OPERATING_ROLE_OVERLAP_UNKNOWN"
+      ]
+    },
+    "coverage": {
+      "scope": "retained-hosted-history",
+      "since": "2026-10-17T00:00:00.000Z",
+      "runCount": 8,
+      "entryCount": 8,
+      "pendingCount": 0,
+      "incompleteCount": 1,
+      "returnedEntryCount": 8,
+      "entriesTruncated": false,
+      "uncoveredSpentRaw": "0",
+      "reasons": [
+        "ACCOUNTING_SUBSIDY_UNKNOWN"
+      ],
+      "roleEntriesTruncated": false
+    },
+    "gaps": [
+      "ACCOUNTING_SUBSIDY_UNKNOWN",
+      "OPERATING_CASH_ALLOCATION_UNKNOWN",
+      "OPERATING_CHAIN_FEES_UNRECORDED",
+      "OPERATING_CREDIT_FEE_UNKNOWN",
+      "OPERATING_HOSTING_COST_UNRECORDED",
+      "OPERATING_LIABILITIES_UNRESOLVED",
+      "OPERATING_PROTOCOL_FEE_RECEIPT_NOT_RETAINED",
+      "OPERATING_PROTOCOL_FEE_UNKNOWN",
+      "OPERATING_REWARD_TOKEN_ALLOCATION_UNKNOWN",
+      "OPERATING_ROLE_OVERLAP_UNKNOWN",
+      "OPERATING_STARTUP_CAPITAL_SOURCE_UNKNOWN",
+      "OPERATING_SUBSIDY_GRANTS_UNKNOWN",
+      "OPERATING_SUPPLIER_COST_UNRECORDED",
+      "OPERATING_TREASURY_RECEIPTS_UNCONFIRMED",
+      "OPERATING_UPSTREAM_COST_UNRECORDED"
+    ]
+  },
+  "fixtureEvidence": {
+    "taskCount": 5,
+    "journalCount": 10,
+    "originalJournalsUnchanged": true,
+    "temporaryFilesRemoved": true,
+    "fixtureDigest": "054f8179998fd46bcc8eb748459190979759c7152c9dff38aac38433254d4c63"
+  },
+  "checksPassed": [
+    "role-contributions-separated",
+    "internal-transfers-not-additive",
+    "refunds-not-deducted-twice",
+    "principal-not-a-second-cost",
+    "grants-not-consumption",
+    "mixed-token-provenance-unknown",
+    "operator-declarations-not-invoices",
+    "owner-preview-not-actual-profit",
+    "finite-zero-burn-unknown-runway",
+    "duplicate-payment-deduplication",
+    "invalid-refund-stays-partial",
+    "unresolved-payment-stays-partial",
+    "original-journals-unchanged"
+  ],
+  "sourceSha256": {
+    "scripts/operating-report-demo.ts": "b431cb3168ffbeab53d4ea4f25b8f14abb92c7826db29600e844ab72b1d617fb",
+    "scripts/fixtures/operating-report-payment-fixtures.ts": "8fd6d014c0cde8c520d32298bcfefacb5901ee2c6c9a102d0638765ac0db18e8",
+    "services/hosted-agents/src/operating-types.ts": "53b7be5942a1efeefb39b45426fbb66bba1db698e330d0243ca6880ad26db0ad",
+    "services/hosted-agents/src/operating-report.ts": "b10af6db10ac328291d0807138bfcddcb85b26018587227a65a499d9bccd2cfb",
+    "services/hosted-agents/src/operating-history.ts": "04cd5fb9b69ad1cb5202cfa1dbde1fd7ce6a8096da00d063e672ab262ed28f9c",
+    "services/hosted-agents/src/accounting.ts": "93680031622d3faa66b79c162c966ebfd4bbae0cedc34e2eca80dbca421268fd",
+    "services/hosted-agents/src/strategy-history.ts": "f11edd037945a036315f60e8ed69923f2163765458e733145902f68afcc465f1",
+    "packages/pi-loop/src/selector.ts": "0eee1effe9d38f8b51738d7455d31cd05faa28657a865151308be08b698b65fe",
+    "packages/pi-loop/src/economics.ts": "e292e8ab0d60eac56bdd3e95f1ddd2fdd24ba48a402f9dceb9f920fc8188de75"
+  }
+}

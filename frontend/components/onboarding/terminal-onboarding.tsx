@@ -119,6 +119,8 @@ export function TerminalOnboarding() {
       {state.pending?.kind === "run" && authenticated && <p role="status">已有未确认的操作。请先<Link href="/dashboard">进入工作台</Link>，查看或恢复原请求。</p>}
       {error && <p id="terminal-error" className={styles.error} role="alert">✗ {error}</p>}
       {state.error && <p className={styles.error} role="alert">✗ {state.error}</p>}
+      {state.walletNetworkTarget === "42431" && <button type="button" disabled={state.busy} onClick={() => void state.switchWalletNetwork()}>切换到 Tempo Moderato Testnet</button>}
+      {state.notice && state.access === "signed-out" && <p role="status">{state.notice}</p>}
       {state.access === "unavailable" && phase === "boot" && <p className={styles.dim}>平台服务尚不可用；连接恢复前无法登录或创建 Agent。</p>}
     </main>
     <div className={styles.tracking} aria-hidden="true" />

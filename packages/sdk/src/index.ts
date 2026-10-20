@@ -1,5 +1,5 @@
 import { Contract, JsonRpcApiProvider, JsonRpcProvider, Wallet, isError, keccak256, randomBytes, type Signer, type TransactionReceipt, type TransactionRequest } from "ethers";
-import { ACCOUNT_ABI, EMPTY_AUTH, MANAGER_ABI, PaymentError, accountInterface, contractError, paymentId,
+import { ACCOUNT_ABI, EMPTY_AUTH, MANAGER_ABI, PaymentError, InferenceControlError, accountInterface, contractError, paymentId,
   requestDigest, sameAddress, uint, type ChatInput, type InferenceReceipt, type Json, type Quote, type RoutingTier } from "./protocol.js";
 export * from "./protocol.js";
 
@@ -13,6 +13,9 @@ export interface InferOptions {
   sessionKey?: string; signer?: Signer; underwriterUrl?: string; timeoutMs?: number;
   onHandle?: (handle: PaymentHandle) => Promise<void> | void;
   beforePayment?: (handle: PaymentHandle) => Promise<void> | void;
+  /** Admission for a request that may start delivery, including an already
+   * paid handle. Cached Delivered reads bypass this hook. It must not pay. */
+  beforeDispatch?: (handle: PaymentHandle) => Promise<void> | void;
 }
 export interface FetchOptions { body: Record<string, Json> & { service: string; model: string; messages: Json[]; tier?: RoutingTier } }
 export interface Inference { result: Json; receipt: InferenceReceipt; handle: PaymentHandle }
@@ -79,6 +82,7 @@ export class InferCredit {
     const existing = this.locks.get(handle.quote.paymentId);
     if (existing) return existing;
     const work = this.finish(handle).catch(async error => {
+      if (error instanceof InferenceControlError) { error.handle = structuredClone(handle); throw error; }
       // wait() throws rather than returning a status-0 receipt. Verify that
       // original transaction against its canonical block before classifying it.
       if (isError(error, "CALL_EXCEPTION") && error.receipt?.status === 0) {
@@ -123,6 +127,7 @@ export class InferCredit {
       this.walletQueue = work;
       await work;
     }
+    await this.options.beforeDispatch?.(structuredClone(handle));
     const delivered = await this.http(handle.relayUrl, { method: "POST", headers: { "content-type": "application/json",
       "x-payment-id": handle.quote.paymentId, ...(handle.submission?.txHash ? { "x-payment-tx": handle.submission.txHash } : {}) }, body: JSON.stringify(handle.input) });
     const body = await delivered.json() as { result: Json; receipt: InferenceReceipt; error?: string };

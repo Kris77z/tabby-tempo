@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { loadTempoHostedBootstrap, type TempoHostedBootstrap } from "../tempo-hosted-runtime.js";
 import { TEMPO_IDENTITY, TEMPO_PATH_USD, TEMPO_REPUTATION } from "../tempo-config.js";
 import { modelCatalogDigest } from "../../services/hosted-agents/src/metered-task.js";
+import { tempoHostedConfig } from "../tempo-hosted-config.js";
 
 async function fixture() {
   const directory = await realpath(await mkdtemp(join(tmpdir(), "af-tempo-runtime-catalog-")));
@@ -25,6 +26,27 @@ async function fixture() {
   const path = await put("bootstrap.json", bootstrap);
   return { directory, put, gateway, bootstrap, path, close: () => rm(directory, { recursive: true, force: true }) };
 }
+
+test("public origin is required before reading another config or doing network work", async () => {
+  const f = await fixture(), before = process.env.TEMPO_PUBLIC_ORIGIN;
+  try {
+    delete process.env.TEMPO_PUBLIC_ORIGIN;
+    await f.put("bootstrap.json", { ...f.bootstrap, frontendOrigin: "https://tempo.example.test", gatewayReadyFile: "/must-not-read/gateway.json" });
+    const initial = await readFile(f.path, "utf8");
+    await assert.rejects(loadTempoHostedBootstrap(f.path), /TEMPO_PUBLIC_ORIGIN_REQUIRED/);
+    assert.equal(await readFile(f.path, "utf8"), initial);
+  } finally { if (before === undefined) delete process.env.TEMPO_PUBLIC_ORIGIN; else process.env.TEMPO_PUBLIC_ORIGIN = before; await f.close(); }
+});
+
+test("offline seal and runtime recovery generate identical hosted config bytes", () => {
+  const hosted = { boundedGamesFile: "/fixture/grant.json", directory: "/fixture/hosted", origin: "http://127.0.0.1:3028", chainId: "42431" as const,
+    models: [{ id: "kimi-k2.6", label: "Kimi K2.6" }], maxAgentsPerOwner: 6, maxTotalBudgetRaw: "1000000", maxPerRunBudgetRaw: "120000" };
+  const original = { version: 1 as const, port: 8794, hosted, executor: { taskConfigFile: "/fixture/task.json", gameConfigFile: "/fixture/game.json" } };
+  const migrated = tempoHostedConfig(JSON.parse(JSON.stringify(original)), true);
+  const recovered = tempoHostedConfig({ ...original, hosted: { ...hosted, boundedGamesSealed: true } });
+  assert.equal(JSON.stringify(migrated), JSON.stringify(recovered));
+  assert.equal(JSON.stringify(tempoHostedConfig(migrated)), JSON.stringify(migrated));
+});
 
 for (const ids of [["cheap", "strong"], ["kimi-k2.6", "kimi-k3"], ["cheap", "kimi-k3"], ["kimi-k2.6", "strong"]]) {
   test(`bootstrap preserves ${ids.join("/")} logical IDs and the original paid catalog/domain digest`, async () => {

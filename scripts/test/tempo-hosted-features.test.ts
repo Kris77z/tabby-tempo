@@ -40,6 +40,9 @@ async function fixture(t: any) {
   const actorId = randomUUID(), actor = { id: actorId, owner, wallet: actorWallet, modelId: "kimi-k2.6", strategy: "balanced", allowCredit: false, perRunBudgetRaw: "120000", totalBudgetRaw: "300000",
     reservedRaw: "0", spentRaw: "0", status: "Ready", binding: { chainId: "42431", agentId: "73", wallet: actorWallet } };
   const database = await put(join(directory, "hosted/database/session.json"), { version: 1, agents: [actor], runs: [], creations: [], sponsoredOwners: { [owner]: 7 }, sponsoredTotal: 7 });
+  await put(join(directory, "hosted.json"), { version: 1, port: bootstrap.hostedPort,
+    hosted: { boundedGamesFile: paths.boundedGamesFile, directory: join(directory, "hosted"), origin: bootstrap.frontendOrigin, chainId: "42431", models: [{ id: "kimi-k2.6", label: "Kimi K2.6" }], maxAgentsPerOwner: 6, maxTotalBudgetRaw: "1000000", maxPerRunBudgetRaw: "120000" },
+    executor: { taskConfigFile: join(directory, "task.json"), gameConfigFile: join(directory, "game.json") } });
   await put(paths.boundedGamesFile, { version: 1, id: randomUUID(), parentRequestId: randomUUID(), chainId: "42431", origin: bootstrap.frontendOrigin, asset: TEMPO_PATH_USD, owner, issuedAtMs: Date.now() - 1000, expiresAtMs: Date.now() + 1800000,
     baselineOwnerGames: 7, baselineTotalGames: 7, maxAdditionalGames: 2, maxGameCalls: 40, maxGameCompletionTokens: 20480, maxCashRewardsRaw: "0", actor: { hostedAgentId: actorId, registryId: "73", wallet: actorWallet } });
   const snapshotFile = await put(join(root, "operator/acceptance-20261016/bootstrap-snapshot.json"), { version: 1, chainId: bootstrap.chainId, asset: bootstrap.asset, contracts: { account: bootstrap.contracts.account, escrow: bootstrap.contracts.escrow, manager: bootstrap.contracts.manager } });
@@ -142,6 +145,23 @@ test("explicit seal retains frozen files and old reserve history, releases the a
   assert.equal((await sealTempoHostedFeatures(f.directory, f.bootstrapFile)).cached, true);
   assert.equal((await verifyTempoHostedFeatures(after, f.directory, f.bootstrap))!.seal!.file, f.paths.closureFile);
   await f.put(closure.ledgerFile, { changed: true }); await assert.rejects(verifyTempoHostedFeatures(after, f.directory, f.bootstrap), /TEMPO_FEATURES_BINDING_INVALID/);
+});
+
+test("seal retries native config after config-before-journal failure and repairs a cached seal without changing business bytes", async t => {
+  const f = await fixture(t); await closureFixture(f);
+  const database = await readFile(f.database, "utf8"), mirror = await readFile(join(f.root, "operator/bounded-admissions/session.json"), "utf8");
+  const original = SessionStore.prototype.write;
+  SessionStore.prototype.write = async function(value) { if (this.directory === join(f.directory, "runtime-journal") && (value as any).features?.seal) throw new Error("SYNTHETIC_JOURNAL_WRITE_FAILURE"); return original.call(this, value); };
+  try { await assert.rejects(sealTempoHostedFeatures(f.directory, f.bootstrapFile), /SYNTHETIC_JOURNAL_WRITE_FAILURE/); }
+  finally { SessionStore.prototype.write = original; }
+  const config = join(f.directory, "hosted.json"), generated = await readFile(config, "utf8");
+  assert.equal(JSON.parse(generated).hosted.boundedGamesSealed, true); assert.equal(JSON.parse(await readFile(f.journalFile, "utf8")).features.seal, undefined);
+  assert.equal((await sealTempoHostedFeatures(f.directory, f.bootstrapFile)).cached, false);
+  assert.equal(await readFile(config, "utf8"), generated);
+  const journal = await readFile(f.journalFile, "utf8"), stale = JSON.parse(generated); delete stale.hosted.boundedGamesSealed; await f.put(config, stale);
+  assert.equal((await sealTempoHostedFeatures(f.directory, f.bootstrapFile)).cached, true);
+  assert.equal(await readFile(config, "utf8"), generated); assert.equal(await readFile(f.journalFile, "utf8"), journal);
+  assert.equal(await readFile(f.database, "utf8"), database); assert.equal(await readFile(join(f.root, "operator/bounded-admissions/session.json"), "utf8"), mirror);
 });
 
 test("seal requires an existing audit and terminal original requests and cannot predate completion", async t => {

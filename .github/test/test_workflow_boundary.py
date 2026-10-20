@@ -48,16 +48,31 @@ class WorkflowBoundaryTests(unittest.TestCase):
             self.assertIn(check, self.deploy)
         self.assertNotIn("uses:", self.deploy)
         self.assertNotIn("checkout@", self.deploy)
-        self.assertNotIn("upload-artifact@", self.text)
+        self.assertNotIn("upload-artifact@", self.deploy)
         self.assertNotIn("download-artifact@", self.text)
 
     def test_action_references_are_full_verified_pins(self):
         expected = {"actions/checkout": "fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
                     "actions/setup-node": "a0853c24544627f65ddf259abe73b1d18a591444",
-                    "foundry-rs/foundry-toolchain": "908c540300062bd5a7e473851cdb4282204cee09"}
+                    "foundry-rs/foundry-toolchain": "908c540300062bd5a7e473851cdb4282204cee09",
+                    "actions/upload-artifact": "ea165f8d65b6e75b540449e92b4886f43607fa02"}
         for action, revision in re.findall(r"uses: ([^@\s]+)@([^\s]+)", self.text):
             self.assertEqual(revision, expected[action])
             self.assertRegex(revision, r"^[0-9a-f]{40}$")
+
+    def test_local_review_upload_is_scoped_and_required_checks_gate_deploy(self):
+        self.assertIn('npm run review:check', self.ci)
+        self.assertIn('npm run review:artifacts -- --execute-local --output "$RUNNER_TEMP/tabby-local-review"', self.ci)
+        self.assertIn('node scripts/review-artifacts.mjs --verify "$RUNNER_TEMP/tabby-local-review"', self.ci)
+        self.assertIn('npx playwright test --config frontend/playwright.accounting.config.ts', self.ci)
+        upload = self.ci.split('- name: Upload only validated sanitized local review artifacts', 1)[1].split('      - name:', 1)[0]
+        self.assertIn("if: success() && hashFiles('scripts/review-artifacts.mjs') != ''", upload)
+        self.assertIn('path: ${{ runner.temp }}/tabby-local-review/', upload)
+        self.assertIn('include-hidden-files: false', upload)
+        self.assertIn('if-no-files-found: error', upload)
+        self.assertNotIn('.data/', upload)
+        self.assertNotIn('download-artifact@', self.text)
+        self.assertNotIn('continue-on-error', self.ci)
 
     def test_offline_script_group_is_serial_and_covers_retained_new_launchers(self):
         group = self.ci.split("- name: Run offline Tempo runtime, migration, RPC and journal checks", 1)[1].split("      - name:", 1)[0]

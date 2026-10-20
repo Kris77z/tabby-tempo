@@ -37,6 +37,8 @@ import { startExternalSpecialistStack } from "./external-specialist-stack.js";
 import { taskPrivateFile } from "../packages/pi-loop/src/task-runner/config.js";
 import { readTempoHostedFeatures, tempoFeaturePaths, tempoFeatureTaskDomain, tempoFeatureAutonomy, tempoFeatureBudgetFile, verifyTempoHostedFeatures, verifyTempoFeatureSeal, type TempoHostedFeaturesJournal } from "./tempo-hosted-features.js";
 import { validateTempoTransactionBudget } from "./tempo-transaction-budget.js";
+import { tempoHostedConfig } from "./tempo-hosted-config.js";
+import type { HostedDaemonConfig } from "./hosted-agents.js";
 
 /** Operator-prepared, existing deployment and task catalog. This script never bootstraps chain state. */
 export interface TempoHostedBootstrap {
@@ -125,6 +127,10 @@ export function tempoGoalConfig(catalog: GatewayModel[], ports: Partial<Record<P
 }
 export async function loadTempoHostedBootstrap(file: string) {
   const b = JSON.parse(await readFile(absolute(file), "utf8")) as TempoHostedBootstrap;
+  // Fail before reading gateway/role material or doing any RPC. Trusted process
+  // launchers clear ambient variables, so operators must pass this explicitly.
+  if (typeof b.frontendOrigin === "string" && b.frontendOrigin.startsWith("https:") && !process.env.TEMPO_PUBLIC_ORIGIN)
+    fail("TEMPO_PUBLIC_ORIGIN_REQUIRED");
   if (b.version !== 1 || b.chainId !== "42431" || !Number.isSafeInteger(b.deploymentBlock) || b.deploymentBlock < 0
     || b.asset?.symbol !== "PathUSD" || b.asset.decimals !== 6 || !same(b.asset.address, TEMPO_PATH_USD) || !same(b.identity, TEMPO_IDENTITY) || !same(b.reputation, TEMPO_REPUTATION)
     || !["direct", "system-https-proxy"].includes(b.rpcTransport) || !tempoFrontendOriginAllowed(b.frontendOrigin) || !Number.isSafeInteger(b.hostedPort) || b.hostedPort < 1024 || b.hostedPort > 65535
@@ -303,12 +309,20 @@ export async function sealTempoHostedFeatures(directory: string, bootstrapFile: 
     if (!hosted || !Array.isArray(hosted.runs) || hosted.runs.some((run: any) => !["Succeeded", "Failed"].includes(run.status) || run.recoverable !== false || run.result?.terminal !== true)
       || hosted.agents.some((agent: any) => agent.activeRequestId || agent.reservedRaw !== "0")) fail("TEMPO_TERMINAL_RUNS_REQUIRED");
     const record = await verifyTempoHostedFeatures(journal.features, directory, b) ?? fail("TEMPO_FEATURES_REQUIRED");
-    if (record.seal) return { sealed: true, cached: true, featureId: record.config.id, chainWrites: 0 };
-    const raw = await taskPrivateFile(closureFile);
-    record.seal = { version: 1, file: closureFile, digest: createHash("sha256").update(raw).digest("hex") };
-    await verifyTempoFeatureSeal(record, directory, true);
-    journal.features = record; await store.write(journal);
-    return { sealed: true, cached: false, featureId: record.config.id, chainWrites: 0 };
+    const cached = !!record.seal;
+    if (!cached) {
+      const raw = await taskPrivateFile(closureFile);
+      record.seal = { version: 1, file: closureFile, digest: createHash("sha256").update(raw).digest("hex") };
+      await verifyTempoFeatureSeal(record, directory, true);
+    }
+    // Read before freezing the seal, so a missing/invalid generated config does
+    // not leave an unusable partial seal. Both writes are replayable on retry.
+    const configFile = join(directory, "hosted.json");
+    const generated = JSON.parse(await taskPrivateFile(configFile)) as HostedDaemonConfig;
+    if (generated.hosted?.boundedGamesFile !== record.config.boundedGamesFile || generated.hosted.directory !== join(directory, "hosted")) fail("TEMPO_FEATURES_BINDING_INVALID");
+    await atomicJson(configFile, tempoHostedConfig(generated, true));
+    if (!cached) { journal.features = record; await store.write(journal); }
+    return { sealed: true, cached, featureId: record.config.id, chainWrites: 0 };
   } finally { if (hostedHeld) await hostedLock.close(); await store.close(); }
 }
 
@@ -492,12 +506,12 @@ export async function startTempoHostedRuntime(directory: string, bootstrapFile: 
       rpcUrlFile: b.rpcUrlFile, rpcTransport: b.rpcTransport, upstreamTransport: defaultUpstreamTransport(), walletDirectory, sponsorKeyFile: b.roleKeyFiles.sponsor,
       opponent: { binding: b.opponentBinding, keyFile: b.roleKeyFiles.opponent, modelId: "kimi-k2.6", strategy: "balanced" },
       models: models.map(id => ({ id, baseUrl: "https://api.moonshot.cn/v1", keyFile: b.vendorKeyFile })), creditsDirectory: join(directory, "credits") });
-    const hostedConfigFile = await put("hosted.json", { version: 1, port: b.hostedPort,
+    const hostedConfigFile = await put("hosted.json", tempoHostedConfig({ version: 1, port: b.hostedPort,
       hosted: { ...(journal.testSponsorship?{testSponsorshipFile:journal.testSponsorship.file}:{}), ...(features ? { boundedGamesFile: features.config.boundedGamesFile, ...(features.seal ? { boundedGamesSealed: true } : {}) } : {}), directory: join(directory, "hosted"), origin: b.frontendOrigin, chainId: "42431", models: models.map(id => ({ id, label: id === "kimi-k2.6" ? "Kimi K2.6" : "Kimi K3" })),
         maxAgentsPerOwner: 6, maxTotalBudgetRaw: "1000000", maxPerRunBudgetRaw: "120000" }, executor: { taskConfigFile, gameConfigFile },
       goals: { ...tempoGoalConfig(catalog,journal.ports,b.payTo), ...(external ? { external: external.config } : {}) },
       autonomy: tempoFeatureAutonomy({ maxTasks: 2, maxDecisions: 3, durationMs: 1200000, plannerRelayUrl: `${url("planner")}/v1/chat`, plannerProvider: b.payTo, plannerPriceRaw: "10000",
-        plannerService: "infercredit/plan", plannerModel: "logical-planner", plannerPhysicalModel: catalog[0].model, plannerResponseModel: catalog[0].responseModel }, !!features) });
+        plannerService: "infercredit/plan", plannerModel: "logical-planner", plannerPhysicalModel: catalog[0].model, plannerResponseModel: catalog[0].responseModel }, !!features) }));
     await loadHostedDaemonConfig(hostedConfigFile);
     const launch = () => childReady("scripts/hosted-agents.ts", ["--start", "--recover"], { ...process.env, HOSTED_AGENTS_CONFIG: hostedConfigFile });
     hosted = await launch();

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 import { Interface, type JsonRpcProvider, type Signer } from "ethers";
 import { PaymentError, type Json } from "@agentfuel/sdk";
@@ -6,12 +7,15 @@ import type { ProblemId } from "@agentfuel/arena";
 import { publicSampleFor } from "./public-sample.js";
 
 export interface SubmissionConfig { taskId: string; agentId: string; rpcUrl: string; chainId: string; escrowAddress: string; arenaUrl: string; deadlineMs: number }
-export interface SubmissionState { phase: string; reason?: string; candidate?: string; submission?: { payload: Submission; runId?: string; result?: Json } }
-export interface SubmissionOptions { rpc: JsonRpcProvider; signer: Signer; save: () => Promise<void>; timeoutMs?: number; pollTimeoutMs?: number }
+export interface SubmissionState { phase: string; reason?: string; candidate?: string; submission?: { payload: Submission; runId?: string; result?: Json; recovery?: { binding: string; attempts: 1 } } }
+/** Trusted host opt-in for this accepted run only; recovering a writer lock grants no dispatch permission. */
+export interface SubmissionRecoveryPermission { maxAttempts: 1; assertAllowed: () => void | Promise<void> }
+export interface SubmissionOptions { submissionRecovery?: SubmissionRecoveryPermission; rpc: JsonRpcProvider; signer: Signer; save: () => Promise<void>; timeoutMs?: number; pollTimeoutMs?: number }
 const escrowInterface = new Interface(["event TaskSettled(uint256 indexed taskId,bool passed,uint256 repaid,uint256 slashed,uint256 agentResidual)"]);
 function stop(code: string): never { throw new PaymentError(code, code); }
 /** Shared host-only final submission. Callers must durably qualify candidate before entering. */
 export async function submitProgrammingCandidate(state: SubmissionState, config: SubmissionConfig, options: SubmissionOptions, problemId: ProblemId = "sum-integers") {
+  if (["Succeeded", "Failed", "Refunded", "Stopped", "Cancelled", "Sealed"].includes(state.phase)) return;
   publicSampleFor(problemId);
   const { rpc, save } = options;
   const assertTime = () => { if (Date.now() >= config.deadlineMs) stop("SESSION_DEADLINE"); };
@@ -26,6 +30,7 @@ export async function submitProgrammingCandidate(state: SubmissionState, config:
     state.submission = { payload }; state.phase = "SubmissionPending"; await save();
   }
   const submission = state.submission;
+  if (submission.payload.taskId !== config.taskId) stop("ARENA_RESULT_MISMATCH");
   if (!submission.runId) {
     assertTime(); // After a lost HTTP response only the exact saved signature/payload may be replayed, before this deadline.
     try {
@@ -45,9 +50,41 @@ export async function submitProgrammingCandidate(state: SubmissionState, config:
   do {
     try {
       const response = await fetch(config.arenaUrl.replace(/\/$/, "") + "/runs/" + encodeURIComponent(submission.runId), { signal: AbortSignal.timeout(options.timeoutMs ?? 10000) });
-      const run = await response.json() as { status?: string; result?: Json };
+      const run = await response.json() as { runId?: string; taskId?: string; status?: string; result?: Json };
       if (!response.ok) { state.reason = "ARENA_RUN_UNAVAILABLE"; await save(); return; }
-      if (run.status === "error") { state.phase = "SubmissionPending"; state.reason = "ARENA_SETTLEMENT_UNCERTAIN"; await save(); return; }
+      if (run.runId !== undefined && run.runId !== submission.runId || run.taskId !== undefined && run.taskId !== config.taskId) stop("ARENA_RESULT_MISMATCH");
+      if (run.status === "error") {
+        state.phase = "SubmissionPending";
+        // Default recovery only observes the accepted run. A trusted caller must
+        // explicitly permit one re-POST, with its cumulative reservation saved first.
+        const permission = options.submissionRecovery;
+        if (!permission) { state.reason = "ARENA_SETTLEMENT_UNCERTAIN"; await save(); return; }
+        if (permission.maxAttempts !== 1 || typeof permission.assertAllowed !== "function") stop("ARENA_RECOVERY_PERMISSION_INVALID");
+        const binding = createHash("sha256").update(JSON.stringify({ chainId: config.chainId, escrowAddress: config.escrowAddress.toLowerCase(),
+          taskId: config.taskId, agentId: config.agentId, runId: submission.runId, payload: submission.payload })).digest("hex");
+        if (submission.recovery !== undefined) {
+          if (!submission.recovery || typeof submission.recovery !== "object" || submission.recovery.binding !== binding || submission.recovery.attempts !== 1) stop("ARENA_RECOVERY_BINDING_INVALID");
+          state.reason = "ARENA_SETTLEMENT_UNCERTAIN"; await save(); return;
+        }
+        await permission.assertAllowed();
+        submission.recovery = { binding, attempts: 1 }; await save();
+        await permission.assertAllowed(); // A seal during persistence must prevent dispatch.
+        // Reuse the exact saved signature, old deadline and original accepted run;
+        // this option never authorizes another payment, model call or signature.
+        try {
+          const recovery = await fetch(config.arenaUrl.replace(/\/$/, "") + "/submissions", { method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify(submission.payload), signal: AbortSignal.timeout(options.timeoutMs ?? 10000) });
+          const body = await recovery.json() as { runId?: string; taskId?: string };
+          if (!recovery.ok) {
+            const rejected = recovery.status >= 400 && recovery.status < 500 && recovery.status !== 409 && recovery.status !== 429;
+            state.reason = rejected ? "ARENA_SUBMISSION_REJECTED" : recovery.status === 409 ? "SUBMISSION_CONFLICT_UNCERTAIN" : "SUBMISSION_UNCERTAIN";
+            await save(); return;
+          }
+          if (body.runId !== submission.runId || body.taskId !== config.taskId) { state.reason = "ARENA_RESULT_MISMATCH"; await save(); return; }
+          delete state.reason; await save();
+        } catch { state.reason = "SUBMISSION_UNCERTAIN"; await save(); return; }
+        continue;
+      }
       if (run.status === "settled") {
         const result = run.result as { verdict?: { taskId?: string; agentId?: string; runId?: string; passed?: boolean; mode?: string; chainId?: string; escrowAddress?: string; problemId?: string }; settlement?: { taskId?: string; runId?: string; passed?: boolean; txHash?: string } };
         const verdict = result?.verdict, settlement = result?.settlement;

@@ -1,0 +1,2747 @@
+{
+  "version": 1,
+  "sourceHead": "13fc9747c877f075b424220716d81d24f431d53a",
+  "sourceBase": "ce1409d0db0f210fb3804c9ec52807b499b8f1b9",
+  "priorPrHead": "2776decd302d21d53b3a15fb2a461321b6139353",
+  "paths": 212,
+  "counts": {
+    "migrated": 132,
+    "explicitly-excluded-historical-or-Monad-specific": 60,
+    "previously-covered": 20
+  },
+  "remainingDeferredProductPaths": [],
+  "files": [
+    {
+      "path": ".github/workflows/review.yml",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "b232c0f0ab1f9aed39e3867094cf6a305e81f5b0d185909e10c9feba9c09443c",
+      "sourceBlobSha1": "12aedf51a26771b34716b86b9157b1ce7139b40e",
+      "status": "migrated",
+      "reason": "Adapted into Tempo-owned entry points/negative tests; excludes hardcoded upstream history and preserves pinned deployment gates.",
+      "targetPaths": [
+        ".github/workflows/tempo-ci.yml"
+      ],
+      "targetSha256": {
+        ".github/workflows/tempo-ci.yml": "02f1fdd9fad1d14b7e556932443d94c8bed6be3b4502fb109fbacf90acaa6862"
+      }
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "3aa35e6061ad46dbd4f3e06332c6f7494a93e2e5bb5c2601d4205072785db296",
+      "sourceBlobSha1": "a2bbccea638d31613c29f623813ce5a574a71913",
+      "status": "migrated",
+      "reason": "Added current scoped capability/commands without overwriting historical Tempo facts or importing source live acceptance.",
+      "targetPaths": [
+        "CONTRIBUTING.md"
+      ],
+      "targetSha256": {
+        "CONTRIBUTING.md": "f85a2a59230fe076cd7ff9a6bce09a003d6afe31696f0246616b4f767afd49cb"
+      }
+    },
+    {
+      "path": "README.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "9105ad261bf4eebf9367abebfdd78698e986390dab9311cd896f90c11bdbf82c",
+      "sourceBlobSha1": "f4701b04e903c17d1b26dab016dfe506397cc0b3",
+      "status": "migrated",
+      "reason": "Added current scoped capability/commands without overwriting historical Tempo facts or importing source live acceptance.",
+      "targetPaths": [
+        "README.md"
+      ],
+      "targetSha256": {
+        "README.md": "bdfe68b7ff09ce46d11d09ade5e217aad8be7cbe70a090989ee0c320aed8589d"
+      }
+    },
+    {
+      "path": "README.zh-CN.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "0c165c8aa3110c4160f4991bf38f10455a8ee75282fd2dc71c0ac01006ab79c1",
+      "sourceBlobSha1": "e88acd6c2c0015f1a2691b1b0d0a9cd2f060702e",
+      "status": "migrated",
+      "reason": "Added current scoped capability/commands without overwriting historical Tempo facts or importing source live acceptance.",
+      "targetPaths": [
+        "README.zh-CN.md"
+      ],
+      "targetSha256": {
+        "README.zh-CN.md": "34ed8efd5045c40102f7b8d1e8d3577ebd463470fcdef7e3e1783f9ab450d7ab"
+      }
+    },
+    {
+      "path": "deploy/monad-vps/README.md",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "c0a80651d43d7f39fb372ec4f1381cd384876139745953224073327ecd4e7bce",
+      "sourceBlobSha1": "9cdebab0b1a4944a521683d07f23ad9e8fcd4c01",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "bfc9133e75b3b690fd7ddef18bea56c7bae350606bebd6e01a1355c9c9750651",
+      "sourceBlobSha1": "783a9cd997e6679baa41b0b3a058c05b3227ee5e",
+      "status": "migrated",
+      "reason": "Added current scoped capability/commands without overwriting historical Tempo facts or importing source live acceptance.",
+      "targetPaths": [
+        "docs/ARCHITECTURE.md"
+      ],
+      "targetSha256": {
+        "docs/ARCHITECTURE.md": "0946a5727c3b5e4a01927f9c64968ccb6e8ff9e0da93150a32f150d462d7ff9f"
+      }
+    },
+    {
+      "path": "docs/BOUNDED-ECONOMY.md",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "1741dc30ecb1cd3bc84546e2daea9e2b880ae3f6b007b79724718ea42dfad58b",
+      "sourceBlobSha1": "56f868d36dd55f6daccf499a3e15b4eb951cf74f",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "docs/BOUNDED-ECONOMY.md"
+      ],
+      "targetSha256": {
+        "docs/BOUNDED-ECONOMY.md": "4b4e18725923b05aafa80af8c199029306e3951703855836d33fedccb1b01365"
+      }
+    },
+    {
+      "path": "docs/ECONOMICS.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "a0bff307aed1e97688760e49c72f76d2c679ef53932d946989835e840cdf9212",
+      "sourceBlobSha1": "8cbcdcd9e4a7f92918b12cc95616bf79c54ac90e",
+      "status": "migrated",
+      "reason": "Added current scoped capability/commands without overwriting historical Tempo facts or importing source live acceptance.",
+      "targetPaths": [
+        "docs/ECONOMICS.md"
+      ],
+      "targetSha256": {
+        "docs/ECONOMICS.md": "eb303d621904f3982394b3a81da0ef76e50a8a7bc623056227c84df7740b863c"
+      }
+    },
+    {
+      "path": "docs/INDEPENDENT-ECONOMY.md",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "204e5b6be97d9b6ce8edf46cd26edf7b1f46df86f9a984b3c2926501f2bf4a4b",
+      "sourceBlobSha1": "544b720948a4cb290d5d15a899e04f5a4a2344c7",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "docs/INDEPENDENT-ECONOMY.md"
+      ],
+      "targetSha256": {
+        "docs/INDEPENDENT-ECONOMY.md": "ebf5266b2e9b25d0c3b2b0b7cd6d24e1c873bd19708e0595f25b60d22bfc0523"
+      }
+    },
+    {
+      "path": "docs/OPERATING-REPORT.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "730001fae8af2715eaf9e6f37277abdeb609b8d1f980cb0c8a2d02dbc8da1273",
+      "sourceBlobSha1": "7107997ab85fd19465d22c5c657e8048dc1172de",
+      "status": "migrated",
+      "reason": "Added current scoped capability/commands without overwriting historical Tempo facts or importing source live acceptance.",
+      "targetPaths": [
+        "docs/OPERATING-REPORT.md"
+      ],
+      "targetSha256": {
+        "docs/OPERATING-REPORT.md": "8a40165087314dcdbbbece43db5037a744d131b4be9bee99f91db6b4ba0e1738"
+      }
+    },
+    {
+      "path": "docs/README.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "005e1711d89d2b91bac1c95d848fbd2dce378e33c2d087b7c0f9346972baef14",
+      "sourceBlobSha1": "e59abeef8d8c4ae6206266bb9041fa2c01447e31",
+      "status": "migrated",
+      "reason": "Added current scoped capability/commands without overwriting historical Tempo facts or importing source live acceptance.",
+      "targetPaths": [
+        "docs/README.md"
+      ],
+      "targetSha256": {
+        "docs/README.md": "35b7d01ed851c774f9b6ad3eb1e6b9ad7c060f1809d5d974e2fa98518e49350f"
+      }
+    },
+    {
+      "path": "docs/REVIEW-REPLAY.md",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "22db871f3f46daad34c24597ef5963e5f4c76b5222cfc53b8d07c0f572a324ac",
+      "sourceBlobSha1": "beba365fa224b142ccefd7821b5bc33dec6fc355",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "docs/REVIEW-REPLAY.md"
+      ],
+      "targetSha256": {
+        "docs/REVIEW-REPLAY.md": "7c531ce832c5eba1f63f210bbd200aac403ac59fa9317b6660df826ac77fdb30"
+      }
+    },
+    {
+      "path": "docs/REVIEW.md",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "81b9df84ed398d564ce1ac00d5c5d86b136e959aab30c617cae5d94223c21494",
+      "sourceBlobSha1": "851f2fac100692113c7a16661bea141f04efd219",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "docs/REVIEW.md"
+      ],
+      "targetSha256": {
+        "docs/REVIEW.md": "b7ace6df539eed854366b3f32d1c2bd5a2f4e286f2144cda238caa51cc07157c"
+      }
+    },
+    {
+      "path": "docs/STRATEGY-ADVICE.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "dde66b7e6c3c1eb6338193a4b6a63f982fda8bc5f55ff3f51253b9ca6ec70719",
+      "sourceBlobSha1": "50c543a070df15a91912d5987050dee69d24ffc8",
+      "status": "migrated",
+      "reason": "Added current scoped capability/commands without overwriting historical Tempo facts or importing source live acceptance.",
+      "targetPaths": [
+        "docs/STRATEGY-ADVICE.md"
+      ],
+      "targetSha256": {
+        "docs/STRATEGY-ADVICE.md": "1f5138b4ac3e1dabc8399ba29c7e9a2b937fe694570f7b740d805792eeedd652"
+      }
+    },
+    {
+      "path": "docs/VERIFICATION.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "6d8e9db1da5aee941b423727632f0b4566a11d2f63fa0c8454cf2b23946af359",
+      "sourceBlobSha1": "522a0dde25976f92d5a74c39aa0f281b419ec3f2",
+      "status": "migrated",
+      "reason": "Added current scoped capability/commands without overwriting historical Tempo facts or importing source live acceptance.",
+      "targetPaths": [
+        "docs/VERIFICATION.md"
+      ],
+      "targetSha256": {
+        "docs/VERIFICATION.md": "6fb63bed71a28c109792e4d582b899a79ff8f6da79b9a4886dee5269e304befa"
+      }
+    },
+    {
+      "path": "docs/acceptance/economic-loop-20261017.json",
+      "group": "recorded-offline-evidence-not-tempo-acceptance",
+      "sourceSha256": "a869669a00d8512d718877a868995d002219f028f7fe8bb8ff8a6d8149f206d0",
+      "sourceBlobSha1": "276deaa8f706d18d0db20298c98f35ede4334e0b",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/acceptance/p0-bounded-economy-20261018.json",
+      "group": "recorded-offline-evidence-not-tempo-acceptance",
+      "sourceSha256": "c6dc17cce051a78b3b833af34d46924667ce9f48dafe70d75bb7c42f3d8a6d0d",
+      "sourceBlobSha1": "265bdf0570e0de0d21e72cb1268a8b6b20491769",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/acceptance/p0-bounded-shadow-20261018.json",
+      "group": "recorded-offline-evidence-not-tempo-acceptance",
+      "sourceSha256": "c5a614deeab77f866a5ecd46795c0df85e6e2f76fc54055764387286e4c53580",
+      "sourceBlobSha1": "c1055a4115cafffc9476fd888e3aa5236d6c71e8",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/acceptance/p0-independent-economy-20261019.json",
+      "group": "recorded-offline-evidence-not-tempo-acceptance",
+      "sourceSha256": "776d73ee95fbc5956878d9b50359d84f5135cbd903f315be14460e75717c0882",
+      "sourceBlobSha1": "79454259e0990e29abd23c3ece95b0362d7b5c67",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/acceptance/p0-independent-shadow-20261019.json",
+      "group": "recorded-offline-evidence-not-tempo-acceptance",
+      "sourceSha256": "51b280de46574519f22521bdf34c784afe94f1ea8f9533a36c61294bea129b96",
+      "sourceBlobSha1": "85bc84d88b30b939e1a90531f5c7def5f6b24146",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/acceptance/p1-role-economic-loop-20261017.json",
+      "group": "recorded-offline-evidence-not-tempo-acceptance",
+      "sourceSha256": "f4cc8774e20ae341d1325a9abf06b0e82c850ed5e19beb21503e89d479ecd5a4",
+      "sourceBlobSha1": "5d0dbecb6f9860ddab524c57e2df7a8bd82b54dc",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/acceptance/p1-role-economic-loop-final-20261017.json",
+      "group": "recorded-offline-evidence-not-tempo-acceptance",
+      "sourceSha256": "d233b5af3d3d40d1651c6786b901eb5522cbf2f199bd826719acc76f8e59f275",
+      "sourceBlobSha1": "ea1d3bddff66a5bc53d654c6e1fa5a7e51180e09",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/acceptance/p1-role-offline-20261017.json",
+      "group": "recorded-offline-evidence-not-tempo-acceptance",
+      "sourceSha256": "c74477cd9acd178680a645be0b8679e4280e34fbe837f45ecfdfd237fb263797",
+      "sourceBlobSha1": "0e619a6d3389ecc0fd672e20f42b8a641dd24478",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/acceptance/p1-role-offline-final-20261017.json",
+      "group": "recorded-offline-evidence-not-tempo-acceptance",
+      "sourceSha256": "08ec58577c19b48b11ae8901d63e5cb7e1dfccca58882684bb758cb30f1f11a3",
+      "sourceBlobSha1": "2ba6fd59586af14bb91323efad1b67339d04169f",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/acceptance/p1-strategy-economic-loop-20261017.json",
+      "group": "recorded-offline-evidence-not-tempo-acceptance",
+      "sourceSha256": "1977d74f7d2bcedc46fd8827efce1208e81ccb1d7aea6f10faea9b0ac3692a0b",
+      "sourceBlobSha1": "4a890a7c55c7a79aa48f46379992a8415656dfef",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/acceptance/p1-strategy-offline-20261017.json",
+      "group": "recorded-offline-evidence-not-tempo-acceptance",
+      "sourceSha256": "74b7862a8c126bc1b9382043645ef7d066869576fd0de7a16124775dfc7f82f9",
+      "sourceBlobSha1": "5b13487df96133796f1228a779b904eb5be4e444",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/acceptance/publisher-worker-20261017.json",
+      "group": "recorded-offline-evidence-not-tempo-acceptance",
+      "sourceSha256": "c30fcab7d04907fde3ad9576a64a7b410c7eb7c8ffc1b358de0f59a87a993461",
+      "sourceBlobSha1": "062eeadeca253bd779b3266321e57f3f6006cb7d",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/economic-loop-local.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "c22bc6a03f5719eaef48a0a5e5fad0ad665dd23a0090aded99ee2237c83c9592",
+      "sourceBlobSha1": "039c1b9effabd500964006c4f2f41a669755b4ad",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/economics-local-20261017.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "504956fa9aba8d9c59b6d8ac7eac5e61071925f2cf956634423c18199920c385",
+      "sourceBlobSha1": "e8f2a4cc92fc899fbb47c39a36d0c55b51a0a574",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/monad-demo-readiness-20261016.md",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "b835d4284c41c4936840116a47b64f19f76e54cb9412d2143d5af7e63d52f3a8",
+      "sourceBlobSha1": "7eb7203bf8aa01cc9eef71dc803bf903c78e403d",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/monad-hackathon-live-20261017.md",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "ee31cf0a223c9a8b9699028ecc1d9bb2f55febee9f1e2800af9eef5c4738c2ff",
+      "sourceBlobSha1": "6e19be9304dfa03e409e1e22a95cb409864c3dff",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/p0-independent-local-20261019.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "74996bc6e993676931ebe9aa73a6c734966be20792f92c059ba41225fc20aa0f",
+      "sourceBlobSha1": "29d589a121bf4f9f84484f63f36288faa4460ea0",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/p0-local-20261017.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "bff452f8c65a1aef1e6e9c2d51bfabbfb390e24bbccc7087e303bf37eac62423",
+      "sourceBlobSha1": "22bb3f1160eca8b3274ad5f9f1299ef01749e212",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/p0-review-loop-local-20261018.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "cd46e40a76e1a028c3c7ca6dc5d77a8182b7ae6a78d8602d3d1170fdbb11672b",
+      "sourceBlobSha1": "78ecb56038c641c08e096903752461ffba69b1fd",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/p1-role-local-20261017.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "1d9014c396d65d13068639d9c3404b09fd47dadb9dc7a00281078f5070048f4d",
+      "sourceBlobSha1": "bc58b7688ed3cd357e72b65999a6da974ce583ae",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/p1-strategy-local-20261017.md",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "e2191976166ef46e31444708b5f427fe07c8cb6c06806dc474c5cdf27ab36231",
+      "sourceBlobSha1": "a5fcadd2fb262386621cd6ec1d8016a81df51a43",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "docs/video-update-20261015.md",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "22f697b609a9c1b668360ace50ec948584868ad77d562c54a68fef700e5106da",
+      "sourceBlobSha1": "125ffa85718795f852e58c4c26ca9f9da5a1151f",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "examples/economic-worker/README.md",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "df64c9e28e188a1ad9e4ad9bbf029124ff93b8ad6ac1f3f271c4f178eb436a11",
+      "sourceBlobSha1": "0a4d4fd58ccce1b7e658d57415217a24bc423677",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/economic-worker/README.md"
+      ],
+      "targetSha256": {
+        "examples/economic-worker/README.md": "d8213fc453de81c88a87c101a73454b5f43acd2775da2318b9637616a7b458d3"
+      }
+    },
+    {
+      "path": "examples/economic-worker/controller.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "fcebae7b6df3155e16845afe35983fe8bb9aee557d599eccd9ec0e4d83a2462c",
+      "sourceBlobSha1": "5cb2b4c677ba03b466f794559c47458f7f77c5de",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/economic-worker/controller.mjs"
+      ],
+      "targetSha256": {
+        "examples/economic-worker/controller.mjs": "b094071d2c41634cb64281363552bf022392b21a0b69eb07fe6a2528c66911c0"
+      }
+    },
+    {
+      "path": "examples/economic-worker/durable.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "790b0da4208ba368dff971b1175cc642170da8b39f2b38577966cd42f892382c",
+      "sourceBlobSha1": "dcf48ab700c6e92f837df5598f5c38e811b3a940",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/economic-worker/durable.mjs"
+      ],
+      "targetSha256": {
+        "examples/economic-worker/durable.mjs": "395d623ee04196ea32ef8d685dd6b500f422b03624589caa58f36f4a4ff2cd32"
+      }
+    },
+    {
+      "path": "examples/economic-worker/package-lock.json",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "da35944305c4e33217e94afad35b330e823fba7fefcf429710fa1b2081386280",
+      "sourceBlobSha1": "5ecee5eb799435560369688e47775e90d710e0c5",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/economic-worker/package-lock.json"
+      ],
+      "targetSha256": {
+        "examples/economic-worker/package-lock.json": "da35944305c4e33217e94afad35b330e823fba7fefcf429710fa1b2081386280"
+      }
+    },
+    {
+      "path": "examples/economic-worker/package.json",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "21cba04381285d15077ab43b7418c77753506894e13e503ffc25a2cf5411af65",
+      "sourceBlobSha1": "b2cbcc059501a477ee06c8ae6c42a903daa974e2",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/economic-worker/package.json"
+      ],
+      "targetSha256": {
+        "examples/economic-worker/package.json": "21cba04381285d15077ab43b7418c77753506894e13e503ffc25a2cf5411af65"
+      }
+    },
+    {
+      "path": "examples/economic-worker/policy.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "41411e86a4273e17aa8d97e3ec5431887f991a46542a759436f939f759aaa0f0",
+      "sourceBlobSha1": "9b18ae9d67309439a31a6f802f132f441606c3ed",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/economic-worker/policy.mjs"
+      ],
+      "targetSha256": {
+        "examples/economic-worker/policy.mjs": "41411e86a4273e17aa8d97e3ec5431887f991a46542a759436f939f759aaa0f0"
+      }
+    },
+    {
+      "path": "examples/economic-worker/protocol.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "f56aa983bd1bc14ab159af999dc700d7a62f382d29fed599faa53d23c397819e",
+      "sourceBlobSha1": "13eda311d620d6a2610a92552cc3ff089b559972",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/economic-worker/protocol.mjs"
+      ],
+      "targetSha256": {
+        "examples/economic-worker/protocol.mjs": "f56aa983bd1bc14ab159af999dc700d7a62f382d29fed599faa53d23c397819e"
+      }
+    },
+    {
+      "path": "examples/economic-worker/publisher.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "d0de28c6afda347b04ba8e13e15cef7b8d7c92bf72ab5987cb28db055d173668",
+      "sourceBlobSha1": "9eb6d26ffe015f6878eab878650c6d6394965140",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/economic-worker/publisher.mjs"
+      ],
+      "targetSha256": {
+        "examples/economic-worker/publisher.mjs": "d0de28c6afda347b04ba8e13e15cef7b8d7c92bf72ab5987cb28db055d173668"
+      }
+    },
+    {
+      "path": "examples/publisher-worker/README.md",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "ca8b7c5eb9db2b952bd15019558e69d7592fe09427ca24670db2672a14994f93",
+      "sourceBlobSha1": "10cfd48e181e4957e033d4b3e1b8d01a07fb3757",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/publisher-worker/README.md"
+      ],
+      "targetSha256": {
+        "examples/publisher-worker/README.md": "be35fc263e4a67f3993e4cdff3420baaa3230feee50c000657fff979c1198ba5"
+      }
+    },
+    {
+      "path": "examples/publisher-worker/admit.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "e9e1a03ebc85fc618e5028c970be70acd3c68c292a388544b8f79642d9c1c522",
+      "sourceBlobSha1": "64b7efa8745e709842da390ed4553d62299c9cb9",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/publisher-worker/admit.mjs"
+      ],
+      "targetSha256": {
+        "examples/publisher-worker/admit.mjs": "e9e1a03ebc85fc618e5028c970be70acd3c68c292a388544b8f79642d9c1c522"
+      }
+    },
+    {
+      "path": "examples/publisher-worker/durable.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "3098a28dd2892570e868206f2e24634dbfcec481bfba0a9da96c6bba77cde98f",
+      "sourceBlobSha1": "0be498537b9d5a6f6ad3ba8143fdcdd4269cc7fd",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/publisher-worker/durable.mjs"
+      ],
+      "targetSha256": {
+        "examples/publisher-worker/durable.mjs": "14dec4aa6850e4aaf67f01f996f994e15d856fe403f0e04b47e1459f537d0246"
+      }
+    },
+    {
+      "path": "examples/publisher-worker/package-lock.json",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "73e10ed0a205f43924a31a8aa66e19e684d9003f069464853ef06b1ca1112150",
+      "sourceBlobSha1": "a8ab08bab9f37f7b5843a723c94a2d631a2191da",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/publisher-worker/package-lock.json"
+      ],
+      "targetSha256": {
+        "examples/publisher-worker/package-lock.json": "73e10ed0a205f43924a31a8aa66e19e684d9003f069464853ef06b1ca1112150"
+      }
+    },
+    {
+      "path": "examples/publisher-worker/package.json",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "52a9bfed4779a7dba68ae2691e29be392242920c8d4c9d0a3a444425adc69640",
+      "sourceBlobSha1": "a28008d64c6b1cfe1ffd119991e386710989c89c",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/publisher-worker/package.json"
+      ],
+      "targetSha256": {
+        "examples/publisher-worker/package.json": "52a9bfed4779a7dba68ae2691e29be392242920c8d4c9d0a3a444425adc69640"
+      }
+    },
+    {
+      "path": "examples/publisher-worker/protocol.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "98e3626feac73a5c5e9a937e884bb51a0385da83022bf82d13dad46807b291a9",
+      "sourceBlobSha1": "74fc7777a5395c36c170a2b1e004c255418ba8f9",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/publisher-worker/protocol.mjs"
+      ],
+      "targetSha256": {
+        "examples/publisher-worker/protocol.mjs": "98e3626feac73a5c5e9a937e884bb51a0385da83022bf82d13dad46807b291a9"
+      }
+    },
+    {
+      "path": "examples/publisher-worker/publisher.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "4485dee77829335c4fb7236a278212300ed48b73d6fc00a3ba5156875a1485c2",
+      "sourceBlobSha1": "b37c1148f75a170e6f26fbd93db940dd91594539",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/publisher-worker/publisher.mjs"
+      ],
+      "targetSha256": {
+        "examples/publisher-worker/publisher.mjs": "4485dee77829335c4fb7236a278212300ed48b73d6fc00a3ba5156875a1485c2"
+      }
+    },
+    {
+      "path": "examples/publisher-worker/test/protocol.test.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "ea7fd8b8b761d2cbc6ca58f557295726bc7d05244ec1c7e3eea5cf214e5292d6",
+      "sourceBlobSha1": "dc0ee33b3ab60eb5e74a908a45cca1b90ceea7f1",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/publisher-worker/test/protocol.test.mjs"
+      ],
+      "targetSha256": {
+        "examples/publisher-worker/test/protocol.test.mjs": "b6ae8f22b7385d9910624ce706135985af3486f50b8c62dbccdd1b114fb0d02d"
+      }
+    },
+    {
+      "path": "examples/publisher-worker/worker.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "d4df6e96133676c7c89214813f5759cf7708e8f368cab7408e6986978f13b34e",
+      "sourceBlobSha1": "8067cbd3e9f6ee1014f18c7acdb0842fbc876813",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "examples/publisher-worker/worker.mjs"
+      ],
+      "targetSha256": {
+        "examples/publisher-worker/worker.mjs": "6ac3f92aa22b6c72a9e0a817a1b7d9a7e2dbc6350a89781968e42a5d624c28de"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/.gitignore",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "7456e20d5fc6711ad84176414a16d226446a3277e4b43bce5b5696ba571bb82e",
+      "sourceBlobSha1": "b017ccd4bd18e09dc7dae6f9948c5d875a5ac3a3",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/.gitignore"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/.gitignore": "7456e20d5fc6711ad84176414a16d226446a3277e4b43bce5b5696ba571bb82e"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/README.md",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "cfee4b43a815e14dc942b90013b63ea20b11615c5ca43495cc0abaaa93e80591",
+      "sourceBlobSha1": "0851a61ff827a21ec3e43996375698799ab280ba",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/README.md"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/README.md": "3bd1bf8f63cf756073fc6d62df76ae0de9c72a0c189a8279c24a11e0de02b3de"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/client.mjs",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "ae5128d181bf90673d9125c7120bdf0f1d9da726d70d5a51aaed629351712338",
+      "sourceBlobSha1": "ef75531d450db6235c5caa633c4c51c60e92b9f4",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/client.mjs"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/client.mjs": "ae5128d181bf90673d9125c7120bdf0f1d9da726d70d5a51aaed629351712338"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/demo.mjs",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "bdf98050a45027a397daae7734b365227b296361e0ed676b43ed31ab1a498fa1",
+      "sourceBlobSha1": "2f6c3bba511c2f38833e4f259a49673f9826f59c",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/demo.mjs"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/demo.mjs": "bdf98050a45027a397daae7734b365227b296361e0ed676b43ed31ab1a498fa1"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/fixture.mjs",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "9fcaf4146d185c3301963ff28aaccf35d567b4b63dbf76f8c99baae3f18271db",
+      "sourceBlobSha1": "065c5b608fe5e1b11fda50733cef57d83b686012",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/fixture.mjs"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/fixture.mjs": "9fcaf4146d185c3301963ff28aaccf35d567b4b63dbf76f8c99baae3f18271db"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/journal.mjs",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "b46eb1769b42a230d9908c8dcac3cc4abce9fea20a0431f794d793558e1dbba5",
+      "sourceBlobSha1": "c5e80e2518cb4a2eb36750bcaf5637a6ea1196cc",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/journal.mjs"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/journal.mjs": "b46eb1769b42a230d9908c8dcac3cc4abce9fea20a0431f794d793558e1dbba5"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/package-lock.json",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "e9570d85df20c44c3fca5fcbc32e2198943f767c258477a6970ecd6852a7bd3c",
+      "sourceBlobSha1": "c80c8839952600b68aa22ee30b8882e5485a51a6",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/package-lock.json"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/package-lock.json": "e9570d85df20c44c3fca5fcbc32e2198943f767c258477a6970ecd6852a7bd3c"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/package.json",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "958ee32ad9b5ec8417cb2a20c6aa4e2aee9aa2f28bb2fe7fa2dc6e6a3e4db768",
+      "sourceBlobSha1": "bde94d2a57eaec0880b6492e037a1c8bcfe71742",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/package.json"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/package.json": "958ee32ad9b5ec8417cb2a20c6aa4e2aee9aa2f28bb2fe7fa2dc6e6a3e4db768"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/real-client.mjs",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "19ce5be0917fc4e936bdbfcc038083cb9131e71a58599dbfdbcb8185629c1aab",
+      "sourceBlobSha1": "0338c8b16f1c0c7374e0ab9aa667ad4ec60a2756",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/real-client.mjs"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/real-client.mjs": "19ce5be0917fc4e936bdbfcc038083cb9131e71a58599dbfdbcb8185629c1aab"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/test/smoke.test.mjs",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "e4441259b971f12f595f5e73b6310ba982d19ae6cdded90fa8eab3b26223c220",
+      "sourceBlobSha1": "dcea6b79f01c84c7d4f00bcba470ce01cf75bb61",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/test/smoke.test.mjs"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/test/smoke.test.mjs": "e4441259b971f12f595f5e73b6310ba982d19ae6cdded90fa8eab3b26223c220"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/trusted-config.example.json",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "c75b76715e87c2c686ee5a58840661aba722017abffa032a7be66b6b397f7d61",
+      "sourceBlobSha1": "9320b09f800dcdd8453950c71fc68ea762e20d9b",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/trusted-config.example.json"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/trusted-config.example.json": "c75b76715e87c2c686ee5a58840661aba722017abffa032a7be66b6b397f7d61"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/tsconfig.json",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "4741f58a2891ac5bf01328ead81da59e6e545cca9e34bee677d9dcbebe3e3a99",
+      "sourceBlobSha1": "5ee1463dc2d7c8ee0ce309fb25288765c6ab0f16",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/tsconfig.json"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/tsconfig.json": "4741f58a2891ac5bf01328ead81da59e6e545cca9e34bee677d9dcbebe3e3a99"
+      }
+    },
+    {
+      "path": "examples/sdk-standalone/typecheck.ts",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "cb46e9f701ba7221ba4cf0f28bcec6d2d9228572acf4cc7f3ec70cc27f635e58",
+      "sourceBlobSha1": "e65f77bdb288785a732db83b41e81af8f47119af",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "examples/sdk-standalone/typecheck.ts"
+      ],
+      "targetSha256": {
+        "examples/sdk-standalone/typecheck.ts": "cb46e9f701ba7221ba4cf0f28bcec6d2d9228572acf4cc7f3ec70cc27f635e58"
+      }
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/README.md",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "bd72b9ab79cfc269ca2ca37c89a38d22ebe7bd50528ce8893360c110b5867011",
+      "sourceBlobSha1": "65ccd9a06fd885af4644d909e7620280c7485be7",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/automatic-fresh-public-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "a14e34c9b276fb25eb1ef83e94fdf1825b40585e3f5fc36cf32e752f5bff308f",
+      "sourceBlobSha1": "e41ad93886a7c08c2b1111a8e9101da5b87eb6c1",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/credit-loop-public-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "5527a3c39467c494647bdcdc7219d5ddabc313375068a220bae7464efa80c2e9",
+      "sourceBlobSha1": "857e7916c444016859d5ce7d0a1b267fc45b2682",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/deployment-public-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "0ecccc7724c36e0af36a042397947eea4ce029a63bb17839e9421b7375a85902",
+      "sourceBlobSha1": "850cc4f8838e74c8b2fda744ff95dae4b9f910ef",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/external-public-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "9bed1a3b4713400a2f726243df8a3f85a8f633a7866e980b12b0549dca12953e",
+      "sourceBlobSha1": "8169660d62e66c3118b3cbf913d061f378b36f2c",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/fallback-fresh-public-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "913891b5664a32eb50d5f14dbdd32aa624fad4bd43f82f6361d3ea4c78d17a16",
+      "sourceBlobSha1": "ad56eb761c2131d64e69eb2462dedf184107a207",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/presenter-credit-loop-public-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "b930d5ac4224f511e2b037c7be6b16157c149af63e0a8548d2114fc24b48d964",
+      "sourceBlobSha1": "a7b7f1b2229633b2eb04c88db7b7275a7be5164c",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/presenter-ready-public-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "82dd311349d9f16a9338d1f04e0dfaa690a00b497ee63f149764ede51c3dadad",
+      "sourceBlobSha1": "b557d28f191adf17015eb584ee1fa34623c3c6cf",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/public-agent-evidence.jpg",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "f1e7f74261f76bf56b107050c5d3deb560c0163853d6fea327b240a5be2b3762",
+      "sourceBlobSha1": "9a674b97a67e3c4f66d380b409f38eeaa9c4d55a",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/public-browser-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "5e351fcb330bce63e1a450378b78f1e3476f77d4e76f125ce6a15096c23e01d7",
+      "sourceBlobSha1": "83fdc92f8388a258cb49cfec99e4f625588b28ed",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/public-expert-evidence.jpg",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "843a4835b04ac5e90d1485f5162c57a434b108344b62c98cf6013b28fa55e26c",
+      "sourceBlobSha1": "05f2ecbfd353a76c2491b8c3fce0dbd1b2a14640",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/public-finance.jpg",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "b9d77661a036350a956be4ea55378587a2b183e9313a86b56d0cb223f33035de",
+      "sourceBlobSha1": "0df2608868e47c1cc8d1abf0c5246e20b62eb2f1",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/public-games.jpg",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "d1f87d1854d0ed3248c6301995489dd304bddd7287002b9b404ec7f3c7906fea",
+      "sourceBlobSha1": "26f7faa73e6d155390dc45366abfa8f19e5f5ad2",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/public-health-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "2b8e772da36091908b9619e1b5d949750785ec18f61dc0748ba822b77fc053f7",
+      "sourceBlobSha1": "ed43a2e994c2e9a6e43070c80a203fc2bdd36ad2",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/public-task.jpg",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "d21d2ec260d215cf35fae68077f521843f6e0aac21b07b12d32b40fa73764981",
+      "sourceBlobSha1": "261df61844af0b83b6fe041bdf47c71e78e92b1a",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/resources-public-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "be0442b939b081f4119e06c71df4bde04c6b23a24d46ef608bef87612bd5c403",
+      "sourceBlobSha1": "278cfaa15ed98ace4e80cf51308a1867d2aba87e",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/settlement-recovery-public-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "3a0d095750d386bc6e87058258ad65048847caccbca2e039bf6d72dd0fed6554",
+      "sourceBlobSha1": "98f2dd53bdfef45c11bbf9047436854c25d0be36",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/standby-task-creation-public-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "6c7961c1b7c0d2a415bd18167ee43857b0bd2f050d85bb2554bccf44bab8bb33",
+      "sourceBlobSha1": "42a8cf81c043639cefddcd2fb34168ff52b7df9d",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/standby-tasks-public-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "843b24335e370741ddbb74e594eab089d67922f8bb66dd318e3da11ee8b709f2",
+      "sourceBlobSha1": "5b7f7238dcaf784d9b801b32f476ad48084193eb",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/acceptance/monad-hackathon-20261017/token-supplement-public-summary.json",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "2254117362e316bfa91cae5b0b69c1a5401ce0e88760ae69a0dcbb6f1fac811b",
+      "sourceBlobSha1": "ea28a4c159123d486667df01f821a6eccabdb0f2",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/app/watch/page.tsx",
+      "group": "presentation-and-public-demo",
+      "sourceSha256": "db852ce8fd7048a6209eeb2dc7d47207f5d4f68e1379120ddff3fce8a1d6659d",
+      "sourceBlobSha1": "c1483b8f5e51fa54d47631913434f92dbce3b7c9",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/components/hosted/accounting-panel.tsx",
+      "group": "economic-readonly-ui",
+      "sourceSha256": "07344c0ef6ed95d7f09ce73761f1a75f5401643457bdcd3ec87ed1b02c10f374",
+      "sourceBlobSha1": "ab45397a1279cb947eaffc4a5604a766a5c3bcfa",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "frontend/components/hosted/accounting-panel.tsx"
+      ],
+      "targetSha256": {
+        "frontend/components/hosted/accounting-panel.tsx": "ace487fa52f6312ea79ce43f816ccbd3a08196e3caa1e84610fe47339d484491"
+      }
+    },
+    {
+      "path": "frontend/components/hosted/finance-app.tsx",
+      "group": "economic-readonly-ui",
+      "sourceSha256": "951f90347a4b6c73dd8d7e0c1047b8fc2a35628a4c14e5821ebf131b7a3ed3df",
+      "sourceBlobSha1": "ae4a3f9bdf08647b1a7d092ddeda9ae70ed57569",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "frontend/components/hosted/finance-app.tsx"
+      ],
+      "targetSha256": {
+        "frontend/components/hosted/finance-app.tsx": "c5af5527588779f1120234a20b74a595f71a4c14f3df972e7c73e022e98108cc"
+      }
+    },
+    {
+      "path": "frontend/components/hosted/finance.module.css",
+      "group": "economic-readonly-ui",
+      "sourceSha256": "3b2ef6e3ebd05f6b059e28ffdb50ead2d2b9e3edf35d07c2822c8474ac5f4b23",
+      "sourceBlobSha1": "1282cd9f00d43eb7c5656a19bfd672c6f672e5dd",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "frontend/components/hosted/finance.module.css"
+      ],
+      "targetSha256": {
+        "frontend/components/hosted/finance.module.css": "3b2ef6e3ebd05f6b059e28ffdb50ead2d2b9e3edf35d07c2822c8474ac5f4b23"
+      }
+    },
+    {
+      "path": "frontend/components/hosted/hosted-app.tsx",
+      "group": "reliability-first",
+      "sourceSha256": "e750edaa30b143dacb9e3eed4e8db6916415443f8ff71984a02eb5db0c879e87",
+      "sourceBlobSha1": "0732b1d1d7b1a9a58db22c57682413a24b928e96",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "frontend/components/hosted/hosted-app.tsx"
+      ],
+      "targetSha256": {
+        "frontend/components/hosted/hosted-app.tsx": "07c3a3082dc5867c1440381694505ca4b45d36bb9c98a3cc0267ce9168317c6e"
+      }
+    },
+    {
+      "path": "frontend/components/hosted/mission-chat.tsx",
+      "group": "presentation-and-public-demo",
+      "sourceSha256": "cd6a1bc21d6d8a152a59c6b54c59f5b468893a0c9d06db14fe645c1be5c88cf2",
+      "sourceBlobSha1": "f367e139de3a54b7ca8770566337b80bc9c2942c",
+      "status": "migrated",
+      "reason": "Added model path/downgrade reason and no-task scene rendering/tests; retained Tempo dynamic currency labels.",
+      "targetPaths": [
+        "frontend/components/hosted/mission-chat.tsx"
+      ],
+      "targetSha256": {
+        "frontend/components/hosted/mission-chat.tsx": "8a6802598122e98fa519913d5d57c93579ced94eb7432e55e4ec2aa4df9155cc"
+      }
+    },
+    {
+      "path": "frontend/components/hosted/workspace-notifications.tsx",
+      "group": "reliability-first",
+      "sourceSha256": "2af5b302257a371ef78980b5fd0f27f50cbd419fe72a7bd5bafbaf885c194628",
+      "sourceBlobSha1": "5bd616199e1b789bb29b9e6385732483a125e899",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "frontend/components/hosted/workspace-notifications.tsx"
+      ],
+      "targetSha256": {
+        "frontend/components/hosted/workspace-notifications.tsx": "ac709eed69a683358dac2a176055b5285848d978aa1d7a6a1a39e0f9e4b3891e"
+      }
+    },
+    {
+      "path": "frontend/components/landing/landing-locale.ts",
+      "group": "presentation-and-public-demo",
+      "sourceSha256": "3875a754d654d78faedad6b1f8d71f56e96784cf52bd6d80c5b5f9c08fbf5779",
+      "sourceBlobSha1": "e0213b1e012315076101908223f42c156a68307b",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/components/landing/landing-page.tsx",
+      "group": "presentation-and-public-demo",
+      "sourceSha256": "360600a4b249b811a657bdc12622476acc7997403b929779517fc24520d02663",
+      "sourceBlobSha1": "a82e027bd695c0c317eeb4c6545633e8fc55fe71",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/components/landing/landing.module.css",
+      "group": "presentation-and-public-demo",
+      "sourceSha256": "c7afc1bb0c178c623b06264c2149ae41663f9ff8c2c6191e65b24c66ebd86103",
+      "sourceBlobSha1": "49a61473991bab004cfe453176ac6d77a850e50c",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/components/onboarding/terminal-onboarding.tsx",
+      "group": "reliability-first",
+      "sourceSha256": "9b348a958a454abe318254d2d9f3a89cf9c5400edc1ce95f9c5ee7333c5d3b6b",
+      "sourceBlobSha1": "750060ade9144e937bef047da80dee404c8b8bde",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "frontend/components/onboarding/terminal-onboarding.tsx"
+      ],
+      "targetSha256": {
+        "frontend/components/onboarding/terminal-onboarding.tsx": "9808b0bf1bc87fd7d63740d292612a9124bf76ab33f39c65f9c68db04fca47dd"
+      }
+    },
+    {
+      "path": "frontend/components/watch/video-player.tsx",
+      "group": "presentation-and-public-demo",
+      "sourceSha256": "dd1e9edaaa5ba1685dfc3589884707d4092e78bc1885503946d6438290736d4b",
+      "sourceBlobSha1": "f677429b515756a353f97bd1145390390b77123b",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/components/watch/watch.module.css",
+      "group": "presentation-and-public-demo",
+      "sourceSha256": "0e75bdb00c5dfbb3117d75cf320fac24433ea2fcc15079b7e2201fc2e624e475",
+      "sourceBlobSha1": "35935e82ffc2576eb9c95032caa4ed68de39ab95",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/lib/hosted-accounting.ts",
+      "group": "economic-readonly-ui",
+      "sourceSha256": "db49dcaae4674e99d80bd2690080aa8d272614a6082e61ac83183ef881890afa",
+      "sourceBlobSha1": "e27e7600af8263353d093a215f65f06faef79c0a",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "frontend/lib/hosted-accounting.ts"
+      ],
+      "targetSha256": {
+        "frontend/lib/hosted-accounting.ts": "4cd92f519abe0acd0db7a6d796952b402562501e272748dbd212e028331bffc6"
+      }
+    },
+    {
+      "path": "frontend/lib/hosted-agents-proxy.ts",
+      "group": "reliability-first",
+      "sourceSha256": "5a445b12357b97bcc12ff31394a41a61f04bd47fd8ddafa8b669b3c876e0711f",
+      "sourceBlobSha1": "970072f7fbea2f913a0749fa5389cf6b8f2ea38c",
+      "status": "migrated",
+      "reason": "Prior reliability migration preserved; subsequent economic hunks merged without replacing Tempo/PR8 controls.",
+      "targetPaths": [
+        "frontend/lib/hosted-agents-proxy.ts"
+      ],
+      "targetSha256": {
+        "frontend/lib/hosted-agents-proxy.ts": "7248ec24836496aafc702975216a9788f620f7f15f86ec4a373173aa60710739"
+      }
+    },
+    {
+      "path": "frontend/lib/hosted-client.ts",
+      "group": "reliability-first",
+      "sourceSha256": "9ecee7ba5d17c4d5c867b3723f2a1474185ac6b336e04bda30a33fbc268c3ee5",
+      "sourceBlobSha1": "164ea3edfcefc89a4c80deb956db013781222f3c",
+      "status": "migrated",
+      "reason": "Prior reliability migration preserved; subsequent economic hunks merged without replacing Tempo/PR8 controls.",
+      "targetPaths": [
+        "frontend/lib/hosted-client.ts"
+      ],
+      "targetSha256": {
+        "frontend/lib/hosted-client.ts": "88e01d6ec95065538c15329d91752d61d834ba6c9cd2cd83eb13b54b4b808f20"
+      }
+    },
+    {
+      "path": "frontend/lib/hosted-operating-report.ts",
+      "group": "economic-readonly-ui",
+      "sourceSha256": "76588bb2c4fc49c7bf549e7f8bd7b39911e57ecda08b0e3445d650c4fbbb8f34",
+      "sourceBlobSha1": "ca4a94f7c6e00da2eaf64f2d427923044c45e14c",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "frontend/lib/hosted-operating-report.ts"
+      ],
+      "targetSha256": {
+        "frontend/lib/hosted-operating-report.ts": "a2d05fff68b36f0d2e84634b96a7950feb668e6c67b5d81ea0b36977f4d7451a"
+      }
+    },
+    {
+      "path": "frontend/lib/hosted-strategy-advice.ts",
+      "group": "economic-readonly-ui",
+      "sourceSha256": "9e07cbf57213319d1b1efce879524e8aafc0f8ee9323e45b79cc2b4914e30a4a",
+      "sourceBlobSha1": "da44c931927aae29ddf7c936af34e0204627b77e",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "frontend/lib/hosted-strategy-advice.ts"
+      ],
+      "targetSha256": {
+        "frontend/lib/hosted-strategy-advice.ts": "fd7b57c839fda523ccefb1ad1dc42e306c7c812869851fe240c62fa4f2a285e1"
+      }
+    },
+    {
+      "path": "frontend/lib/project-videos.ts",
+      "group": "presentation-and-public-demo",
+      "sourceSha256": "6afffd5188b806a2b6b74f0d7d408040e7b2a24f5834fabbc0b437521dfb8523",
+      "sourceBlobSha1": "64750872ba55877931ecfdd42a590dbaa508957d",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "frontend/lib/tabby-scenes.ts",
+      "group": "presentation-and-public-demo",
+      "sourceSha256": "89207f0431759e99def7fec78463dcd1439efab9e3ad86944a7c2afa60ec60a0",
+      "sourceBlobSha1": "59235faacdef5389d97c2aeecd60c82523fc6385",
+      "status": "migrated",
+      "reason": "Added model path/downgrade reason and no-task scene rendering/tests; retained Tempo dynamic currency labels.",
+      "targetPaths": [
+        "frontend/lib/tabby-scenes.ts"
+      ],
+      "targetSha256": {
+        "frontend/lib/tabby-scenes.ts": "dec49fa33dc44ff5da62e918004a26a0326b7198bbbdc23a0d0c51c25956949f"
+      }
+    },
+    {
+      "path": "frontend/lib/use-hosted-accounting.ts",
+      "group": "economic-readonly-ui",
+      "sourceSha256": "1e3545f8a9a4220fecd4f6b0aa125e8fe6cf7c2da4477defa0e7fcaa8a07ef73",
+      "sourceBlobSha1": "919ab0ff6fb5044b7e8c1af740d8adb93174700b",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "frontend/lib/use-hosted-accounting.ts"
+      ],
+      "targetSha256": {
+        "frontend/lib/use-hosted-accounting.ts": "a4c424c207ee0342710a2187dfd3e5572515ca47c59e66a2d4c1374a2d952e65"
+      }
+    },
+    {
+      "path": "frontend/lib/use-hosted-agents.ts",
+      "group": "reliability-first",
+      "sourceSha256": "8df6967d7e0e71ff735cdb9c3c2672e36d4de90b5f4611fff5bbbd1b0979a25c",
+      "sourceBlobSha1": "88bf2d229bb30db9cd17671c1ea086788e6bcfcb",
+      "status": "migrated",
+      "reason": "Prior reliability migration preserved; subsequent economic hunks merged without replacing Tempo/PR8 controls.",
+      "targetPaths": [
+        "frontend/lib/use-hosted-agents.ts"
+      ],
+      "targetSha256": {
+        "frontend/lib/use-hosted-agents.ts": "3afb899daf6b64d9ead89a32275da1c1fe6bd47da31650eec6890dc3c129a698"
+      }
+    },
+    {
+      "path": "frontend/playwright.config.ts",
+      "group": "presentation-and-public-demo",
+      "sourceSha256": "a9c96d9920baedce5dd2b4e3d7901f4670e6cef31802d7a31089804c79cc7e05",
+      "sourceBlobSha1": "8b99505098340adbe72114f09fb45c36ad120e65",
+      "status": "migrated",
+      "reason": "Adapted into Tempo-owned entry points/negative tests; excludes hardcoded upstream history and preserves pinned deployment gates.",
+      "targetPaths": [
+        "frontend/playwright.accounting.config.ts"
+      ],
+      "targetSha256": {
+        "frontend/playwright.accounting.config.ts": "0d3dede0e733b56c8980e0b2365d91e33f40f5c5399d2a9c5b3856a5c62241e1"
+      }
+    },
+    {
+      "path": "frontend/playwright.hosted.config.ts",
+      "group": "presentation-and-public-demo",
+      "sourceSha256": "f257793bfab5f02f419e7b13ee95db5a4f1c49fd823c8edb125a8d4eaa42edbc",
+      "sourceBlobSha1": "ce5f429be50f820a7f9960c4ac64a7750a370c24",
+      "status": "migrated",
+      "reason": "Adapted into Tempo-owned entry points/negative tests; excludes hardcoded upstream history and preserves pinned deployment gates.",
+      "targetPaths": [
+        "frontend/playwright.accounting.config.ts"
+      ],
+      "targetSha256": {
+        "frontend/playwright.accounting.config.ts": "0d3dede0e733b56c8980e0b2365d91e33f40f5c5399d2a9c5b3856a5c62241e1"
+      }
+    },
+    {
+      "path": "frontend/test/accounting-fixture.ts",
+      "group": "economic-readonly-ui",
+      "sourceSha256": "75d08b328c7ae0b2d498db67a840c21a2f1fde2bca9bf9713b3d7525fc8f3896",
+      "sourceBlobSha1": "c566660052ea681b2780ca672b7c5155d19ca95c",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "frontend/test/accounting-fixture.ts"
+      ],
+      "targetSha256": {
+        "frontend/test/accounting-fixture.ts": "bb46d52730e1d38424adcfb045c1df8fa358b2e4b9886aec7170caf49c88cc53"
+      }
+    },
+    {
+      "path": "frontend/test/browser/hosted-accounting.spec.ts",
+      "group": "economic-readonly-ui",
+      "sourceSha256": "1f28111eb874cfd76b47927224b344551145a66489db07546040fc3e3a67b36f",
+      "sourceBlobSha1": "ac8356ead835267f1d4c968f655bff66c40675cd",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "frontend/test/browser/hosted-accounting.spec.ts"
+      ],
+      "targetSha256": {
+        "frontend/test/browser/hosted-accounting.spec.ts": "9cbfc7205d73ead0188f295ffc72afef1f5f550e05503b4d608847c3e55b3082"
+      }
+    },
+    {
+      "path": "frontend/test/browser/hosted-agents.spec.ts",
+      "group": "reliability-first",
+      "sourceSha256": "d9c856b57b6428367e4b3aa353ad724343e218af6f7cfbf55d4dce6d0616cf8e",
+      "sourceBlobSha1": "bae13ccd5fa0b6191d89c1aea77c57ca104e117d",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "frontend/test/browser/hosted-agents.spec.ts"
+      ],
+      "targetSha256": {
+        "frontend/test/browser/hosted-agents.spec.ts": "b63f75cc2dac30078a400c8a65587efc584163f3b4e5e566f5db6cbcbc2dce43"
+      }
+    },
+    {
+      "path": "frontend/test/browser/hosted-onboarding.spec.ts",
+      "group": "reliability-first",
+      "sourceSha256": "90f2945355860093942acbb69537df681b8a0cb2ff77ba0fb807fa8073627dfd",
+      "sourceBlobSha1": "080d789805b283cf36ef61c9b984a5c1c3d9c8b2",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "frontend/test/browser/hosted-onboarding.spec.ts"
+      ],
+      "targetSha256": {
+        "frontend/test/browser/hosted-onboarding.spec.ts": "a85d0aa7b3fa375a1e13c14f84d5b79c45173f816ceb506b9e86a967e8506f0f"
+      }
+    },
+    {
+      "path": "frontend/test/hosted-accounting.test.ts",
+      "group": "economic-readonly-ui",
+      "sourceSha256": "b6a7b7195701d5fe9cea2e1bbe9ecfde94b1ae8637e76a71fbdfa8c7f0d90cd4",
+      "sourceBlobSha1": "534b0fa05ec777669f0a7d6eb6a3d62d617f1410",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "frontend/test/hosted-accounting.test.ts"
+      ],
+      "targetSha256": {
+        "frontend/test/hosted-accounting.test.ts": "1225045655e87623367050b51e3f5bf8061ce6ce43dce0b0b46b38ab5f2dfa95"
+      }
+    },
+    {
+      "path": "frontend/test/hosted-agents-proxy.test.ts",
+      "group": "reliability-first",
+      "sourceSha256": "888b63f9c0444c534c158917516542c617074c16607c3a4a48d886591685fc50",
+      "sourceBlobSha1": "890638e540acc0314db422a01d1087f125c60c44",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "frontend/test/hosted-agents-proxy.test.ts"
+      ],
+      "targetSha256": {
+        "frontend/test/hosted-agents-proxy.test.ts": "c7b6201b7cbc51aac229f3e9d1da3e218751d185fda48dfe8dcc0ab74ec11c6f"
+      }
+    },
+    {
+      "path": "frontend/test/hosted-operating-report.test.ts",
+      "group": "economic-readonly-ui",
+      "sourceSha256": "ad713eab7352fcacf20a3cb96561b06fe0b04adcc64dc131fe5a453c55d8ea65",
+      "sourceBlobSha1": "da4ff2b403fbe218346e5194ff821343bfee6b9b",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "frontend/test/hosted-operating-report.test.ts"
+      ],
+      "targetSha256": {
+        "frontend/test/hosted-operating-report.test.ts": "bc787955c567b3152c970a7f70d783d6bed9007139bdbbb64ee7f665d55ee32b"
+      }
+    },
+    {
+      "path": "frontend/test/hosted-snapshot-owner.test.ts",
+      "group": "reliability-first",
+      "sourceSha256": "98c4eb8f99a603d90e409db662ae058fbee4d5a9501931e8f9c1fe6893703090",
+      "sourceBlobSha1": "86f78e476f62ac35abf412f904ffde1276c4c8af",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "frontend/test/hosted-snapshot-owner.test.ts"
+      ],
+      "targetSha256": {
+        "frontend/test/hosted-snapshot-owner.test.ts": "98c4eb8f99a603d90e409db662ae058fbee4d5a9501931e8f9c1fe6893703090"
+      }
+    },
+    {
+      "path": "frontend/test/hosted-strategy-advice.test.ts",
+      "group": "economic-readonly-ui",
+      "sourceSha256": "f85787f3edd1f2b8953970c76e42d02d52694a84b87f657f1ed1789b911ceff5",
+      "sourceBlobSha1": "3f017883bc1761693a698788c44d86550f0a27da",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "frontend/test/hosted-strategy-advice.test.ts"
+      ],
+      "targetSha256": {
+        "frontend/test/hosted-strategy-advice.test.ts": "126061e3c28921fadaaa4e6fe12b74567e8f8d3879df775ba646854b5fd08073"
+      }
+    },
+    {
+      "path": "frontend/test/hosted-wallet-network.test.ts",
+      "group": "reliability-first",
+      "sourceSha256": "7e42907e02f563028b88495e09316368c81666ca84e52601be1451c43ebb75cc",
+      "sourceBlobSha1": "ecb7864fd6b0fdd7b214d8be7b9901d002c997ef",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "frontend/test/hosted-wallet-network.test.ts"
+      ],
+      "targetSha256": {
+        "frontend/test/hosted-wallet-network.test.ts": "ef49bc68a268c66d520ae4d22da798316d2a468a4e2df4e71ee33a598170643d"
+      }
+    },
+    {
+      "path": "frontend/test/tabby-scenes.test.ts",
+      "group": "presentation-and-public-demo",
+      "sourceSha256": "0b0cf9408812e5b0f838f1efd37c09752844583451b7eab714dd8ce85dd4e8d7",
+      "sourceBlobSha1": "ec74107b03dda765a2d9d353cc33db5bf3393082",
+      "status": "migrated",
+      "reason": "Added model path/downgrade reason and no-task scene rendering/tests; retained Tempo dynamic currency labels.",
+      "targetPaths": [
+        "frontend/test/tabby-scenes.test.ts"
+      ],
+      "targetSha256": {
+        "frontend/test/tabby-scenes.test.ts": "0b0cf9408812e5b0f838f1efd37c09752844583451b7eab714dd8ce85dd4e8d7"
+      }
+    },
+    {
+      "path": "package.json",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "abd3bf1a039a55f392f595b8944729af8e0d3e497426adb3d8942146643ab954",
+      "sourceBlobSha1": "0b2bacf48eb82a6edccf9e99926315ec3cb34fc7",
+      "status": "migrated",
+      "reason": "Added current scoped capability/commands without overwriting historical Tempo facts or importing source live acceptance.",
+      "targetPaths": [
+        "package.json"
+      ],
+      "targetSha256": {
+        "package.json": "ab1a3ad97da15e2937536f097005bb4689857bad58c865a962e9f992caa871fd"
+      }
+    },
+    {
+      "path": "packages/pi-loop/README.md",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "e6f20abb66e4172de6ebcea4f497a7b56cd7ed9666faefff08e06108dbb75568",
+      "sourceBlobSha1": "afa451c7a247660de05a8b156a93d78500d42217",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "packages/pi-loop/README.md"
+      ],
+      "targetSha256": {
+        "packages/pi-loop/README.md": "4161a236f46f3ed1bae61d5cdfb0ddb35ed84086563ca1722269e61f9130accb"
+      }
+    },
+    {
+      "path": "packages/pi-loop/src/autonomy.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "a478265abd7d8e4fb32b27b11a5f662080dc5901ebcbe16ff8be572d7ab12a44",
+      "sourceBlobSha1": "ea349422a8b6d396cb0e525ec3d6edb572791e17",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "packages/pi-loop/src/autonomy.ts"
+      ],
+      "targetSha256": {
+        "packages/pi-loop/src/autonomy.ts": "a478265abd7d8e4fb32b27b11a5f662080dc5901ebcbe16ff8be572d7ab12a44"
+      }
+    },
+    {
+      "path": "packages/pi-loop/src/economics.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "c5efc4ee98d28a270b411baaf11e83d0fa7ff71e28a0e671c627528a4848227d",
+      "sourceBlobSha1": "2b990edfdc5ac577da9cb1b6334957f5b3557fa4",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "packages/pi-loop/src/economics.ts"
+      ],
+      "targetSha256": {
+        "packages/pi-loop/src/economics.ts": "1351d5ea65e0e319e60773db39e4faec0112b942ffd7ad985e722e9c51f9889d"
+      }
+    },
+    {
+      "path": "packages/pi-loop/src/selector.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "0eee1effe9d38f8b51738d7455d31cd05faa28657a865151308be08b698b65fe",
+      "sourceBlobSha1": "7479923926b8718f861be297d16e82e4e6e45372",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "packages/pi-loop/src/selector.ts"
+      ],
+      "targetSha256": {
+        "packages/pi-loop/src/selector.ts": "0eee1effe9d38f8b51738d7455d31cd05faa28657a865151308be08b698b65fe"
+      }
+    },
+    {
+      "path": "packages/pi-loop/src/submission.ts",
+      "group": "reliability-first",
+      "sourceSha256": "ce4f65da39ce491a4d6b844bb589ca3ead26de31ba931b023cfd5615405c58bc",
+      "sourceBlobSha1": "2066ce69615e4e729cff19d645d8fa770740b91c",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "packages/pi-loop/src/submission.ts"
+      ],
+      "targetSha256": {
+        "packages/pi-loop/src/submission.ts": "0023cbb5368f173692454ad1ebccd1974111d68a6b45b638bab4a6d115b4fe3e"
+      }
+    },
+    {
+      "path": "packages/pi-loop/src/workflow.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "824ed688031262882acae15a64bd5d9d2d9e626918e97486633e5b6393fdf8ee",
+      "sourceBlobSha1": "b07405ff4286ddb5fcb5b8fab2058759f58c9684",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "packages/pi-loop/src/workflow.ts"
+      ],
+      "targetSha256": {
+        "packages/pi-loop/src/workflow.ts": "01a2066749520d91d184292bc2fcbf4388695e1b7645618b36290981c919cb16"
+      }
+    },
+    {
+      "path": "packages/pi-loop/test/economics.test.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "bf3442ce9e2630a2a69494e1be8af268835899ea72fd377a1c00a2824589df8d",
+      "sourceBlobSha1": "99e1dfae751fe4eb6fb68b1023f286dfb57b62a4",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "packages/pi-loop/test/economics.test.ts"
+      ],
+      "targetSha256": {
+        "packages/pi-loop/test/economics.test.ts": "39b5502cd736529034a40e8f91b5803f60ffb09d47eb312f489f113dfc9ee2c5"
+      }
+    },
+    {
+      "path": "packages/pi-loop/test/submission.test.ts",
+      "group": "reliability-first",
+      "sourceSha256": "c57493f8b812f56801d909531e1184c8b59d40ba04642aeea8f61974ab3d6a75",
+      "sourceBlobSha1": "2ebeae4c1c79c7ae1ee8fcdf675fff6dce3ba659",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "packages/pi-loop/test/submission.test.ts"
+      ],
+      "targetSha256": {
+        "packages/pi-loop/test/submission.test.ts": "08da0be1f9ce5b06f565f747a6cc2e0d6fd6e5483030edd8af8a82aa1495305b"
+      }
+    },
+    {
+      "path": "packages/pi-loop/test/workflow.test.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "acb952520d475a08aca48d362d66c6c9dc8c2e6ff538a61209e9c4ba066f4e3e",
+      "sourceBlobSha1": "5e116257c10dd3288b0a51cdd29e58f51daab2f3",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "packages/pi-loop/test/workflow.test.ts"
+      ],
+      "targetSha256": {
+        "packages/pi-loop/test/workflow.test.ts": "49fb3e88cb300addeb7f2e79767564b25aa987f24eefa92b44a1370775fc657a"
+      }
+    },
+    {
+      "path": "packages/sdk/DISTRIBUTION.md",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "d1f83435007c89cfc9fb7229e8eb79931c410be606b2ce054ec67ed45f1d1687",
+      "sourceBlobSha1": "e472a674e268d4d0efdc23aaa30ebba42b98e377",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "packages/sdk/DISTRIBUTION.md"
+      ],
+      "targetSha256": {
+        "packages/sdk/DISTRIBUTION.md": "9aa8fa0c89c7727556038a7f809b5f4940f9ece63d7264725ef141c1b7521495"
+      }
+    },
+    {
+      "path": "packages/sdk/README.md",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "4fa29561bcda2035b323e220b4f814cf6000157c00ffe3c8c1973317599de1f5",
+      "sourceBlobSha1": "6bca2c2db6f94a2d848da4590645971e4291073c",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "packages/sdk/README.md"
+      ],
+      "targetSha256": {
+        "packages/sdk/README.md": "7a4d34c981b742f0eb52908f6824da4acbb1b777d139e5f54bfcbf110d566328"
+      }
+    },
+    {
+      "path": "packages/sdk/package.json",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "10f80b8981dd4e98a02af1a88619540c038365c45a2315343fd64ad3e270145f",
+      "sourceBlobSha1": "09e6a7f90a5ed9e9ac2717321ba76398d6c85bac",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "packages/sdk/package.json"
+      ],
+      "targetSha256": {
+        "packages/sdk/package.json": "88352ec229508fac98014a93c0d487662fba01da113f17616e8ff2400b1eb502"
+      }
+    },
+    {
+      "path": "packages/sdk/scripts/pack.mjs",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "4a0a84d60de99a184b269ff9cfbed24c7a2c1d8c8713747cfd561a50c866c0b5",
+      "sourceBlobSha1": "bdbf9a74529a726c374ff3d55b57fa7a4a8a1753",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "packages/sdk/scripts/pack.mjs"
+      ],
+      "targetSha256": {
+        "packages/sdk/scripts/pack.mjs": "4a0a84d60de99a184b269ff9cfbed24c7a2c1d8c8713747cfd561a50c866c0b5"
+      }
+    },
+    {
+      "path": "packages/sdk/tsconfig.build.json",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "e6a62ded0dc1004f04ae3b61dc3e9a4f28540b41d845d249607f2be0b0fda55d",
+      "sourceBlobSha1": "0e61c59a8446c1c443959783a66a5de73e980f23",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "packages/sdk/tsconfig.build.json"
+      ],
+      "targetSha256": {
+        "packages/sdk/tsconfig.build.json": "e6a62ded0dc1004f04ae3b61dc3e9a4f28540b41d845d249607f2be0b0fda55d"
+      }
+    },
+    {
+      "path": "scripts/acceptance-evidence-20261017.mjs",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "6badc678c0fcea4b31186810b751a6a11a73e752b9dd7b2428b749e8b8c8f22d",
+      "sourceBlobSha1": "45f86835feeb99786582924bbf85477d3bfdb332",
+      "status": "migrated",
+      "reason": "Adapted into Tempo-owned entry points/negative tests; excludes hardcoded upstream history and preserves pinned deployment gates.",
+      "targetPaths": [
+        "scripts/review-evidence.mjs",
+        "scripts/check-acceptance-evidence.mjs"
+      ],
+      "targetSha256": {
+        "scripts/review-evidence.mjs": "592fa96fcc8bcc1fa30df809ed4743f0667de1a241efcabf5d12b242d93c5326",
+        "scripts/check-acceptance-evidence.mjs": "06bdbf7acd153e5543b592b1326335eade87d4d0a19f2f7cf8463f07bf648281"
+      }
+    },
+    {
+      "path": "scripts/bounded-economy-local.ts",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "3a443b5c3ef1a6ab0b3e0b0ed098de183f3eb29e3177a95c7a906004bdff1652",
+      "sourceBlobSha1": "a2104468ce76c2a1746f0b71595b9169e2d89444",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/bounded-economy-local.ts"
+      ],
+      "targetSha256": {
+        "scripts/bounded-economy-local.ts": "3a443b5c3ef1a6ab0b3e0b0ed098de183f3eb29e3177a95c7a906004bdff1652"
+      }
+    },
+    {
+      "path": "scripts/check-acceptance-evidence.mjs",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "e57a4b269fb0c2f9a29437396cc8b3e89fa0bf8c22da9543bcbbf135945fc224",
+      "sourceBlobSha1": "cdc86b3f61e3115a7d2e7692a10e57f3a84b5cf8",
+      "status": "migrated",
+      "reason": "Added current scoped capability/commands without overwriting historical Tempo facts or importing source live acceptance.",
+      "targetPaths": [
+        "scripts/check-acceptance-evidence.mjs"
+      ],
+      "targetSha256": {
+        "scripts/check-acceptance-evidence.mjs": "06bdbf7acd153e5543b592b1326335eade87d4d0a19f2f7cf8463f07bf648281"
+      }
+    },
+    {
+      "path": "scripts/check-bounded-economy.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "c3cc65673f0d439828566cbaec4253c61d1ed7a3e938577546dfdcedaa9546ab",
+      "sourceBlobSha1": "2474d0ad4454dee237b1aa9156b27c191db70204",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/check-bounded-economy.mjs"
+      ],
+      "targetSha256": {
+        "scripts/check-bounded-economy.mjs": "c3cc65673f0d439828566cbaec4253c61d1ed7a3e938577546dfdcedaa9546ab"
+      }
+    },
+    {
+      "path": "scripts/check-doc-links.mjs",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "2e43b87663da9b9264f66774e405638daef45b63ce662490c024d2d5b247c542",
+      "sourceBlobSha1": "fb5c3fd3547cde24467abaf48be76b0a3ef70f01",
+      "status": "previously-covered",
+      "reason": "Tempo-owned existing checker validates all added local links; upstream additions only recognize excluded source historical artifacts.",
+      "targetPaths": [
+        "scripts/check-doc-links.mjs"
+      ],
+      "targetSha256": {
+        "scripts/check-doc-links.mjs": "bea87d700ad482cb33b4665564223dc8be7687821a04241727ecae6e88465c77"
+      }
+    },
+    {
+      "path": "scripts/check-economic-loop.mjs",
+      "group": "economic-local-tools",
+      "sourceSha256": "4899d71ae348dff51da8a5f8186e26eaf2e61f856ef6a5b5dd888ab76ee9c8e3",
+      "sourceBlobSha1": "35243b023fddfe2462e44888d28b427c27076625",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/check-economic-loop.mjs"
+      ],
+      "targetSha256": {
+        "scripts/check-economic-loop.mjs": "4899d71ae348dff51da8a5f8186e26eaf2e61f856ef6a5b5dd888ab76ee9c8e3"
+      }
+    },
+    {
+      "path": "scripts/check-independent-economy.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "049161822f17abbb7455692b6dabde20e3a8ad3e6d2f47bd9c528c6f2a036d86",
+      "sourceBlobSha1": "cca6234298c5e41dadf30312818f4e3c42072b73",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/check-independent-economy.mjs"
+      ],
+      "targetSha256": {
+        "scripts/check-independent-economy.mjs": "049161822f17abbb7455692b6dabde20e3a8ad3e6d2f47bd9c528c6f2a036d86"
+      }
+    },
+    {
+      "path": "scripts/check-publisher-worker.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "6601a7e8a5135ccd565b5ce6540f7917e6e637227adc33dd3fef155b421124c9",
+      "sourceBlobSha1": "3ad5aba9d6ff323269723fe4ed41a1fe6c6c6478",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/check-publisher-worker.mjs"
+      ],
+      "targetSha256": {
+        "scripts/check-publisher-worker.mjs": "6601a7e8a5135ccd565b5ce6540f7917e6e637227adc33dd3fef155b421124c9"
+      }
+    },
+    {
+      "path": "scripts/check-sdk-standalone.mjs",
+      "group": "standalone-sdk-package",
+      "sourceSha256": "d629182934d8d0b0539e1399257d9a111b497dca512a8770d697aee81ccad14b",
+      "sourceBlobSha1": "bca56a99c0745a47f126694629493792b5f3cb85",
+      "status": "migrated",
+      "reason": "Independent offline package/consumer plus Tempo-owned documentation; existing SDK core and typed controls unchanged.",
+      "targetPaths": [
+        "scripts/check-sdk-standalone.mjs"
+      ],
+      "targetSha256": {
+        "scripts/check-sdk-standalone.mjs": "d629182934d8d0b0539e1399257d9a111b497dca512a8770d697aee81ccad14b"
+      }
+    },
+    {
+      "path": "scripts/economic-loop-local.ts",
+      "group": "economic-local-tools",
+      "sourceSha256": "20c943d135e091615c788e649e338d36795c3a324000cee3aeb965321ee22eac",
+      "sourceBlobSha1": "9ce3cf817b4439d82291a1fee90148415f663410",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/economic-loop-local.ts"
+      ],
+      "targetSha256": {
+        "scripts/economic-loop-local.ts": "20c943d135e091615c788e649e338d36795c3a324000cee3aeb965321ee22eac"
+      }
+    },
+    {
+      "path": "scripts/fixtures/operating-report-payment-fixtures.ts",
+      "group": "economic-local-tools",
+      "sourceSha256": "8fd6d014c0cde8c520d32298bcfefacb5901ee2c6c9a102d0638765ac0db18e8",
+      "sourceBlobSha1": "e5c917327116306ca78768d030f74cb2fd92eee5",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/fixtures/operating-report-payment-fixtures.ts"
+      ],
+      "targetSha256": {
+        "scripts/fixtures/operating-report-payment-fixtures.ts": "8fd6d014c0cde8c520d32298bcfefacb5901ee2c6c9a102d0638765ac0db18e8"
+      }
+    },
+    {
+      "path": "scripts/independent-economy-local.ts",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "a462a8609d82d17ee610cb966c6468efcf284f382615e95cdf2229cc5d65d07b",
+      "sourceBlobSha1": "795b56b80a553e8a54d7ff368ab86f85530dcd58",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/independent-economy-local.ts"
+      ],
+      "targetSha256": {
+        "scripts/independent-economy-local.ts": "a462a8609d82d17ee610cb966c6468efcf284f382615e95cdf2229cc5d65d07b"
+      }
+    },
+    {
+      "path": "scripts/lib/bounded-economy-policy.ts",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "3fed20ceb1eae9eb971641225993025358dde2c5606f25692b66a639677bb124",
+      "sourceBlobSha1": "28aadd9d151451e90365343d1ed90b192f72d301",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/lib/bounded-economy-policy.ts"
+      ],
+      "targetSha256": {
+        "scripts/lib/bounded-economy-policy.ts": "3fed20ceb1eae9eb971641225993025358dde2c5606f25692b66a639677bb124"
+      }
+    },
+    {
+      "path": "scripts/lib/independent-economy-evidence.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "0fc42703773a56300310f27a34a2880c742025a78fe2adcdcae679616f33b539",
+      "sourceBlobSha1": "8caef573aea68dfad8078b48e0e80b4944b80a92",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/lib/independent-economy-evidence.mjs"
+      ],
+      "targetSha256": {
+        "scripts/lib/independent-economy-evidence.mjs": "0fc42703773a56300310f27a34a2880c742025a78fe2adcdcae679616f33b539"
+      }
+    },
+    {
+      "path": "scripts/monad-collaboration-autonomy-acceptance.ts",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "496b7ffc6e2f281cea41d8261f197536c4958d6c23b05932c889022dbfbe8a13",
+      "sourceBlobSha1": "52d8970247fbfcd67fa243180b91214ff0a452ea",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "scripts/monad-collaboration-fund-goals.ts",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "3e37d42dfcffc9e13fc66c7a4b4d4d4721fa9642c1109081e19ca833d2d101e9",
+      "sourceBlobSha1": "0cabefd69cfeaa7011a82bb20d7f7da3fe418524",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "scripts/monad-collaboration-goal-acceptance.ts",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "642eb7a70643fd29adcd8f19ebe5bc4a268a2158a95b323bbf311c1a34c5bac6",
+      "sourceBlobSha1": "c49fd21a39e9ad44df976023048f7f4794d0c10e",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "scripts/monad-hackathon-acceptance.ts",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "7f49e095f3512a91f19114f2a141006ded1a5c0373ca041825611dc6fe93cd62",
+      "sourceBlobSha1": "3c39c1bb85998ebc4982eda47954d7e259e23e6a",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "scripts/monad-token-supplement-acceptance.ts",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "9537bb99281476174b28688ba05585273a8adf2d6a66a84b0a8e1a520deca6f6",
+      "sourceBlobSha1": "ebc9b0bfa5263bd04cb90bb8703e1db477fabf09",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "scripts/operating-report-demo.ts",
+      "group": "economic-local-tools",
+      "sourceSha256": "b431cb3168ffbeab53d4ea4f25b8f14abb92c7826db29600e844ab72b1d617fb",
+      "sourceBlobSha1": "839aca4eb45f224472df3c5ebbba6e62addbbe46",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/operating-report-demo.ts"
+      ],
+      "targetSha256": {
+        "scripts/operating-report-demo.ts": "b431cb3168ffbeab53d4ea4f25b8f14abb92c7826db29600e844ab72b1d617fb"
+      }
+    },
+    {
+      "path": "scripts/operating-report.ts",
+      "group": "economic-local-tools",
+      "sourceSha256": "b6949cc619b2e7bfcd90c6288f7dd09e5f4445c16814e3b494534a27f6d79826",
+      "sourceBlobSha1": "82a3fafffd9ded832a8f7853049fbbafc261e5e7",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/operating-report.ts"
+      ],
+      "targetSha256": {
+        "scripts/operating-report.ts": "b6949cc619b2e7bfcd90c6288f7dd09e5f4445c16814e3b494534a27f6d79826"
+      }
+    },
+    {
+      "path": "scripts/publisher-worker-local.ts",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "91ed7ffc583b02740210a933f43e3c2049347c3bec401baa6ca0231126eafa85",
+      "sourceBlobSha1": "0cb5ba2e83566ffa3220390d5f83c70fe1354728",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/publisher-worker-local.ts"
+      ],
+      "targetSha256": {
+        "scripts/publisher-worker-local.ts": "0f141f70e95dd8f282eccc8a48c8769ec8907ecc8593bf0e1159215337b82c79"
+      }
+    },
+    {
+      "path": "scripts/review-artifacts.mjs",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "84511f17fda6b7d61f27e28999f7dc5da0212a6d6c7368658da3ffbbd25762dc",
+      "sourceBlobSha1": "17479b9619c043422e38e395f01493f811e8a5d4",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/review-artifacts.mjs"
+      ],
+      "targetSha256": {
+        "scripts/review-artifacts.mjs": "46672a0a11e1d2c4b50907d0308c515e3d32f4503720b0c2cae75fb20538f78b"
+      }
+    },
+    {
+      "path": "scripts/review-check.mjs",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "f7b5b26dc4fee28dddea4aaeda5b0fe0bf52bb329e92207bdefb82287ba302e2",
+      "sourceBlobSha1": "b2525eb3da20e3e0dbf56c163cbdb90807b64c31",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/review-check.mjs"
+      ],
+      "targetSha256": {
+        "scripts/review-check.mjs": "afbad3678c72975f6c3f9ac7c9cde9f3dcfc3d4fbd77100e123042c432f4eb84"
+      }
+    },
+    {
+      "path": "scripts/review-evidence.mjs",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "033be6f9cc0e9a394d4c42446b0593ef7c9a66df132e25a7c88686068c20b695",
+      "sourceBlobSha1": "2af924721656483e518f7bac333c49962e46a562",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/review-evidence.mjs"
+      ],
+      "targetSha256": {
+        "scripts/review-evidence.mjs": "592fa96fcc8bcc1fa30df809ed4743f0667de1a241efcabf5d12b242d93c5326"
+      }
+    },
+    {
+      "path": "scripts/review-replay.mjs",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "10deab68f98cc155a833c403cb3c1dee909c7364561ada9ef11819ba47228f6a",
+      "sourceBlobSha1": "5760b0c91ad9212b5ab87e61ba7981acd899a09e",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/review-replay.mjs"
+      ],
+      "targetSha256": {
+        "scripts/review-replay.mjs": "dade975dcfb9273f60add8bbee65f48da5023f5c99dc28f8559d5fce88d00389"
+      }
+    },
+    {
+      "path": "scripts/review-replay/client.js",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "35f5b52102c406ad2ec9c54487455abd94f8586c7d1c890a4f1b5920ab5aa089",
+      "sourceBlobSha1": "bb2453f8b07a1fe69be7d4e30db66b966726d869",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/review-replay/client.js"
+      ],
+      "targetSha256": {
+        "scripts/review-replay/client.js": "716f70f5f4afcc25b45371e6b5faa8f0928263b671c78b5c6c5cae9863aac9e9"
+      }
+    },
+    {
+      "path": "scripts/review-replay/style.css",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "dbe2a61d462fe2967bfc45eddba58b6ba0b5ea0f21449226b3fea91d83e0dfc6",
+      "sourceBlobSha1": "67df0ceb8df54f376c29565f59054c1f9d4040de",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/review-replay/style.css"
+      ],
+      "targetSha256": {
+        "scripts/review-replay/style.css": "dbe2a61d462fe2967bfc45eddba58b6ba0b5ea0f21449226b3fea91d83e0dfc6"
+      }
+    },
+    {
+      "path": "scripts/strategy-advice-demo.ts",
+      "group": "economic-local-tools",
+      "sourceSha256": "5ef7f617270ee683d9a00dfc90604a6d490d5e68f8d738aa937df1d4e4bd4671",
+      "sourceBlobSha1": "e3b29085c2ec997562ed67eb11be181f7f31a1c9",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/strategy-advice-demo.ts"
+      ],
+      "targetSha256": {
+        "scripts/strategy-advice-demo.ts": "5ef7f617270ee683d9a00dfc90604a6d490d5e68f8d738aa937df1d4e4bd4671"
+      }
+    },
+    {
+      "path": "scripts/test/acceptance-evidence.test.mjs",
+      "group": "integration-docs-and-command-surface",
+      "sourceSha256": "556d18ca84b07c8777ddbb49c117cffe905db78199503c956adfb468e495d76b",
+      "sourceBlobSha1": "7a3c72a34e7c1e2d206721be963013e6521cce8b",
+      "status": "migrated",
+      "reason": "Adapted into Tempo-owned entry points/negative tests; excludes hardcoded upstream history and preserves pinned deployment gates.",
+      "targetPaths": [
+        "scripts/test/review-evidence.test.mjs",
+        "scripts/test/review-evidence-audit.test.mjs"
+      ],
+      "targetSha256": {
+        "scripts/test/review-evidence.test.mjs": "61c6018a31bf2ea5e68f3d962cc94e93e8c59af592330e9b625dfebf9cab37c2",
+        "scripts/test/review-evidence-audit.test.mjs": "3bef6538e3df34721166caa41b061b1a088b51e36d03ea092620ae63a4ddaf2b"
+      }
+    },
+    {
+      "path": "scripts/test/bounded-economy-audit.test.ts",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "17090f44c093efc0b5cd153b15e2d1d53d47edd57e8c2fe4c710f662a33c9f39",
+      "sourceBlobSha1": "722667bcc89de690c375017da268e74c05f51e7c",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/test/bounded-economy-audit.test.ts"
+      ],
+      "targetSha256": {
+        "scripts/test/bounded-economy-audit.test.ts": "17090f44c093efc0b5cd153b15e2d1d53d47edd57e8c2fe4c710f662a33c9f39"
+      }
+    },
+    {
+      "path": "scripts/test/bounded-economy-launcher-audit.test.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "57cca467f54f4ab09ea869c011f6a1492f97bc66fb48c6d2a461139ebcc671af",
+      "sourceBlobSha1": "f8c0d01bc927948ebaff3c8caaab33dae1a1b730",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/test/bounded-economy-launcher-audit.test.mjs"
+      ],
+      "targetSha256": {
+        "scripts/test/bounded-economy-launcher-audit.test.mjs": "57cca467f54f4ab09ea869c011f6a1492f97bc66fb48c6d2a461139ebcc671af"
+      }
+    },
+    {
+      "path": "scripts/test/independent-economy-audit.test.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "a148a9d44ac728b6878d35e63d040230aa1d3cbb48ed4c4f0c1b415a379df318",
+      "sourceBlobSha1": "570a4f9e7dfee756f7b201e46a08928ea9c2fb80",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/test/independent-economy-audit.test.mjs"
+      ],
+      "targetSha256": {
+        "scripts/test/independent-economy-audit.test.mjs": "29a915a14e750e895c63e817492017259c50a6b0105589f08076fb3a677d7d5f"
+      }
+    },
+    {
+      "path": "scripts/test/independent-economy-evidence.test.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "7777ba8587b3721bd87323b90d540a647eebe7b273c9958d9154a9e446e55ed7",
+      "sourceBlobSha1": "6fd5d1b9dabcfeb03672c965b9855a963eeea46c",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/test/independent-economy-evidence.test.mjs"
+      ],
+      "targetSha256": {
+        "scripts/test/independent-economy-evidence.test.mjs": "b739afe390c59ae5799effca289550847b36e32dd0193c99d9e77f62a1466082"
+      }
+    },
+    {
+      "path": "scripts/test/independent-evidence-audit.test.mjs",
+      "group": "independent-workers-and-policy-demos",
+      "sourceSha256": "a9907940d33970a1f79136b694386ba6166bcabae44c462f6470dcd1bdaabd73",
+      "sourceBlobSha1": "1d2eff60319bdf7c8f5c83a0cbb89a56f2cea75d",
+      "status": "migrated",
+      "reason": "Local31337/loopback consumer, durable policy and dispatch budget, Unknown fail-closed, canonical cold recovery; not production Hosted activation.",
+      "targetPaths": [
+        "scripts/test/independent-evidence-audit.test.mjs"
+      ],
+      "targetSha256": {
+        "scripts/test/independent-evidence-audit.test.mjs": "da284fc20aed6cea279cdcbd71e9a4b3356b16c635901f4e7205f3d0f24c63b7"
+      }
+    },
+    {
+      "path": "scripts/test/monad-collaboration-autonomy-acceptance.test.ts",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "e85157600a7230cd3877a10e187b49d917a403a4e01b8ab2607428742676b31f",
+      "sourceBlobSha1": "7c358b49c98f2eb6b38441b2384da97882b8b796",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "scripts/test/monad-collaboration-fund-goals.test.ts",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "23052f282737f136163aed6dbe57472857054a7bc00ec21b0538fc43c459affd",
+      "sourceBlobSha1": "cf022cf7253cb6dd52e385ea6dde717d88dc033f",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "scripts/test/monad-collaboration-goal-acceptance.test.ts",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "a6e2ea169efe2d16790fa998c96dc8700793e6759c03b835fe026f7754af9102",
+      "sourceBlobSha1": "fa7042a1925f76c036df6ff8fd2d65d8de79b56a",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "scripts/test/monad-hackathon-acceptance.test.ts",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "8b248d1f1890fb549968b31536c29466956481a356d2563dfd2d4078e41fb3d2",
+      "sourceBlobSha1": "b5ea070ffb4fa378e50d9357fd9897ee51f26b97",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "scripts/test/monad-token-supplement-acceptance.test.ts",
+      "group": "monad-specific-history-and-operations",
+      "sourceSha256": "b14ec9c324b6da676c58dc77996da9fa9b77402f205b135be4bf6d03dffd4f8b",
+      "sourceBlobSha1": "49f59d78aebdb553a5eb9dc50089616298bc1711",
+      "status": "explicitly-excluded-historical-or-Monad-specific",
+      "reason": "Source historical/deployment/marketing evidence; not product logic and not Tempo acceptance.",
+      "targetPaths": [],
+      "targetSha256": {}
+    },
+    {
+      "path": "scripts/test/operating-report-demo.test.ts",
+      "group": "economic-local-tools",
+      "sourceSha256": "7d3280a7306091f4e6e25e72ce02dbdf36ddeae508d9f6e1179029c7651de52b",
+      "sourceBlobSha1": "31003f521d5988030c2c0395646ff8ad99310d32",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/test/operating-report-demo.test.ts"
+      ],
+      "targetSha256": {
+        "scripts/test/operating-report-demo.test.ts": "7d3280a7306091f4e6e25e72ce02dbdf36ddeae508d9f6e1179029c7651de52b"
+      }
+    },
+    {
+      "path": "scripts/test/review-artifacts.test.mjs",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "0eaa24b4aef88c9e2916f71e6d1c71977be3f2a1dfb77207fcaaa17aaf24305f",
+      "sourceBlobSha1": "870dbc4a978ad112389865562828c03dd67f1240",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/test/review-artifacts.test.mjs"
+      ],
+      "targetSha256": {
+        "scripts/test/review-artifacts.test.mjs": "0eaa24b4aef88c9e2916f71e6d1c71977be3f2a1dfb77207fcaaa17aaf24305f"
+      }
+    },
+    {
+      "path": "scripts/test/review-evidence-audit.test.mjs",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "c71896efdcfc543783a5dc967c2e8428e39b98d47f87dff097c2fa1ebdc68492",
+      "sourceBlobSha1": "52e4596d76fb4f33477211980472eaf385cf8b7d",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/test/review-evidence-audit.test.mjs"
+      ],
+      "targetSha256": {
+        "scripts/test/review-evidence-audit.test.mjs": "3bef6538e3df34721166caa41b061b1a088b51e36d03ea092620ae63a4ddaf2b"
+      }
+    },
+    {
+      "path": "scripts/test/review-evidence.test.mjs",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "01e9a6d8e9c26c410c3ee4f2ee6207dd5b085273418c9199d3e60b292791a5df",
+      "sourceBlobSha1": "2648b3b8e94b2bacb1f8b571a313a81644209f21",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/test/review-evidence.test.mjs"
+      ],
+      "targetSha256": {
+        "scripts/test/review-evidence.test.mjs": "61c6018a31bf2ea5e68f3d962cc94e93e8c59af592330e9b625dfebf9cab37c2"
+      }
+    },
+    {
+      "path": "scripts/test/review-replay.test.mjs",
+      "group": "review-replay-and-ci-artifacts",
+      "sourceSha256": "75c1026e5abb1ef8633d26ca32d800469cdd92b5febe050020c76dac60605e77",
+      "sourceBlobSha1": "bb5e1ac59885fa4825290a7316669cfbb64efa8d",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/test/review-replay.test.mjs"
+      ],
+      "targetSha256": {
+        "scripts/test/review-replay.test.mjs": "75c1026e5abb1ef8633d26ca32d800469cdd92b5febe050020c76dac60605e77"
+      }
+    },
+    {
+      "path": "scripts/test/strategy-advice-demo.test.ts",
+      "group": "economic-local-tools",
+      "sourceSha256": "2b5b46c95abe5315caab6b3e87393004fa976f912f6dc6860eb2bcbfe73ebba9",
+      "sourceBlobSha1": "c769fb508d185c7a1976c118772accbdff11252a",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "scripts/test/strategy-advice-demo.test.ts"
+      ],
+      "targetSha256": {
+        "scripts/test/strategy-advice-demo.test.ts": "2b5b46c95abe5315caab6b3e87393004fa976f912f6dc6860eb2bcbfe73ebba9"
+      }
+    },
+    {
+      "path": "services/arena/src/controller.ts",
+      "group": "reliability-first",
+      "sourceSha256": "ad536520feef0d7c9e0fe77f1a80fb311bdfac749775238b1fc7c54614ccbd1f",
+      "sourceBlobSha1": "91ba433aaa97b68255229abcd6de2da1049f001c",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "services/arena/src/controller.ts"
+      ],
+      "targetSha256": {
+        "services/arena/src/controller.ts": "ad536520feef0d7c9e0fe77f1a80fb311bdfac749775238b1fc7c54614ccbd1f"
+      }
+    },
+    {
+      "path": "services/arena/src/http.ts",
+      "group": "reliability-first",
+      "sourceSha256": "e72e21885fdc135f5df79b7c96663d205419d11be8de3f718033477a20ec3db4",
+      "sourceBlobSha1": "35f35c38584834dc59712fa3749580e4820d565c",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "services/arena/src/http.ts"
+      ],
+      "targetSha256": {
+        "services/arena/src/http.ts": "e72e21885fdc135f5df79b7c96663d205419d11be8de3f718033477a20ec3db4"
+      }
+    },
+    {
+      "path": "services/arena/src/ipc.ts",
+      "group": "reliability-first",
+      "sourceSha256": "ef03547448b8a545310c889555c894c5286563de602dac9cba633a8abd2970f6",
+      "sourceBlobSha1": "87427bd57c6ea7ada770d635dca76aa5e9e1c0af",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "services/arena/src/ipc.ts"
+      ],
+      "targetSha256": {
+        "services/arena/src/ipc.ts": "ef03547448b8a545310c889555c894c5286563de602dac9cba633a8abd2970f6"
+      }
+    },
+    {
+      "path": "services/arena/src/protocol.ts",
+      "group": "reliability-first",
+      "sourceSha256": "bcd714d92f701e518eb7822f858c726606eac66c01aa13a457b7ff52280213b3",
+      "sourceBlobSha1": "70eebbaa90f7f986b34f9548d21cd09c7ad18aeb",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "services/arena/src/protocol.ts"
+      ],
+      "targetSha256": {
+        "services/arena/src/protocol.ts": "bcd714d92f701e518eb7822f858c726606eac66c01aa13a457b7ff52280213b3"
+      }
+    },
+    {
+      "path": "services/arena/src/settler.ts",
+      "group": "reliability-first",
+      "sourceSha256": "ba08a58910be3939d0eda516e4a674b6c698022f4b2674151eb499246c6bf42e",
+      "sourceBlobSha1": "951c2f6b1fd0c7c45c5dff0f158c8e5c8d9c836f",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "services/arena/src/settler.ts"
+      ],
+      "targetSha256": {
+        "services/arena/src/settler.ts": "3eb835684ffb87220ee6567467d9f81986001ab903bfdba35f4cea8b925b21a2"
+      }
+    },
+    {
+      "path": "services/arena/test/arena.test.ts",
+      "group": "reliability-first",
+      "sourceSha256": "5203ed41d18db18f9611d757af1e0b72375a04b21b9c60bfc4b26c3f9b4f7c51",
+      "sourceBlobSha1": "24dabbea5d4e4d05f2055619ecd1044a29b04816",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "services/arena/test/arena.test.ts"
+      ],
+      "targetSha256": {
+        "services/arena/test/arena.test.ts": "d59360a57c7bd86471ac898e2386b8ef27a0f7ca45f0ac4b9844d9baf85ab013"
+      }
+    },
+    {
+      "path": "services/arena/test/http-persistence.test.ts",
+      "group": "reliability-first",
+      "sourceSha256": "425c1c67ee156f717f2774634beca67f128f9a034f5ed6d16272c124ead91966",
+      "sourceBlobSha1": "527723828f966c5d2e6accdc30a3d8628776d0c1",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "services/arena/test/http-persistence.test.ts"
+      ],
+      "targetSha256": {
+        "services/arena/test/http-persistence.test.ts": "425c1c67ee156f717f2774634beca67f128f9a034f5ed6d16272c124ead91966"
+      }
+    },
+    {
+      "path": "services/hosted-agents/README.md",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "cf061973b343acac2a2420ee41a49660e294fce05afbebed65622eddff3c1fe8",
+      "sourceBlobSha1": "bba5f1548202ccc8690baaad71358b2d795f1ddc",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/README.md"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/README.md": "d896aefdd41ada376c0f419f5be0ae80f418753ad972e5bc59247f48fbe8433a"
+      }
+    },
+    {
+      "path": "services/hosted-agents/src/accounting.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "926ced6e7a1c601e05fc87e47ddb5858867fd482534060b6becac63194e4d097",
+      "sourceBlobSha1": "733dbab3ff3f1f4462b1c7c87d8887f514f44d35",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/src/accounting.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/src/accounting.ts": "93680031622d3faa66b79c162c966ebfd4bbae0cedc34e2eca80dbca421268fd"
+      }
+    },
+    {
+      "path": "services/hosted-agents/src/autonomy-executor.ts",
+      "group": "reliability-first",
+      "sourceSha256": "3c31d9c18ad60fe73a18a298409d867ab8dc9f35f76e8c0a3ce6bdab2da42ac4",
+      "sourceBlobSha1": "3a08fafa0ec9e31e64bc225e16dedf748c6eb832",
+      "status": "migrated",
+      "reason": "Prior reliability migration preserved; subsequent economic hunks merged without replacing Tempo/PR8 controls.",
+      "targetPaths": [
+        "services/hosted-agents/src/autonomy-executor.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/src/autonomy-executor.ts": "50aa7a8bd476ae6f3dc767b6486994d77ad7a19708456a294a5a148b2f5edd47"
+      }
+    },
+    {
+      "path": "services/hosted-agents/src/http.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "c5c24f10a0c117e1173cfa3debe74e2b39484779c269f7479c72bb73ef196f3f",
+      "sourceBlobSha1": "42de13fc557c547c4a289b8a3ff067603d431b86",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/src/http.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/src/http.ts": "c5c24f10a0c117e1173cfa3debe74e2b39484779c269f7479c72bb73ef196f3f"
+      }
+    },
+    {
+      "path": "services/hosted-agents/src/operating-history.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "f5936131090f9751e5a802a53a6445fce71ce87b4fe40c2478d0cbd165bfe621",
+      "sourceBlobSha1": "5b7f79af8c8d537103d0edde8115875e4dfee990",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/src/operating-history.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/src/operating-history.ts": "04cd5fb9b69ad1cb5202cfa1dbde1fd7ce6a8096da00d063e672ab262ed28f9c"
+      }
+    },
+    {
+      "path": "services/hosted-agents/src/operating-report.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "388fb09c16aaefab2f2f593fd6771504fc8e6c2c08af3fa2af5945617145f49b",
+      "sourceBlobSha1": "72eb45f87f44393aed4b4805c357793cb9043781",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/src/operating-report.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/src/operating-report.ts": "b10af6db10ac328291d0807138bfcddcb85b26018587227a65a499d9bccd2cfb"
+      }
+    },
+    {
+      "path": "services/hosted-agents/src/operating-types.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "89f5ffc5a21bc3e09dbe6bbb019de638c062ee4f8db7cb30cba2cc7c30da4964",
+      "sourceBlobSha1": "419e468418237b54e660fd375240dad952a23150",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/src/operating-types.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/src/operating-types.ts": "53b7be5942a1efeefb39b45426fbb66bba1db698e330d0243ca6880ad26db0ad"
+      }
+    },
+    {
+      "path": "services/hosted-agents/src/service.ts",
+      "group": "reliability-first",
+      "sourceSha256": "0e14272cc6cbf2df700c38661f8889caabf02ea012622841d9acd070cb3a45de",
+      "sourceBlobSha1": "1a6da85bb4cbc79d7cd8c112a67492b845049e61",
+      "status": "migrated",
+      "reason": "Prior reliability migration preserved; subsequent economic hunks merged without replacing Tempo/PR8 controls.",
+      "targetPaths": [
+        "services/hosted-agents/src/service.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/src/service.ts": "520c4f721bec347de78e02247127c02520fec252971492218d8f075387271d83"
+      }
+    },
+    {
+      "path": "services/hosted-agents/src/strategy-advice.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "8590f4524e8bd8d124f02fa85239c3ee306a701d52d7c763677a83640d203ca9",
+      "sourceBlobSha1": "d62f09060dad6a66cdff0b8cad3eab103635339c",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/src/strategy-advice.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/src/strategy-advice.ts": "7830d2148f2824cd6e297c70e3f20fa2a09e22c2ed329675f100d4b27791d800"
+      }
+    },
+    {
+      "path": "services/hosted-agents/src/strategy-history.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "c19b836110f2f31956a3915cf6f04bfec0b85091a2bf26e33f63cceecfc91aa2",
+      "sourceBlobSha1": "023fe0119ba920a284f957b034ea4dffe72c2f3f",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/src/strategy-history.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/src/strategy-history.ts": "f11edd037945a036315f60e8ed69923f2163765458e733145902f68afcc465f1"
+      }
+    },
+    {
+      "path": "services/hosted-agents/src/strategy-types.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "2dba25648a3619256d1a28466d66d3c8ab9e2bc43fac29c54331429ad7a6ba45",
+      "sourceBlobSha1": "d03afeea0f9449fe0d4e58ecf36ea2f25e34e27f",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/src/strategy-types.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/src/strategy-types.ts": "02bf61f8e38efbf8b3d78bd070325fe0fa05d9767c0375c7f61f0f55dbdd4786"
+      }
+    },
+    {
+      "path": "services/hosted-agents/src/task-executor.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "d030c35127beba2f54f25ea96a647aa9d36dc76aa8c2c6fffa690222f3ea0da6",
+      "sourceBlobSha1": "f9ac4778704763f8735f3753a557ad00038ef90b",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/src/task-executor.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/src/task-executor.ts": "0b0fe851f7d51d98faa85f9dc8b17ca05dca17892ae674d07101ecf633fa1261"
+      }
+    },
+    {
+      "path": "services/hosted-agents/src/types.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "a977bae6e1e9f5b5a88b9f74a476b4d4b54a50867a7b63a4c07a6c77b73990ca",
+      "sourceBlobSha1": "308d133c112c52035d3b9a8480b876a0a8b27ed1",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/src/types.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/src/types.ts": "e7dbbffee6a6fb37a295215e08bfccb4402a0c214e128ac5f91c106e8b598dc6"
+      }
+    },
+    {
+      "path": "services/hosted-agents/test/accounting-http.test.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "4d351e17c8ef4be6567afba930c5c2d265ca126e0a03b67936f3fed8ad9b570e",
+      "sourceBlobSha1": "303c4d73c4d8a1093f571d1a55334bc624ff6ad9",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/test/accounting-http.test.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/test/accounting-http.test.ts": "87d30d70fc9764466b1269610bc9bda52cfc318cf271b33a0df71ddcdf970438"
+      }
+    },
+    {
+      "path": "services/hosted-agents/test/accounting.test.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "0249200d15e0fde39864c1f713f88370bb16979fc28cd5757313708f69c8272b",
+      "sourceBlobSha1": "f069cee82c7444aaad1c86f2559e70275a232ca5",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/test/accounting.test.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/test/accounting.test.ts": "902b9856825eb41b8bd5049c71e20edb7f7df4883573e547ea76d77852bd48a2"
+      }
+    },
+    {
+      "path": "services/hosted-agents/test/autonomy-executor.test.ts",
+      "group": "reliability-first",
+      "sourceSha256": "9894b423c5115900cb95f4f42ecf1839de5923c22d69636e59bfb34ceb785232",
+      "sourceBlobSha1": "c1b7e408913a635b5123395d693a62799d62b3c1",
+      "status": "migrated",
+      "reason": "Prior reliability migration preserved; subsequent economic hunks merged without replacing Tempo/PR8 controls.",
+      "targetPaths": [
+        "services/hosted-agents/test/autonomy-executor.test.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/test/autonomy-executor.test.ts": "9894b423c5115900cb95f4f42ecf1839de5923c22d69636e59bfb34ceb785232"
+      }
+    },
+    {
+      "path": "services/hosted-agents/test/autonomy-game-live.test.ts",
+      "group": "reliability-first",
+      "sourceSha256": "e721876d74a6a5df08b8e764a6af5abeba6529eac8e2e7d572b9e60692d05fdf",
+      "sourceBlobSha1": "33275c01c6de782cfe3efba862c31d5b7aa6e3cc",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "services/hosted-agents/test/autonomy-game-live.test.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/test/autonomy-game-live.test.ts": "cecc43550b206191ffcb8d30ba785e5632c5e9e8061e68d9c30cc0222460ec95"
+      }
+    },
+    {
+      "path": "services/hosted-agents/test/operating-report-audit.test.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "15ea2cb7850f9230da25b15f89429f2fc9cbe89d888f435a83adae858f426050",
+      "sourceBlobSha1": "16d1df59be8fc6d73de28bcba460d42e3a7b086b",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/test/operating-report-audit.test.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/test/operating-report-audit.test.ts": "15ea2cb7850f9230da25b15f89429f2fc9cbe89d888f435a83adae858f426050"
+      }
+    },
+    {
+      "path": "services/hosted-agents/test/service.test.ts",
+      "group": "reliability-first",
+      "sourceSha256": "eb59521a499287613b438967f0d05d64acd259fc0426ba6c1b60ca395ae02b51",
+      "sourceBlobSha1": "4515c79fcf82e5b06db76fa009bd24680b5746a1",
+      "status": "previously-covered",
+      "reason": "Already migrated in 2776decd with explicit opt-in bounded recovery/Tempo wallet and PR8 controls.",
+      "targetPaths": [
+        "services/hosted-agents/test/service.test.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/test/service.test.ts": "eb59521a499287613b438967f0d05d64acd259fc0426ba6c1b60ca395ae02b51"
+      }
+    },
+    {
+      "path": "services/hosted-agents/test/strategy-advice-audit.test.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "6f56a8725d386ff7c9d5aff25130197b5b6bc56405637b7ea0f66a77ecc78854",
+      "sourceBlobSha1": "53bf0beaa7abe582a839828fa0c69ac6d2134500",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/test/strategy-advice-audit.test.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/test/strategy-advice-audit.test.ts": "52b9a4d60f36c6054d63677cac258157470d14ab6662d4aa7fa75a28bdd5e662"
+      }
+    },
+    {
+      "path": "services/hosted-agents/test/strategy-advice-http.test.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "8b393831a58b8d3e7b814ef08168cf3bb5dfcd2808cfe78dfb04f3143cdec06d",
+      "sourceBlobSha1": "76c5920909dc4865efc97fa09d7eb186ae8cc64a",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/test/strategy-advice-http.test.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/test/strategy-advice-http.test.ts": "8b393831a58b8d3e7b814ef08168cf3bb5dfcd2808cfe78dfb04f3143cdec06d"
+      }
+    },
+    {
+      "path": "services/hosted-agents/test/task-executor.test.ts",
+      "group": "economic-admission-accounting-and-reporting",
+      "sourceSha256": "f21286692f52df575115540c091d752ce326a4701b5fa8771a793860fe23ca30",
+      "sourceBlobSha1": "0d17aec097b714e5fa6040ab16b78fe389f9aa30",
+      "status": "migrated",
+      "reason": "Ported product implementation with Tempo configuration and existing PR8 recovery protections retained.",
+      "targetPaths": [
+        "services/hosted-agents/test/task-executor.test.ts"
+      ],
+      "targetSha256": {
+        "services/hosted-agents/test/task-executor.test.ts": "f21286692f52df575115540c091d752ce326a4701b5fa8771a793860fe23ca30"
+      }
+    }
+  ]
+}

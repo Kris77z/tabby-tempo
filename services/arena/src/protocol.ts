@@ -24,6 +24,12 @@ export interface Verdict {
   agentId: string; problemId: ProblemId; passed: boolean;
   mode: "docker" | "manual"; evidenceHash: string;
 }
+/** Durable independent test evidence, recorded before settlement can be sent. */
+export interface Evaluation {
+  verdict: Verdict;
+  tests: Array<{ case: number; passed: boolean; failure?: string }>;
+}
+export interface SettlementIntent { verdict: Verdict; txHash: string }
 export interface Settlement { taskId: string; runId: string; passed: boolean; txHash: string; blockNumber: number; feedback: Array<{ type: number; sent: boolean; pending: boolean }> }
 export const digest = (value: string) => createHash("sha256").update(value).digest("hex");
 export function settlementTimeout(value: unknown = 30000): number {

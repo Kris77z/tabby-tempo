@@ -1,0 +1,530 @@
+{
+  "version": 1,
+  "suite": "local-independent-economy",
+  "mode": "shadow",
+  "status": "passed",
+  "startedAt": "2026-10-20T08:39:57.806Z",
+  "provenance": {
+    "chainId": "31337",
+    "environment": "owned-local-anvil",
+    "consumer": "external-directory-installed-sdk",
+    "model": "controlled-response-injection",
+    "evaluation": "real-pinned-Docker-public-and-hidden-tests",
+    "settlement": "independent-Arena-settler-process",
+    "source": {
+      "revision": "e4b29f6158de4ffec5cf90764feb7853bbb086ab",
+      "dirty": true,
+      "trackedDiffSha256": "aebd8518f70d12716ecaa4d612bc6c05c003acf19862ad82a651d4c68d57c93c"
+    },
+    "sourceSha256": {
+      "examples/economic-worker/package.json": "21cba04381285d15077ab43b7418c77753506894e13e503ffc25a2cf5411af65",
+      "examples/economic-worker/package-lock.json": "da35944305c4e33217e94afad35b330e823fba7fefcf429710fa1b2081386280",
+      "examples/economic-worker/protocol.mjs": "f56aa983bd1bc14ab159af999dc700d7a62f382d29fed599faa53d23c397819e",
+      "examples/economic-worker/durable.mjs": "395d623ee04196ea32ef8d685dd6b500f422b03624589caa58f36f4a4ff2cd32",
+      "examples/economic-worker/policy.mjs": "41411e86a4273e17aa8d97e3ec5431887f991a46542a759436f939f759aaa0f0",
+      "examples/economic-worker/publisher.mjs": "d0de28c6afda347b04ba8e13e15cef7b8d7c92bf72ab5987cb28db055d173668",
+      "examples/economic-worker/controller.mjs": "600543b2b0b050116e6bf3d9a4b988456d7df9c6a256d99c01f178b7c92db960",
+      "scripts/check-independent-economy.mjs": "049161822f17abbb7455692b6dabde20e3a8ad3e6d2f47bd9c528c6f2a036d86",
+      "scripts/independent-economy-local.ts": "a462a8609d82d17ee610cb966c6468efcf284f382615e95cdf2229cc5d65d07b",
+      "packages/sdk/src/index.ts": "34d932db78bff53d916544b3bca05c045c0c70152e369f9e086eae3c607d4961",
+      "packages/sdk/src/protocol.ts": "82bb95975a2f1a78fd1069cdf48da9afceed1e5e48e5de8477223b0cbd7b1a23",
+      "services/provider-relay/src/fixed-price.ts": "661225e0c4e8fa299c6f60f838b4dbf2871ea4e80275d2ab8d91e8cc585b4e2e",
+      "services/provider-relay/src/relay.ts": "40489b93ed26a8229853acdff5c5400847cc843cff089dc6b3e2620ff9d0cefb",
+      "services/provider-relay/src/refunder.ts": "6aa7b6e26ec24f7cd57ce768e85937ba6bc37e0ccba7d20444d75a9b2f0562b9",
+      "services/arena/src/http.ts": "e72e21885fdc135f5df79b7c96663d205419d11be8de3f718033477a20ec3db4",
+      "services/arena/src/settler-main.ts": "31a6767d583541ae54810521b9a4fc76dd34a305ac2c211fb7becf7d69c3f344",
+      "packages/pi-loop/src/provider.ts": "c635bd8e2a34c4f71ee6345144bf01790d6c4310b73e40af6ed495ffb29e4b84",
+      "packages/pi-loop/test/workflow-fixture.ts": "450ebfbb2920e638a3284c8b81607e0ea70090cbe63e8c6ea1c6d96f34c9bca0"
+    },
+    "consumerSha256": {
+      "package.json": "21cba04381285d15077ab43b7418c77753506894e13e503ffc25a2cf5411af65",
+      "package-lock.json": "da35944305c4e33217e94afad35b330e823fba7fefcf429710fa1b2081386280",
+      "protocol.mjs": "f56aa983bd1bc14ab159af999dc700d7a62f382d29fed599faa53d23c397819e",
+      "durable.mjs": "395d623ee04196ea32ef8d685dd6b500f422b03624589caa58f36f4a4ff2cd32",
+      "policy.mjs": "41411e86a4273e17aa8d97e3ec5431887f991a46542a759436f939f759aaa0f0",
+      "publisher.mjs": "d0de28c6afda347b04ba8e13e15cef7b8d7c92bf72ab5987cb28db055d173668",
+      "controller.mjs": "600543b2b0b050116e6bf3d9a4b988456d7df9c6a256d99c01f178b7c92db960"
+    },
+    "sdkArchiveSha256": "601dd2ec35896d17a865061f24ff1b7e550e7048ca0a7fadd36b1b2516fa0d79",
+    "node": "v22.22.0",
+    "tools": {
+      "forge": "forge Version: 1.8.1",
+      "anvil": "anvil Version: 1.8.1",
+      "docker": "28.1.1",
+      "imageId": "sha256:54f0c1506c135da9a6b9cc0b0524b97e225b712ead8d601326d24f7e6619fede",
+      "dockerTransport": "local-unix-socket"
+    },
+    "launcherSha256": "049161822f17abbb7455692b6dabde20e3a8ad3e6d2f47bd9c528c6f2a036d86"
+  },
+  "policy": {
+    "version": 1,
+    "id": "independent-local-cash-v1",
+    "chainId": "31337",
+    "maxTasks": 6,
+    "totalSpendRaw": "720000",
+    "maxPaymentRaw": "120000",
+    "reserveCashRaw": "120000",
+    "minProfitRaw": "20000",
+    "coldStartCushionRaw": "60000",
+    "startedAtMs": 1792485597806,
+    "deadlineMs": 1792485897806
+  },
+  "policySha256": "aa91d1794217687deaaea98e05986d6f19fbbf7071c79116d6f7f912a86a0660",
+  "publication": {
+    "tasks": [
+      {
+        "publisherPid": 25707,
+        "taskId": "1",
+        "problemId": "sum-integers",
+        "rewardRaw": "335000",
+        "fundedEscrowRaw": "335000",
+        "protocolFeeBps": "0",
+        "deadlineMs": 1792487397000,
+        "creation": {
+          "txHash": "0x7133009108033dca9aa935276cbc53dbf9e78f81afe94fc39f3a4139e3b04241",
+          "blockHash": "0xcf38f5e07f235293c7c8e69406c060e8f14997c145512e2163f640c84f6be15a",
+          "blockNumber": 29,
+          "status": 1,
+          "event": "TaskCreated",
+          "eventCount": 1,
+          "values": {
+            "taskId": "1",
+            "poster": "0x3DA8D322CB2435dA26E9C9fEE670f9fB7Fe74E49",
+            "reward": "335000",
+            "deadline": "1792487397"
+          }
+        },
+        "manifestSha256": "cf0cc6cca59c54644aab75e98d6baed3661b8db1c11980ad5c6da3ff35aeec26",
+        "signatureVerified": true
+      },
+      {
+        "publisherPid": 25723,
+        "taskId": "2",
+        "problemId": "balanced-brackets",
+        "rewardRaw": "325000",
+        "fundedEscrowRaw": "325000",
+        "protocolFeeBps": "0",
+        "deadlineMs": 1792487398000,
+        "creation": {
+          "txHash": "0x7b0f7bbf3749104ddfd12f7592c12a7dc953d552ee5ec84b3e035a75d0e4a981",
+          "blockHash": "0xb7c18018cf78926824763b0a614055fb96488e19c3fca34f8074a77e66053c1b",
+          "blockNumber": 31,
+          "status": 1,
+          "event": "TaskCreated",
+          "eventCount": 1,
+          "values": {
+            "taskId": "2",
+            "poster": "0x3DA8D322CB2435dA26E9C9fEE670f9fB7Fe74E49",
+            "reward": "325000",
+            "deadline": "1792487398"
+          }
+        },
+        "manifestSha256": "06e19c63542c698d745bcfc76472a564f67ff91696eebdaefb933db84223dd61",
+        "signatureVerified": true
+      },
+      {
+        "publisherPid": 25745,
+        "taskId": "3",
+        "problemId": "sum-integers",
+        "rewardRaw": "330000",
+        "fundedEscrowRaw": "330000",
+        "protocolFeeBps": "0",
+        "deadlineMs": 1792487399000,
+        "creation": {
+          "txHash": "0xf825cb0374056348b756ce06a30540b0abb9a6b95147f178ae0f9cd8ab971c55",
+          "blockHash": "0x674925cf1925b6ae9eab56a1745492fab4385d5c11374f0592a80b30e3c170c5",
+          "blockNumber": 33,
+          "status": 1,
+          "event": "TaskCreated",
+          "eventCount": 1,
+          "values": {
+            "taskId": "3",
+            "poster": "0x3DA8D322CB2435dA26E9C9fEE670f9fB7Fe74E49",
+            "reward": "330000",
+            "deadline": "1792487399"
+          }
+        },
+        "manifestSha256": "1689fcc0a96e6d03671ef984d71b0ace6edb3891aa01d86840949ee8fb3ce36c",
+        "signatureVerified": true
+      },
+      {
+        "publisherPid": 25752,
+        "taskId": "4",
+        "problemId": "balanced-brackets",
+        "rewardRaw": "340000",
+        "fundedEscrowRaw": "340000",
+        "protocolFeeBps": "0",
+        "deadlineMs": 1792487400000,
+        "creation": {
+          "txHash": "0x8bc8948cb25460ed14d77e8e08437870f196651ec026c4642772298025d15ba2",
+          "blockHash": "0x5166615e042fc599e360fd95fd4777c289f516bc6003f8d0abfbfede74595862",
+          "blockNumber": 35,
+          "status": 1,
+          "event": "TaskCreated",
+          "eventCount": 1,
+          "values": {
+            "taskId": "4",
+            "poster": "0x3DA8D322CB2435dA26E9C9fEE670f9fB7Fe74E49",
+            "reward": "340000",
+            "deadline": "1792487400"
+          }
+        },
+        "manifestSha256": "ae5739bc7c87260151cafc0c69b61c992872a06423021fc96b1dfc672704be46",
+        "signatureVerified": true
+      },
+      {
+        "publisherPid": 25760,
+        "taskId": "5",
+        "problemId": "balanced-brackets",
+        "rewardRaw": "330000",
+        "fundedEscrowRaw": "330000",
+        "protocolFeeBps": "0",
+        "deadlineMs": 1792487401000,
+        "creation": {
+          "txHash": "0x09231a384b138de16e1b6bcf92419e2f4009a682238da9e7180ee6263f0631ad",
+          "blockHash": "0xfaf737d9644411d8cfc2deb3d66af0eba16d60c56150fe41967daba111526c81",
+          "blockNumber": 37,
+          "status": 1,
+          "event": "TaskCreated",
+          "eventCount": 1,
+          "values": {
+            "taskId": "5",
+            "poster": "0x3DA8D322CB2435dA26E9C9fEE670f9fB7Fe74E49",
+            "reward": "330000",
+            "deadline": "1792487401"
+          }
+        },
+        "manifestSha256": "f16e8038c7e4ac03ff587d4eb3e9f9e8a867bd485ae4f97ab5782526f559e198",
+        "signatureVerified": true
+      },
+      {
+        "publisherPid": 25767,
+        "taskId": "6",
+        "problemId": "sum-integers",
+        "rewardRaw": "325000",
+        "fundedEscrowRaw": "325000",
+        "protocolFeeBps": "0",
+        "deadlineMs": 1792487401000,
+        "creation": {
+          "txHash": "0x3ee2b0fd4934d91ac6f08a3ccd8f662b174550334247d398c0d7bab586559ba0",
+          "blockHash": "0xb2a440111670190da87c3d79fa60fd4a2654e57d2dcf88763ee36432c1027ac0",
+          "blockNumber": 39,
+          "status": 1,
+          "event": "TaskCreated",
+          "eventCount": 1,
+          "values": {
+            "taskId": "6",
+            "poster": "0x3DA8D322CB2435dA26E9C9fEE670f9fB7Fe74E49",
+            "reward": "325000",
+            "deadline": "1792487401"
+          }
+        },
+        "manifestSha256": "982627311147367a8af29a195f3a6c6d7eada2522281c02b8c531636cbed05b4",
+        "signatureVerified": true
+      },
+      {
+        "publisherPid": 25774,
+        "taskId": "7",
+        "problemId": "sum-integers",
+        "rewardRaw": "100000",
+        "fundedEscrowRaw": "100000",
+        "protocolFeeBps": "0",
+        "deadlineMs": 1792487402000,
+        "creation": {
+          "txHash": "0x7c34bf55ffda0dd71334803be172ae5b7a5f2dfa97c6428223620b932b59a48f",
+          "blockHash": "0x98da2d8ceef0d71583f2ddc53bc12e03cbffff3f63cd0e7addca3ce45f5dc49d",
+          "blockNumber": 41,
+          "status": 1,
+          "event": "TaskCreated",
+          "eventCount": 1,
+          "values": {
+            "taskId": "7",
+            "poster": "0x3DA8D322CB2435dA26E9C9fEE670f9fB7Fe74E49",
+            "reward": "100000",
+            "deadline": "1792487402"
+          }
+        },
+        "manifestSha256": "38ba8399e43e57e4a332b3b8d60ec543fb5c1c70d8754edb233f1b3f53731c02",
+        "signatureVerified": true
+      }
+    ]
+  },
+  "initialFunding": {
+    "agentId": "1",
+    "startupCapitalRaw": "600000",
+    "ownerTopupsAfterProvisionRaw": "0",
+    "gameSubsidyRaw": "0",
+    "taskPublisherFundedRewardsRaw": "2085000"
+  },
+  "scope": {
+    "productionNetworkUsed": false,
+    "publicVendorCalls": false,
+    "autonomousPlannerExercised": false,
+    "creditOptionsExercised": false,
+    "nativeGasValuedInUSDC": false,
+    "limitations": [
+      "Owned local Anvil and a trusted signed catalog; controlled model responses.",
+      "Cash-only deterministic policy, no commercial demand or real provider profit claim.",
+      "Uncertain task continuation requires an explicit full refund and independent verifier failure closure.",
+      "An orphaned lock claim fails closed; manual reconciliation is required."
+    ]
+  },
+  "interruptions": [],
+  "rounds": [],
+  "shadow": {
+    "before": {
+      "cashRaw": "600000",
+      "walletNonce": 4,
+      "paymentEvents": 0,
+      "settlementEvents": 0,
+      "acceptanceEvents": 0,
+      "modelCalls": 0
+    },
+    "after": {
+      "cashRaw": "600000",
+      "walletNonce": 4,
+      "paymentEvents": 0,
+      "settlementEvents": 0,
+      "acceptanceEvents": 0,
+      "modelCalls": 0
+    },
+    "observation": {
+      "candidates": [
+        {
+          "taskId": "1",
+          "problemId": "sum-integers",
+          "rewardRaw": "335000",
+          "escrowBalanceRaw": "335000",
+          "protocolFeeBps": "0",
+          "status": "1",
+          "deadlineMs": 1792487397000,
+          "priceRaw": "120000",
+          "expiresAtMs": 1792485903000,
+          "observedAtMs": 1792485604817,
+          "blockNumber": 41,
+          "blockHash": "0x98da2d8ceef0d71583f2ddc53bc12e03cbffff3f63cd0e7addca3ce45f5dc49d",
+          "paymentId": "0x633b93dc0a423d6fc9f72e8a60b1c8d7996f92c934cda26ba338bb5472bd21e7",
+          "requestDigest": "0x9f523e723c437b0d1e108bc8b8accfebfcc2de8957505d9ee6497410bc4c4877"
+        },
+        {
+          "taskId": "2",
+          "problemId": "balanced-brackets",
+          "rewardRaw": "325000",
+          "escrowBalanceRaw": "325000",
+          "protocolFeeBps": "0",
+          "status": "1",
+          "deadlineMs": 1792487398000,
+          "priceRaw": "120000",
+          "expiresAtMs": 1792485903000,
+          "observedAtMs": 1792485604944,
+          "blockNumber": 41,
+          "blockHash": "0x98da2d8ceef0d71583f2ddc53bc12e03cbffff3f63cd0e7addca3ce45f5dc49d",
+          "paymentId": "0x4b2192d3e53a088d637c9445aa9d9c38ce08505167507cc09b1674d9cfca1caf",
+          "requestDigest": "0x9f7f2f51671a4bac08d239ebb29ebc50126412a0766c175be6577c239f5c9121"
+        },
+        {
+          "taskId": "3",
+          "problemId": "sum-integers",
+          "rewardRaw": "330000",
+          "escrowBalanceRaw": "330000",
+          "protocolFeeBps": "0",
+          "status": "1",
+          "deadlineMs": 1792487399000,
+          "priceRaw": "120000",
+          "expiresAtMs": 1792485903000,
+          "observedAtMs": 1792485605070,
+          "blockNumber": 41,
+          "blockHash": "0x98da2d8ceef0d71583f2ddc53bc12e03cbffff3f63cd0e7addca3ce45f5dc49d",
+          "paymentId": "0x15a54c34dd9d0acafb9aa1770eee488b63489d8c6551e05d523d4e190738dd5f",
+          "requestDigest": "0xbe5fbd107ef3b606461edaff1cc34d504ef61a4d1b0fa4b428529b3ffda20580"
+        },
+        {
+          "taskId": "4",
+          "problemId": "balanced-brackets",
+          "rewardRaw": "340000",
+          "escrowBalanceRaw": "340000",
+          "protocolFeeBps": "0",
+          "status": "1",
+          "deadlineMs": 1792487400000,
+          "priceRaw": "120000",
+          "expiresAtMs": 1792485903000,
+          "observedAtMs": 1792485605196,
+          "blockNumber": 41,
+          "blockHash": "0x98da2d8ceef0d71583f2ddc53bc12e03cbffff3f63cd0e7addca3ce45f5dc49d",
+          "paymentId": "0x58f69cc89f2562d06d174ba9e4cf80615645aec8d074453a2b0c4ba2ab33493d",
+          "requestDigest": "0x27af5f310310e5656d5d2fba8c5b35f4020a5553528ce90ebdcc3c86455d3fa9"
+        },
+        {
+          "taskId": "5",
+          "problemId": "balanced-brackets",
+          "rewardRaw": "330000",
+          "escrowBalanceRaw": "330000",
+          "protocolFeeBps": "0",
+          "status": "1",
+          "deadlineMs": 1792487401000,
+          "priceRaw": "120000",
+          "expiresAtMs": 1792485903000,
+          "observedAtMs": 1792485605321,
+          "blockNumber": 41,
+          "blockHash": "0x98da2d8ceef0d71583f2ddc53bc12e03cbffff3f63cd0e7addca3ce45f5dc49d",
+          "paymentId": "0x455dfe470af3ca285499d683250c908814a2f043766312aa59f8057580fb6d99",
+          "requestDigest": "0xf0a23352039c3afbb959503fb78a98093758bd64477b5f6c1d4fcb317bac90df"
+        },
+        {
+          "taskId": "6",
+          "problemId": "sum-integers",
+          "rewardRaw": "325000",
+          "escrowBalanceRaw": "325000",
+          "protocolFeeBps": "0",
+          "status": "1",
+          "deadlineMs": 1792487401000,
+          "priceRaw": "120000",
+          "expiresAtMs": 1792485903000,
+          "observedAtMs": 1792485605448,
+          "blockNumber": 41,
+          "blockHash": "0x98da2d8ceef0d71583f2ddc53bc12e03cbffff3f63cd0e7addca3ce45f5dc49d",
+          "paymentId": "0xb8d1a366235d43864b12ef52600565ee07ee14da8a6384e3280788d6d1c232ef",
+          "requestDigest": "0xf501af9d62b0d4afd9ce03a3641ebcdf539a48262685c224dc5a6eb6412760c9"
+        },
+        {
+          "taskId": "7",
+          "problemId": "sum-integers",
+          "rewardRaw": "100000",
+          "escrowBalanceRaw": "100000",
+          "protocolFeeBps": "0",
+          "status": "1",
+          "deadlineMs": 1792487402000,
+          "priceRaw": "120000",
+          "expiresAtMs": 1792485903000,
+          "observedAtMs": 1792485605577,
+          "blockNumber": 41,
+          "blockHash": "0x98da2d8ceef0d71583f2ddc53bc12e03cbffff3f63cd0e7addca3ce45f5dc49d",
+          "paymentId": "0x4f6c327958f4e155a040db2d9050ec4cb34a6f4fa3b5c6b925b066142da3a469",
+          "requestDigest": "0x607c47488aeac90d8110f084187f1df58bb923cd5d6c5457aa8310c85768fdaa"
+        }
+      ],
+      "history": [],
+      "cashRaw": "600000",
+      "spentRaw": "0",
+      "reservedRaw": "0",
+      "nowMs": 1792485605592,
+      "unresolved": false
+    },
+    "decision": {
+      "status": "selected",
+      "selectedTaskId": "4",
+      "stopReason": null,
+      "assessments": [
+        {
+          "taskId": "1",
+          "problemId": "sum-integers",
+          "coldStart": true,
+          "comparableCount": 0,
+          "failedComparableCount": 0,
+          "failureCushionRaw": "0",
+          "netRevenueRaw": "335000",
+          "requiredProfitRaw": "80000",
+          "completionProfitRaw": "215000",
+          "surplusRaw": "135000",
+          "reasons": [],
+          "status": "eligible"
+        },
+        {
+          "taskId": "2",
+          "problemId": "balanced-brackets",
+          "coldStart": true,
+          "comparableCount": 0,
+          "failedComparableCount": 0,
+          "failureCushionRaw": "0",
+          "netRevenueRaw": "325000",
+          "requiredProfitRaw": "80000",
+          "completionProfitRaw": "205000",
+          "surplusRaw": "125000",
+          "reasons": [],
+          "status": "eligible"
+        },
+        {
+          "taskId": "3",
+          "problemId": "sum-integers",
+          "coldStart": true,
+          "comparableCount": 0,
+          "failedComparableCount": 0,
+          "failureCushionRaw": "0",
+          "netRevenueRaw": "330000",
+          "requiredProfitRaw": "80000",
+          "completionProfitRaw": "210000",
+          "surplusRaw": "130000",
+          "reasons": [],
+          "status": "eligible"
+        },
+        {
+          "taskId": "4",
+          "problemId": "balanced-brackets",
+          "coldStart": true,
+          "comparableCount": 0,
+          "failedComparableCount": 0,
+          "failureCushionRaw": "0",
+          "netRevenueRaw": "340000",
+          "requiredProfitRaw": "80000",
+          "completionProfitRaw": "220000",
+          "surplusRaw": "140000",
+          "reasons": [],
+          "status": "eligible"
+        },
+        {
+          "taskId": "5",
+          "problemId": "balanced-brackets",
+          "coldStart": true,
+          "comparableCount": 0,
+          "failedComparableCount": 0,
+          "failureCushionRaw": "0",
+          "netRevenueRaw": "330000",
+          "requiredProfitRaw": "80000",
+          "completionProfitRaw": "210000",
+          "surplusRaw": "130000",
+          "reasons": [],
+          "status": "eligible"
+        },
+        {
+          "taskId": "6",
+          "problemId": "sum-integers",
+          "coldStart": true,
+          "comparableCount": 0,
+          "failedComparableCount": 0,
+          "failureCushionRaw": "0",
+          "netRevenueRaw": "325000",
+          "requiredProfitRaw": "80000",
+          "completionProfitRaw": "205000",
+          "surplusRaw": "125000",
+          "reasons": [],
+          "status": "eligible"
+        },
+        {
+          "taskId": "7",
+          "problemId": "sum-integers",
+          "coldStart": true,
+          "comparableCount": 0,
+          "failedComparableCount": 0,
+          "failureCushionRaw": "0",
+          "netRevenueRaw": "100000",
+          "requiredProfitRaw": "80000",
+          "completionProfitRaw": "-20000",
+          "surplusRaw": "-100000",
+          "reasons": [
+            "MINIMUM_PROFIT"
+          ],
+          "status": "rejected"
+        }
+      ]
+    }
+  },
+  "completedAt": "2026-10-20T08:40:05.712Z",
+  "durationMs": 7906,
+  "cleanup": {
+    "ownedProcessesStopped": true,
+    "ownedContainersRemoved": true,
+    "privateTempDirectoryRemoved": true,
+    "ownedIpcDirectoryRemoved": true,
+    "failures": []
+  }
+}

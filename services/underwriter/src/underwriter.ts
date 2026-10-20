@@ -166,6 +166,11 @@ export class Underwriter {
     reject(loan.status !== 0n, "LOAN_EXISTS", "Task already has a loan record");
     const caps = principalCap(agent.terms.capUsdCents, this.config.assetDecimals, this.config.tokenUsdPrice,
       BigInt(payableEscrow), ctx.configuration.ltvBps, agent.terms.feeBps);
+    // An authorization may narrow protocol limits, never exceed the Manager's
+    // configured per-epoch draw ceiling. Cash paid alongside the loan does not
+    // justify signing a larger principal than this absolute on-chain limit.
+    const protocolDrawCap = ctx.configuration.maxDrawPerEpoch;
+    if (caps.principalCap > protocolDrawCap) caps.principalCap = protocolDrawCap;
     reject(caps.principalCap === 0n, "ZERO_CAP", "Integer credit cap is zero");
     reject(caps.principalCap > UINT256_MAX, "CAP_OUT_OF_RANGE", "Credit cap exceeds uint256");
     const authDeadline = now + 1800n;
@@ -176,7 +181,7 @@ export class Underwriter {
       configuration: ctx.configuration, addresses: ctx.addresses, agent,
       task: { taskId, poster: task.poster, reward: task.reward, escrowBalance: task.escrowBalance,
         agentId: task.agentId, deadline: task.deadline, protocolFeeBps: task.protocolFeeBps, status: task.status, payableEscrow },
-      caps, nonce, authDeadline, loanDueAt });
+      caps: { ...caps, protocolDrawCap }, nonce, authDeadline, loanDueAt });
     const evidenceHash = keccak256(toUtf8Bytes(evidence));
     const authorization = { agentId, taskId, principalCap: caps.principalCap, feeBps: agent.terms.feeBps,
       riskTier: agent.terms.riskTier, identityVersion: agent.identity.version, authDeadline, loanDueAt, nonce, evidenceHash };

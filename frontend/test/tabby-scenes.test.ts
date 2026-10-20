@@ -77,3 +77,16 @@ test('practice match scenes follow the referee and never create a monetary rewar
 test('a visitor without an agent waits for creation without a configuration action',()=>{
  const scene=tabbyScene(undefined,{ready:false});assert.equal(scene.scene,'onboarding');assert.equal(scene.label,'等待创建 Agent');assert.equal(scene.requiredAction,undefined);assert.equal(scene.animated,false);
 });
+
+test('an empty first autonomous run shows no available task rather than a completed delivery',()=>{
+ const empty=run({action:'autonomous',status:'Failed',chargedRaw:'0',reason:'AUTONOMY_NO_AVAILABLE_TASKS',result:{phase:'Stopped',terminal:true,success:false,chargedRaw:'0',autonomousTasks:0,reason:'AUTONOMY_NO_AVAILABLE_TASKS'},activities:[event({scene:'decision',state:'completed',reason:'AUTONOMY_NO_AVAILABLE_TASKS'})]});
+ const scene=tabbyScene(empty);
+ assert.equal(runOutcomeLabel(empty),'暂无可用任务');assert.equal(scene.scene,'task');assert.equal(scene.state,'blocked');assert.equal(scene.label,'暂无可执行任务');assert.equal(scene.animated,false);assert.equal(scene.reason,'AUTONOMY_NO_AVAILABLE_TASKS');assert.equal(scene.evidence.chargedRaw,'0');assert.equal(scene.evidence.txHash,undefined);assert.equal(scene.evidence.rewardRaw,undefined);assert.equal(scene.objects.some(object=>object.kind==='artifact'),false);
+ const completed=run({action:'autonomous',status:'Succeeded',reason:'AUTONOMY_NO_AVAILABLE_TASKS',result:{phase:'Stopped',terminal:true,success:true,chargedRaw:'10000',autonomousTasks:1,reason:'AUTONOMY_NO_AVAILABLE_TASKS'}});
+ assert.equal(runOutcomeLabel(completed),'已完成');assert.equal(tabbyScene(completed).scene,'delivery');
+});
+
+test('persisted model selections retain their name and actual downgrade reason',()=>{
+ const records=run({activities:[event({scene:'model',state:'selected',subject:{id:'kimi-k3',name:'Kimi K3',kind:'model'}}),event({scene:'model',state:'selected',reason:'HOSTED_GOAL_MODEL_DOWNGRADED',subject:{id:'kimi-k2.6',name:'Kimi K2.6',kind:'model'}},2)]});
+ const history=tabbySceneHistory(records);assert.equal(history[0].objects[0].name,'Kimi K3');assert.equal(history[0].reason,undefined);assert.equal(history[1].objects[0].name,'Kimi K2.6');assert.equal(history[1].reason,'HOSTED_GOAL_MODEL_DOWNGRADED');assert.equal(history[1].animated,false);
+});

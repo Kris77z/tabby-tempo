@@ -54,7 +54,11 @@ export function MissionChat({run,agentName,chainId,history=false,disconnected=fa
           </button>
           <div id={traceId} className={chat.traceCollapse} data-open={open} aria-hidden={!open} inert={!open}>
             <div className={chat.traceClip}><div className={chat.traceBody}>
-            {trace.length>0&&<ol className={chat.trace}>{trace.map((event,i)=><li key={event.seq??i} data-state={event.state}><span aria-hidden="true">{marks[event.state]??'·'}</span><div><strong>{sceneLabels[event.scene]}</strong><p>{event.label}</p>{event.selectedExpert&&<small>{event.selectedExpert.name}</small>}</div>{event.evidence.txHash&&<TransactionEvidence hash={event.evidence.txHash} chainId={event.evidence.chainId??chainId} label="凭证"/>}</li>)}</ol>}
+            {trace.length>0&&<ol className={chat.trace}>{trace.map((event,i)=>{
+              const model=event.objects.find(object=>object.kind==='model'&&object.id!=='model');
+              const downgradeReason=event.reason==='HOSTED_GOAL_MODEL_DOWNGRADED'||event.reason==='GATEWAY_MODEL_DOWNGRADED'?event.reason:undefined;
+              return <li key={event.seq??i} data-state={event.state}><span aria-hidden="true">{marks[event.state]??'·'}</span><div><strong>{sceneLabels[event.scene]}</strong><p>{event.label}{model&&<> · {model.name}</>}</p>{downgradeReason&&<p>{reasonLabel(downgradeReason)}</p>}{event.selectedExpert&&<small>{event.selectedExpert.name}</small>}</div>{event.evidence.txHash&&<TransactionEvidence hash={event.evidence.txHash} chainId={event.evidence.chainId??chainId} label="凭证"/>}</li>;
+            })}</ol>}
             {view?.phases.map((phase,i)=><details className={chat.phase} key={i}><summary><span>{phase.output?'✓':live&&view.stage==='executing'&&i===completedPhases?'◌':'·'} {phase.name}</span><small>{phase.output?'已产出':live&&view.stage==='executing'&&i===completedPhases?'执行中':'待执行'}</small></summary><p>{phase.goal}</p>{phase.output&&<MissionMarkdown text={phase.output}/>}</details>)}
             {!trace.length&&!view?.phases.length&&<p className={chat.quiet}>等待执行计划。</p>}
         {view?.review&&<details className={chat.review} data-passed={view.review.passed}><summary>{view.review.passed?'✓ 独立复核通过':'! 独立复核未通过'} · {view.review.checks.length} 项</summary><p>{view.review.summary}</p><ul>{view.review.checks.map((c,i)=><li key={i}>{c}</li>)}</ul></details>}

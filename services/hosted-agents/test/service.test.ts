@@ -63,6 +63,26 @@ test("signed owner login is domain-bound, single-use, expiring and revocable; on
   try { Date.now = () => expires.expiresAt + 1; await assert.rejects(f.service.login(expires.id, await wallet.signMessage(expires.message)), /HOSTED_AUTH_INVALID/); }
   finally { Date.now = original; }
 });
+test("authenticated zero-Agent snapshots retain their normalized owner across restart, account switch and logout", async t => {
+  const f = await fixture(t), first = Wallet.createRandom(), second = Wallet.createRandom();
+  const signIn = async (wallet: typeof first) => {
+    const challenge = await f.service.challenge(wallet.address);
+    return f.service.login(challenge.id, await wallet.signMessage(challenge.message));
+  };
+  const firstLogin = await signIn(first);
+  const firstSnapshot = await f.service.snapshot(await f.service.authenticate(firstLogin.token));
+  assert.equal(firstSnapshot.owner, first.address); assert.deepEqual(firstSnapshot.agents, []); assert.deepEqual(firstSnapshot.runs, []);
+  assert.equal((await f.service.snapshot(first.address.toLowerCase())).owner, first.address);
+  await f.restart();
+  assert.equal((await f.service.snapshot(await f.service.authenticate(firstLogin.token))).owner, first.address);
+  await f.service.create(first.address, { name: "First owner's Agent", requestId: randomUUID() }); await f.service.waitUntilIdle();
+  const secondLogin = await signIn(second), secondSnapshot = await f.service.snapshot(await f.service.authenticate(secondLogin.token));
+  assert.equal(secondSnapshot.owner, second.address); assert.deepEqual(secondSnapshot.agents, []); assert.deepEqual(secondSnapshot.runs, []);
+  assert.equal((await f.service.snapshot(await f.service.authenticate(firstLogin.token))).agents.length, 1);
+  await f.service.logout(secondLogin.token); await f.restart();
+  await assert.rejects(f.service.authenticate(secondLogin.token), /HOSTED_AUTH_REQUIRED/);
+  assert.equal((await f.service.snapshot(await f.service.authenticate(firstLogin.token))).owner, first.address);
+});
 test("two owners get unique custody wallets, private keys and immutable ownership; retries never create extra agents", async t => {
   const f = await fixture(t), a = Wallet.createRandom(), b = Wallet.createRandom(), requestId = randomUUID();
   const first = await f.service.create(a.address, { ...settings, requestId }); await f.service.waitUntilIdle();

@@ -3,6 +3,7 @@ import { Contract, JsonRpcApiProvider, getAddress, type Signer } from "ethers";
 import { problemCatalog, type ProblemId } from "@agentfuel/arena";
 import { InferCredit, ACCOUNT_ABI, PaymentError, canonical, requestDigest, sameAddress, uint,
   type FetchOptions, type Inference, type Json, type PaymentHandle, type RoutingTier } from "@agentfuel/sdk";
+import { assertEconomicPayment, assessTaskEconomics, validateTaskEconomicsPolicy, type TaskEconomicsPolicy, type TaskEconomics, type TaskRevenue } from "./economics.js";
 import { SessionStore } from "./session.js";
 
 const TASK_ABI = ["function getTask(uint256) view returns(tuple(address poster,uint256 reward,uint256 escrowBalance,uint256 agentId,uint256 deadline,uint16 protocolFeeBps,uint8 status))"];
@@ -21,15 +22,17 @@ export interface SelectionProvider {
 export interface SelectionConfig {
   agentId: string; chainId: string; account: string; asset: string; escrowAddress: string;
   tasks: SelectionTask[]; providers: SelectionProvider[];
+  economics?: TaskEconomicsPolicy;
   allowCredit: boolean; maxPrice: string; deadlineMs: number; minRemainingMs: number; maxCompletionTokens: number;
 }
 export interface SelectionSnapshot {
-  atMs: number; cash: string; tasks: Array<SelectionTask & { assigned: boolean }>; creditEnabled: boolean;
+  atMs: number; cash: string; tasks: Array<SelectionTask & { assigned: boolean; revenue?: TaskRevenue }>; creditEnabled: boolean;
 }
 export interface SelectionCandidate {
   taskId: string; problemId: ProblemId; deadlineMs: number; creditLimit: string;
   providerId: string; tier: RoutingTier; price: string; funding: "cash" | "task-credit";
-  rejected: Array<"TASK_UNAVAILABLE" | "CAPABILITY" | "DEADLINE" | "PRICE_LIMIT" | "FUNDS">;
+  economics?: TaskEconomics;
+  rejected: Array<"ECONOMICS_REVENUE_UNKNOWN" | "ECONOMICS_ESCROW_UNFUNDED" | "ECONOMICS_NOT_WORTHWHILE" | "TASK_UNAVAILABLE" | "CAPABILITY" | "DEADLINE" | "PRICE_LIMIT" | "FUNDS">;
 }
 export interface SelectionDecision {
   snapshot: SelectionSnapshot; snapshotHash: string; candidates: SelectionCandidate[]; selected?: SelectionCandidate;
@@ -53,7 +56,8 @@ function keys(value: object, allowed: string[]) {
 }
 function time(value: number) { if (!Number.isSafeInteger(value) || value < 0) fail("INVALID_SELECTOR_TIME"); }
 function validate(config: SelectionConfig) {
-  keys(config, ["agentId", "chainId", "account", "asset", "escrowAddress", "tasks", "providers", "allowCredit", "maxPrice", "deadlineMs", "minRemainingMs", "maxCompletionTokens"]);
+  keys(config, ["agentId", "chainId", "account", "asset", "escrowAddress", "tasks", "providers", "allowCredit", "maxPrice", "deadlineMs", "minRemainingMs", "maxCompletionTokens", "economics"]);
+  if (config.economics !== undefined) validateTaskEconomicsPolicy(config.economics);
   if (typeof config.allowCredit !== "boolean") fail("INVALID_SELECTOR_CONFIG");
   for (const name of ["agentId", "chainId", "maxPrice"] as const) if (uint(config[name], name) === 0n) fail("INVALID_SELECTOR_CONFIG");
   for (const address of [config.account, config.asset, config.escrowAddress]) getAddress(address);
@@ -96,17 +100,22 @@ export function selectInference(config: SelectionConfig, snapshot: SelectionSnap
     const observed = snapshot.tasks.find(value => value.taskId === task.taskId);
     if (!observed || typeof observed.assigned !== "boolean" || hash({ taskId: observed.taskId, problemId: observed.problemId, deadlineMs: observed.deadlineMs, creditLimit: observed.creditLimit }) !== hash(task)) fail("INVALID_SELECTOR_SNAPSHOT");
     for (const provider of config.providers) for (const route of provider.routes) {
-      const rejected: SelectionCandidate["rejected"] = [], cash = BigInt(snapshot.cash), price = BigInt(route.price);
+      const rejected: SelectionCandidate["rejected"] = [], cash = BigInt(snapshot.cash), price = BigInt(config.economics?.executionCostRaw ?? route.price);
       if (!observed.assigned) rejected.push("TASK_UNAVAILABLE");
       if (!route.capabilities.includes("python3-json-stdio") || !route.capabilities.includes(task.problemId)) rejected.push("CAPABILITY");
       if (Math.min(task.deadlineMs, config.deadlineMs) - snapshot.atMs <= config.minRemainingMs) rejected.push("DEADLINE");
       if (price > BigInt(config.maxPrice)) rejected.push("PRICE_LIMIT");
       if (price > cash + (config.allowCredit && snapshot.creditEnabled ? BigInt(task.creditLimit) : 0n)) rejected.push("FUNDS");
-      candidates.push({ ...task, providerId: provider.id, tier: route.tier, price: route.price, funding: price <= cash ? "cash" : "task-credit", rejected });
+      const economics = config.economics ? assessTaskEconomics(config.economics, observed.revenue, route.price, snapshot.cash) : undefined;
+      if (economics?.reason) rejected.push(economics.reason);
+      candidates.push({ ...task, ...(economics ? { economics } : {}), providerId: provider.id, tier: route.tier, price: route.price, funding: price <= cash ? "cash" : "task-credit", rejected });
     }
   }
   candidates.sort(order);
   return { snapshot: structuredClone(snapshot), snapshotHash: hash({ configHash: hash(config), snapshot }), candidates, selected: candidates.find(candidate => candidate.rejected.length === 0) };
+}
+export function selectionRejectionReason(decision: SelectionDecision): string {
+  return decision.candidates.find(candidate => candidate.economics?.reason && !candidate.rejected.some(reason => ["TASK_UNAVAILABLE", "CAPABILITY", "DEADLINE"].includes(reason)))?.economics?.reason ?? "NO_FEASIBLE_CANDIDATE";
 }
 function body(config: SelectionConfig, selected: SelectionCandidate, provider: SelectionProvider): FetchOptions["body"] {
   return { service: provider.service, model: provider.model, tier: selected.tier, max_completion_tokens: config.maxCompletionTokens,
@@ -132,14 +141,18 @@ export async function runSelectedInference(directory: string, config: SelectionC
       if (session.phase === "Delivered" || session.phase === "Stopped") return session;
     } else {
       if (BigInt(await rpc.send("eth_chainId", [])) !== BigInt(config.chainId)) fail("NETWORK_MISMATCH");
-      const [cash, tasks] = await Promise.all([account.getFunction("cash").staticCall(config.agentId), Promise.all(config.tasks.map(async task => {
-        const current = await escrow.getFunction("getTask").staticCall(task.taskId);
-        return { ...task, assigned: current.status === 2n && current.agentId === BigInt(config.agentId) && current.deadline * 1000n === BigInt(task.deadlineMs) };
+      const block = config.economics ? await rpc.getBlock("latest") : undefined;
+      if (config.economics && !block?.hash) fail("ECONOMICS_OBSERVATION_UNCONFIRMED");
+      const at = block ? { blockTag: block.number } : {};
+      const [cash, tasks] = await Promise.all([account.getFunction("cash").staticCall(config.agentId, at), Promise.all(config.tasks.map(async task => {
+        const current = await escrow.getFunction("getTask").staticCall(task.taskId, at);
+        return { ...task, ...(config.economics ? { revenue: { rewardRaw: String(current.reward), escrowBalanceRaw: String(current.escrowBalance), protocolFeeBps: String(current.protocolFeeBps) } } : {}), assigned: current.status === 2n && current.agentId === BigInt(config.agentId) && current.deadline * 1000n === BigInt(task.deadlineMs) };
       }))]);
+      if (block && (await rpc.getBlock(block.number))?.hash !== block.hash) fail("ECONOMICS_OBSERVATION_UNCONFIRMED");
       const snapshot: SelectionSnapshot = { atMs: Date.now(), cash: String(cash), tasks, creditEnabled: Boolean(options.underwriterUrl) };
       const decision = selectInference(config, snapshot);
       session = { version: 1, config: structuredClone(config), configHash: hash(config), decision, phase: decision.selected ? "Selected" : "Stopped", reservedPrice: "0",
-        ...(!decision.selected ? { reason: "NO_FEASIBLE_CANDIDATE" } : {}) };
+        ...(!decision.selected ? { reason: selectionRejectionReason(decision) } : {}) };
       await store.write(session); // No quote or payment can occur before this decision is durable.
     }
     const selected = session.decision.selected;
@@ -147,6 +160,7 @@ export async function runSelectedInference(directory: string, config: SelectionC
     const provider = config.providers.find(value => value.id === selected.providerId)!;
     const input = body(config, selected, provider), paymentTaskId = selected.funding === "cash" ? "0" : selected.taskId;
     const checkHandle = (handle: PaymentHandle) => {
+      if (config.economics) assertEconomicPayment(config.economics, handle);
       if (handle.relayUrl !== provider.relayUrl || handle.quote.price !== selected.price ||
         handle.quote.taskId !== paymentTaskId || handle.input.taskId !== paymentTaskId || handle.quote.tier !== selected.tier ||
         requestDigest(handle.input) !== requestDigest({ ...input, taskId: paymentTaskId, agentId: config.agentId }) ||
@@ -155,9 +169,17 @@ export async function runSelectedInference(directory: string, config: SelectionC
     const guard = async (handle: PaymentHandle) => {
       checkHandle(handle);
       if (Date.now() + config.minRemainingMs >= Math.min(config.deadlineMs, selected.deadlineMs)) fail("SELECTION_DEADLINE");
-      const [cash, task] = await Promise.all([account.getFunction("cash").staticCall(config.agentId), escrow.getFunction("getTask").staticCall(selected.taskId)]);
+      const block = config.economics ? await rpc.getBlock("latest") : undefined;
+      if (config.economics && !block?.hash) fail("ECONOMICS_OBSERVATION_UNCONFIRMED");
+      const at = block ? { blockTag: block.number } : {};
+      const [cash, task] = await Promise.all([account.getFunction("cash").staticCall(config.agentId, at), escrow.getFunction("getTask").staticCall(selected.taskId, at)]);
+      if (block && (await rpc.getBlock(block.number))?.hash !== block.hash) fail("ECONOMICS_OBSERVATION_UNCONFIRMED");
       if (task.status !== 2n || task.agentId !== BigInt(config.agentId) || task.deadline * 1000n !== BigInt(selected.deadlineMs)) fail("SELECTION_TASK_CHANGED");
       if (BigInt(selected.price) > cash + (selected.funding === "task-credit" ? BigInt(selected.creditLimit) : 0n)) fail("SELECTION_FUNDS_CHANGED");
+      if (config.economics) {
+        const economics = assessTaskEconomics(config.economics, { rewardRaw: String(task.reward), escrowBalanceRaw: String(task.escrowBalance), protocolFeeBps: String(task.protocolFeeBps) }, selected.price, String(cash));
+        if (economics.reason) fail(economics.reason);
+      }
       if (Date.now() + config.minRemainingMs >= Math.min(config.deadlineMs, selected.deadlineMs)) fail("SELECTION_DEADLINE");
     };
     if (session.handle) checkHandle(session.handle);

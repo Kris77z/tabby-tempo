@@ -1,0 +1,8 @@
+{
+  "name": "agentfuel-publisher-worker-example",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test test/*.test.mjs" },
+  "dependencies": { "ethers": "6.17.0" }
+}
