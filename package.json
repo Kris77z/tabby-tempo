@@ -36,7 +36,22 @@
     "hosted-agents": "tsx scripts/hosted-agents.ts",
     "test:hosted": "npm test --workspace @agentfuel/hosted-agents",
     "docs:check": "node scripts/check-doc-links.mjs",
-    "test:sdk:standalone": "node scripts/check-sdk-standalone.mjs"
+    "test:sdk:standalone": "node scripts/check-sdk-standalone.mjs",
+    "review:check": "node scripts/review-check.mjs",
+    "economics:local": "node scripts/check-economic-loop.mjs",
+    "test:publisher-worker": "node scripts/check-publisher-worker.mjs",
+    "review:integration": "npm run economics:local && npm run test:publisher-worker && npm run economics:bounded -- --execute-local && npm run economics:independent && npm run economics:independent -- --execute-local",
+    "strategy:demo": "tsx scripts/strategy-advice-demo.ts",
+    "test:strategy-demo": "tsx --test scripts/test/strategy-advice-demo.test.ts",
+    "operating:demo": "tsx scripts/operating-report-demo.ts",
+    "operating:report": "tsx scripts/operating-report.ts",
+    "test:operating-demo": "tsx --test scripts/test/operating-report-demo.test.ts",
+    "review:evidence": "node scripts/review-evidence.mjs",
+    "review:replay": "node scripts/review-replay.mjs",
+    "economics:bounded": "node scripts/check-bounded-economy.mjs",
+    "economics:independent": "node scripts/check-independent-economy.mjs",
+    "review:artifacts": "node scripts/review-artifacts.mjs",
+    "test:worker:guards": "node --import tsx --test examples/publisher-worker/test/*.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -44,7 +44,7 @@ export async function dispatchAdmission(config, manifest, provider, escrow, stat
 export async function resumeSubmission(state, save, allowed, taskId, post, deadlineMs) {
   const binding=()=>({runId:state.runId,taskId,submissionSha256:createHash("sha256").update(JSON.stringify(state.submission)).digest("hex"),attempts:1});
   const check=()=>{
-    if (!allowed || !Number.isSafeInteger(deadlineMs) || Date.now()>=deadlineMs || state.stopped || state.terminal || state.sealed || state.stopReason || !state.runId || state.submission?.taskId!==taskId) throw Error("SUBMISSION_RECOVERY_NOT_AUTHORIZED");
+    if (allowed !== true || !Number.isSafeInteger(deadlineMs) || Date.now()>=deadlineMs || state.stopped || state.terminal || state.sealed || state.stopReason || !state.runId || state.submission?.taskId!==taskId) throw Error("SUBMISSION_RECOVERY_NOT_AUTHORIZED");
   };
   check(); if(state.submissionRecovery!==undefined)throw Error("SUBMISSION_RECOVERY_NOT_AUTHORIZED");
   const reservation=binding(); state.submissionRecovery=reservation; await save();

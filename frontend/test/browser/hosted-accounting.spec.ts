@@ -1,8 +1,9 @@
 import { test, expect, type Page, type Route } from "@playwright/test";
 import { Wallet, getBytes, toUtf8String } from "ethers";
 import type { HostedAgent, HostedRun } from "../../../services/hosted-agents/src/types";
-import { accountingFixture, accountingTime } from "../accounting-fixture";
+import { accountingFixture as baseAccountingFixture, accountingTime } from "../accounting-fixture";
 
+const accountingFixture=(id?:string)=>({...baseAccountingFixture(id),currency:"PathUSD" as const});
 const owner = "0x" + "1".repeat(40);
 const actor = (id: string, accountOwner = owner): HostedAgent => ({ id, owner: accountOwner, name: id, wallet: "0x" + (id.endsWith("b") ? "3" : "2").repeat(40), status: "Ready", modelId: "controlled", strategy: "balanced", perRunBudgetRaw: "120000", totalBudgetRaw: "1000000", spentRaw: "0", reservedRaw: "0", allowCredit: true, createdAt: accountingTime, updatedAt: accountingTime });
 const a = actor("accounting-agent-a"), b = actor("accounting-agent-b");
@@ -35,13 +36,13 @@ test("operating amounts preserve six decimal precision, distinguish capital and 
   });
   await page.goto("/dashboard"); await expect(page.getByRole("button", { name: "账户菜单" })).toBeVisible(); expect(reads).toBe(0);
   await page.getByRole("tab", { name: "资金与借贷", exact: true }).click();
-  await expect(panel(page)).toContainText("−0.020003 USDC"); await expect(panel(page)).toContainText("0.120001 USDC"); await expect(panel(page)).toContainText("0.000002 USDC");
+  await expect(panel(page)).toContainText("−0.020003 PathUSD"); await expect(panel(page)).toContainText("0.120001 PathUSD"); await expect(panel(page)).toContainText("0.000002 PathUSD");
   await panel(page).getByText("补贴、资本与 token", { exact: true }).click();
-  await expect(panel(page)).toContainText("游戏 USDC 补贴0.3 USDC"); await expect(panel(page)).toContainText("充值入账1 USDC");
-  await expect(panel(page)).toContainText("获赠 token10,000"); await expect(panel(page)).toContainText("推理使用 token（含付费及补贴）215"); await expect(panel(page)).toContainText("MON Gas 未纳入"); await expect(panel(page)).toContainText("已核对条目 1/1（100%）");
+  await expect(panel(page)).toContainText("游戏结算资产补贴0.3 PathUSD"); await expect(panel(page)).toContainText("充值入账1 PathUSD");
+  await expect(panel(page)).toContainText("获赠 token10,000"); await expect(panel(page)).toContainText("推理使用 token（含付费及补贴）215"); await expect(panel(page)).toContainText("链上交易费尚未记录"); await expect(panel(page)).toContainText("已核对条目 1/1（100%）");
   expect(await panel(page).evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
   fail = true; await panel(page).getByRole("button", { name: "刷新经营账" }).click();
-  await expect(panel(page)).toContainText("以下保留上次结果"); await expect(panel(page)).toContainText("−0.020003 USDC");
+  await expect(panel(page)).toContainText("以下保留上次结果"); await expect(panel(page)).toContainText("−0.020003 PathUSD");
   expect(reads).toBe(2); expect(writes).toEqual([]); expect(errors).toEqual([]);
 });
 
@@ -56,11 +57,11 @@ test("partial accounting keeps unresolved net unknown and a 401 removes the owne
     return fallback(route);
   });
   await page.goto("/dashboard?panel=finance");
-  await expect(panel(page)).toContainText("经营净额待核算"); await expect(panel(page)).toContainText("部分付款结果待确认"); await expect(panel(page)).toContainText("已核对条目 0/1（0%）");
-  await expect(panel(page)).toContainText("累计支出中有 0.000003 USDC 缺少历史记录");
+  await expect(panel(page)).toContainText("结算贡献（不含链费）待核算"); await expect(panel(page)).toContainText("部分付款结果待确认"); await expect(panel(page)).toContainText("已核对条目 0/1（0%）");
+  await expect(panel(page)).toContainText("累计支出中有 0.000003 PathUSD 缺少历史记录");
   expired = true; await panel(page).getByRole("button", { name: "刷新经营账" }).click();
   await expect(panel(page)).toHaveCount(0); await expect(page.getByRole("button", { name: "签名登录", exact: true })).toBeEnabled();
-  await expect(page.getByTestId("hosted-center-surface")).not.toContainText("0.120001 USDC");
+  await expect(page.getByTestId("hosted-center-surface")).not.toContainText("0.120001 PathUSD");
 });
 
 test("late reads cannot replace a different Agent and an identity mismatch keeps no new totals", async ({ page }) => {
@@ -76,11 +77,11 @@ test("late reads cannot replace a different Agent and an identity mismatch keeps
   });
   try {
     await page.goto("/dashboard?panel=finance"); await expect(panel(page)).toContainText("正在读取");
-    await switchAgent(page, b); await expect(panel(page)).toContainText("0.700001 USDC");
+    await switchAgent(page, b); await expect(panel(page)).toContainText("0.700001 PathUSD");
     const oldResponse = page.waitForResponse(response => response.url().endsWith(`/${a.id}/accounting`)); release(); await oldResponse;
-    await expect(panel(page)).not.toContainText("−0.020003 USDC");
+    await expect(panel(page)).not.toContainText("−0.020003 PathUSD");
     mismatch = true; await panel(page).getByRole("button", { name: "刷新经营账" }).click();
-    await expect(panel(page)).toContainText("以下保留上次结果"); await expect(panel(page)).toContainText("0.700001 USDC");
+    await expect(panel(page)).toContainText("以下保留上次结果"); await expect(panel(page)).toContainText("0.700001 PathUSD");
   } finally { release(); }
 });
 
@@ -101,7 +102,7 @@ test("a completed request during an accounting read causes one latest read after
   try {
     await page.goto("/dashboard?panel=finance"); await expect.poll(() => reads).toBe(1);
     complete = true; await refreshSnapshot(page); release();
-    await expect(panel(page)).toContainText("−0.020004 USDC"); expect(reads).toBe(2);
+    await expect(panel(page)).toContainText("−0.020004 PathUSD"); expect(reads).toBe(2);
   } finally { release(); }
 });
 
@@ -112,7 +113,7 @@ test("login waits for accounting transports after the view closes and isolates a
   await page.context().addCookies([{ name: cookieName, value: oldToken, domain: "127.0.0.1", path: "/api/hosted", httpOnly: true, sameSite: "Strict" }]);
   await page.exposeFunction("__accountingWallet", async ({ method, params }: { method: string; params?: unknown[] }) => {
     if (["eth_accounts", "eth_requestAccounts"].includes(method)) return [signer.address];
-    if (method === "eth_chainId") return "0x279f";
+    if (method === "eth_chainId") return "0xa5bf";
     if (method === "personal_sign") return signer.signMessage(toUtf8String(getBytes(String(params?.[0]))));
     throw new Error(`Unexpected wallet call ${method}`);
   });
@@ -122,7 +123,7 @@ test("login waits for accounting transports after the view closes and isolates a
   });
   let release!: () => void, reads = 0, challenges = 0, logins = 0;
   const gate = new Promise<void>(resolve => { release = resolve; }), expiresAt = Date.now() + 300000;
-  const challenge = { id: "accounting-challenge", expiresAt, message: `AgentFuel hosted agent login\nOrigin: http://127.0.0.1:3014\nWallet: ${signer.address}\nChain: 10143\nNonce: accounting-challenge\nExpires: ${new Date(expiresAt).toISOString()}\nThis signature authenticates your platform account. It authorizes no blockchain transaction.` };
+  const challenge = { id: "accounting-challenge", expiresAt, message: `AgentFuel hosted agent login\nOrigin: http://127.0.0.1:3014\nWallet: ${signer.address}\nChain: 42431\nNonce: accounting-challenge\nExpires: ${new Date(expiresAt).toISOString()}\nThis signature authenticates your platform account. It authorizes no blockchain transaction.` };
   await page.route("**/api/**", async route => {
     const path = new URL(route.request().url()).pathname, cookie = route.request().headers().cookie ?? "";
     if (path === "/api/hosted/agents") return route.fulfill({ json: { owner: cookie.includes(newToken) ? signer.address : owner, agents: [cookie.includes(newToken) ? nextAgent : a], runs: [], models: [] } });
@@ -143,6 +144,6 @@ test("login waits for accounting transports after the view closes and isolates a
     release(); await expect(page.getByRole("button", { name: "账户菜单", exact: true })).toBeEnabled();
     expect(logins).toBe(1); expect((await page.context().cookies()).find(cookie => cookie.name === cookieName)?.value).toBe(newToken);
     await page.getByRole("tab", { name: "资金与借贷", exact: true }).click();
-    await expect(panel(page)).toContainText("−0.000001 USDC"); await expect(panel(page)).not.toContainText("−0.020003 USDC");
+    await expect(panel(page)).toContainText("−0.000001 PathUSD"); await expect(panel(page)).not.toContainText("−0.020003 PathUSD");
   } finally { release(); }
 });

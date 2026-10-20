@@ -1,0 +1,491 @@
+{
+  "version": 1,
+  "demonstration": "controlled-offline-strategy-advice",
+  "observedAt": "2026-10-17T00:00:00.000Z",
+  "currency": "USDC",
+  "decimals": 6,
+  "scope": {
+    "controlledFixtures": true,
+    "productionRead": false,
+    "productionWrite": false,
+    "externalRpcCalls": 0,
+    "modelCalls": 0,
+    "signedTransactions": 0,
+    "currentQuoteEvidence": false,
+    "successProbabilityEstimated": false,
+    "basis": "successful-completion-bound",
+    "excludes": [
+      "native-gas",
+      "reward-token-opportunity-cost",
+      "success-probability"
+    ]
+  },
+  "fixtureEvidence": {
+    "taskCount": 7,
+    "journalCount": 14,
+    "originalJournalsUnchanged": true,
+    "temporaryFilesRemoved": true,
+    "fixtureDigest": "03b59fc7cb27c54280d490a8ee73d4f777fc29c4df18f4b831b3037e4418e378"
+  },
+  "defaultPolicy": {
+    "reserveCashRaw": "500000",
+    "minProfitRaw": "1",
+    "minMarginBps": "1000",
+    "source": "advisory-default",
+    "marginBasis": "net-task-revenue"
+  },
+  "costDeviation": {
+    "originalPrediction": {
+      "source": "original-workflow-admission",
+      "atMs": 1792195199000,
+      "snapshotHash": "9951a1bdc1c1db751f8708c63b8bec31c442711e87e4bd42f492e07aa6f66aaf",
+      "routeBinding": "fa741d5872035801d0c42c964dca5c4fd529c740cf4892b24f7439e7aceb359c",
+      "taskId": "5",
+      "problemId": "sum-integers",
+      "providerId": "route-a",
+      "tier": "cheap",
+      "funding": "cash",
+      "executionCostRaw": "80000",
+      "planningCostRaw": "0",
+      "borrowerFeeRaw": "0",
+      "netRevenueRaw": "220000",
+      "netRewardRaw": "140000",
+      "originalMinNetRewardRaw": "1"
+    },
+    "actualExecutionCostRaw": "120000",
+    "deviationRaw": "40000",
+    "before": {
+      "recommendation": {
+        "status": "preview",
+        "taskId": "101",
+        "providerId": "route-a",
+        "tier": "cheap",
+        "funding": "cash",
+        "reasons": [
+          "STRATEGY_HYPOTHETICAL_ONLY"
+        ]
+      },
+      "cash": {
+        "status": "confirmed",
+        "cashRaw": "1000000",
+        "financeObservedAt": "2026-10-17T00:00:00.000Z",
+        "reserveCashRaw": "500000",
+        "pendingCommitmentsRaw": "0",
+        "outstandingDebtRaw": "0",
+        "availableBeforeReserveRaw": "1000000",
+        "spendableCashRaw": "500000",
+        "unresolvedLiabilities": false,
+        "creditIncluded": false
+      },
+      "candidates": [
+        {
+          "taskId": "101",
+          "providerId": "route-a",
+          "funding": "cash",
+          "status": "eligible",
+          "quotedExecutionCostRaw": "80000",
+          "observedCostBufferRaw": "0",
+          "adjustedExecutionCostRaw": "80000",
+          "comparableCount": 1,
+          "failedComparableCount": 0,
+          "observedFailureLossRaw": "0",
+          "successfulCompletionProfitRaw": "140000",
+          "requiredProfitRaw": "22000",
+          "cashAfterRaw": "920000",
+          "creditRequiredRaw": "0",
+          "reasons": [],
+          "gaps": []
+        },
+        {
+          "taskId": "102",
+          "providerId": "route-b",
+          "funding": "cash",
+          "status": "eligible",
+          "quotedExecutionCostRaw": "100000",
+          "observedCostBufferRaw": "0",
+          "adjustedExecutionCostRaw": "100000",
+          "comparableCount": 1,
+          "failedComparableCount": 0,
+          "observedFailureLossRaw": "0",
+          "successfulCompletionProfitRaw": "130000",
+          "requiredProfitRaw": "23000",
+          "cashAfterRaw": "900000",
+          "creditRequiredRaw": "0",
+          "reasons": [],
+          "gaps": []
+        }
+      ]
+    },
+    "after": {
+      "recommendation": {
+        "status": "preview",
+        "taskId": "102",
+        "providerId": "route-b",
+        "tier": "cheap",
+        "funding": "cash",
+        "reasons": [
+          "STRATEGY_HYPOTHETICAL_ONLY"
+        ]
+      },
+      "cash": {
+        "status": "confirmed",
+        "cashRaw": "1000000",
+        "financeObservedAt": "2026-10-17T00:00:00.000Z",
+        "reserveCashRaw": "500000",
+        "pendingCommitmentsRaw": "0",
+        "outstandingDebtRaw": "0",
+        "availableBeforeReserveRaw": "1000000",
+        "spendableCashRaw": "500000",
+        "unresolvedLiabilities": false,
+        "creditIncluded": false
+      },
+      "candidates": [
+        {
+          "taskId": "101",
+          "providerId": "route-a",
+          "funding": "cash",
+          "status": "eligible",
+          "quotedExecutionCostRaw": "80000",
+          "observedCostBufferRaw": "40000",
+          "adjustedExecutionCostRaw": "120000",
+          "comparableCount": 2,
+          "failedComparableCount": 0,
+          "observedFailureLossRaw": "0",
+          "successfulCompletionProfitRaw": "100000",
+          "requiredProfitRaw": "22000",
+          "cashAfterRaw": "880000",
+          "creditRequiredRaw": "0",
+          "reasons": [],
+          "gaps": []
+        },
+        {
+          "taskId": "102",
+          "providerId": "route-b",
+          "funding": "cash",
+          "status": "eligible",
+          "quotedExecutionCostRaw": "100000",
+          "observedCostBufferRaw": "0",
+          "adjustedExecutionCostRaw": "100000",
+          "comparableCount": 1,
+          "failedComparableCount": 0,
+          "observedFailureLossRaw": "0",
+          "successfulCompletionProfitRaw": "130000",
+          "requiredProfitRaw": "23000",
+          "cashAfterRaw": "900000",
+          "creditRequiredRaw": "0",
+          "reasons": [],
+          "gaps": []
+        }
+      ]
+    }
+  },
+  "paidFailure": {
+    "actualLossRaw": "70000",
+    "knownFailureLossRaw": "70000",
+    "before": {
+      "recommendation": {
+        "status": "preview",
+        "taskId": "103",
+        "providerId": "route-c",
+        "tier": "cheap",
+        "funding": "cash",
+        "reasons": [
+          "STRATEGY_HYPOTHETICAL_ONLY"
+        ]
+      },
+      "cash": {
+        "status": "confirmed",
+        "cashRaw": "1000000",
+        "financeObservedAt": "2026-10-17T00:00:00.000Z",
+        "reserveCashRaw": "500000",
+        "pendingCommitmentsRaw": "0",
+        "outstandingDebtRaw": "0",
+        "availableBeforeReserveRaw": "1000000",
+        "spendableCashRaw": "500000",
+        "unresolvedLiabilities": false,
+        "creditIncluded": false
+      },
+      "candidates": [
+        {
+          "taskId": "103",
+          "providerId": "route-c",
+          "funding": "cash",
+          "status": "eligible",
+          "quotedExecutionCostRaw": "40000",
+          "observedCostBufferRaw": "0",
+          "adjustedExecutionCostRaw": "40000",
+          "comparableCount": 1,
+          "failedComparableCount": 0,
+          "observedFailureLossRaw": "0",
+          "successfulCompletionProfitRaw": "160000",
+          "requiredProfitRaw": "20000",
+          "cashAfterRaw": "960000",
+          "creditRequiredRaw": "0",
+          "reasons": [],
+          "gaps": []
+        },
+        {
+          "taskId": "102",
+          "providerId": "route-b",
+          "funding": "cash",
+          "status": "eligible",
+          "quotedExecutionCostRaw": "100000",
+          "observedCostBufferRaw": "0",
+          "adjustedExecutionCostRaw": "100000",
+          "comparableCount": 1,
+          "failedComparableCount": 0,
+          "observedFailureLossRaw": "0",
+          "successfulCompletionProfitRaw": "130000",
+          "requiredProfitRaw": "23000",
+          "cashAfterRaw": "900000",
+          "creditRequiredRaw": "0",
+          "reasons": [],
+          "gaps": []
+        }
+      ]
+    },
+    "after": {
+      "recommendation": {
+        "status": "preview",
+        "taskId": "102",
+        "providerId": "route-b",
+        "tier": "cheap",
+        "funding": "cash",
+        "reasons": [
+          "STRATEGY_HYPOTHETICAL_ONLY"
+        ]
+      },
+      "cash": {
+        "status": "confirmed",
+        "cashRaw": "1000000",
+        "financeObservedAt": "2026-10-17T00:00:00.000Z",
+        "reserveCashRaw": "500000",
+        "pendingCommitmentsRaw": "0",
+        "outstandingDebtRaw": "0",
+        "availableBeforeReserveRaw": "1000000",
+        "spendableCashRaw": "500000",
+        "unresolvedLiabilities": false,
+        "creditIncluded": false
+      },
+      "candidates": [
+        {
+          "taskId": "103",
+          "providerId": "route-c",
+          "funding": "cash",
+          "status": "eligible",
+          "quotedExecutionCostRaw": "40000",
+          "observedCostBufferRaw": "30000",
+          "adjustedExecutionCostRaw": "70000",
+          "comparableCount": 2,
+          "failedComparableCount": 1,
+          "observedFailureLossRaw": "70000",
+          "successfulCompletionProfitRaw": "130000",
+          "requiredProfitRaw": "90000",
+          "cashAfterRaw": "930000",
+          "creditRequiredRaw": "0",
+          "reasons": [],
+          "gaps": []
+        },
+        {
+          "taskId": "102",
+          "providerId": "route-b",
+          "funding": "cash",
+          "status": "eligible",
+          "quotedExecutionCostRaw": "100000",
+          "observedCostBufferRaw": "0",
+          "adjustedExecutionCostRaw": "100000",
+          "comparableCount": 1,
+          "failedComparableCount": 0,
+          "observedFailureLossRaw": "0",
+          "successfulCompletionProfitRaw": "130000",
+          "requiredProfitRaw": "23000",
+          "cashAfterRaw": "900000",
+          "creditRequiredRaw": "0",
+          "reasons": [],
+          "gaps": []
+        }
+      ]
+    }
+  },
+  "cashReserve": {
+    "recommendation": {
+      "status": "no-eligible-candidate",
+      "reasons": [
+        "STRATEGY_CASH_RESERVE"
+      ]
+    },
+    "cash": {
+      "status": "confirmed",
+      "cashRaw": "250000",
+      "financeObservedAt": "2026-10-17T00:00:00.000Z",
+      "reserveCashRaw": "200000",
+      "pendingCommitmentsRaw": "0",
+      "outstandingDebtRaw": "0",
+      "availableBeforeReserveRaw": "250000",
+      "spendableCashRaw": "50000",
+      "unresolvedLiabilities": false,
+      "creditIncluded": false
+    },
+    "candidates": [
+      {
+        "taskId": "102",
+        "providerId": "route-b",
+        "funding": "cash",
+        "status": "rejected",
+        "quotedExecutionCostRaw": "100000",
+        "observedCostBufferRaw": "0",
+        "adjustedExecutionCostRaw": "100000",
+        "comparableCount": 1,
+        "failedComparableCount": 0,
+        "observedFailureLossRaw": "0",
+        "successfulCompletionProfitRaw": "130000",
+        "requiredProfitRaw": "23000",
+        "cashAfterRaw": "150000",
+        "creditRequiredRaw": "0",
+        "reasons": [
+          "STRATEGY_CASH_RESERVE"
+        ],
+        "gaps": []
+      }
+    ]
+  },
+  "creditCannotSupplyReserve": {
+    "recommendation": {
+      "status": "no-eligible-candidate",
+      "reasons": [
+        "STRATEGY_CASH_RESERVE",
+        "STRATEGY_DAILY_CREDIT_USAGE_UNKNOWN"
+      ]
+    },
+    "cash": {
+      "status": "confirmed",
+      "cashRaw": "250000",
+      "financeObservedAt": "2026-10-17T00:00:00.000Z",
+      "reserveCashRaw": "200000",
+      "pendingCommitmentsRaw": "0",
+      "outstandingDebtRaw": "0",
+      "availableBeforeReserveRaw": "250000",
+      "spendableCashRaw": "50000",
+      "unresolvedLiabilities": false,
+      "creditIncluded": false
+    },
+    "candidates": [
+      {
+        "taskId": "104",
+        "providerId": "route-credit",
+        "funding": "task-credit",
+        "status": "rejected",
+        "quotedExecutionCostRaw": "300000",
+        "observedCostBufferRaw": "0",
+        "adjustedExecutionCostRaw": "300000",
+        "comparableCount": 1,
+        "failedComparableCount": 0,
+        "observedFailureLossRaw": "0",
+        "successfulCompletionProfitRaw": "192500",
+        "requiredProfitRaw": "50000",
+        "cashAfterRaw": "0",
+        "creditRequiredRaw": "50000",
+        "reasons": [
+          "STRATEGY_CASH_RESERVE"
+        ],
+        "gaps": [
+          "STRATEGY_DAILY_CREDIT_USAGE_UNKNOWN"
+        ]
+      }
+    ]
+  },
+  "minimumProfit": {
+    "recommendation": {
+      "status": "no-eligible-candidate",
+      "reasons": [
+        "STRATEGY_MINIMUM_PROFIT"
+      ]
+    },
+    "cash": {
+      "status": "confirmed",
+      "cashRaw": "1000000",
+      "financeObservedAt": "2026-10-17T00:00:00.000Z",
+      "reserveCashRaw": "200000",
+      "pendingCommitmentsRaw": "0",
+      "outstandingDebtRaw": "0",
+      "availableBeforeReserveRaw": "1000000",
+      "spendableCashRaw": "800000",
+      "unresolvedLiabilities": false,
+      "creditIncluded": false
+    },
+    "candidates": [
+      {
+        "taskId": "105",
+        "providerId": "route-b",
+        "funding": "cash",
+        "status": "rejected",
+        "quotedExecutionCostRaw": "49000",
+        "observedCostBufferRaw": "0",
+        "adjustedExecutionCostRaw": "49000",
+        "comparableCount": 1,
+        "failedComparableCount": 0,
+        "observedFailureLossRaw": "0",
+        "successfulCompletionProfitRaw": "1000",
+        "requiredProfitRaw": "10000",
+        "cashAfterRaw": "951000",
+        "creditRequiredRaw": "0",
+        "reasons": [
+          "STRATEGY_MINIMUM_PROFIT"
+        ],
+        "gaps": []
+      },
+      {
+        "taskId": "106",
+        "providerId": "route-b",
+        "funding": "cash",
+        "status": "rejected",
+        "quotedExecutionCostRaw": "185000",
+        "observedCostBufferRaw": "0",
+        "adjustedExecutionCostRaw": "185000",
+        "comparableCount": 1,
+        "failedComparableCount": 0,
+        "observedFailureLossRaw": "0",
+        "successfulCompletionProfitRaw": "15000",
+        "requiredProfitRaw": "20000",
+        "cashAfterRaw": "815000",
+        "creditRequiredRaw": "0",
+        "reasons": [
+          "STRATEGY_MINIMUM_PROFIT"
+        ],
+        "gaps": []
+      }
+    ]
+  },
+  "unknownBlocksAdvice": {
+    "recommendation": {
+      "status": "blocked",
+      "reasons": [
+        "STRATEGY_UNRESOLVED_LIABILITIES"
+      ]
+    },
+    "unresolvedLiabilities": true,
+    "pendingCommitmentsRaw": "500000"
+  },
+  "checksPassed": [
+    "original-prediction-versus-actual",
+    "cost-overrun-changes-next-preview",
+    "paid-failure-changes-next-preview",
+    "cash-reserve",
+    "credit-excluded-from-cash-reserve",
+    "absolute-profit-floor",
+    "net-revenue-margin-floor",
+    "unknown-blocks-advice",
+    "original-journals-unchanged"
+  ],
+  "sourceSha256": {
+    "scripts/strategy-advice-demo.ts": "5ef7f617270ee683d9a00dfc90604a6d490d5e68f8d738aa937df1d4e4bd4671",
+    "services/hosted-agents/src/strategy-advice.ts": "7830d2148f2824cd6e297c70e3f20fa2a09e22c2ed329675f100d4b27791d800",
+    "services/hosted-agents/src/strategy-history.ts": "f11edd037945a036315f60e8ed69923f2163765458e733145902f68afcc465f1",
+    "services/hosted-agents/src/strategy-types.ts": "02bf61f8e38efbf8b3d78bd070325fe0fa05d9767c0375c7f61f0f55dbdd4786",
+    "services/hosted-agents/src/accounting.ts": "93680031622d3faa66b79c162c966ebfd4bbae0cedc34e2eca80dbca421268fd",
+    "services/hosted-agents/src/finance-projection.ts": "b1c2d2992895b93d11f7485917838f8df31e120407d67f620537b96d789f19f9",
+    "packages/pi-loop/src/selector.ts": "0eee1effe9d38f8b51738d7455d31cd05faa28657a865151308be08b698b65fe",
+    "packages/pi-loop/src/economics.ts": "e292e8ab0d60eac56bdd3e95f1ddd2fdd24ba48a402f9dceb9f920fc8188de75",
+    "packages/pi-loop/src/workflow.ts": "377c553aa46457298f007b6b41eadf34ea80af54d3153f068613b2ab410de92d"
+  }
+}

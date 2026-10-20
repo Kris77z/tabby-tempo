@@ -51,3 +51,7 @@ npm run docs:check
 本地服务必须使用新隔离 Anvil、合成角色和新目录，或 [fixture 前端](frontend/README.md#local-visual-and-test-checks)。不能启动旧本机 Tempo runtime、复用原密钥/journal/授权，或与 VPS 同时写同一状态。历史 Monad/USDC 文档仅作来源背景；当前验证入口是 [Tempo 证据索引](docs/VERIFICATION.md)。
 
 代码沿用 `@agentfuel/*` 包名、`InferCredit` 签名 domain 和反馈 tag，避免破坏旧请求兼容。原始代码采用 [MIT](LICENSE)，第三方许可与来源单独保留。
+
+## 2026-10-20 代码层经济与恢复能力
+
+新增冻结经济准入、owner只读经营/策略/operating投影、独立SDK和本地Publisher/Worker；见 [Review](docs/REVIEW.md)。仅owned31337、合成模型与固定Docker离线验证，不更新此文档原有历史Tempo验收事实，不宣称公共链完整流程、TLS可靠性、真实模型或部署已通过。PathUSD结算贡献排除尚未归集链费，完整净利润未知。

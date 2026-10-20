@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "suite": "local-publisher-worker",
+  "status": "passed",
+  "generatedAt": "2026-10-20T08:39:24.386Z",
+  "scope": "isolated Anvil; controlled model response; existing Docker Arena; no production execution or external adoption",
+  "source": {
+    "revision": "e4b29f6158de4ffec5cf90764feb7853bbb086ab",
+    "dirty": true,
+    "harnessSha256": "0f141f70e95dd8f282eccc8a48c8769ec8907ecc8593bf0e1159215337b82c79",
+    "consumerSha256": {
+      "README.md": "ca8b7c5eb9db2b952bd15019558e69d7592fe09427ca24670db2672a14994f93",
+      "package.json": "52a9bfed4779a7dba68ae2691e29be392242920c8d4c9d0a3a444425adc69640",
+      "package-lock.json": "73e10ed0a205f43924a31a8aa66e19e684d9003f069464853ef06b1ca1112150",
+      "protocol.mjs": "98e3626feac73a5c5e9a937e884bb51a0385da83022bf82d13dad46807b291a9",
+      "durable.mjs": "d3abd3231c3cd20e6dac52057d28367400ae171616a4c8ef76fd6b8d226ed1ae",
+      "publisher.mjs": "4485dee77829335c4fb7236a278212300ed48b73d6fc00a3ba5156875a1485c2",
+      "admit.mjs": "e9e1a03ebc85fc618e5028c970be70acd3c68c292a388544b8f79642d9c1c522",
+      "worker.mjs": "e9a2b07cb62c85ee862d4067ca1715deb95e5768eca59001057f4474d88a7b59",
+      "test/protocol.test.mjs": "55cc0a7414dcbfb7f6f8557ba6cfac98751fef4eaef9f3a72957bfb905046177"
+    },
+    "trustedConfigSha256": "a70a5b5cfd32e970b799fc6efba88a76346871f7f018f070462e958a7e3ca1c2",
+    "sdkArchiveSha256": "601dd2ec35896d17a865061f24ff1b7e550e7048ca0a7fadd36b1b2516fa0d79",
+    "node": "v22.22.0"
+  },
+  "chainId": "31337",
+  "assetDecimals": 6,
+  "contracts": {
+    "escrow": "0x5CF7F96627F3C9903763d128A1cc5D97556A6b99",
+    "account": "0x6D411e0A54382eD43F02410Ce1c7a7c122afA6E1",
+    "manager": "0xB9816fC57977D5A786E654c7CF76767be63b966e",
+    "asset": "0x51a240271AB8AB9f9a21C82d9a85396b704E164d"
+  },
+  "roles": {
+    "publisher": "0x3DA8D322CB2435dA26E9C9fEE670f9fB7Fe74E49",
+    "worker": "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF",
+    "verifier": "0x68E527780872cda0216Ba0d8fBD58b67a5D5e351",
+    "provider": "0x1efF47bc3a10a45D4B230B5d10E37751FE6AA718"
+  },
+  "taskId": "1",
+  "paymentId": "0x8ad44e150aa6cbc240fc0892912a863fdebbf3109cc90693945093b4f8187211",
+  "publication": {
+    "txHash": "0xad7bafdc1e2230f91f4aa09a42d27ea10204f80d369d1543630c01f8eb9bc1c6",
+    "blockNumber": 28,
+    "reward": "150000",
+    "recoveredSameTask": true
+  },
+  "payment": {
+    "txHash": "0x64226bc29f9f34927a7b62d5b6ca10432a058db307f445e1149ab73b81c4cc5c",
+    "blockNumber": 30,
+    "fromCash": "40000",
+    "fromCredit": "80000",
+    "modelCalls": 1
+  },
+  "verification": {
+    "mode": "docker",
+    "image": "python:3.12-alpine@sha256:4c47124a8391cb7a9f571164147d154777cf012a4ece5f86097130d7a4478111",
+    "cases": 5,
+    "passed": true,
+    "runId": "b21f8127-0865-4199-a678-8ad5714db78c"
+  },
+  "settlement": {
+    "passed": true,
+    "txHash": "0x5b4e6c6145deee809491b23ea0cacff5704693d2151f0532deafbdf2a57f61f1",
+    "blockNumber": 31,
+    "repaid": "92000",
+    "slashed": "0",
+    "residual": "58000"
+  },
+  "economics": {
+    "openingCash": "40000",
+    "closingCash": "58000",
+    "netTaskIncome": "18000",
+    "reward": "150000",
+    "providerCost": "120000",
+    "principal": "80000",
+    "borrowFee": "12000",
+    "protocolFee": "0",
+    "gasIncluded": false
+  },
+  "replay": {
+    "publisherExtraTasks": 0,
+    "workerExtraPayments": 0,
+    "modelExtraCalls": 0,
+    "verifierExtraTransactions": 0,
+    "recoveredSameArenaRun": true,
+    "recoveredSameSettlementHash": true
+  },
+  "negativeChecks": [
+    "tampered publication rejected before admission write",
+    "unprofitable task rejected before acceptance/payment",
+    "changed worker config preserves original journal",
+    "worker cannot self-settle"
+  ],
+  "provenance": {
+    "node": "v22.22.0",
+    "tools": {
+      "forge": "forge Version: 1.8.1",
+      "anvil": "anvil Version: 1.8.1",
+      "docker": "28.1.1",
+      "imageId": "sha256:54f0c1506c135da9a6b9cc0b0524b97e225b712ead8d601326d24f7e6619fede",
+      "dockerTransport": "local-unix-socket"
+    },
+    "launcherSha256": "6601a7e8a5135ccd565b5ce6540f7917e6e637227adc33dd3fef155b421124c9"
+  },
+  "cleanup": {
+    "ownedProcessesStopped": true,
+    "ownedContainersRemoved": true,
+    "privateTempDirectoryRemoved": true,
+    "ownedIpcDirectoryRemoved": true,
+    "failures": []
+  }
+}

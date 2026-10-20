@@ -160,6 +160,34 @@ jobs:
             node --import tsx --test --test-concurrency=1 scripts/test/hosted-agents.test.ts
           fi
 
+      - name: Validate scoped economics, independent consumers and read-only evidence
+        run: |
+          if [[ -f scripts/review-artifacts.mjs ]]; then
+            npm run review:check
+            npm run review:artifacts -- --execute-local --output "$RUNNER_TEMP/tabby-local-review"
+            node scripts/review-artifacts.mjs --verify "$RUNNER_TEMP/tabby-local-review"
+          fi
+
+      - name: Verify accounting owner boundaries on desktop and mobile
+        env:
+          HOSTED_AGENTS_URL: ''
+          HOSTED_FRONTEND_ORIGIN: ''
+        run: |
+          if [[ -f frontend/playwright.accounting.config.ts ]]; then
+            npx playwright install --with-deps chromium
+            npx playwright test --config frontend/playwright.accounting.config.ts
+          fi
+
+      - name: Upload only validated sanitized local review artifacts
+        if: success() && hashFiles('scripts/review-artifacts.mjs') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: tempo-local-review-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/tabby-local-review/
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 30
+
       - name: Check candidate documentation links when the historical version provides the command
         run: npm run docs:check --if-present
 

@@ -77,3 +77,7 @@ The browser harness mocks authenticated APIs and never connects a real owner or 
 | Dated public results | [Verification](docs/VERIFICATION.md), [documentation index](docs/README.md) |
 
 This independent project extends AgentFuel source `922f65dc9c20ab404946ce37e49e95484b515f75`. Internal `@agentfuel/*` names, `InferCredit` EIP-712 domains and feedback tags retain compatibility. Original code is [MIT licensed](LICENSE); dependency/design notices remain separate in [attribution](docs/ATTRIBUTION.md).
+
+## Scoped economics and offline independent consumers
+
+[Review guide](docs/REVIEW.md) covers versioned task admission, owner-only accounting/strategy/operating views, an independently installed SDK, loopback Publisher/Worker and bounded recovery. `npm run review:check` validates registered Tempo-owned local summaries; `npm run review:artifacts -- --execute-local --output /absolute/new-directory` explicitly runs owned Anvil/Docker with controlled model responses. This is not public Tempo, real-model or production acceptance. No production RPC, model route, contract or deployment configuration is changed; chain fees remain unknown/excluded from contribution.

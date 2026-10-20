@@ -83,7 +83,7 @@ test("dispatch and submission reservations fail closed across stop, malformed hi
  const stopped={};await assert.rejects(dispatchAdmission(c,m,provider,escrow,stopped,async()=>{stopped.sealed=true},h),/Original dispatch/);
  await assert.rejects(dispatchAdmission({...c,solveDeadlineMs:0},m,provider,escrow,{},async()=>{},h),/deadline/);
  let posts=0; const state={runId:"original",submission:{taskId:"1",code:"original"}}, post=async()=>{posts++;return{runId:"original",taskId:"1"}};
- await assert.rejects(resumeSubmission(state,async()=>{},false,"1",post,c.solveDeadlineMs),/NOT_AUTHORIZED/);
+ for(const permission of [false,"true",{},1])await assert.rejects(resumeSubmission(state,async()=>{},permission,"1",post,c.solveDeadlineMs),/NOT_AUTHORIZED/);
  for(const prior of [null,false,{}])await assert.rejects(resumeSubmission({...state,submissionRecovery:prior},async()=>{},true,"1",post,c.solveDeadlineMs),/NOT_AUTHORIZED/);
  const revoked=structuredClone(state);await assert.rejects(resumeSubmission(revoked,async()=>{revoked.sealed=true},true,"1",post,c.solveDeadlineMs),/NOT_AUTHORIZED/);
  await resumeSubmission(state,async()=>{},true,"1",post,c.solveDeadlineMs);
