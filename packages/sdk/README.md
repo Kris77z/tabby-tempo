@@ -128,3 +128,9 @@ The SDK is exercised through the real local Relay and contracts, rather than a s
 - [`allowance.test.ts`](../../services/provider-relay/test/allowance.test.ts): one paid package, unchanged one-task draw limit and original-payment refund behavior.
 
 These tests use local assets and controlled model responses. Later real-model and Monad acceptance has a separate [tracked record](../../docs/monad-hosted-acceptance-20261012.md); it does not turn each local test into proof of live deployment or standard x402 interoperability.
+
+## 独立 Node.js 发行包
+
+运行 `npm run pack:standalone --workspace @agentfuel/sdk -- --out-dir DIRECTORY` 生成只含编译 JS、类型和公开文档的本地 tarball；workspace 的 TypeScript exports 保持不变。`npm run test:sdk:standalone` 将包安装到独立临时 consumer，以离线缓存依赖运行类型、恢复、失败和单派发测试。不会发布 npm，也不执行真实付款。
+
+Tempo 使用可信部署配置和当前已验证 signer/provider；不要从报价、模型输出或示例地址推定真实部署。现金、授信和链费上限必须由调用方分别设置；独立打包保留当前 typed control、beforeDispatch、Unknown handle 和不二派发行为。

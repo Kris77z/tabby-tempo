@@ -1,0 +1,13 @@
+{
+  "name": "agentfuel-sdk-standalone-example",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node demo.mjs",
+    "test": "node --test test/*.test.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": { "ethers": "6.17.0" },
+  "devDependencies": { "@types/node": "22.20.4", "typescript": "5.9.3" }
+}

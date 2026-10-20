@@ -1,0 +1,15 @@
+{
+  "rpcUrl": "http://127.0.0.1:8545",
+  "relayUrl": "http://127.0.0.1:8788/v1/chat",
+  "chainId": "31337",
+  "agentId": "1",
+  "account": "0x1111111111111111111111111111111111111111",
+  "asset": "0x2222222222222222222222222222222222222222",
+  "provider": "0x3333333333333333333333333333333333333333",
+  "maxPrice": "10000",
+  "request": {
+    "service": "infercredit/coder",
+    "model": "coder",
+    "messages": [{ "role": "user", "content": "Replace with the intended request." }]
+  }
+}
